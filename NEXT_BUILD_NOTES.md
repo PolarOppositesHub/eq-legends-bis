@@ -1,8 +1,26 @@
 # Next build notes
 
-**v1.0.5 coding smoke-ready locally.** Josh must rebuild Windows + publish GitHub Release **v1.0.5** (agent cannot). Never invent item stats.
+**v1.0.5 READY TO SHIP — coding smoke green.** Agent cannot build Windows `.exe` or create GitHub Releases. Josh rebuilds + publishes on **Joshs_Notebook**. Never invent item stats.
 
-Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Slot / Simulator / Item Search, Mode includes **AI Choice**, Priority shows Primary/Secondary/Tertiary dropdowns.
+## Josh Windows rebuild + GitHub Release v1.0.5
+
+```powershell
+git pull origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
+```
+
+Artifacts in `dist-desktop/`:
+- Prefer **NSIS**: `EQ-Legends-BiS-1.0.5-win-x64.exe` (updater-friendly)
+- Also: `EQ-Legends-BiS-1.0.5-portable.exe`
+
+Publish: GitHub Release **v1.0.5** for `PolarOppositesHub/eq-legends-bis` including `latest.yml` (electron-builder GitHub publish already configured in `desktop/package.json`).
+
+### Post-install verify
+- [ ] Header badge **UI 1.0.5** (and API · v1.0.5)
+- [ ] Left Menu: Best in Slot / Simulator / **Upgrade Priority** / Item Search
+- [ ] Mode includes **AI Choice**; Priority Primary/Secondary/Tertiary (3 each)
+- [ ] BiS with Paladin in trio allows single-class armor (any-class / `mode=any`)
+- [ ] Import **Inventory.txt** from `/outputfile inventory` — never pick `.exe`
 
 ## 1.0.5 — UI visibility, class priority defaults, hover tips, AC softcap (2026-09-07)
 
