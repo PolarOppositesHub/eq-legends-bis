@@ -974,22 +974,24 @@ export default function App() {
   const resolveCompareDeltas = (row) => {
     const slot = row.slot
     const selected = bisOverrides[slot] || row.selected_bis || ''
-    const wornName = equipment[slot] || row.worn?.name || ''
+    const wornName = (equipment[slot] || row.worn?.name || '').trim()
     const pool = slotItems[slot] || []
     let effectiveWorn = {}
     if (wornName) {
-      const found = pool.find((it) => (it.name || '').toLowerCase() === String(wornName).toLowerCase())
+      const found = pool.find((it) => (it.name || '').toLowerCase() === wornName.toLowerCase())
       if (found) {
         effectiveWorn = found.stats_at_upgrade || found.stats_plus10 || {}
       } else if (
         row.worn?.name
-        && String(row.worn.name).toLowerCase() === String(wornName).toLowerCase()
+        && String(row.worn.name).toLowerCase() === wornName.toLowerCase()
         && row.worn?.stats
       ) {
         effectiveWorn = row.worn.stats
       }
     }
     if (!selected) return []
+    // Same item selected on both sides → no delta chips.
+    if (wornName && wornName.toLowerCase() === String(selected).toLowerCase()) return []
     const opt = (row.bis_options || []).find((o) => o.name === selected)
     let bisStats = opt?.stats_at_upgrade || opt?.stats_plus10 || null
     if (!bisStats && bis?.slots) {
@@ -1002,7 +1004,7 @@ export default function App() {
       }
     }
     if ((!bisStats || !Object.keys(bisStats).length) && pool.length) {
-      const found = pool.find((it) => it.name === selected)
+      const found = pool.find((it) => (it.name || '').toLowerCase() === String(selected).toLowerCase())
       bisStats = found?.stats_at_upgrade || found?.stats_plus10 || {}
     }
     return computeStatDeltas(effectiveWorn, bisStats || {}).filter((d) => Math.abs(d.delta) >= 1e-9)
@@ -1234,7 +1236,7 @@ export default function App() {
                   <div className="field">
                     <label>&nbsp;</label>
                     <button className="primary" disabled={loading} onClick={runSim}>
-                      {loading ? 'Updating…' : 'Recalculate'}
+                      {loading ? 'Updating…' : 'Apply / Recalculate'}
                     </button>
                   </div>
                 </>
@@ -1486,6 +1488,9 @@ export default function App() {
             <div className="sim-grid">
               <div className="panel">
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Equipment</h2>
+                <p className="muted" style={{ marginTop: 0, marginBottom: '0.65rem' }}>
+                  Deltas update live as you change Worn / BiS. Apply / Recalculate also refreshes Upgrade Priority.
+                </p>
                 <div className="builds-bar">
                   <input
                     type="text"
@@ -1636,7 +1641,12 @@ export default function App() {
                         </select>
                         <div className="equip-deltas">
                           {deltas.length === 0 ? (
-                            <span className="muted">—</span>
+                            <span className="muted">
+                              {selectedBis && (equipment[slot] || '') &&
+                              String(equipment[slot]).toLowerCase() === String(selectedBis).toLowerCase()
+                                ? 'match'
+                                : '—'}
+                            </span>
                           ) : (
                             deltas.map((d) => (
                               <span
