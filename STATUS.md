@@ -1,26 +1,33 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.8 — READY FOR OVERNIGHT WINDOWS SHIP / GitHub Release**
-Canonical: backend/app/{main,engine,scoring,ac_softcap,quest_guides,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths,character_pools,spell_buffs}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
+Version: **1.0.10 READY TO SHIP** — BiS icons seed + sim deltas + search/import harden + clearer quest steps
+Canonical: backend/app/{main,engine,item_catalog,paths,inventory,quest_guides,...}.py + frontend App.jsx + desktop/main.js
+PR: https://github.com/PolarOppositesHub/eq-legends-bis/pull/7 (`cursor/bis-icons-seed-sim-deltas-d4a5` → `main`)
 
-**Agent cannot** build Windows `.exe` or create GitHub Releases. Overnight grok bot / Josh publishes from **main**.
+**Agent cannot** build Windows `.exe` or create GitHub Releases. Overnight grok bot / Josh: **merge PR #7**, then publish from **main**.
 
-## Ship checklist (overnight / Josh)
-- [ ] `main` at **1.0.8** (this handoff)
-- [ ] Windows rebuild: `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
-- [ ] Prefer **NSIS** `EQ-Legends-BiS-1.0.8-win-x64.exe`; portable also built
-- [ ] Publish GitHub Release **v1.0.8** + `latest.yml`
-- [ ] After install: header **UI 1.0.8** (and API · v1.0.8)
+## Overnight ship steps
+1. Merge PR **#7** into `main`
+2. `git pull origin main`
+3. `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
+4. Publish GitHub Release **v1.0.10** with NSIS + portable + `latest.yml`
+5. Prefer NSIS `EQ-Legends-BiS-1.0.10-win-x64.exe`
+6. Confirm header **UI 1.0.10** (API · v1.0.10)
 
-## Why 1.0.8 (after 1.0.7)
-- BiS icons: eqlwiki 16-bit PNGs blank in Chromium → convert to 8-bit on download (Pillow)
-- BiS hover tip to the right of cursor; weapon HandMod formulas hidden in UI (`why_ui`)
-- Live Totals: eqlegendstools race+class+STA/INT/WIS pools (not gear-only)
-- Simulator **Cast Buffs → Quick Buff** (max stacking lines for selected trio)
-- Max AAs (sheet) toggle for Natural Durability / Eminence / Familiar-style AAs
+## Why 1.0.10
+- BiS icons: ship seeded `data/item-images` + read bundled seeds when userData cache is empty; copy seed→writable; softer ItemIcon fallback
+- Simulator: live worn/BiS deltas without Suggest upgrades; Apply/Recalculate also refreshes upgrade priorities; equipment table no inner scrollbar
+- Item Search / Inventory import: stop 500s from image-cache coupling (`name_in_catalog`, hardened `_public_item`, endpoint guards, Electron decoded-path probe)
+- Upgrade Priority quest steps: expand tags like `4-KoS` to zone + mob names
 
-## Smoke notes
-- Versions: root / frontend / desktop package.json **1.0.8**; engine meta **1.0.8**; UI badge **UI 1.0.8**
-- `POST /api/simulate` with `cast_buffs=quick` returns pool HP/Mana/END + active buff list
-- Item icons ensure + serve as 8-bit PNG
-- desktop/resources/backend/app synced (character_pools, spell_buffs, item_catalog, engine, races, main)
+## Search / Inventory regression (vs 1.0.3)
+- **1.0.3:** Inventory import was TSV-only (no catalog/image I/O). Item Search did not exist.
+- **1.0.4+:** Import called `get_item_by_name` → `_public_item` → `local_image_path` per row; packaged read-only `item-images` mkdir → **500 Internal Server Error**. Search had the same coupling.
+- **1.0.10 fix:** `name_in_catalog` (no image I/O); `_public_item` / search never raise; Electron probes real decoded dirs + writable `EQ_IMAGES_DIR`; empty/missing decoded degrades with a warning instead of 500.
+
+## Coding smoke (green)
+- Search `aegis` / `sword` → 200, catalog ~940
+- Inventory.txt Location/Name TSV import → `ok: true`, worn slots mapped
+- Mock `local_image_path` OSError → search 200 + import 200
+- Quest guide "Wizard Test of Focus" mentions Keeper of Souls / Island 4
+- Versions: root / frontend / desktop / engine / UI badge all **1.0.10**

@@ -105,33 +105,35 @@ function ItemIcon({ name, className = 'item-icon' }) {
     setLoading(true)
     setSrc('')
 
+    const paint = () => {
+      setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
+      setFailed(false)
+      setLoading(false)
+    }
+
     const load = async () => {
       try {
         await ensureItemImage(name)
         if (cancelled) return
-        setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
-        setFailed(false)
-        setLoading(false)
+        paint()
       } catch (_) {
         if (cancelled) return
         // One retry after a short delay (wiki/network race on first BiS paint).
         if (tries.current < 1) {
           tries.current += 1
-          await new Promise((r) => setTimeout(r, 400))
+          await new Promise((r) => setTimeout(r, 450))
           if (cancelled) return
           try {
             await ensureItemImage(name)
             if (cancelled) return
-            setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
-            setFailed(false)
-            setLoading(false)
+            paint()
             return
           } catch (__) {
-            /* fall through */
+            /* fall through — GET also fetches/serves */
           }
         }
-        setFailed(true)
-        setLoading(false)
+        // Soft-fallback: still try the GET endpoint (it runs ensure server-side).
+        if (!cancelled) paint()
       }
     }
     load()
@@ -154,14 +156,18 @@ function ItemIcon({ name, className = 'item-icon' }) {
       alt=""
       onError={() => {
         // File existed at ensure time but GET failed — one more ensure then give up.
-        if (tries.current >= 2) {
+        if (tries.current >= 3) {
           setFailed(true)
           return
         }
         tries.current += 1
         ensureItemImage(name)
           .then(() => setSrc(`${itemImageUrl(name)}&_=${Date.now()}`))
-          .catch(() => setFailed(true))
+          .catch(() => {
+            // Last chance: bust cache on GET without ensure JSON.
+            if (tries.current >= 3) setFailed(true)
+            else setSrc(`${itemImageUrl(name)}&_=${Date.now()}&retry=${tries.current}`)
+          })
       }}
     />
   )
@@ -609,6 +615,24 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, classes])
 
+  const suggestionBody = useCallback((eq) => ({
+    classes,
+    equipment: eq,
+    upgrade,
+    character_level: characterLevel,
+    prefer_ranged_damage: preferRanged,
+    mode,
+    priority_stat: priorityStat,
+    primary_stats: nonemptyStats(primaryStats),
+    secondary_stats: nonemptyStats(secondaryStats),
+    tertiary_stats: nonemptyStats(tertiaryStats),
+    maximize_hp_regen: maximizeHpRegen,
+    fetch_quest_guides: true,
+  }), [
+    classes, upgrade, characterLevel, preferRanged, mode, priorityStat,
+    primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
+  ])
+
   const runSim = useCallback(async () => {
     if (classes.length < 1) {
       setError('Pick at least one class (up to 3).')
@@ -627,12 +651,19 @@ export default function App() {
         assume_max_aas: assumeMaxAas,
       })
       setSim(data)
+      // Also refresh upgrade priorities (replaces separate Suggest upgrades button).
+      try {
+        const sug = await upgradeSuggestions(suggestionBody(equipment))
+        setSuggestions(sug)
+      } catch (_) {
+        /* sim totals still useful if upgrade ranking fails */
+      }
     } catch (e) {
       setError(String(e.message || e))
     } finally {
       setLoading(false)
     }
-  }, [classes, race, upgrade, characterLevel, equipment, castBuffsMode, assumeMaxAas])
+  }, [classes, race, upgrade, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody])
 
   useEffect(() => {
     if (tab === 'sim' && Object.keys(equipment).length) runSim()
@@ -676,24 +707,6 @@ export default function App() {
     }
   }
 
-  const suggestionBody = useCallback((eq) => ({
-    classes,
-    equipment: eq,
-    upgrade,
-    character_level: characterLevel,
-    prefer_ranged_damage: preferRanged,
-    mode,
-    priority_stat: priorityStat,
-    primary_stats: nonemptyStats(primaryStats),
-    secondary_stats: nonemptyStats(secondaryStats),
-    tertiary_stats: nonemptyStats(tertiaryStats),
-    maximize_hp_regen: maximizeHpRegen,
-    fetch_quest_guides: true,
-  }), [
-    classes, upgrade, characterLevel, preferRanged, mode, priorityStat,
-    primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
-  ])
-
   const onImportFile = async (file) => {
     if (!file) return
     const lower = (file.name || '').toLowerCase()
@@ -708,6 +721,11 @@ export default function App() {
     try {
       const text = await file.text()
       const parsed = await importInventory(text)
+      if (parsed && parsed.ok === false) {
+        setImportMsg('')
+        setError((parsed.warnings && parsed.warnings[0]) || parsed.note || 'Inventory import failed.')
+        return
+      }
       const eq = parsed.equipment || {}
       setEquipment(eq)
       setImportMeta({
@@ -721,10 +739,14 @@ export default function App() {
         (parsed.unmatched_count ? ` · unmatched ${parsed.unmatched_count}` : '') +
         ` from ${file.name}`
       )
-      setTab('upgrades')
+      setTab('sim')
       if (classes.length >= 1) {
-        const sug = await upgradeSuggestions(suggestionBody(eq))
-        setSuggestions(sug)
+        try {
+          const sug = await upgradeSuggestions(suggestionBody(eq))
+          setSuggestions(sug)
+        } catch (_) {
+          /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
+        }
       }
     } catch (e) {
       setImportMsg('')
@@ -843,7 +865,9 @@ export default function App() {
       if (searchSlot) params.slot = searchSlot
       const res = await searchItems(params)
       setSearchResults(res)
+      if (res?.warning) setError(String(res.warning))
     } catch (e) {
+      setSearchResults(null)
       setError(String(e.message || e))
     } finally {
       setSearchLoading(false)
@@ -872,64 +896,104 @@ export default function App() {
   const trioLabel = classes.length ? classes.join(' · ') : '(none selected)'
 
   const equipCompareRows = useMemo(() => {
-    if (suggestions?.equipment_compare?.length) {
-      return suggestions.equipment_compare
+    const slots = meta?.slots || bis?.slots?.map((s) => s.slot) || []
+    const sugBySlot = {}
+    for (const row of suggestions?.equipment_compare || []) {
+      if (row?.slot) sugBySlot[row.slot] = row
     }
-    if (!bis?.slots?.length) return []
-    return bis.slots.map((row) => {
-      const slot = row.slot
-      const bisName = (row.name || '').trim()
+    const bisBySlot = {}
+    for (const row of bis?.slots || []) {
+      if (row?.slot) bisBySlot[row.slot] = row
+    }
+
+    return slots.map((slot) => {
+      const sug = sugBySlot[slot]
+      const bisRow = bisBySlot[slot]
+      const pool = slotItems[slot] || []
+      const wornName = (equipment[slot] || '').trim()
+      const wornItem = pool.find((it) => (it.name || '').toLowerCase() === wornName.toLowerCase())
+      let wornStats = wornItem
+        ? (wornItem.stats_at_upgrade || wornItem.stats_plus10 || {})
+        : {}
+      // Suggestions may include worn stats for imported names missing from the slot pool.
+      if ((!wornStats || !Object.keys(wornStats).length) && sug?.worn?.stats) {
+        const sugWornName = (sug.worn?.name || '').trim().toLowerCase()
+        if (!wornName || sugWornName === wornName.toLowerCase()) {
+          wornStats = sug.worn.stats || {}
+        }
+      }
+
       const bis_options = []
-      if (bisName) {
+      const pushOpt = (o) => {
+        if (!o?.name) return
+        if (bis_options.some((x) => x.name === o.name)) return
         bis_options.push({
-          name: bisName,
-          why: row.why,
-          url: row.url || '',
-          stats_at_upgrade: row.stats_at_upgrade || row.stats_plus10 || {},
+          name: o.name,
+          why: o.why,
+          url: o.url || '',
+          stats_at_upgrade: o.stats_at_upgrade || o.stats_plus10 || {},
         })
       }
-      for (const a of row.alts || []) {
-        if (a?.name) {
-          bis_options.push({
-            name: a.name,
-            why: a.why,
-            url: a.url || '',
-            stats_at_upgrade: a.stats_at_upgrade || a.stats_plus10 || {},
+      if (sug?.bis_options?.length) {
+        for (const o of sug.bis_options) pushOpt(o)
+      }
+      if (bisRow) {
+        pushOpt({
+          name: bisRow.name,
+          why: bisRow.why,
+          url: bisRow.url || '',
+          stats_at_upgrade: bisRow.stats_at_upgrade || bisRow.stats_plus10 || {},
+        })
+        for (const a of bisRow.alts || []) pushOpt(a)
+      }
+      if (!bis_options.length && pool.length) {
+        for (const it of pool.slice(0, 40)) {
+          pushOpt({
+            name: it.name,
+            stats_at_upgrade: it.stats_at_upgrade || it.stats_plus10 || {},
           })
         }
       }
-      const wornName = (equipment[slot] || '').trim()
-      const pool = slotItems[slot] || []
-      const wornItem = pool.find((it) => (it.name || '').toLowerCase() === wornName.toLowerCase())
-      const wornStats = wornItem
-        ? (wornItem.stats_at_upgrade || wornItem.stats_plus10 || {})
-        : {}
-      const bisStats = row.stats_at_upgrade || row.stats_plus10 || {}
+
+      const selectedBis = (sug?.selected_bis || bisRow?.name || '').trim() || null
+      const selectedOpt = bis_options.find((o) => o.name === selectedBis)
+      const bisStats = selectedOpt?.stats_at_upgrade
+        || (bisRow && bisRow.name === selectedBis
+          ? (bisRow.stats_at_upgrade || bisRow.stats_plus10 || {})
+          : {})
+        || {}
+
       return {
         slot,
         worn: { name: wornName || null, stats: wornStats },
         bis_options,
-        selected_bis: bisName || null,
-        deltas: bisName ? computeStatDeltas(wornStats, bisStats) : [],
+        selected_bis: selectedBis,
+        deltas: selectedBis ? computeStatDeltas(wornStats, bisStats) : [],
       }
     })
-  }, [suggestions, bis, equipment, slotItems])
+  }, [suggestions, bis, equipment, slotItems, meta])
 
   const resolveCompareDeltas = (row) => {
     const slot = row.slot
     const selected = bisOverrides[slot] || row.selected_bis || ''
-    const wornName = equipment[slot] || row.worn?.name || ''
-    const wornStats = row.worn?.stats || {}
+    const wornName = (equipment[slot] || row.worn?.name || '').trim()
     const pool = slotItems[slot] || []
-    let effectiveWorn = wornStats
-    if (wornName && (!effectiveWorn || !Object.keys(effectiveWorn).length)) {
-      const found = pool.find((it) => (it.name || '').toLowerCase() === String(wornName).toLowerCase())
-      if (found) effectiveWorn = found.stats_at_upgrade || found.stats_plus10 || {}
+    let effectiveWorn = {}
+    if (wornName) {
+      const found = pool.find((it) => (it.name || '').toLowerCase() === wornName.toLowerCase())
+      if (found) {
+        effectiveWorn = found.stats_at_upgrade || found.stats_plus10 || {}
+      } else if (
+        row.worn?.name
+        && String(row.worn.name).toLowerCase() === wornName.toLowerCase()
+        && row.worn?.stats
+      ) {
+        effectiveWorn = row.worn.stats
+      }
     }
     if (!selected) return []
-    if (selected === row.selected_bis && row.deltas?.length && !bisOverrides[slot]) {
-      return row.deltas.filter((d) => Math.abs(d.delta) >= 1e-9)
-    }
+    // Same item selected on both sides → no delta chips.
+    if (wornName && wornName.toLowerCase() === String(selected).toLowerCase()) return []
     const opt = (row.bis_options || []).find((o) => o.name === selected)
     let bisStats = opt?.stats_at_upgrade || opt?.stats_plus10 || null
     if (!bisStats && bis?.slots) {
@@ -941,11 +1005,11 @@ export default function App() {
         bisStats = alt?.stats_at_upgrade || alt?.stats_plus10 || {}
       }
     }
-    if (!bisStats && pool.length) {
-      const found = pool.find((it) => it.name === selected)
+    if ((!bisStats || !Object.keys(bisStats).length) && pool.length) {
+      const found = pool.find((it) => (it.name || '').toLowerCase() === String(selected).toLowerCase())
       bisStats = found?.stats_at_upgrade || found?.stats_plus10 || {}
     }
-    return computeStatDeltas(effectiveWorn, bisStats || {})
+    return computeStatDeltas(effectiveWorn, bisStats || {}).filter((d) => Math.abs(d.delta) >= 1e-9)
   }
 
   const navItems = [
@@ -970,10 +1034,10 @@ export default function App() {
           <p>
             Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
             {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.8'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.10'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.9</span>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.10</span>
       </header>
 
       <div className="app-shell">
@@ -1174,7 +1238,7 @@ export default function App() {
                   <div className="field">
                     <label>&nbsp;</label>
                     <button className="primary" disabled={loading} onClick={runSim}>
-                      {loading ? 'Updating…' : 'Recalculate'}
+                      {loading ? 'Updating…' : 'Apply / Recalculate'}
                     </button>
                   </div>
                 </>
@@ -1424,8 +1488,11 @@ export default function App() {
 
           {tab === 'sim' && (
             <div className="sim-grid">
-              <div className="panel">
+              <div className="panel sim-equip-panel">
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Equipment</h2>
+                <p className="muted" style={{ marginTop: 0, marginBottom: '0.65rem' }}>
+                  Deltas update live as you change Worn / BiS. Apply / Recalculate also refreshes Upgrade Priority.
+                </p>
                 <div className="builds-bar">
                   <input
                     type="text"
@@ -1474,9 +1541,6 @@ export default function App() {
                     />
                   </label>
                   <button type="button" onClick={openHelp}>Help</button>
-                  <button type="button" className="primary" onClick={runUpgradeSuggestions} disabled={loading || classes.length < 1}>
-                    Suggest upgrades
-                  </button>
                 </div>
 
                 {importMeta && (importMeta.unmatched_count > 0 || unmatchedNames.length > 0 || allItemNames.length > 0) && (
@@ -1579,7 +1643,12 @@ export default function App() {
                         </select>
                         <div className="equip-deltas">
                           {deltas.length === 0 ? (
-                            <span className="muted">—</span>
+                            <span className="muted">
+                              {selectedBis && (equipment[slot] || '') &&
+                              String(equipment[slot]).toLowerCase() === String(selectedBis).toLowerCase()
+                                ? 'match'
+                                : '—'}
+                            </span>
                           ) : (
                             deltas.map((d) => (
                               <span
@@ -1596,11 +1665,13 @@ export default function App() {
                   })}
                 </div>
                 <div style={{ marginTop: '0.75rem' }}>
-                  <button className="primary" onClick={runSim} disabled={loading}>Apply / Recalculate</button>
+                  <button className="primary" onClick={runSim} disabled={loading}>
+                    {loading ? 'Updating…' : 'Apply / Recalculate'}
+                  </button>
                 </div>
               </div>
 
-              <div className="panel">
+              <div className="panel sim-totals-panel">
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Live Totals</h2>
                 {sim ? (
                   <>

@@ -157,7 +157,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.9",
+        "version": m.get("version") or "1.0.10",
         "scoring": m.get("scoring"),
     }
 
@@ -222,7 +222,19 @@ def api_item_search(
     offset: int = Query(default=0, ge=0),
 ):
     """Search all catalog items (full game DB union of flat_* + aggregate)."""
-    return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+    try:
+        return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+    except Exception as e:
+        return {
+            "total": 0,
+            "offset": offset,
+            "limit": limit,
+            "query": q or "",
+            "slot": str(slot).upper() if isinstance(slot, str) and slot else None,
+            "items": [],
+            "catalog_size": 0,
+            "warning": f"item search failed: {e}",
+        }
 
 
 @app.get("/api/item-detail")
@@ -440,6 +452,20 @@ def api_inventory_import(body: InventoryParseRequest):
         parsed = inventory_mod.parse_inventory_tsv(body.text)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        return {
+            "ok": False,
+            "equipment": {},
+            "upgrade_hints": {},
+            "worn": [],
+            "all_items": [],
+            "unmatched": [],
+            "unmatched_count": 0,
+            "skipped_count": 0,
+            "skipped": [],
+            "warnings": [f"inventory import failed: {e}"],
+            "note": "Import failed; check Inventory.txt from /outputfile inventory.",
+        }
     return {
         "ok": True,
         "equipment": parsed.get("equipment") or {},

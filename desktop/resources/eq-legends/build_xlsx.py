@@ -12,10 +12,51 @@ from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
-ROOT = Path("/workspace/eq-legends")
-OUT = ROOT / "decoded"
-XLSX = ROOT / "EQ_Legends_BiS.xlsx"
-XLSX_FIXED = ROOT / "EQ_Legends_BiS_fixed.xlsx"
+
+import os
+from pathlib import Path as _Path
+
+def _resolve_root():
+    for key in ("EQ_LEGENDS_ROOT", "EQ_APP_ROOT"):
+        v = os.environ.get(key)
+        if v and _Path(v).exists():
+            return _Path(v)
+    here = _Path(__file__).resolve().parent
+    # vendor copy lives in backend/vendor; decoded may be sibling data
+    for cand in (
+        here,
+        here.parent.parent / "data",
+        _Path("/workspace/eq-legends"),
+    ):
+        if (cand / "decoded").exists() or (cand / "build_planner.py").exists():
+            # Prefer real legends tree when present
+            pass
+    if (_Path("/workspace/eq-legends") / "decoded").exists():
+        return _Path("/workspace/eq-legends")
+    # Packaged: EQ_LEGENDS_DATA parent or resources
+    data = os.environ.get("EQ_LEGENDS_DATA")
+    if data:
+        return _Path(data).parent if _Path(data).name == "decoded" else _Path(data)
+    return here
+
+def _resolve_out(root):
+    data = os.environ.get("EQ_LEGENDS_DATA")
+    if data and _Path(data).exists():
+        return _Path(data)
+    if (root / "decoded").exists():
+        return root / "decoded"
+    # backend/vendor -> ../../data/decoded
+    app_data = _Path(__file__).resolve().parents[2] / "data" / "decoded"
+    if app_data.exists():
+        return app_data
+    return root / "decoded"
+
+ROOT = _resolve_root()
+OUT = _resolve_out(ROOT)
+_xlsx_dir = _Path(os.environ["EQ_XLSX_DIR"]) if os.environ.get("EQ_XLSX_DIR") else ROOT
+XLSX = _xlsx_dir / "EQ_Legends_BiS.xlsx"
+XLSX_FIXED = _xlsx_dir / "EQ_Legends_BiS_fixed.xlsx"
+
 
 ALL_CLASSES = (
     "Bard", "Beastlord", "Berserker", "Cleric", "Druid", "Enchanter",

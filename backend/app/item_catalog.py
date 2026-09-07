@@ -6,6 +6,7 @@ for reuse across BiS, Simulator, and Item Search. Never invents item stats.
 from __future__ import annotations
 
 import json
+import math
 import re
 import urllib.error
 import urllib.parse
@@ -14,9 +15,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .paths import APP_ROOT, decoded_dir, images_dir
+from .paths import APP_ROOT, decoded_dir, image_seed_dirs, images_dir
 
-USER_AGENT = "EQLegendsBiS/1.0.9 (local; josh; item-icon-cache)"
+USER_AGENT = "EQLegendsBiS/1.0.10 (local; josh; item-icon-cache)"
+
+# Serialize wiki fetches so BiS first-paint does not stampede eqlwiki.
+_ensure_locks: dict[str, Any] = {}
+_ensure_guard = None
 
 
 def _images_dir() -> Path:
@@ -28,11 +33,186 @@ def _slug(name: str) -> str:
     return s or "item"
 
 
+# Tooltip line stats — same keys as build_planner.parse_tip_stats (real lines only).
+_TIP_STAT_PAT = re.compile(
+    r"(AC|HP|MANA|END|STR|STA|AGI|DEX|WIS|INT|CHA|ATK|DMG|Haste|"
+    r"SV FIRE|SV COLD|SV MAGIC|SV POISON|SV DISEASE|SV VOID|"
+    r"FIRE DMG|COLD DMG)\s*:\s*\+?(-?\d+)",
+    re.I,
+)
+_TIP_DLY_PAT = re.compile(r"Atk Delay:\s*(\d+)", re.I)
+_TIP_STAT_MAP = {
+    "AC": "AC", "HP": "HP", "MANA": "MANA", "END": "END",
+    "STR": "STR", "STA": "STA", "AGI": "AGI", "DEX": "DEX",
+    "WIS": "WIS", "INT": "INT", "CHA": "CHA", "ATK": "ATK",
+    "DMG": "DMG", "HASTE": "Haste",
+    "SV FIRE": "SVF", "SV COLD": "SVC", "SV MAGIC": "SVM",
+    "SV POISON": "SVP", "SV DISEASE": "SVD", "SV VOID": "SVV",
+    "FIRE DMG": "FIRE_DMG", "COLD DMG": "COLD_DMG",
+}
+_SCALABLE = {
+    "AC", "HP", "MANA", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA",
+    "END", "ATK", "SVM", "SVF", "SVC", "SVD", "SVP", "SVV",
+}
+
+
+def _parse_tip_stats(lines: list[Any] | None) -> dict[str, Any]:
+    """Parse AC/HP/…/DMG/DLY from real tooltip lines only — never invent."""
+    stats: dict[str, Any] = {}
+    for line in lines or []:
+        s = str(line)
+        for m in _TIP_STAT_PAT.finditer(s):
+            key = _TIP_STAT_MAP.get(m.group(1).upper())
+            if key:
+                stats[key] = int(m.group(2))
+        m2 = _TIP_DLY_PAT.search(s)
+        if m2:
+            stats["DLY"] = int(m2.group(1))
+    return stats
+
+
+def _scale_stats_plus10(stats0: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for k, v in (stats0 or {}).items():
+        if k == "DMG":
+            try:
+                out[k] = float(math.floor(float(v) * 2))
+            except (TypeError, ValueError):
+                continue
+        elif k in ("DLY", "FIRE_DMG", "COLD_DMG", "Haste"):
+            try:
+                out[k] = float(v)
+            except (TypeError, ValueError):
+                continue
+        elif k in _SCALABLE:
+            try:
+                o = float(v)
+                a = math.floor(o * 2)
+                out[k] = float(max(a, o + 10) if o > 0 else o)
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
+def _slots_classes_from_lines(lines: list[Any] | None) -> tuple[list[str], list[str]]:
+    slots: list[str] = []
+    classes: list[str] = []
+    for line in lines or []:
+        s = str(line).strip()
+        low = s.lower()
+        if low.startswith("slot:"):
+            slots = [p.strip().upper() for p in s.split(":", 1)[1].split() if p.strip()]
+        elif low.startswith("class:"):
+            raw = s.split(":", 1)[1].strip()
+            classes = [p.strip() for p in re.split(r"[,/]", raw) if p.strip()]
+    return slots, classes
+
+
+def _zone_from_tip(tip: dict[str, Any]) -> tuple[str, str, str]:
+    """Return (zone, drops_mobs, quest_source) from tip fields / lines."""
+    drops = tip.get("dropsFrom") or []
+    zones: list[str] = []
+    mobs: list[str] = []
+    if isinstance(drops, list):
+        for e in drops:
+            if isinstance(e, dict):
+                if e.get("location"):
+                    zones.append(str(e["location"]))
+                if e.get("npc"):
+                    mobs.append(str(e["npc"]))
+            elif isinstance(e, str) and e.strip():
+                zones.append(e.strip())
+    quests = tip.get("rewardFromQuests") or []
+    quest_source = ""
+    if isinstance(quests, list) and quests:
+        quest_source = f"Reward from quest: {quests[0]}"
+    for line in tip.get("lines") or []:
+        s = str(line).strip()
+        low = s.lower()
+        if low.startswith("drops from:") and not zones:
+            rest = s.split(":", 1)[1].strip() if ":" in s else ""
+            zones.append(rest.split(":")[0].strip() if ":" in rest else rest)
+        if low.startswith("reward from") and not quest_source:
+            quest_source = s
+    zone = ", ".join(dict.fromkeys(zones))
+    drops_mobs = ", ".join(dict.fromkeys(mobs))
+    return zone, drops_mobs, quest_source
+
+
+def _tooltip_row(tip: dict[str, Any], *, kind: str) -> dict[str, Any] | None:
+    if not isinstance(tip, dict):
+        return None
+    name = (tip.get("name") or "").strip()
+    if not name:
+        return None
+    lines = list(tip.get("lines") or tip.get("tooltipLines") or [])
+    s0 = _parse_tip_stats(lines)
+    if tip.get("stats") and isinstance(tip["stats"], dict):
+        s0 = {**s0, **tip["stats"]}
+    s10 = tip.get("stats_plus10") if isinstance(tip.get("stats_plus10"), dict) else None
+    if not s10:
+        s10 = _scale_stats_plus10(s0) if s0 else {}
+    slots, classes = _slots_classes_from_lines(lines)
+    if tip.get("slots"):
+        slots = [str(s).strip().upper() for s in tip["slots"] if s]
+    if tip.get("classes") or tip.get("classNames"):
+        classes = list(tip.get("classes") or tip.get("classNames") or [])
+    zone, drops_mobs, quest_source = _zone_from_tip(tip)
+    return {
+        "name": name,
+        "itemID": tip.get("itemID"),
+        "slots": slots,
+        "slot": " / ".join(slots),
+        "classes": classes,
+        "classes_str": ", ".join(classes),
+        "stats_plus0": s0,
+        "stats_plus10": s10,
+        "url": tip.get("sourceHref") or "",
+        "sourceUrl": tip.get("sourceUrl") or "",
+        "zamUrl": tip.get("zamUrl") or "",
+        "zone": zone,
+        "drops_mobs": drops_mobs,
+        "quest_source": quest_source,
+        "tooltipLines": lines,
+        "catalog_kind": kind,
+        "from_catalog_tooltip": True,
+    }
+
+
+def _name_key(name: str) -> str:
+    """Casefold + normalize curly/backtick apostrophes for dedupe."""
+    s = (name or "").strip().lower()
+    for ch in ("’", "‘", "`", "ʼ"):
+        s = s.replace(ch, "'")
+    return s
+
+
+def _threading_lock():
+    global _ensure_guard
+    if _ensure_guard is None:
+        import threading
+
+        _ensure_guard = threading.Lock()
+    return _ensure_guard
+
+
+def _lock_for(name: str):
+    import threading
+
+    key = (name or "").strip().lower() or "item"
+    with _threading_lock():
+        lock = _ensure_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _ensure_locks[key] = lock
+        return lock
+
+
 def _merge_row(by_name: dict[str, dict[str, Any]], row: dict[str, Any]) -> None:
     name = (row.get("name") or "").strip()
     if not name:
         return
-    key = name.lower()
+    key = _name_key(name)
     if key not in by_name:
         by_name[key] = row
         return
@@ -43,7 +223,10 @@ def _merge_row(by_name: dict[str, dict[str, Any]], row: dict[str, Any]) -> None:
     ):
         by_name[key] = {**row, **{k: cur[k] for k in cur if cur.get(k) and not row.get(k)}}
         cur = by_name[key]
-    for fld in ("url", "sourceUrl", "zamUrl", "zone", "itemID", "classes_str"):
+    for fld in (
+        "url", "sourceUrl", "zamUrl", "zone", "itemID", "classes_str",
+        "drops_mobs", "quest_source",
+    ):
         if not cur.get(fld) and row.get(fld):
             cur[fld] = row[fld]
     if not cur.get("classes") and row.get("classes"):
@@ -54,6 +237,12 @@ def _merge_row(by_name: dict[str, dict[str, Any]], row: dict[str, Any]) -> None:
         cur["tooltipLines"] = row["tooltipLines"]
     if row.get("is_weapon"):
         cur["is_weapon"] = True
+    if (not cur.get("stats_plus0")) and row.get("stats_plus0"):
+        cur["stats_plus0"] = row["stats_plus0"]
+    if (not cur.get("stats_plus10")) and row.get("stats_plus10"):
+        cur["stats_plus10"] = row["stats_plus10"]
+    if "_" in (cur.get("name") or "") and "_" not in name:
+        cur["name"] = name
 
 
 def _weapon_row_from_catalog(w: dict[str, Any]) -> dict[str, Any] | None:
@@ -120,30 +309,54 @@ def _named_catalog_row(row: dict[str, Any], *, kind: str) -> dict[str, Any] | No
     }
 
 
+def _load_json(path: Path) -> Any:
+    try:
+        if not path.is_file():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
 @lru_cache(maxsize=1)
 def _all_flat_items() -> list[dict[str, Any]]:
-    """Union of flat_* + aggregate + catalog.json (weapons/focus/clickies/worn/proc)."""
-    decoded = decoded_dir()
+    """Union of flat_* + aggregate + catalog.json lists + tooltip item maps.
+
+    Never invents stats. Missing/corrupt files are skipped so search/import
+    degrade to an empty or partial catalog instead of raising.
+    """
     by_name: dict[str, dict[str, Any]] = {}
-    for path in sorted(decoded.glob("flat_*.json")):
-        try:
-            rows = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
+    try:
+        decoded = decoded_dir()
+    except Exception:
+        return []
+    try:
+        if not decoded.exists():
+            return []
+    except OSError:
+        return []
+    try:
+        flat_paths = sorted(decoded.glob("flat_*.json"))
+    except OSError:
+        flat_paths = []
+    for path in flat_paths:
+        rows = _load_json(path)
         if not isinstance(rows, list):
             continue
         for row in rows:
-            _merge_row(by_name, row)
-    agg = decoded / "aggregate.json"
-    if agg.is_file():
+            if isinstance(row, dict):
+                try:
+                    _merge_row(by_name, row)
+                except Exception:
+                    continue
+    agg_rows = _load_json(decoded / "aggregate.json")
+    for row in agg_rows if isinstance(agg_rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        name = (row.get("name") or "").strip()
+        if not name:
+            continue
         try:
-            rows = json.loads(agg.read_text(encoding="utf-8"))
-        except Exception:
-            rows = []
-        for row in rows if isinstance(rows, list) else []:
-            name = (row.get("name") or "").strip()
-            if not name:
-                continue
             _merge_row(by_name, {
                 "name": name,
                 "itemID": row.get("itemID"),
@@ -158,25 +371,56 @@ def _all_flat_items() -> list[dict[str, Any]]:
                 "tooltipLines": row.get("tooltipLines") or [],
                 "from_aggregate_only": True,
             })
-    cat_path = decoded / "catalog.json"
-    if cat_path.is_file():
-        try:
-            catalog = json.loads(cat_path.read_text(encoding="utf-8"))
         except Exception:
-            catalog = {}
+            continue
+    catalog = _load_json(decoded / "catalog.json")
+    if isinstance(catalog, dict):
         for w in catalog.get("weapons") or []:
-            norm = _weapon_row_from_catalog(w)
-            if norm:
-                _merge_row(by_name, norm)
-        for w in catalog.get("proc") or []:
-            norm = _weapon_row_from_catalog(w)
-            if norm:
-                _merge_row(by_name, norm)
-        for kind in ("focus", "bardResonance", "clickies", "worn"):
-            for row in catalog.get(kind) or []:
-                norm = _named_catalog_row(row if isinstance(row, dict) else {}, kind=kind)
+            if not isinstance(w, dict):
+                continue
+            try:
+                norm = _weapon_row_from_catalog(w)
                 if norm:
                     _merge_row(by_name, norm)
+            except Exception:
+                continue
+        for w in catalog.get("proc") or []:
+            if not isinstance(w, dict):
+                continue
+            try:
+                norm = _weapon_row_from_catalog(w)
+                if norm:
+                    _merge_row(by_name, norm)
+            except Exception:
+                continue
+        for kind in ("focus", "bardResonance", "clickies", "worn"):
+            for row in catalog.get(kind) or []:
+                if not isinstance(row, dict):
+                    continue
+                try:
+                    norm = _named_catalog_row(row, kind=kind)
+                    if norm:
+                        _merge_row(by_name, norm)
+                except Exception:
+                    continue
+        # Tooltip item maps often hold instruments/clickies not in list sections.
+        for kind in (
+            "tooltips",
+            "focusItemTooltips",
+            "clickyItemTooltips",
+            "wornItemTooltips",
+            "procItemTooltips",
+        ):
+            tip_map = catalog.get(kind) or {}
+            if not isinstance(tip_map, dict):
+                continue
+            for tip in tip_map.values():
+                try:
+                    norm = _tooltip_row(tip if isinstance(tip, dict) else {}, kind=kind)
+                    if norm:
+                        _merge_row(by_name, norm)
+                except Exception:
+                    continue
     return list(by_name.values())
 
 
@@ -187,27 +431,38 @@ def search_items(
     limit: int = 50,
     offset: int = 0,
 ) -> dict[str, Any]:
+    """Search catalog. Never raises — empty catalog when data is missing."""
     qn = (q or "").strip().lower()
     slot_u = (slot or "").strip().upper() or None
+    try:
+        pool = _all_flat_items()
+    except Exception:
+        pool = []
     hits: list[dict[str, Any]] = []
-    for it in _all_flat_items():
-        name = it.get("name") or ""
-        if qn and qn not in name.lower():
-            # also match classes_str
-            blob = f"{name} {it.get('classes_str') or ''} {it.get('zone') or ''}".lower()
-            if qn not in blob:
-                continue
-        if slot_u:
-            slots = {str(s).upper() for s in (it.get("slots") or [])}
-            slot_field = str(it.get("slot") or "").upper()
-            if slot_u not in slots and slot_u not in slot_field.replace("/", " ").split():
-                # EAR matches EAR1 etc loosely
-                if not any(slot_u in str(s).upper() for s in slots) and slot_u not in slot_field:
+    for it in pool:
+        try:
+            name = it.get("name") or ""
+            if qn and qn not in name.lower():
+                blob = f"{name} {it.get('classes_str') or ''} {it.get('zone') or ''}".lower()
+                if qn not in blob:
                     continue
-        hits.append(_public_item(it))
+            if slot_u:
+                slots = {str(s).upper() for s in (it.get("slots") or [])}
+                slot_field = str(it.get("slot") or "").upper()
+                if slot_u not in slots and slot_u not in slot_field.replace("/", " ").split():
+                    if not any(slot_u in str(s).upper() for s in slots) and slot_u not in slot_field:
+                        continue
+            hits.append(_public_item(it))
+        except Exception:
+            continue
     hits.sort(key=lambda r: (r["name"] or "").lower())
     total = len(hits)
     page = hits[offset: offset + max(1, min(200, limit))]
+    decoded_s = ""
+    try:
+        decoded_s = str(decoded_dir())
+    except Exception:
+        decoded_s = ""
     return {
         "total": total,
         "offset": offset,
@@ -215,23 +470,58 @@ def search_items(
         "query": q,
         "slot": slot_u,
         "items": page,
-        "catalog_size": len(_all_flat_items()),
+        "catalog_size": len(pool),
+        "decoded_dir": decoded_s,
+        "warning": None if pool else "Item catalog empty — decoded data missing or unreadable.",
     }
 
 
 def get_item_by_name(name: str) -> dict[str, Any] | None:
-    key = (name or "").strip().lower()
+    key = _name_key(name)
     if not key:
         return None
-    for it in _all_flat_items():
-        if (it.get("name") or "").strip().lower() == key:
-            return _public_item(it)
+    try:
+        pool = _all_flat_items()
+    except Exception:
+        return None
+    for it in pool:
+        if _name_key(it.get("name") or "") == key:
+            try:
+                return _public_item(it)
+            except Exception:
+                return None
     return None
+
+
+def name_in_catalog(name: str) -> bool:
+    """True if name exists in catalog — does not touch image cache."""
+    key = _name_key(name)
+    if not key:
+        return False
+    try:
+        pool = _all_flat_items()
+    except Exception:
+        return False
+    for it in pool:
+        if _name_key(it.get("name") or "") == key:
+            return True
+    return False
 
 
 def _public_item(it: dict[str, Any]) -> dict[str, Any]:
     name = it.get("name") or ""
-    local = local_image_path(name)
+    local = None
+    has_local = False
+    try:
+        local = local_image_path(name)
+        has_local = bool(local and local.is_file())
+    except Exception:
+        local = None
+        has_local = False
+    try:
+        image_url = f"/api/item-image?name={urllib.parse.quote(name)}" if name else ""
+    except Exception:
+        image_url = ""
     return {
         "name": name,
         "itemID": it.get("itemID"),
@@ -250,22 +540,70 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "ratio_plus0": it.get("ratio_plus0"),
         "ratio_plus10": it.get("ratio_plus10"),
         "tooltipLines": it.get("tooltipLines") or [],
-        "image_url": f"/api/item-image?name={urllib.parse.quote(name)}" if local or True else "",
-        "has_local_image": local is not None and local.is_file(),
+        "image_url": image_url,
+        "has_local_image": has_local,
     }
 
 
-def local_image_path(name: str) -> Path | None:
-    img_dir = _images_dir()
+def _safe_resolve(p: Path) -> Path:
     try:
-        img_dir.mkdir(parents=True, exist_ok=True)
+        return p.resolve()
+    except Exception:
+        return p
+
+
+def _find_image_file(name: str, directories: list[Path]) -> Path | None:
+    slug = _slug(name)
+    for img_dir in directories:
+        try:
+            for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+                p = img_dir / f"{slug}{ext}"
+                if p.is_file() and p.stat().st_size > 0:
+                    return p
+        except Exception:
+            continue
+    return None
+
+
+def local_image_path(name: str) -> Path | None:
+    """Prefer writable cache, then bundled/seed dirs."""
+    try:
+        img_dir = _images_dir()
+    except Exception:
+        img_dir = None
+    dirs: list[Path] = []
+    if img_dir is not None:
+        try:
+            img_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        dirs.append(img_dir)
+    try:
+        for seed in image_seed_dirs():
+            if img_dir is None or _safe_resolve(seed) != _safe_resolve(img_dir):
+                dirs.append(seed)
     except Exception:
         pass
-    for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
-        p = img_dir / f"{_slug(name)}{ext}"
-        if p.is_file() and p.stat().st_size > 0:
-            return p
-    return None
+    return _find_image_file(name, dirs)
+
+
+def _copy_seed_into_cache(name: str) -> Path | None:
+    """If icon exists only in a bundled seed dir, copy into writable cache."""
+    img_dir = _images_dir()
+    existing = _find_image_file(name, [img_dir])
+    if existing:
+        return existing
+    seed_hit = _find_image_file(name, image_seed_dirs())
+    if not seed_hit:
+        return None
+    try:
+        img_dir.mkdir(parents=True, exist_ok=True)
+        dest = img_dir / seed_hit.name
+        if not dest.exists() or dest.stat().st_size == 0:
+            dest.write_bytes(seed_hit.read_bytes())
+        return dest if dest.is_file() and dest.stat().st_size > 0 else seed_hit
+    except Exception:
+        return seed_hit
 
 
 def _ssl_context():
@@ -378,10 +716,26 @@ def _normalize_image_blob(blob: bytes, ext: str) -> bytes:
 
 def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
     """Return local image path info; optionally fetch from eqlwiki and save."""
+    with _lock_for(name):
+        return _ensure_item_image_unlocked(name, fetch=fetch)
+
+
+def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, Any]:
     img_dir = _images_dir()
     try:
         img_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
+        # Still allow serving from read-only seed if present.
+        seeded = _find_image_file(name, image_seed_dirs())
+        if seeded:
+            return {
+                "name": name,
+                "cached": True,
+                "path": str(seeded),
+                "url": f"/api/item-image?name={urllib.parse.quote(name)}",
+                "images_dir": str(img_dir),
+                "seed": True,
+            }
         return {
             "name": name,
             "cached": False,
@@ -397,7 +751,7 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
         except Exception:
             return str(p)
 
-    existing = local_image_path(name)
+    existing = _copy_seed_into_cache(name) or local_image_path(name)
     if existing:
         # Re-encode legacy 16-bit wiki PNGs already on disk (Chromium blank otherwise).
         try:
@@ -405,7 +759,13 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
             if existing.suffix.lower() == ".png" and len(raw) > 25 and raw[24] == 16:
                 fixed = _normalize_image_blob(raw, ".png")
                 if fixed and fixed != raw:
-                    existing.write_bytes(fixed)
+                    try:
+                        existing.write_bytes(fixed)
+                    except Exception:
+                        # Seed may be read-only — write fixed copy into writable cache.
+                        dest = img_dir / f"{_slug(name)}.png"
+                        dest.write_bytes(fixed)
+                        existing = dest
         except Exception:
             pass
         return {
@@ -437,10 +797,12 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
 
     img_url = None
     wiki_tried = 0
+    last_http_err = None
     for wiki in _wiki_urls_for_item(it):
         wiki_tried += 1
         html_b = _http_get(wiki)
         if not html_b:
+            last_http_err = f"http failed: {wiki}"
             continue
         try:
             html = html_b.decode("utf-8", errors="ignore")
@@ -457,6 +819,7 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
             "url": None,
             "error": "no wiki image found",
             "wiki_tried": wiki_tried,
+            "last_http_err": last_http_err,
             "images_dir": str(img_dir),
         }
 

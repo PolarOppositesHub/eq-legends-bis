@@ -1,6 +1,46 @@
 # Next build notes
 
-**v1.0.8 READY TO SHIP — overnight grok bot release.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+**v1.0.10 READY TO SHIP — overnight grok bot release.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+
+## Overnight / Josh — GitHub Release v1.0.10
+
+1. Merge PR **#7** (`cursor/bis-icons-seed-sim-deltas-d4a5` → `main`) if not already on main.
+2. Build + publish:
+
+```powershell
+git pull origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
+```
+
+Artifacts in `dist-desktop/`:
+- Prefer **NSIS**: `EQ-Legends-BiS-1.0.10-win-x64.exe` (updater-friendly)
+- Also: `EQ-Legends-BiS-1.0.10-portable.exe`
+
+Publish: GitHub Release **v1.0.10** for `PolarOppositesHub/eq-legends-bis` including `latest.yml`.
+
+### Post-install verify
+- [ ] Header badge **UI 1.0.10** (and API · v1.0.10)
+- [ ] BiS tab: item icons visible (seeded PNGs; not “No image” placeholders for known seed items)
+- [ ] Item Search: query `aegis` / `sword` returns hits — **no Internal Server Error**
+- [ ] Simulator: Import **Inventory.txt** from `/outputfile inventory` — **no Internal Server Error**; worn slots fill
+- [ ] Simulator: worn vs BiS **deltas** update live; **Apply / Recalculate** refreshes Upgrade Priority (no separate Suggest upgrades button)
+- [ ] Upgrade Priority: Sky quest steps show zone + mob (e.g. Island 4 / Keeper of Souls), not raw `4-KoS`
+- [ ] Binary/.exe picker → clear message pointing at Inventory.txt
+
+## 1.0.10 — icons seed + sim deltas + search/import harden + quest clarity (2026-09-07)
+- [x] Ship seeded `data/item-images` + read bundled seeds when userData cache empty
+- [x] Simulator live worn/BiS deltas; Apply/Recalculate; remove inner equip scrollbar + Suggest upgrades button
+- [x] Item Search / Inventory import: stop 500s from image-cache coupling (`name_in_catalog`, hardened `_public_item`, Electron decoded-path probe)
+- [x] Quest guide tags like `4-KoS` → zone + mob names
+- [x] Versions aligned to **1.0.10** / UI **1.0.10**
+
+### Regression note (vs 1.0.3)
+- 1.0.3 inventory import was TSV-only (no catalog/image I/O). Item Search did not exist.
+- 1.0.4+ coupled import/search to image cache → packaged Windows **500**. Fixed in 1.0.10.
+
+---
+
+**Prior: v1.0.8 (superseded by 1.0.10).** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.8
 
