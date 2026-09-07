@@ -5,6 +5,8 @@ import re
 from typing import Any
 
 from . import engine
+from . import item_catalog as item_catalog_mod
+from . import scoring as sc
 
 # Inventory Location → planner slot(s). Multi-slot locations consume in order.
 LOCATION_TO_SLOTS: dict[str, list[str]] = {
@@ -42,11 +44,22 @@ def _strip_upgrade_suffix(name: str) -> tuple[str, int | None]:
     return n[: m.start()].strip(), int(m.group(1))
 
 
+def _catalog_has_name(name: str) -> bool:
+    return item_catalog_mod.get_item_by_name(name) is not None
+
+
 def parse_inventory_tsv(text: str) -> dict[str, Any]:
-    """Parse Inventory.txt body. Returns worn equipment mapped to planner slots."""
+    """Parse Inventory.txt body. Returns worn equipment mapped to planner slots.
+
+    Every non-empty inventory line is retained in `all_items` even when not in the
+    catalog or not mappable to a planner slot (flagged unmatched / skipped).
+    """
     lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
     if not lines:
-        return {"equipment": {}, "rows": [], "worn": [], "skipped": [], "warnings": ["Empty file"]}
+        return {
+            "equipment": {}, "rows": [], "worn": [], "all_items": [],
+            "unmatched": [], "skipped": [], "warnings": ["Empty file"],
+        }
 
     # Find header
     start = 0
@@ -59,6 +72,8 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             break
 
     worn: list[dict[str, Any]] = []
+    all_items: list[dict[str, Any]] = []
+    unmatched: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     slot_counts: dict[str, int] = {}
     equipment: dict[str, str] = {}
@@ -76,61 +91,122 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         count = (cols[3] or "").strip() if len(cols) > 3 else ""
         slots_col = (cols[4] or "").strip() if len(cols) > 4 else ""
 
-        # Nested aug/bag slots: Head-Slot2, General 1-Slot1, Any Slot-Slot7
-        if "-" in location and re.search(r"-Slot\d+$", location, re.I):
-            skipped.append({"location": location, "name": name, "reason": "nested/aug slot"})
-            continue
-        if location.lower().startswith("general ") or location.lower().startswith("bank"):
-            skipped.append({"location": location, "name": name, "reason": "bag/bank"})
-            continue
-        if location.lower() in ("any slot", "keyring", "augmentation", "charm"):
-            skipped.append({"location": location, "name": name, "reason": "non-planner worn"})
-            continue
-        if not name or name.lower() == "empty" or item_id == "0":
-            skipped.append({"location": location, "name": name or "Empty", "reason": "empty"})
-            continue
-
-        loc_key = location.upper().strip()
-        targets = LOCATION_TO_SLOTS.get(loc_key)
-        if not targets:
-            skipped.append({"location": location, "name": name, "reason": "unknown location"})
-            continue
-
-        idx = slot_counts.get(loc_key, 0)
-        if idx >= len(targets):
-            skipped.append({"location": location, "name": name, "reason": "extra duplicate location"})
-            continue
-        planner_slot = targets[idx]
-        slot_counts[loc_key] = idx + 1
-
         base_name, upg = _strip_upgrade_suffix(name)
-        worn.append({
+        in_catalog = bool(base_name) and _catalog_has_name(base_name)
+        entry = {
             "location": location,
-            "planner_slot": planner_slot,
             "name": name,
             "base_name": base_name,
             "upgrade_from_name": upg,
             "id": item_id,
             "count": count,
             "slots": slots_col,
-        })
+            "in_catalog": in_catalog,
+            "unmatched": not in_catalog and bool(base_name) and base_name.lower() != "empty",
+        }
+
+        # Nested aug/bag slots: Head-Slot2, General 1-Slot1, Any Slot-Slot7
+        if "-" in location and re.search(r"-Slot\d+$", location, re.I):
+            entry["reason"] = "nested/aug slot"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            continue
+        if location.lower().startswith("general ") or location.lower().startswith("bank"):
+            entry["reason"] = "bag/bank"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            if entry["unmatched"]:
+                unmatched.append(entry)
+            continue
+        if location.lower() in ("any slot", "keyring", "augmentation", "charm"):
+            entry["reason"] = "non-planner worn"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            if entry["unmatched"]:
+                unmatched.append(entry)
+            continue
+        # Empty slots: blank / "Empty" name. ID "0" alone is not empty when a name is present.
+        if not name or name.lower() == "empty":
+            entry["reason"] = "empty"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            continue
+        if item_id == "0" and (not count or count == "0"):
+            # Heuristic: some dumps mark empty with ID 0 and Count 0 even with a leftover name.
+            # Prefer name-based empty above; only skip here when count is also zero-ish.
+            pass
+
+        loc_key = location.upper().strip()
+        targets = LOCATION_TO_SLOTS.get(loc_key)
+        if not targets:
+            entry["reason"] = "unknown location"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            if entry["unmatched"]:
+                unmatched.append(entry)
+            continue
+
+        idx = slot_counts.get(loc_key, 0)
+        if idx >= len(targets):
+            entry["reason"] = "extra duplicate location"
+            entry["planner_slot"] = None
+            skipped.append(entry)
+            all_items.append(entry)
+            if entry["unmatched"]:
+                unmatched.append(entry)
+            continue
+        planner_slot = targets[idx]
+        slot_counts[loc_key] = idx + 1
+
+        entry["planner_slot"] = planner_slot
+        entry["reason"] = None if in_catalog else "not in item DB (shown anyway)"
+        worn.append(entry)
+        all_items.append(entry)
         equipment[planner_slot] = base_name  # catalog/pool match without +N
         if upg is not None:
             upgrade_hints[planner_slot] = upg
+        if entry["unmatched"]:
+            unmatched.append(entry)
 
     return {
         "equipment": equipment,
         "upgrade_hints": upgrade_hints,
         "worn": worn,
+        "all_items": all_items[:500],
+        "unmatched": unmatched[:200],
+        "unmatched_count": len(unmatched),
         "skipped": skipped[:200],
         "skipped_count": len(skipped),
         "warnings": [],
         "note": (
             "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). "
-            "Nested *-SlotN, bags, bank, Any Slot skipped. "
-            "Item names stripped of +N for catalog match; upgrade_hints retained from dump."
+            "Every line is retained in all_items. Unmatched (not in item DB) still listed "
+            "with names from the file — no invented stats. "
+            "Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items."
         ),
     }
+
+
+def _stat_delta(worn_stats: dict, bis_stats: dict) -> list[dict[str, Any]]:
+    keys = [
+        "AC", "HP", "MANA", "END", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA",
+        "Haste", "DMG", "DLY", "HP_REGEN", "MANA_REGEN", "END_REGEN",
+        "SVF", "SVC", "SVM", "SVP", "SVD",
+    ]
+    out = []
+    for k in keys:
+        a = float(worn_stats.get(k) or 0)
+        b = float(bis_stats.get(k) or 0)
+        d = b - a
+        if abs(d) < 1e-9:
+            continue
+        out.append({"stat": k, "worn": a, "bis": b, "delta": d})
+    return out
 
 
 def suggest_upgrades(
@@ -141,105 +217,143 @@ def suggest_upgrades(
     character_level: int = 50,
     prefer_ranged_damage: bool = True,
     alts: int = 3,
+    mode: str = "ai",
+    priority_stat: str = "HP",
+    primary_stats: list[str] | None = None,
+    secondary_stats: list[str] | None = None,
+    tertiary_stats: list[str] | None = None,
+    maximize_hp_regen: bool = False,
 ) -> dict[str, Any]:
-    """Compare current equipment vs BiS/pool; prioritize missing or worse slots."""
+    """Compare current equipment vs BiS list for the trio; prioritize closing BiS gaps."""
     if not classes:
         return {"suggestions": [], "bis": None, "error": "Select at least one class"}
 
     bis = engine.recommend_bis(
         classes,
-        mode="priority",
-        priority_stat="HP",
+        mode=mode or "ai",
+        priority_stat=priority_stat or "HP",
         alts=alts,
         upgrade=upgrade,
         prefer_ranged_damage=prefer_ranged_damage,
         character_level=character_level,
+        primary_stats=primary_stats,
+        secondary_stats=secondary_stats,
+        tertiary_stats=tertiary_stats,
+        maximize_hp_regen=maximize_hp_regen,
     )
     suggestions: list[dict[str, Any]] = []
+    equipment_compare: list[dict[str, Any]] = []
     eq_norm = {str(k).upper(): v for k, v in (equipment or {}).items() if v}
 
     for row in bis.get("slots") or []:
         slot = row["slot"]
         bis_name = (row.get("name") or "").strip()
         current = (eq_norm.get(slot) or "").strip()
+        bis_stats = row.get("stats_at_upgrade") or row.get("stats_plus10") or {}
+        bis_alts = [{"name": bis_name, "why": row.get("why"), "url": row.get("url") or ""}]
+        for a in row.get("alts") or []:
+            if a.get("name"):
+                bis_alts.append({
+                    "name": a["name"],
+                    "why": a.get("why"),
+                    "url": a.get("url") or "",
+                    "stats_at_upgrade": a.get("stats_at_upgrade") or a.get("stats_plus10") or {},
+                })
+
+        cur_item = None
+        cur_stats: dict[str, Any] = {}
+        if current:
+            try:
+                pool_items = engine.items_for_slot(
+                    classes, slot=slot, upgrade=upgrade, prefer_ranged_damage=prefer_ranged_damage
+                )
+            except Exception:
+                pool_items = []
+            cur_item = next(
+                (it for it in pool_items if (it.get("name") or "").lower() == current.lower()),
+                None,
+            )
+            if cur_item:
+                cur_stats = cur_item.get("stats_at_upgrade") or cur_item.get("stats_plus10") or {}
+            else:
+                # Unmatched worn item — name only, no invented stats
+                cat = item_catalog_mod.get_item_by_name(current)
+                if cat:
+                    cur_stats = cat.get("stats_plus10") or cat.get("stats_plus0") or {}
+
+        deltas = _stat_delta(cur_stats, bis_stats) if bis_name else []
+        equipment_compare.append({
+            "slot": slot,
+            "worn": {
+                "name": current or None,
+                "in_catalog": bool(cur_item) or (bool(current) and _catalog_has_name(current)),
+                "stats": cur_stats,
+                "url": (cur_item or {}).get("url") or "",
+                "image_url": f"/api/item-image?name={current}" if current else "",
+            },
+            "bis_options": bis_alts,
+            "selected_bis": bis_name or None,
+            "deltas": deltas,
+        })
+
         if not bis_name:
             continue
         if not current:
             suggestions.append({
                 "slot": slot,
                 "priority": 100,
-                "reason": "missing BiS (slot empty)",
+                "reason": "missing BiS (slot empty) — upgrade to BiS list pick",
                 "current": None,
                 "suggested": bis_name,
                 "suggested_url": row.get("url") or "",
                 "suggested_zone": row.get("zone") or "",
                 "suggested_ratio": row.get("ratio_at_upgrade"),
                 "suggested_why": row.get("why") or "",
+                "deltas": deltas,
             })
             continue
         if current.lower() == bis_name.lower():
             continue
-        # Compare ratios when both weapons; else treat as worse-than-BiS gap
-        cur_ratio = None
-        # look up current in alts or pool via items_for_slot
-        try:
-            pool_items = engine.items_for_slot(
-                classes, slot=slot, upgrade=upgrade, prefer_ranged_damage=prefer_ranged_damage
-            )
-        except Exception:
-            pool_items = []
-        cur_item = next((it for it in pool_items if (it.get("name") or "").lower() == current.lower()), None)
-        bis_ratio = row.get("ratio_at_upgrade")
-        if cur_item:
-            cur_ratio = cur_item.get("ratio_at_upgrade")
-        worse = False
-        reason = "not current BiS"
-        if bis_ratio is not None and cur_ratio is not None:
-            if float(cur_ratio) + 1e-9 < float(bis_ratio):
-                worse = True
-                reason = f"worse ratio ({float(cur_ratio):.4f} < BiS {float(bis_ratio):.4f})"
-            else:
-                # equal/better ratio but different item — still note BiS alternate
-                reason = f"differs from BiS (yours ratio {float(cur_ratio):.4f})"
-                worse = float(cur_ratio) + 1e-9 < float(bis_ratio)
-        else:
-            # stat heuristic: compare HP+AC on upgrade stats if present
-            bis_stats = row.get("stats_at_upgrade") or row.get("stats_plus10") or {}
-            cur_stats = (cur_item or {}).get("stats_at_upgrade") or (cur_item or {}).get("stats_plus10") or {}
-            bis_score = float(bis_stats.get("HP") or 0) + 2 * float(bis_stats.get("AC") or 0)
-            cur_score = float(cur_stats.get("HP") or 0) + 2 * float(cur_stats.get("AC") or 0)
-            if cur_score + 1e-9 < bis_score:
-                worse = True
-                reason = f"worse HP/AC proxy ({cur_score:.0f} < BiS {bis_score:.0f})"
-            else:
-                reason = "differs from recommended BiS"
 
-        if worse or current.lower() != bis_name.lower():
-            pri = 80 if not current else (70 if worse else 40)
-            if bis_ratio is not None and cur_ratio is not None and worse:
-                pri = 90
-            suggestions.append({
-                "slot": slot,
-                "priority": pri,
-                "reason": reason,
-                "current": current,
-                "current_ratio": cur_ratio,
-                "suggested": bis_name,
-                "suggested_url": row.get("url") or "",
-                "suggested_zone": row.get("zone") or "",
-                "suggested_ratio": bis_ratio,
-                "suggested_why": row.get("why") or "",
-            })
+        # Gap vs BiS list: higher priority when more/larger meaningful deltas favor BiS
+        positive_gap = sum(d["delta"] for d in deltas if d["delta"] > 0)
+        negative_gap = sum(-d["delta"] for d in deltas if d["delta"] < 0)
+        worse = positive_gap > negative_gap + 1e-9
+        reason = (
+            f"not current BiS — replace with {bis_name}"
+            + (f" (net BiS gain ~{positive_gap - negative_gap:.0f})" if deltas else "")
+        )
+        pri = 95 if worse else 55
+        if not cur_item and not _catalog_has_name(current):
+            pri = 85
+            reason = f"worn item unmatched in DB; BiS list recommends {bis_name}"
+        suggestions.append({
+            "slot": slot,
+            "priority": pri,
+            "reason": reason,
+            "current": current,
+            "suggested": bis_name,
+            "suggested_url": row.get("url") or "",
+            "suggested_zone": row.get("zone") or "",
+            "suggested_ratio": row.get("ratio_at_upgrade"),
+            "suggested_why": row.get("why") or "",
+            "deltas": deltas,
+        })
 
     suggestions.sort(key=lambda s: (-s["priority"], s["slot"]))
     return {
         "suggestions": suggestions,
+        "equipment_compare": equipment_compare,
         "bis_summary": {
             "classes": bis.get("classes"),
+            "mode": bis.get("mode"),
             "upgrade": bis.get("upgrade"),
             "character_level": bis.get("character_level"),
             "pool_size": bis.get("pool_size"),
         },
         "equipment": eq_norm,
-        "note": "Upgrade-first vs current BiS/pool at selected upgrade. Missing slots ranked highest.",
+        "note": (
+            "Upgrade priorities driven by the BiS list for the selected trio/mode "
+            "(not AC/HP-only heuristic). equipment_compare provides worn | BiS options | deltas."
+        ),
     }

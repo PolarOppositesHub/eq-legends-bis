@@ -1,30 +1,63 @@
 # Next build notes
 
-**Collecting for next build** (after **v1.0.3**). Windows rebuild on hold until Josh says start. Never invent item stats.
+**v1.0.4 coding in progress / smoke-ready locally.** Windows rebuild on hold until Josh says start. Never invent item stats.
 
-## Next version (after 1.0.3)
+## Next version (after 1.0.3) → **1.0.4**
 
 ### Inventory import — show every item
-- [ ] When importing Inventory.txt, some items do not show up (likely missing from our item DB).
-- [ ] **Requirement:** every imported inventory line should still appear in the UI, even if the item is not in the catalog/database.
-- [ ] Unknown / unmatched items: still list them (name from file); degrade gracefully (no invented stats); flag as unmatched if helpful.
+- [x] When importing Inventory.txt, some items do not show up (likely missing from our item DB).
+- [x] **Requirement:** every imported inventory line should still appear in the UI, even if the item is not in the catalog/database.
+- [x] Unknown / unmatched items: still list them (name from file); degrade gracefully (no invented stats); flag as unmatched if helpful.
 - [ ] Josh may send example missing item names while testing.
 
 ### Upgrade priorities — drive from BiS list
-- [ ] Sim “stats upgrade priorities” section feels wrong; Josh suspects it may weight **AC/HP only**.
-- [ ] **Requirement:** upgrade suggestions should be driven by the **BiS list** for the selected class trio (what to upgrade *to*), not a narrow AC/HP heuristic.
-- [ ] Compare current equipped (from inventory import) vs BiS/alternates per slot; prioritize upgrades that close the gap to BiS.
+- [x] Sim “stats upgrade priorities” section feels wrong; Josh suspects it may weight **AC/HP only**.
+- [x] **Requirement:** upgrade suggestions should be driven by the **BiS list** for the selected class trio (what to upgrade *to*), not a narrow AC/HP heuristic.
+- [x] Compare current equipped (from inventory import) vs BiS/alternates per slot; prioritize upgrades that close the gap to BiS.
 
 ### Simulator equipment page — worn vs BiS vs deltas
-- [ ] Equipment page of the simulator should show **imported worn gear** (from Inventory.txt).
-- [ ] **Second column:** BiS gear for that slot (from the BiS list for selected classes), **selectable** (main + alternates as options).
-- [ ] **Third column:** stat differences if the selected BiS item replaced the worn item — per-stat signed deltas (e.g. worn 10 AC, BiS 12 AC → `AC +2`).
-- [ ] Only show meaningful deltas (non-zero); keep readable with current dark/gold theme.
+- [x] Equipment page of the simulator should show **imported worn gear** (from Inventory.txt).
+- [x] **Second column:** BiS gear for that slot (from the BiS list for selected classes), **selectable** (main + alternates as options).
+- [x] **Third column:** stat differences if the selected BiS item replaced the worn item — per-stat signed deltas (e.g. worn 10 AC, BiS 12 AC → `AC +2`).
+- [x] Only show meaningful deltas (non-zero); keep readable with current dark/gold theme.
+
+### BiS tab — multi-tier priority stats (user-selectable)
+- [x] When choosing priority stats on the **BiS tab**, allow up to **3 primary**, **3 secondary**, and **3 tertiary** stats (all user-selectable; slots may be left empty).
+- [x] Ranking/weighting order: **primary → secondary → tertiary**. Within a tier, the selected stats share that tier’s priority.
+- [x] Example: primary STR + STA, secondary INT + WIS, tertiary CHA → gear ranking favors STR/STA first, then INT/WIS, then CHA.
+- [x] Do not hardcode a fixed priority set — the user must be able to pick which stats go in which tier.
+
+### Left nav pane — BiS, Simulator, Item Search
+- [x] Move **Best in Slot** and **Simulator** into a **left-side selectable pane** (sidebar navigation), not only top tabs.
+- [x] Add a third left-nav entry: **Item Search**.
+- [x] Item Search: searchable list of **all items in the game** from the item database/catalog.
+- [x] Requirement: every game item should be present in the DB and findable via this search (name and useful filters as fitting existing data — never invent stats). *(search index = flat_* ∪ aggregate ∪ catalog.json weapons/focus/clickies/worn/proc)*
+
+### BiS alternates hover — real stats + item picture (fix)
+- [x] Current bug/UX: hovering alternate items shows placeholder text like **"hover over stats"** — that is **not** what was requested.
+- [x] **Requirement:** hovering the **alternate item name** shows that item’s **actual stats from the database** (tooltip/popover), same data used elsewhere — never invent stats.
+- [x] Also show the **item picture** in that hover UI (and wherever items are listed when available).
+- [x] If an equipable item has **no picture saved** in the DB/assets: look it up from a reliable source, **download/save** it into the project/data store, and reuse that image throughout the app (BiS, Sim, Item Search, etc.).
+- [x] Do not leave “hover over stats” as the visible content; that was only meant as the interaction cue, not the tooltip body.
+
+### BiS modes — Max all stats, Priority stats, AI choice
+- [x] BiS mode currently has **Max all stats** and **Priority stats**. Keep both; refine Max all; add a third mode.
+- [x] **Max all stats:** do **not** treat every stat equally. Weight by the **important/primary stats of the three classes in the selected trio** (look up each class’s primary stats from reliable EQ Legends sources if not already in-app).
+- [x] **AC and HP:** matter for **all** classes; weigh **heavier for tank classes** in the trio.
+- [x] **HP regen:** add a **toggleable checkbox** (e.g. “Maximize HP regen”) that, when on, includes/weights HP regen in BiS gear ranking.
+- [x] **Mana / mana regen:** only weigh for **mana-using classes** in the trio; ignore for non-mana classes.
+- [x] **Priority stats mode:** still uses the user-selected primary/secondary/tertiary tiers (see above).
+- [x] **New third mode — AI choice:** pick BiS per slot for every trio using best available knowledge of class roles, primary stats, tank vs mana needs, EQ Legends item/data realities, and trio synergy — never invent item stats.
+- [ ] Cross-check AI choice results against other online EQ Legends tools (including community “EQ Legends” gear/BiS tools). Answers should be similar, or differ only with a clear documented reason. *(Josh validation / spot-check still open)*
 
 ### Josh testing notes (paste below as they arrive)
 - Inventory import: some items missing from view — show all even if not in DB.
 - Upgrade priorities: not good — looks like AC/HP only; should go off BiS list for what to upgrade to.
 - Sim equipment: imported worn | selectable BiS column | stat delta column (e.g. AC +2).
+- BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
+- Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
+- BiS alternates hover: show real DB stats + item picture on name hover (not “hover over stats” text); fetch/save missing item images for reuse app-wide.
+- BiS modes: Max all weights trio primary stats + AC/HP (heavier for tanks); HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 

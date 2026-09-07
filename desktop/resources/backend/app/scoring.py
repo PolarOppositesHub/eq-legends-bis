@@ -1,7 +1,15 @@
-"""BiS ranking + haste rules ported from /workspace/eq-legends/build_planner.py."""
+"""Enhanced BiS scoring: multi-tier priority, class-aware max-all, AI choice, regen.
+
+Canonical formulas used by engine via build_planner (vendor twin must stay in sync).
+Item numeric stats come only from decoded JSON / tooltip-parsed regen — never invented.
+"""
 from __future__ import annotations
 
+import re
 from copy import deepcopy
+from typing import Any
+
+from . import class_roles as roles
 
 PLANNER_SLOTS = [
     "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST",
@@ -20,11 +28,13 @@ SLOT_ALIASES = {
 ATTR_KEYS = ["AC", "HP", "MANA", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"]
 RESIST_KEYS = ["SVF", "SVC", "SVM", "SVP", "SVD", "SVV"]
 OTHER_SCORE_KEYS = ATTR_KEYS + RESIST_KEYS
+REGEN_KEYS = ("HP_REGEN", "MANA_REGEN", "END_REGEN")
 
 PRIORITY_STATS = [
     ("AC", "AC"), ("HP", "HP"), ("MANA", "Mana"), ("END", "END"),
     ("STR", "STR"), ("STA", "STA"), ("AGI", "AGI"), ("DEX", "DEX"),
     ("WIS", "WIS"), ("INT", "INT"), ("CHA", "CHA"),
+    ("HP_REGEN", "HP Regen"), ("MANA_REGEN", "Mana Regen"), ("END_REGEN", "End Regen"),
     ("SVF", "SV Fire"), ("SVC", "SV Cold"), ("SVM", "SV Magic"),
     ("SVP", "SV Poison"), ("SVD", "SV Disease"),
 ]
@@ -32,6 +42,11 @@ PRIORITY_STATS = [
 PRIORITY_LABELS = [lab for _, lab in PRIORITY_STATS]
 LABEL_TO_KEY = {lab: key for key, lab in PRIORITY_STATS}
 KEY_TO_LABEL = {key: lab for key, lab in PRIORITY_STATS}
+
+_REGEN_RE = re.compile(r"(HP|Mana|End)\s*Regen:\s*\+?(\d+)", re.I)
+
+# Tier multipliers for multi-stat priority mode
+TIER_WEIGHTS = {"primary": 100.0, "secondary": 25.0, "tertiary": 6.0}
 
 
 def num(v, default=0.0) -> float:
@@ -47,8 +62,37 @@ def positive(v: float) -> float:
     return v if v > 0 else 0.0
 
 
+def parse_regen_from_text(text: str) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for kind, val in _REGEN_RE.findall(text or ""):
+        key = {"hp": "HP_REGEN", "mana": "MANA_REGEN", "end": "END_REGEN"}[kind.lower()]
+        out[key] = out.get(key, 0.0) + float(val)
+    return out
+
+
+def enrich_stats_with_regen(item: dict) -> dict:
+    """Return stats_plus10-like dict including tooltip-parsed regen keys."""
+    s10 = dict(item.get("stats_plus10") or {})
+    chunks: list[str] = []
+    tips = item.get("tooltipLines") or []
+    if isinstance(tips, list):
+        chunks.extend(str(x) for x in tips)
+    special = item.get("special") or []
+    if isinstance(special, list):
+        chunks.extend(str(x) for x in special)
+    elif special:
+        chunks.append(str(special))
+    effect = item.get("effect")
+    if effect:
+        chunks.append(str(effect))
+    parsed = parse_regen_from_text("\n".join(chunks))
+    for k, v in parsed.items():
+        if num(s10.get(k)) <= 0:
+            s10[k] = v
+    return s10
+
+
 def item_haste(item: dict) -> float:
-    """Worn haste percent from +10/+0 stats (does not scale)."""
     s10 = item.get("stats_plus10") or {}
     s0 = item.get("stats_plus0") or {}
     h = s10.get("Haste")
@@ -86,53 +130,207 @@ def base_slots_from_item(item: dict) -> list[str]:
     return [p.strip().upper() for p in slot.split("/") if p.strip()]
 
 
-def other_positive_sum(s10: dict, exclude_key: str | None = None) -> float:
+def other_positive_sum(s10: dict, exclude_keys: set[str] | None = None) -> float:
+    exclude_keys = exclude_keys or set()
     total = 0.0
     for k in OTHER_SCORE_KEYS:
-        if exclude_key and k == exclude_key:
+        if k in exclude_keys:
             continue
         total += positive(num(s10.get(k)))
-    if exclude_key != "END":
+    if "END" not in exclude_keys:
         total += positive(num(s10.get("END")))
     return total
 
 
-def max_all_stat_sum(s10: dict) -> float:
+def _norm_stat_list(stats: list[str] | None) -> list[str]:
+    out: list[str] = []
+    for s in stats or []:
+        key = roles.normalize_stat_key(s) or str(s).strip().upper()
+        if key and key not in out:
+            out.append(key)
+    return out[:3]
+
+
+def default_score_opts(
+    *,
+    classes: list[str] | None = None,
+    primary_stats: list[str] | None = None,
+    secondary_stats: list[str] | None = None,
+    tertiary_stats: list[str] | None = None,
+    maximize_hp_regen: bool = False,
+    priority_stat: str | None = None,
+) -> dict[str, Any]:
+    classes = [c for c in (classes or []) if c]
+    primary = _norm_stat_list(primary_stats)
+    secondary = _norm_stat_list(secondary_stats)
+    tertiary = _norm_stat_list(tertiary_stats)
+    # Back-compat: single priority_stat fills primary if tiers empty
+    if not primary and priority_stat:
+        key = roles.normalize_stat_key(priority_stat) or priority_stat
+        if key in LABEL_TO_KEY:
+            key = LABEL_TO_KEY[key]
+        primary = [key]
+    return {
+        "classes": classes,
+        "primary_stats": primary,
+        "secondary_stats": secondary,
+        "tertiary_stats": tertiary,
+        "maximize_hp_regen": bool(maximize_hp_regen),
+        "has_tank": roles.trio_has_tank(classes),
+        "uses_mana": roles.trio_uses_mana(classes),
+        "attr_weights": roles.trio_primary_attr_weights(classes) if classes else {
+            k: 1.5 for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA")
+        },
+        "roles": roles.trio_roles(classes),
+    }
+
+
+def max_all_stat_sum(s10: dict, opts: dict[str, Any] | None = None) -> float:
+    """Class-aware Max All Stats weighting."""
+    opts = opts or default_score_opts()
+    s10 = dict(s10)
     hp = num(s10.get("HP"))
     mana = num(s10.get("MANA"))
     ac = num(s10.get("AC"))
-    attrs = sum(num(s10.get(k)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"))
     resists = sum(num(s10.get(k)) for k in RESIST_KEYS)
     end = num(s10.get("END"))
-    return hp * 1.0 + mana * 1.0 + ac * 2.0 + attrs * 1.5 + resists * 1.0 + end * 0.5
+    attr_w = opts.get("attr_weights") or {}
+    attrs = sum(num(s10.get(k)) * float(attr_w.get(k, 1.5)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"))
+
+    hp_w = 2.2 if opts.get("has_tank") else 1.0
+    ac_w = 4.0 if opts.get("has_tank") else 2.0
+    mana_w = 1.2 if opts.get("uses_mana") else 0.05
+    score = hp * hp_w + mana * mana_w + ac * ac_w + attrs + resists * 1.0 + end * 0.5
+
+    if opts.get("maximize_hp_regen"):
+        score += num(s10.get("HP_REGEN")) * 40.0
+    if opts.get("uses_mana"):
+        score += num(s10.get("MANA_REGEN")) * 18.0
+    else:
+        score += num(s10.get("MANA_REGEN")) * 0.5
+    score += num(s10.get("END_REGEN")) * 4.0
+    return score
 
 
-def score_priority(item: dict, stat_key: str) -> tuple[float, float, str]:
-    s10 = item.get("stats_plus10") or {}
-    pval = num(s10.get(stat_key))
+def score_priority_tiers(item: dict, opts: dict[str, Any]) -> tuple[float, float, str]:
+    s10 = enrich_stats_with_regen(item)
+    primary = opts.get("primary_stats") or []
+    secondary = opts.get("secondary_stats") or []
+    tertiary = opts.get("tertiary_stats") or []
     hb = haste_bonus(item)
     weapon = item.get("is_weapon") and item.get("ratio_plus10") is not None
+
+    tier_score = 0.0
+    pval = 0.0
+    labels = []
+    used: set[str] = set()
+    for tier, keys in (("primary", primary), ("secondary", secondary), ("tertiary", tertiary)):
+        w = TIER_WEIGHTS[tier]
+        for k in keys:
+            used.add(k)
+            v = num(s10.get(k))
+            tier_score += v * w
+            if tier == "primary":
+                pval += v
+            labels.append(f"{tier[0].upper()}:{KEY_TO_LABEL.get(k, k)}")
+    other = other_positive_sum(s10, exclude_keys=used)
+    if opts.get("maximize_hp_regen") and "HP_REGEN" not in used:
+        tier_score += num(s10.get("HP_REGEN")) * 35.0
+
     if weapon:
         ratio10 = num(item.get("ratio_plus10"))
-        other = other_positive_sum(s10, exclude_key=stat_key)
-        score = ratio10 * 10000.0 + pval * 10.0 + 0.15 * other + hb
+        score = ratio10 * 10000.0 + tier_score * 0.1 + 0.15 * other + hb
         return score, pval, "best ratio"
-    other = other_positive_sum(s10, exclude_key=stat_key)
-    score = pval * 100.0 + 0.15 * other + hb
-    why = f"highest {KEY_TO_LABEL.get(stat_key, stat_key)}"
+    score = tier_score + 0.15 * other + hb
+    why = "priority " + " > ".join(labels) if labels else "priority (none selected)"
     return score, pval, why
 
 
-def score_max_all(item: dict) -> tuple[float, float, str]:
-    s10 = item.get("stats_plus10") or {}
-    bang = max_all_stat_sum(s10)
+def score_priority(item: dict, stat_key: str) -> tuple[float, float, str]:
+    opts = default_score_opts(primary_stats=[stat_key or "INT"])
+    return score_priority_tiers(item, opts)
+
+
+def score_max_all(item: dict, opts: dict[str, Any] | None = None) -> tuple[float, float, str]:
+    opts = opts or default_score_opts()
+    s10 = enrich_stats_with_regen(item)
+    bang = max_all_stat_sum(s10, opts)
     hb = haste_bonus(item)
     weapon = item.get("is_weapon") and item.get("ratio_plus10") is not None
     if weapon:
         ratio10 = num(item.get("ratio_plus10"))
         score = ratio10 * 10000.0 + 0.2 * bang + hb
         return score, bang, "best ratio"
-    return bang + hb, bang, "best total score"
+    why = "max all (class-weighted"
+    if opts.get("has_tank"):
+        why += "; tank AC/HP"
+    if opts.get("maximize_hp_regen"):
+        why += "; HP regen"
+    if not opts.get("uses_mana"):
+        why += "; mana de-emphasized"
+    why += ")"
+    return bang + hb, bang, why
+
+
+def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str]:
+    """AI choice: role-aware blend of class primaries, tank/mana, haste, regen."""
+    opts = dict(opts or default_score_opts())
+    classes = opts.get("classes") or []
+    # Seed primary tiers from class creation bonuses when user didn't set priority tiers
+    if not (opts.get("primary_stats") or opts.get("secondary_stats") or opts.get("tertiary_stats")):
+        # Gather top attrs across trio
+        weights = opts.get("attr_weights") or {}
+        ranked = sorted(weights.items(), key=lambda kv: (-kv[1], kv[0]))
+        opts["primary_stats"] = [k for k, v in ranked[:2] if v > 0]
+        opts["secondary_stats"] = [k for k, v in ranked[2:4] if v > 0]
+        opts["tertiary_stats"] = ["AC", "HP"]
+    # Always emphasize AC/HP; tanks heavier via max_all weights
+    s10 = enrich_stats_with_regen(item)
+    bang = max_all_stat_sum(s10, opts)
+    # Extra AI nudges from role tags
+    role_bonus = 0.0
+    tags = set(opts.get("roles") or [])
+    if "healer" in tags or "caster" in tags:
+        role_bonus += num(s10.get("WIS")) * 2.0 + num(s10.get("INT")) * 2.0 + num(s10.get("MANA")) * 0.8
+        role_bonus += num(s10.get("MANA_REGEN")) * 25.0
+    if "tank" in tags:
+        role_bonus += num(s10.get("AC")) * 2.5 + num(s10.get("HP")) * 1.5 + num(s10.get("STA")) * 2.0
+    if "melee" in tags or "dps" in tags:
+        role_bonus += num(s10.get("STR")) * 1.5 + num(s10.get("DEX")) * 1.2 + num(s10.get("AGI")) * 1.0
+    if opts.get("maximize_hp_regen"):
+        role_bonus += num(s10.get("HP_REGEN")) * 50.0
+    else:
+        role_bonus += num(s10.get("HP_REGEN")) * 12.0  # mild baseline value in AI mode
+
+    hb = haste_bonus(item)
+    weapon = item.get("is_weapon") and item.get("ratio_plus10") is not None
+    if weapon:
+        ratio10 = num(item.get("ratio_plus10"))
+        score = ratio10 * 10000.0 + 0.25 * bang + 0.15 * role_bonus + hb
+        return score, bang + role_bonus, "AI choice (best ratio)"
+    trio = "/".join(classes) if classes else "trio"
+    return bang + role_bonus + hb, bang + role_bonus, f"AI choice for {trio}"
+
+
+def score_item(item: dict, mode: str, stat_key: str | None, opts: dict[str, Any] | None = None) -> tuple[float, float, str]:
+    opts = opts or default_score_opts(priority_stat=stat_key)
+    mode_n = normalize_mode(mode)
+    if mode_n == "priority":
+        if opts.get("primary_stats") or opts.get("secondary_stats") or opts.get("tertiary_stats"):
+            return score_priority_tiers(item, opts)
+        return score_priority(item, stat_key or "INT")
+    if mode_n == "ai":
+        return score_ai_choice(item, opts)
+    return score_max_all(item, opts)
+
+
+def normalize_mode(mode: str | None) -> str:
+    m = (mode or "priority").strip().lower()
+    if m in ("max", "max_all", "max-all", "max all stats"):
+        return "max"
+    if m in ("ai", "ai_choice", "ai-choice", "ai choice"):
+        return "ai"
+    return "priority"
 
 
 def prefer_multi_class(ranked: list[dict], within_pct: float = 0.05) -> list[dict]:
@@ -182,7 +380,13 @@ def prepare_item(raw: dict, selected: set[str]) -> dict | None:
     return item
 
 
-def rank_for_slot(pool: list[dict], planner_slot: str, mode: str, stat_key: str | None) -> list[dict]:
+def rank_for_slot(
+    pool: list[dict],
+    planner_slot: str,
+    mode: str,
+    stat_key: str | None,
+    score_opts: dict[str, Any] | None = None,
+) -> list[dict]:
     if planner_slot in ("EAR1", "EAR2"):
         match_slots = {"EAR1", "EAR2"}
     elif planner_slot in ("FINGER1", "FINGER2"):
@@ -190,17 +394,16 @@ def rank_for_slot(pool: list[dict], planner_slot: str, mode: str, stat_key: str 
     else:
         match_slots = {planner_slot}
 
+    opts = score_opts or default_score_opts(priority_stat=stat_key)
     candidates = []
     for item in pool:
         pslots = set(item.get("planner_slots") or [])
         if not (pslots & match_slots):
             continue
-        if mode == "priority":
-            score, pval, why = score_priority(item, stat_key or "INT")
-        else:
-            score, pval, why = score_max_all(item)
+        score, pval, why = score_item(item, mode, stat_key, opts)
         if item.get("is_weapon") and item.get("ratio_plus10") is not None:
-            why = "best ratio"
+            why = "best ratio" if normalize_mode(mode) != "ai" else why
+        s10 = enrich_stats_with_regen(item)
         candidates.append({
             "name": item["name"],
             "score": score,
@@ -218,18 +421,23 @@ def rank_for_slot(pool: list[dict], planner_slot: str, mode: str, stat_key: str 
             "tri_classes": item.get("tri_classes", 0),
             "is_weapon": item.get("is_weapon", False),
             "stats_plus0": item.get("stats_plus0") or {},
-            "stats_plus10": item.get("stats_plus10") or {},
+            "stats_plus10": s10,
             "haste": item_haste(item),
             "planner_slots": item.get("planner_slots") or [],
             "slot": item.get("slot") or "",
+            "image_url": item.get("image_url") or "",
             "item": item,
         })
     candidates.sort(key=lambda r: (-r["score"], -r["bis_overlap"], r["name"]))
     return prefer_multi_class(candidates, 0.05)
 
 
-def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str, dict]:
-    """Pick one item per planner slot; only ONE worn-haste item (highest %)."""
+def pick_loadout(
+    pool: list[dict],
+    mode: str,
+    stat_key: str | None,
+    score_opts: dict[str, Any] | None = None,
+) -> dict[str, dict]:
     used_names: set[str] = set()
     loadout: dict[str, dict] = {}
     groups = [
@@ -237,11 +445,12 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
         ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
     ]
+    opts = score_opts or default_score_opts(priority_stat=stat_key)
 
     best_haste_cand = None
     best_haste_slot_group = None
     for group in groups:
-        ranked = rank_for_slot(pool, group[0], mode, stat_key)
+        ranked = rank_for_slot(pool, group[0], mode, stat_key, opts)
         for cand in ranked:
             h = item_haste(cand.get("item") or {})
             if h <= 0:
@@ -258,7 +467,7 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
     reserved_haste_group = best_haste_slot_group
 
     for group in groups:
-        ranked = rank_for_slot(pool, group[0], mode, stat_key)
+        ranked = rank_for_slot(pool, group[0], mode, stat_key, opts)
         picks = []
         if reserved_haste_name and group == reserved_haste_group:
             for cand in ranked:
@@ -280,10 +489,19 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
                 break
         for slot, cand in zip(group, picks):
             used_names.add(cand["name"])
+            why = cand["why"]
+            if slot.endswith("2") and not cand.get("is_weapon"):
+                mode_n = normalize_mode(mode)
+                if mode_n == "priority":
+                    why = "2nd priority tier"
+                elif mode_n == "max":
+                    why = "2nd total score"
+                elif mode_n == "ai":
+                    why = "2nd AI choice"
             row = dict(cand)
+            row["why"] = why
             row["slot"] = slot
-            # strip nested item for API size
-            row.pop("item", None)
+            # Keep nested item for engine.recommend_bis (stats / ratio / haste).
             loadout[slot] = row
         for slot in group:
             if slot not in loadout:
@@ -291,7 +509,7 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
                     "slot": slot, "name": "", "score": 0, "pval": 0, "why": "no item",
                     "zone": "", "drops_mobs": "", "classes_str": "", "ratio10": None,
                     "url": "", "stats_plus0": {}, "stats_plus10": {}, "haste": 0,
-                    "is_weapon": False,
+                    "is_weapon": False, "image_url": "", "item": None,
                 }
     return loadout
 
