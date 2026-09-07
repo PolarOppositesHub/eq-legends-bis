@@ -92,6 +92,7 @@ function envForApi() {
     EQ_FRONTEND_DIST: ui,
     EQ_LEGENDS_ROOT: legendsRoot,
     EQ_XLSX_DIR: app.getPath('userData'),
+    EQ_IMAGES_DIR: path.join(app.getPath('userData'), 'item-images'),
     EQ_API_PORT: String(apiPort),
     PYTHONPATH: pyPath,
   };

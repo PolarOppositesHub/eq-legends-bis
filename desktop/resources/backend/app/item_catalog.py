@@ -14,10 +14,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .paths import APP_ROOT, decoded_dir
+from .paths import APP_ROOT, decoded_dir, images_dir
 
-IMAGES_DIR = APP_ROOT / "data" / "item-images"
-USER_AGENT = "EQLegendsBiS/1.0.4 (local; josh; item-icon-cache)"
+USER_AGENT = "EQLegendsBiS/1.0.9 (local; josh; item-icon-cache)"
+
+
+def _images_dir() -> Path:
+    return images_dir()
 
 
 def _slug(name: str) -> str:
@@ -253,20 +256,40 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
 
 
 def local_image_path(name: str) -> Path | None:
-    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    img_dir = _images_dir()
+    try:
+        img_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
     for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
-        p = IMAGES_DIR / f"{_slug(name)}{ext}"
+        p = img_dir / f"{_slug(name)}{ext}"
         if p.is_file() and p.stat().st_size > 0:
             return p
     return None
 
 
-def _http_get(url: str, timeout: float = 20.0) -> bytes | None:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def _ssl_context():
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        import ssl
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        try:
+            import ssl
+
+            return ssl.create_default_context()
+        except Exception:
+            return None
+
+
+def _http_get(url: str, timeout: float = 20.0) -> bytes | None:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
+    ctx = _ssl_context()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             return resp.read()
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError):
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError, OSError):
         return None
 
 
@@ -278,11 +301,10 @@ def _wiki_urls_for_item(it: dict[str, Any]) -> list[str]:
             urls.append(u)
     name = it.get("name") or ""
     if name:
-        # Classic wiki title form
         title = name.replace(" ", "_")
-        urls.append(f"https://eqlwiki.com/{urllib.parse.quote(title)}")
-        urls.append(f"https://eqlwiki.com/{urllib.parse.quote(name)}")
-    # dedupe
+        for host in ("https://eqlwiki.com", "https://eqlwiki.org"):
+            urls.append(f"{host}/{urllib.parse.quote(title)}")
+            urls.append(f"{host}/{urllib.parse.quote(name)}")
     seen, out = set(), []
     for u in urls:
         if u not in seen:
@@ -322,19 +344,86 @@ def _pick_wiki_image(html: str) -> str | None:
     return None
 
 
+def _normalize_image_blob(blob: bytes, ext: str) -> bytes:
+    """Re-encode icons to 8-bit PNG/JPEG so Chromium can display them.
+
+    eqlwiki Item_### assets are often 16-bit RGBA PNGs; browsers leave those blank.
+    """
+    if not blob:
+        return blob
+    try:
+        from PIL import Image
+        import io
+
+        im = Image.open(io.BytesIO(blob))
+        im.load()
+        if im.mode not in ("RGB", "RGBA"):
+            im = im.convert("RGBA" if "A" in (im.mode or "") or im.mode == "P" else "RGB")
+        # Force 8-bit channels via a fresh RGBA/RGB canvas
+        if im.mode == "RGBA":
+            out_im = Image.new("RGBA", im.size)
+            out_im.paste(im, (0, 0))
+        else:
+            out_im = Image.new("RGB", im.size)
+            out_im.paste(im.convert("RGB"), (0, 0))
+        buf = io.BytesIO()
+        if ext in (".jpg", ".jpeg"):
+            out_im.convert("RGB").save(buf, format="JPEG", quality=92)
+        else:
+            out_im.save(buf, format="PNG", optimize=True)
+        return buf.getvalue() or blob
+    except Exception:
+        return blob
+
+
 def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
     """Return local image path info; optionally fetch from eqlwiki and save."""
-    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    img_dir = _images_dir()
+    try:
+        img_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        return {
+            "name": name,
+            "cached": False,
+            "path": None,
+            "url": None,
+            "error": f"image cache not writable ({img_dir}): {e}",
+            "images_dir": str(img_dir),
+        }
+
+    def _path_out(p: Path) -> str:
+        try:
+            return str(p.relative_to(APP_ROOT))
+        except Exception:
+            return str(p)
+
     existing = local_image_path(name)
     if existing:
+        # Re-encode legacy 16-bit wiki PNGs already on disk (Chromium blank otherwise).
+        try:
+            raw = existing.read_bytes()
+            if existing.suffix.lower() == ".png" and len(raw) > 25 and raw[24] == 16:
+                fixed = _normalize_image_blob(raw, ".png")
+                if fixed and fixed != raw:
+                    existing.write_bytes(fixed)
+        except Exception:
+            pass
         return {
             "name": name,
             "cached": True,
-            "path": str(existing.relative_to(APP_ROOT)),
+            "path": _path_out(existing),
             "url": f"/api/item-image?name={urllib.parse.quote(name)}",
+            "images_dir": str(img_dir),
         }
     if not fetch:
-        return {"name": name, "cached": False, "path": None, "url": None, "error": "not cached"}
+        return {
+            "name": name,
+            "cached": False,
+            "path": None,
+            "url": None,
+            "error": "not cached",
+            "images_dir": str(img_dir),
+        }
 
     it = None
     key = (name or "").strip().lower()
@@ -343,10 +432,13 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
             it = row
             break
     if not it:
-        return {"name": name, "cached": False, "path": None, "url": None, "error": "item not in catalog"}
+        # Still try a bare wiki title lookup so BiS names outside flats can resolve.
+        it = {"name": name}
 
     img_url = None
+    wiki_tried = 0
     for wiki in _wiki_urls_for_item(it):
+        wiki_tried += 1
         html_b = _http_get(wiki)
         if not html_b:
             continue
@@ -358,11 +450,26 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
         if img_url:
             break
     if not img_url:
-        return {"name": name, "cached": False, "path": None, "url": None, "error": "no wiki image found"}
+        return {
+            "name": name,
+            "cached": False,
+            "path": None,
+            "url": None,
+            "error": "no wiki image found",
+            "wiki_tried": wiki_tried,
+            "images_dir": str(img_dir),
+        }
 
     blob = _http_get(img_url)
     if not blob:
-        return {"name": name, "cached": False, "path": None, "url": None, "error": f"failed download {img_url}"}
+        return {
+            "name": name,
+            "cached": False,
+            "path": None,
+            "url": None,
+            "error": f"failed download {img_url}",
+            "images_dir": str(img_dir),
+        }
 
     ext = ".png"
     low = img_url.lower()
@@ -370,13 +477,30 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
         if e in low:
             ext = e if e != ".jpeg" else ".jpg"
             break
-    dest = IMAGES_DIR / f"{_slug(name)}{ext}"
-    dest.write_bytes(blob)
+    # Always store browser-safe 8-bit PNG for wiki icons (gif/webp → png).
+    if ext in (".gif", ".webp", ".png"):
+        ext = ".png"
+        blob = _normalize_image_blob(blob, ".png")
+    elif ext in (".jpg", ".jpeg"):
+        blob = _normalize_image_blob(blob, ".jpg")
+    dest = img_dir / f"{_slug(name)}{ext}"
+    try:
+        dest.write_bytes(blob)
+    except Exception as e:
+        return {
+            "name": name,
+            "cached": False,
+            "path": None,
+            "url": None,
+            "error": f"failed write {dest}: {e}",
+            "images_dir": str(img_dir),
+        }
     return {
         "name": name,
         "cached": True,
         "fetched": True,
         "source": img_url,
-        "path": str(dest.relative_to(APP_ROOT)),
+        "path": _path_out(dest),
         "url": f"/api/item-image?name={urllib.parse.quote(name)}",
+        "images_dir": str(img_dir),
     }

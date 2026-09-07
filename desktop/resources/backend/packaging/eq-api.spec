@@ -31,6 +31,7 @@ hidden = [
     "openpyxl",
     "PIL",
     "PIL.Image",
+    "certifi",
     "backend",
     "backend.app",
     "backend.app.main",

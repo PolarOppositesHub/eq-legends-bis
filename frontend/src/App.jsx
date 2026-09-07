@@ -92,34 +92,60 @@ function displayWhy(itemOrWhy) {
 }
 
 function ItemIcon({ name, className = 'item-icon' }) {
-  const [src, setSrc] = useState(() => (name ? itemImageUrl(name) : ''))
+  const [src, setSrc] = useState('')
   const [failed, setFailed] = useState(false)
+  const [loading, setLoading] = useState(Boolean(name))
   const tries = useRef(0)
 
   useEffect(() => {
-    if (!name) return
+    if (!name) return undefined
+    let cancelled = false
     tries.current = 0
     setFailed(false)
-    const base = itemImageUrl(name)
-    if (!base) {
-      setFailed(true)
-      return
-    }
-    setSrc(base)
-    ensureItemImage(name)
-      .then(() => {
-        const next = itemImageUrl(name)
-        if (next) {
-          setSrc(`${next}&_=${Date.now()}`)
-          setFailed(false)
+    setLoading(true)
+    setSrc('')
+
+    const load = async () => {
+      try {
+        await ensureItemImage(name)
+        if (cancelled) return
+        setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
+        setFailed(false)
+        setLoading(false)
+      } catch (_) {
+        if (cancelled) return
+        // One retry after a short delay (wiki/network race on first BiS paint).
+        if (tries.current < 1) {
+          tries.current += 1
+          await new Promise((r) => setTimeout(r, 400))
+          if (cancelled) return
+          try {
+            await ensureItemImage(name)
+            if (cancelled) return
+            setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
+            setFailed(false)
+            setLoading(false)
+            return
+          } catch (__) {
+            /* fall through */
+          }
         }
-      })
-      .catch(() => {})
+        setFailed(true)
+        setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
   }, [name])
 
   if (!name) return null
-  if (failed || !src) {
+  if (failed) {
     return <span className={`${className} item-icon-placeholder`} title="No image" aria-hidden />
+  }
+  if (loading || !src) {
+    return <span className={`${className} item-icon-placeholder`} title="Loading image…" aria-hidden />
   }
   return (
     <img
@@ -127,17 +153,14 @@ function ItemIcon({ name, className = 'item-icon' }) {
       src={src}
       alt=""
       onError={() => {
-        if (tries.current >= 1) {
+        // File existed at ensure time but GET failed — one more ensure then give up.
+        if (tries.current >= 2) {
           setFailed(true)
           return
         }
         tries.current += 1
         ensureItemImage(name)
-          .then(() => {
-            const next = itemImageUrl(name)
-            if (next) setSrc(`${next}&_=${Date.now()}`)
-            else setFailed(true)
-          })
+          .then(() => setSrc(`${itemImageUrl(name)}&_=${Date.now()}`))
           .catch(() => setFailed(true))
       }}
     />
@@ -950,7 +973,7 @@ export default function App() {
             {meta?.version ? ` · v${meta.version}` : ' · v1.0.8'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.8</span>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.9</span>
       </header>
 
       <div className="app-shell">

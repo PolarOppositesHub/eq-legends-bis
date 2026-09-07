@@ -7,6 +7,7 @@ Env overrides:
   EQ_DATA_ROOT           Decoded JSON directory
   EQ_FRONTEND_DIST       Built SPA directory (index.html + assets/)
   EQ_XLSX_DIR            Where to write/read EQ_Legends_BiS.xlsx
+  EQ_IMAGES_DIR          Writable cache for eqlwiki item icons (item-images/)
 """
 from __future__ import annotations
 
@@ -48,6 +49,47 @@ def app_root() -> Path:
 
 # Eager constant for modules that import APP_ROOT at load time
 APP_ROOT = app_root()
+
+
+def _dir_writable(path: Path) -> bool:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        probe = path / ".eq_write_test"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return True
+    except Exception:
+        return False
+
+
+def images_dir() -> Path:
+    """Writable cache for item icons.
+
+    Packaged installs cannot reliably write under resources/; prefer
+    EQ_IMAGES_DIR or EQ_XLSX_DIR/item-images (Electron userData).
+    """
+    override = _env_path("EQ_IMAGES_DIR")
+    if override and _dir_writable(override):
+        return override
+    xdir = _env_path("EQ_XLSX_DIR")
+    if xdir:
+        cand = xdir / "item-images"
+        if _dir_writable(cand):
+            return cand
+    for cand in (
+        app_root() / "data" / "item-images",
+        app_root() / "resources" / "data" / "item-images",
+        Path.cwd() / "data" / "item-images",
+    ):
+        if _dir_writable(cand):
+            return cand
+    # Last resort — may still fail on write; callers report the error.
+    fallback = app_root() / "data" / "item-images"
+    try:
+        fallback.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    return fallback
 
 
 def legends_root() -> Path:
