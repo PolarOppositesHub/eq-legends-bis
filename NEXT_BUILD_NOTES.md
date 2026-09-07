@@ -33,12 +33,20 @@
 - [ ] Item Search: searchable list of **all items in the game** from the item database/catalog.
 - [ ] Requirement: every game item should be present in the DB and findable via this search (name and useful filters as fitting existing data — never invent stats).
 
+### BiS alternates hover — real stats + item picture (fix)
+- [ ] Current bug/UX: hovering alternate items shows placeholder text like **"hover over stats"** — that is **not** what was requested.
+- [ ] **Requirement:** hovering the **alternate item name** shows that item’s **actual stats from the database** (tooltip/popover), same data used elsewhere — never invent stats.
+- [ ] Also show the **item picture** in that hover UI (and wherever items are listed when available).
+- [ ] If an equipable item has **no picture saved** in the DB/assets: look it up from a reliable source, **download/save** it into the project/data store, and reuse that image throughout the app (BiS, Sim, Item Search, etc.).
+- [ ] Do not leave “hover over stats” as the visible content; that was only meant as the interaction cue, not the tooltip body.
+
 ### Josh testing notes (paste below as they arrive)
 - Inventory import: some items missing from view — show all even if not in DB.
 - Upgrade priorities: not good — looks like AC/HP only; should go off BiS list for what to upgrade to.
 - Sim equipment: imported worn | selectable BiS column | stat delta column (e.g. AC +2).
 - BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
 - Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
+- BiS alternates hover: show real DB stats + item picture on name hover (not “hover over stats” text); fetch/save missing item images for reuse app-wide.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 
