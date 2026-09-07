@@ -35,9 +35,13 @@ export const getItemDetail = (name) => {
   const q = new URLSearchParams({ name })
   return req(`/api/item-detail?${q}`)
 }
-export const ensureItemImage = (name) => {
+export const ensureItemImage = async (name) => {
   const q = new URLSearchParams({ name })
-  return req(`/api/item-image/ensure?${q}`, { method: 'POST' })
+  const info = await req(`/api/item-image/ensure?${q}`, { method: 'POST' })
+  if (!info || info.error || info.cached === false) {
+    throw new Error((info && info.error) || 'image not available')
+  }
+  return info
 }
 export const itemImageUrl = (name) => {
   if (!name) return ''

@@ -53,6 +53,15 @@ def main(argv: list[str] | None = None) -> int:
     os.environ["EQ_PACKAGED"] = "1"
     _bootstrap_path()
 
+    # Frozen Windows builds often lack system CA certs for urllib HTTPS.
+    try:
+        import certifi
+
+        os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+        os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+    except Exception:
+        pass
+
     import uvicorn
 
     # Import after path bootstrap

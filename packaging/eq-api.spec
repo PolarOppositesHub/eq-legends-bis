@@ -26,6 +26,7 @@ a = Analysis(
         "multipart",
         "PIL",
         "PIL.Image",
+    "certifi",
         "openpyxl",
     ],
     hookspath=[],
