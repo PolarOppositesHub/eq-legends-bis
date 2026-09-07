@@ -1,6 +1,45 @@
 # Next build notes
 
-**v1.0.10 READY TO SHIP — overnight grok bot release.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+**v1.0.11 — Search My Bags + Quest Hub + import UX (this PR).** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+
+## Overnight / Josh — GitHub Release v1.0.11
+
+1. Merge bags/quest-hub PR → `main`
+2. Build + publish:
+
+```powershell
+git pull origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
+```
+
+Artifacts: `EQ-Legends-BiS-1.0.11-win-x64.exe` (+ portable) + `latest.yml`.
+
+### Post-install verify
+- [ ] Header **UI 1.0.11**
+- [ ] After Inventory import → Simulator shows worn-slot count; unmatched list is **closed** (debug)
+- [ ] Menu **Search My Bags** finds bag/bank items from the import
+- [ ] Menu **Quest Hub** lists quests; open Wizard Test of Focus → prerequisites + Have?/Need components vs import
+- [ ] Upgrade Priority quest row → **Open in Quest Hub**
+
+## 1.0.11 — bags, quest hub, import UX
+- [x] Unmatched names default closed; emphasize worn slots filled
+- [x] Search My Bags menu (imported inventory lines)
+- [x] Quest Hub menu (catalog quest index + guide + prereqs + inventory ownership)
+- [x] Upgrade Priority → Open in Quest Hub
+- [x] Versions **1.0.11**
+
+### Still pending after 1.0.11
+- [ ] Item Search token/anywhere-in-name (`blade of ocean` → Aldryn, Blade of the Ocean); ignore filler words
+- [ ] Item Search usable-class filter alongside slot
+
+### Quest Hub data limits (honest)
+- Quest list comes from decoded `rewardFromQuests` / `quest_source` (~169 names) — not every quest ever in EQ.
+- Prerequisites: eqlwiki-named when listed; Plane of Sky island-access chain from documented eqlwiki Plane of Sky progression.
+- Never invent quest steps or prereq quest names.
+
+---
+
+**v1.0.10 SHIPPED on main (PR #7).** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.10
 
