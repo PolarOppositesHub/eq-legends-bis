@@ -23,6 +23,12 @@ const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
 const MAX_LEVEL = 50
 const EMPTY_TIERS = ['', '', '']
 
+function slotLabel(slot) {
+  if (slot === 'ANY1') return 'ANY1 (Any Slot)'
+  if (slot === 'ANY2') return 'ANY2 (Any Slot)'
+  return slot
+}
+
 function fmtStats(stats, keys) {
   if (!stats) return ''
   const parts = []
@@ -1390,10 +1396,14 @@ export default function App() {
                   (formulas stay in the API only).
                 </p>
               ) : null}
+              <p className="note" style={{ marginTop: '0.5rem' }}>
+                ANY1/ANY2 are the two worn Any Slots — BiS scored on stats only (weapon damage ignored);
+                filled after dedicated slots from leftover gear.
+              </p>
               <div className="grid-slots">
                 {bis.slots.map((s) => (
                   <div className="slot-card" key={s.slot}>
-                    <h3>{s.slot}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
+                    <h3>{slotLabel(s.slot)}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
                     <div className="item-name">
                       {s.name ? <ItemIcon name={s.name} /> : null}
                       {s.name ? (
@@ -1690,7 +1700,7 @@ export default function App() {
                 <select value={searchSlot} onChange={(e) => setSearchSlot(e.target.value)}>
                   <option value="">All slots</option>
                   {(meta?.slots || []).map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{slotLabel(s)}</option>
                   ))}
                 </select>
                 <button type="button" className="primary" disabled={searchLoading} onClick={runSearch}>
@@ -1875,7 +1885,7 @@ export default function App() {
 
                     return (
                       <div className="equip-compare-row" key={slot}>
-                        <label>{slot}</label>
+                        <label>{slotLabel(slot)}</label>
                         <select
                           className="slot-select"
                           value={equipment[slot] || ''}
