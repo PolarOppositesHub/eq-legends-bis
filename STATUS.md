@@ -1,7 +1,7 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
 Version: **1.0.5** (local tree smoke-ready; Josh does Windows portable + gh release — do not package here)
-Canonical: backend/app/{main,engine,scoring,ac_softcap,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
+Canonical: backend/app/{main,engine,scoring,ac_softcap,quest_guides,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
 
 ## Why 1.0.5 (after 1.0.4 complaints)
 Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not on left, no hover stats, only Max All + Priority (no AI Choice), Priority not 3×3 selectable. Source inspection of the published **v1.0.4** portable *does* contain those UI strings — so either an old EXE was still launching, Chromium cached the SPA shell, or hover tips were clipped (CSS absolute tips inside overflow). **1.0.5** makes the UI unmistakable and fixes defaults/hover/cache:
