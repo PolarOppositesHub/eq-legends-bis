@@ -46,6 +46,92 @@ function hideImg(e) {
   e.target.style.display = 'none'
 }
 
+/** Prefer tip to the right of the cursor; clamp into the viewport. */
+function tipCoordsFromPointer(e, tipW = 320, tipH = 220) {
+  const pad = 14
+  const cx = e?.clientX
+  const cy = e?.clientY
+  const rect = e?.currentTarget?.getBoundingClientRect?.()
+  let x = (typeof cx === 'number' ? cx : (rect ? rect.right : 0)) + pad
+  let y = typeof cy === 'number' ? cy - 8 : (rect ? rect.top : 0)
+  if (x + tipW > window.innerWidth - 8) {
+    x = Math.max(8, (typeof cx === 'number' ? cx : x) - tipW - pad)
+  }
+  if (y + tipH > window.innerHeight - 8) {
+    y = Math.max(8, window.innerHeight - tipH - 8)
+  }
+  if (y < 8) y = 8
+  if (x < 8) x = 8
+  return { x, y }
+}
+
+/** User-facing BiS reason — hide DW/ratio formulas from UI (API still has full why). */
+function displayWhy(itemOrWhy) {
+  if (itemOrWhy && typeof itemOrWhy === 'object') {
+    if (itemOrWhy.why_ui) return String(itemOrWhy.why_ui)
+    return displayWhy(itemOrWhy.why)
+  }
+  if (!itemOrWhy) return ''
+  const w = String(itemOrWhy)
+  if (/HandMod|DWChance\s*=|Skill\s*\/\s*400|DB\s*=|min\(DLY|eqlwiki Game_Mechanics|working Legends model|expected-dmg|DW main score|DW offhand|2H occupies|best DW pair/i.test(w)) {
+    if (/2H occupies/i.test(w)) return 'Two-handed weapon (occupies both hands)'
+    if (/DW offhand|offhand with/i.test(w)) return 'Dual-wield offhand'
+    if (/DW main|dual.?wield|best DW pair/i.test(w)) return 'Best dual-wield pair'
+    if (/2H expected|best 2H|two.?hand/i.test(w)) return 'Best two-handed weapon'
+    if (/best ratio/i.test(w)) return 'Best weapon ratio'
+    return 'Weapon pick'
+  }
+  if (/best ratio/i.test(w)) return 'Best weapon ratio'
+  // Drop softcap plumbing tags from the visible line
+  return w
+    .replace(/;\s*AC→softcap/gi, '')
+    .replace(/;\s*past AC softcap/gi, '')
+    .replace(/;\s*AC softcap-aware/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+function ItemIcon({ name, className = 'item-icon' }) {
+  const [src, setSrc] = useState(() => (name ? itemImageUrl(name) : ''))
+  const [failed, setFailed] = useState(false)
+  const tries = useRef(0)
+
+  useEffect(() => {
+    if (!name) return
+    tries.current = 0
+    setFailed(false)
+    setSrc(itemImageUrl(name))
+    ensureItemImage(name)
+      .then(() => {
+        setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
+        setFailed(false)
+      })
+      .catch(() => {})
+  }, [name])
+
+  if (!name) return null
+  if (failed) {
+    return <span className={`${className} item-icon-placeholder`} title="No image" aria-hidden />
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      onError={() => {
+        if (tries.current >= 1) {
+          setFailed(true)
+          return
+        }
+        tries.current += 1
+        ensureItemImage(name)
+          .then(() => setSrc(`${itemImageUrl(name)}&_=${Date.now()}`))
+          .catch(() => setFailed(true))
+      }}
+    />
+  )
+}
+
 function padTier(arr) {
   const next = Array.isArray(arr) ? [...arr] : []
   while (next.length < 3) next.push('')
@@ -93,6 +179,7 @@ function persistBuilds(builds) {
 function itemTipStatsText(item, upgrade) {
   if (!item) return ''
   const stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0
+  const whyLine = displayWhy(item)
   const tipParts = [
     item.haste ? `Haste +${item.haste}% (not stacked)` : null,
     (item.ratio_at_upgrade != null || item.ratio_plus10 != null)
@@ -100,31 +187,32 @@ function itemTipStatsText(item, upgrade) {
       : null,
     fmtStats(stats, SHOW_UP) || null,
     item.zone ? `Zone: ${item.zone}` : null,
-    item.why || null,
+    whyLine || null,
   ].filter(Boolean)
   return tipParts.join('\n')
 }
 
-function AltRow({ a, upgrade, onShowTip, onHideTip }) {
+function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
-    const el = e.currentTarget
-    const r = el.getBoundingClientRect()
+    const { x, y } = tipCoordsFromPointer(e)
     onShowTip({
       name: a.name,
       statsText,
-      x: Math.min(r.left, window.innerWidth - 320),
-      y: r.bottom + 6,
+      x,
+      y,
       image: itemImageUrl(a.name),
     })
   }
   return (
     <li className="alt-row">
       <span className="alt-name-wrap">
+        <ItemIcon name={a.name} />
         <span
           className="alt-name"
           tabIndex={0}
           onMouseEnter={show}
+          onMouseMove={onMoveTip}
           onFocus={show}
           onMouseLeave={onHideTip}
           onBlur={onHideTip}
@@ -318,8 +406,21 @@ export default function App() {
     setHoverTip(tip)
     if (tip?.name && !ensuredImagesRef.current.has(tip.name)) {
       ensuredImagesRef.current.add(tip.name)
-      ensureItemImage(tip.name).catch(() => {})
+      ensureItemImage(tip.name)
+        .then(() => {
+          setHoverTip((t) =>
+            t && t.name === tip.name
+              ? { ...t, image: `${itemImageUrl(tip.name)}&_=${Date.now()}` }
+              : t
+          )
+        })
+        .catch(() => {})
     }
+  }, [])
+
+  const moveHoverTip = useCallback((e) => {
+    const { x, y } = tipCoordsFromPointer(e)
+    setHoverTip((t) => (t ? { ...t, x, y } : t))
   }, [])
 
   const hideHoverTip = useCallback(() => {
@@ -833,7 +934,7 @@ export default function App() {
             {meta?.version ? ` · v${meta.version}` : ' · v1.0.5'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.5</span>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.7</span>
       </header>
 
       <div className="app-shell">
@@ -1078,52 +1179,40 @@ export default function App() {
                 <> · Level <strong>{bis.character_level ?? characterLevel}</strong></>
                 <> · Weapons &amp; armor: any selected class (multi-class preferred on ties)</>
               </p>
-              {bis.dual_wield_enabled && (
+              {bis.dual_wield_enabled ? (
                 <p className="note" style={{ marginTop: '0.5rem' }}>
-                  <strong>DW vs 2H working model</strong> (not exact): {bis.weapon_rule}
-                  {bis.dual_wield_eval?.model_note ? (
-                    <> · {bis.dual_wield_eval.model_note}</>
-                  ) : null}
-                  {bis.dual_wield_eval?.dw_chance != null ? (
-                    <> · DWChance={Number(bis.dual_wield_eval.dw_chance).toFixed(4)}
-                      {' '}(skill≈{bis.dual_wield_eval.dw_skill})</>
-                  ) : null}
+                  Dual-wield classes: primary/secondary chosen as the best DW pair or two-hander
+                  (formulas stay in the API only).
                 </p>
-              )}
+              ) : null}
               <div className="grid-slots">
                 {bis.slots.map((s) => (
                   <div className="slot-card" key={s.slot}>
                     <h3>{s.slot}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
                     <div className="item-name">
-                      {s.name ? (
-                        <img
-                          className="item-icon"
-                          src={itemImageUrl(s.name)}
-                          alt=""
-                          onError={hideImg}
-                        />
-                      ) : null}
+                      {s.name ? <ItemIcon name={s.name} /> : null}
                       {s.name ? (
                         <span
                           className="bis-item-name"
                           tabIndex={0}
                           onMouseEnter={(e) => {
-                            const r = e.currentTarget.getBoundingClientRect()
+                            const { x, y } = tipCoordsFromPointer(e)
                             showHoverTip({
                               name: s.name,
                               statsText: itemTipStatsText(s, upgrade),
-                              x: Math.min(r.left, window.innerWidth - 320),
-                              y: r.bottom + 6,
+                              x,
+                              y,
                               image: itemImageUrl(s.name),
                             })
                           }}
+                          onMouseMove={moveHoverTip}
                           onFocus={(e) => {
-                            const r = e.currentTarget.getBoundingClientRect()
+                            const { x, y } = tipCoordsFromPointer(e)
                             showHoverTip({
                               name: s.name,
                               statsText: itemTipStatsText(s, upgrade),
-                              x: Math.min(r.left, window.innerWidth - 320),
-                              y: r.bottom + 6,
+                              x,
+                              y,
                               image: itemImageUrl(s.name),
                             })
                           }}
@@ -1157,7 +1246,7 @@ export default function App() {
                         ? ` · Ratio@+${upgrade} ${Number(s.ratio_at_upgrade ?? s.ratio_plus10).toFixed(4)}`
                         : ''}
                     </div>
-                    <div className="why">{s.why}</div>
+                    {displayWhy(s) ? <div className="why">{displayWhy(s)}</div> : null}
                     <div className="stats-line">+0 {fmtStats(s.stats_plus0, SHOW0) || '—'}</div>
                     <div className="stats-line">
                       +{upgrade} {fmtStats(s.stats_at_upgrade || (upgrade === 10 ? s.stats_plus10 : null), SHOW_UP) || fmtStats(s.stats_plus10, SHOW10) || '—'}
@@ -1172,6 +1261,7 @@ export default function App() {
                               a={a}
                               upgrade={upgrade}
                               onShowTip={showHoverTip}
+                              onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
                             />
                           ))}
@@ -1586,7 +1676,7 @@ export default function App() {
                       <div className="upgrade-priority-head">
                         <span className="pri">#{s.rank || '—'} · {s.slot}</span>
                         {s.suggested_image_url ? (
-                          <img className="item-icon" src={itemImageUrl(s.suggested)} alt="" onError={hideImg} />
+                          <ItemIcon name={s.suggested} />
                         ) : null}
                         <div className="upgrade-priority-title">
                           {s.current ? (
@@ -1725,14 +1815,7 @@ export default function App() {
           style={{ left: hoverTip.x, top: hoverTip.y }}
           role="tooltip"
         >
-          {hoverTip.image ? (
-            <img
-              className="item-icon"
-              src={hoverTip.image}
-              alt=""
-              onError={hideImg}
-            />
-          ) : null}
+          <ItemIcon name={hoverTip.name} />
           <div className="hover-tip-body">
             <div className="hover-tip-name">{hoverTip.name}</div>
             {hoverTip.statsText ? (

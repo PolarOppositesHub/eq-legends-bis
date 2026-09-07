@@ -443,6 +443,7 @@ def recommend_bis(
                     f"(beat DW pair score {dw_eval.get('pair_score')}; "
                     f"eqlwiki Game_Mechanics working Legends model)"
                 ),
+                "why_ui": "Two-handed weapon (occupies both hands)",
                 "zone": "",
                 "drops_mobs": "",
                 "classes_str": "",
@@ -502,6 +503,7 @@ def recommend_bis(
             "slot": slot,
             "name": cand.get("name") or "",
             "why": cand.get("why") or "",
+            "why_ui": cand.get("why_ui") or "",
             "score": round(_num(cand.get("score")), 4),
             "priority_value": cand.get("pval"),
             "zone": cand.get("zone") or "",
@@ -533,6 +535,7 @@ def recommend_bis(
             row["weapon_compare"] = dw_eval.get("mode")
         elif use_ratio and row["name"]:
             row["why"] = f"best ratio @+{upgrade}"
+            row["why_ui"] = f"Best weapon ratio @+{upgrade}"
             if ratio_u is not None:
                 row["score"] = round(float(ratio_u) * 10000.0, 4)
         h = bp.item_haste(item) if item else _num((row["stats_plus10"] or {}).get("Haste"))
@@ -563,6 +566,7 @@ def recommend_bis(
                     "name": ru["name"],
                     "score": round(_num(ru["score"]), 4),
                     "why": ru.get("why"),
+                    "why_ui": ru.get("why_ui") or "Runner-up two-hander",
                     "zone": ru.get("zone") or "",
                     "ratio_plus10": ru.get("ratio10"),
                     "ratio_at_upgrade": ru.get("ratio_at_upgrade"),
@@ -588,6 +592,7 @@ def recommend_bis(
                     f"best DW pair expected-dmg {ru['score']:.4f} "
                     f"(lost to 2H; eqlwiki Game_Mechanics working Legends model)"
                 ),
+                "why_ui": "Runner-up dual-wield pair",
                 "zone": "",
                 "ratio_plus10": None,
                 "ratio_at_upgrade": None,
@@ -610,6 +615,7 @@ def recommend_bis(
                 "name": r["name"],
                 "score": round(_num(r["score"]), 4),
                 "why": r.get("why"),
+                "why_ui": r.get("why_ui") or "",
                 "zone": r.get("zone") or "",
                 "drops_mobs": r.get("drops_mobs") or r_item.get("drops_mobs") or "",
                 "quest_source": r.get("quest_source") or r_item.get("quest_source") or r_item.get("source") or "",
