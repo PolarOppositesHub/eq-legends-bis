@@ -29,6 +29,8 @@ hidden = [
     "starlette",
     "pydantic",
     "openpyxl",
+    "PIL",
+    "PIL.Image",
     "backend",
     "backend.app",
     "backend.app.main",

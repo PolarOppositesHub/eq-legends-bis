@@ -48,14 +48,14 @@ function hideImg(e) {
 
 /** Prefer tip to the right of the cursor; clamp into the viewport. */
 function tipCoordsFromPointer(e, tipW = 320, tipH = 220) {
-  const pad = 14
+  const pad = 22
   const cx = e?.clientX
   const cy = e?.clientY
   const rect = e?.currentTarget?.getBoundingClientRect?.()
-  let x = (typeof cx === 'number' ? cx : (rect ? rect.right : 0)) + pad
-  let y = typeof cy === 'number' ? cy - 8 : (rect ? rect.top : 0)
+  let x = (typeof cx === 'number' && cx > 0 ? cx : (rect ? rect.right : 0)) + pad
+  let y = typeof cy === 'number' && cy > 0 ? cy - 8 : (rect ? rect.top : 0)
   if (x + tipW > window.innerWidth - 8) {
-    x = Math.max(8, (typeof cx === 'number' ? cx : x) - tipW - pad)
+    x = Math.max(8, (typeof cx === 'number' && cx > 0 ? cx : x) - tipW - pad)
   }
   if (y + tipH > window.innerHeight - 8) {
     y = Math.max(8, window.innerHeight - tipH - 8)
@@ -100,17 +100,25 @@ function ItemIcon({ name, className = 'item-icon' }) {
     if (!name) return
     tries.current = 0
     setFailed(false)
-    setSrc(itemImageUrl(name))
+    const base = itemImageUrl(name)
+    if (!base) {
+      setFailed(true)
+      return
+    }
+    setSrc(base)
     ensureItemImage(name)
       .then(() => {
-        setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
-        setFailed(false)
+        const next = itemImageUrl(name)
+        if (next) {
+          setSrc(`${next}&_=${Date.now()}`)
+          setFailed(false)
+        }
       })
       .catch(() => {})
   }, [name])
 
   if (!name) return null
-  if (failed) {
+  if (failed || !src) {
     return <span className={`${className} item-icon-placeholder`} title="No image" aria-hidden />
   }
   return (
@@ -125,7 +133,11 @@ function ItemIcon({ name, className = 'item-icon' }) {
         }
         tries.current += 1
         ensureItemImage(name)
-          .then(() => setSrc(`${itemImageUrl(name)}&_=${Date.now()}`))
+          .then(() => {
+            const next = itemImageUrl(name)
+            if (next) setSrc(`${next}&_=${Date.now()}`)
+            else setFailed(true)
+          })
           .catch(() => setFailed(true))
       }}
     />
@@ -206,17 +218,17 @@ function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
   }
   return (
     <li className="alt-row">
-      <span className="alt-name-wrap">
+      <span
+        className="alt-name-wrap"
+        tabIndex={0}
+        onMouseEnter={show}
+        onMouseMove={onMoveTip}
+        onFocus={show}
+        onMouseLeave={onHideTip}
+        onBlur={onHideTip}
+      >
         <ItemIcon name={a.name} />
-        <span
-          className="alt-name"
-          tabIndex={0}
-          onMouseEnter={show}
-          onMouseMove={onMoveTip}
-          onFocus={show}
-          onMouseLeave={onHideTip}
-          onBlur={onHideTip}
-        >
+        <span className="alt-name">
           {a.url ? (
             <a href={a.url} target="_blank" rel="noreferrer">{a.name}</a>
           ) : (
