@@ -1,8 +1,46 @@
 # Next build notes
 
-**v1.0.4 coding in progress / smoke-ready locally.** Windows rebuild on hold until Josh says start. Never invent item stats.
+**v1.0.5 coding smoke-ready locally.** Josh must rebuild Windows + publish GitHub Release **v1.0.5** (agent cannot). Never invent item stats.
 
-## Next version (after 1.0.3) → **1.0.4**
+Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Slot / Simulator / Item Search, Mode includes **AI Choice**, Priority shows Primary/Secondary/Tertiary dropdowns.
+
+## 1.0.5 — UI visibility, class priority defaults, hover tips, AC softcap (2026-09-07)
+
+### BiS gear eligibility — Josh feedback
+- [x] Non-weapon BiS pool was **intersection** (must fit all selected classes) → now **union** (usable by any one selected class).
+- [x] Example: Paladin-only armor stays BiS-eligible when Paladin is in the trio.
+- [x] Scoring still prefers multi-class overlap on near ties (`prefer_multi_class` / `bis_overlap`); does not exclude single-class items.
+- [x] Weapons unchanged (already any-class). UI/meta copy updated.
+
+### Upgrade Priority tab — Josh feedback
+- [x] Dedicated left-menu **Upgrade Priority** tab (not only a Sim subsection).
+- [x] Ordered rundown by importance (empty slots → largest BiS gaps).
+- [x] Each entry: what to get, worn → BiS, deltas, **how to get it**.
+- [x] Drops: zone + mob names (zone-research levels/spawns when available).
+- [x] Quests: quest name + eqlwiki steps/components when fetchable (Plane of Sky class-test tables supported); never invent steps.
+- [x] Import Inventory.txt from this tab; Sim keeps a short top-5 teaser linking here.
+- [x] **Import 500 fix:** catalog drop lists misread as quest names blew up quest-guide cache filenames (`OSError: File name too long`) after import → Upgrade Priority. Now classify Zone:mob lists as drops, truncate/hash cache slugs, wrap obtain/quest/zone enrich so suggestions never 500. Binary/.exe picker → clear 400 pointing at Inventory.txt from `/outputfile inventory`.
+
+### AC softcap (Max All / AI) — Josh feedback
+- [x] Do not over-emphasize tank AC at the expense of everything else.
+- [x] Respect AC soft caps; include AA soft-cap increases.
+- [x] Working model (eqlwiki): softcap ≈ `level × 6 + 25` (L≤50); Combat Stability +2/+5/+10%; Physical Enhancement +2%; BiS assumes max CS+PE → L50 target **364**.
+- [x] Loadout greedy: value AC fully until softcap, then lightly (class post-cap return); prefer STA/HP/attrs after.
+- [x] Combat Agility = avoidance only (does not raise softcap).
+- [ ] Josh spot-check softcap numbers vs in-game EQL (wiki notes caps may differ).
+
+### Josh feedback after 1.0.4 update
+- [x] No item images → prefetch icons after BiS; hover tip shows icon; eqlwiki cache under data/item-images/ (needs network first time).
+- [x] No Items tab → left Menu **Item Search** (make nav unmissable).
+- [x] Tabs not on left → sticky left **Menu** with gold border (Best in Slot / Simulator / Item Search).
+- [x] Hover item names → fixed-position tip with real DB stats + picture (main BiS + alternates).
+- [x] Only Max All + Priority → Mode select includes **AI Choice** + hint text.
+- [x] Priority not 3×3 → Primary / Secondary / Tertiary (3 dropdowns each), all selectable.
+- [x] Defaults from selected classes → `GET /api/priority-defaults` ranks classStats; most important → primary, next → secondary, next → tertiary.
+- [x] Tank AC over-emphasized → softcap-aware AC (hit AA-raised softcap, then other stats) + STA/HP focus.
+- [x] Stale UI risk → SPA index `Cache-Control: no-store`; version badge **UI 1.0.5**.
+
+## Prior version (after 1.0.3) → **1.0.4** (shipped; rebuild superseded by 1.0.5)
 
 ### Inventory import — show every item
 - [x] When importing Inventory.txt, some items do not show up (likely missing from our item DB).
@@ -43,7 +81,7 @@
 ### BiS modes — Max all stats, Priority stats, AI choice
 - [x] BiS mode currently has **Max all stats** and **Priority stats**. Keep both; refine Max all; add a third mode.
 - [x] **Max all stats:** do **not** treat every stat equally. Weight by the **important/primary stats of the three classes in the selected trio** (look up each class’s primary stats from reliable EQ Legends sources if not already in-app).
-- [x] **AC and HP:** matter for **all** classes; weigh **heavier for tank classes** in the trio.
+- [x] **AC and HP:** matter for **all** classes; tanks get a **light** AC bump (not dominant) plus HP/STA preference so class attrs still compete.
 - [x] **HP regen:** add a **toggleable checkbox** (e.g. “Maximize HP regen”) that, when on, includes/weights HP regen in BiS gear ranking.
 - [x] **Mana / mana regen:** only weigh for **mana-using classes** in the trio; ignore for non-mana classes.
 - [x] **Priority stats mode:** still uses the user-selected primary/secondary/tertiary tiers (see above).
@@ -57,7 +95,7 @@
 - BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
 - Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
 - BiS alternates hover: show real DB stats + item picture on name hover (not “hover over stats” text); fetch/save missing item images for reuse app-wide.
-- BiS modes: Max all weights trio primary stats + AC/HP (heavier for tanks); HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
+- BiS modes: Max all weights trio primary stats + light AC + HP/STA for tanks; HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 

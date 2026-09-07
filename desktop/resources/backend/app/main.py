@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.4")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.5")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -79,6 +79,7 @@ class UpgradeSuggestRequest(BaseModel):
     tertiary_stats: list[str] = Field(default_factory=list)
     maximize_hp_regen: bool = False
     priority_stat: str = "HP"
+    fetch_quest_guides: bool = True
 
 
 def _norm_classes(classes: list[str] | None, *, allow_empty: bool = True) -> list[str]:
@@ -152,7 +153,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.4",
+        "version": m.get("version") or "1.0.5",
         "scoring": m.get("scoring"),
     }
 
@@ -186,6 +187,27 @@ def post_bis(body: BisRequest):
         raise HTTPException(500, f"BiS haste assertion failed: {e}") from e
     except Exception as e:
         raise HTTPException(500, f"BiS failed: {e}") from e
+
+
+@app.get("/api/priority-defaults")
+def api_priority_defaults(classes: Optional[list[str]] = Query(default=None)):
+    """Suggested primary/secondary/tertiary priority stats for the selected trio."""
+    cls_list: list[str] = []
+    for entry in classes or []:
+        for part in str(entry).split(","):
+            part = part.strip()
+            if part:
+                cls_list.append(part)
+    cleaned = _norm_classes(cls_list, allow_empty=True)
+    from . import class_roles as cr
+    tiers = cr.trio_default_priority_tiers(cleaned)
+    return {
+        "classes": cleaned,
+        "primary_stats": tiers["primary"],
+        "secondary_stats": tiers["secondary"],
+        "tertiary_stats": tiers["tertiary"],
+        "note": "Defaults from races.json classStats ranking across the trio; user may override.",
+    }
 
 
 @app.get("/api/item-search")
@@ -376,15 +398,26 @@ def api_zone_detail(
 def api_inventory_parse(body: InventoryParseRequest):
     if not (body.text or "").strip():
         raise HTTPException(400, "Provide Inventory.txt contents in text")
-    return inventory_mod.parse_inventory_tsv(body.text)
+    try:
+        return inventory_mod.parse_inventory_tsv(body.text)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
 
 
 @app.post("/api/inventory/import")
 def api_inventory_import(body: InventoryParseRequest):
     """Alias for parse — UI/desktop call this after file picker reads Inventory.txt."""
     if not (body.text or "").strip():
-        raise HTTPException(400, "Provide Inventory.txt contents in text")
-    parsed = inventory_mod.parse_inventory_tsv(body.text)
+        raise HTTPException(
+            400,
+            "Provide Inventory.txt contents in text. "
+            "Use Inventory.txt from in-game /outputfile inventory "
+            "(not inventory.exe or other binaries).",
+        )
+    try:
+        parsed = inventory_mod.parse_inventory_tsv(body.text)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
     return {
         "ok": True,
         "equipment": parsed.get("equipment") or {},
@@ -408,22 +441,40 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
     equipment = dict(body.equipment or {})
     parsed = None
     if body.inventory_text:
-        parsed = inventory_mod.parse_inventory_tsv(body.inventory_text)
+        try:
+            parsed = inventory_mod.parse_inventory_tsv(body.inventory_text)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
         equipment = {**equipment, **(parsed.get("equipment") or {})}
     level = max(1, min(50, int(body.character_level or 50)))
-    out = inventory_mod.suggest_upgrades(
-        classes,
-        equipment,
-        upgrade=max(0, min(10, int(body.upgrade))),
-        character_level=level,
-        prefer_ranged_damage=bool(body.prefer_ranged_damage),
-        mode=body.mode or "ai",
-        priority_stat=body.priority_stat or "HP",
-        primary_stats=body.primary_stats,
-        secondary_stats=body.secondary_stats,
-        tertiary_stats=body.tertiary_stats,
-        maximize_hp_regen=bool(body.maximize_hp_regen),
-    )
+    try:
+        out = inventory_mod.suggest_upgrades(
+            classes,
+            equipment,
+            upgrade=max(0, min(10, int(body.upgrade))),
+            character_level=level,
+            prefer_ranged_damage=bool(body.prefer_ranged_damage),
+            mode=body.mode or "ai",
+            priority_stat=body.priority_stat or "HP",
+            primary_stats=body.primary_stats,
+            secondary_stats=body.secondary_stats,
+            tertiary_stats=body.tertiary_stats,
+            maximize_hp_regen=bool(body.maximize_hp_regen),
+            fetch_quest_guides=bool(body.fetch_quest_guides),
+        )
+    except Exception as e:
+        # Never 500 the UI after inventory import — return empty suggestions with note
+        out = {
+            "suggestions": [],
+            "equipment_compare": [],
+            "bis_summary": None,
+            "equipment": {str(k).upper(): v for k, v in (equipment or {}).items() if v},
+            "error": f"Upgrade suggestions unavailable: {e}",
+            "note": (
+                "Quest wiki / zone research failures should not block this; "
+                "retry after selecting classes. No invented stats."
+            ),
+        }
     if parsed is not None:
         out["parsed"] = {
             "equipment": parsed.get("equipment"),
@@ -432,6 +483,13 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
             "skipped_count": parsed.get("skipped_count"),
         }
     return out
+
+
+@app.get("/api/quest-guide")
+def api_quest_guide(name: str = Query(...), fetch: bool = Query(default=True)):
+    """Quest steps from cache/eqlwiki for a quest name (never invented)."""
+    from . import quest_guides as qg
+    return qg.ensure_quest_guide(name, fetch=fetch)
 
 
 @app.get("/api/help/inventory")
@@ -504,7 +562,14 @@ def _mount_spa() -> None:
 
     @app.get("/")
     def spa_index():
-        return FileResponse(dist / "index.html")
+        # Avoid stale Electron/Chromium caches of the SPA shell after updates
+        return FileResponse(
+            dist / "index.html",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
 
     @app.get("/{full_path:path}")
     def spa_fallback(full_path: str):
@@ -513,7 +578,13 @@ def _mount_spa() -> None:
         candidate = dist / full_path
         if candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(dist / "index.html")
+        return FileResponse(
+            dist / "index.html",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
 
 
 if packaged_mode() or FRONTEND_DIST.exists():

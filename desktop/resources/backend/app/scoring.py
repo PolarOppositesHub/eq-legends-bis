@@ -9,6 +9,7 @@ import re
 from copy import deepcopy
 from typing import Any
 
+from . import ac_softcap
 from . import class_roles as roles
 
 PLANNER_SLOTS = [
@@ -159,6 +160,10 @@ def default_score_opts(
     tertiary_stats: list[str] | None = None,
     maximize_hp_regen: bool = False,
     priority_stat: str | None = None,
+    character_level: int = 50,
+    combat_stability_rank: int = 3,
+    physical_enhancement: bool = True,
+    current_worn_ac: float | None = None,
 ) -> dict[str, Any]:
     classes = [c for c in (classes or []) if c]
     primary = _norm_stat_list(primary_stats)
@@ -170,6 +175,12 @@ def default_score_opts(
         if key in LABEL_TO_KEY:
             key = LABEL_TO_KEY[key]
         primary = [key]
+    level = max(1, min(50, int(character_level or 50)))
+    softcap = ac_softcap.softcap_target(
+        level,
+        combat_stability_rank=combat_stability_rank,
+        physical_enhancement=physical_enhancement,
+    )
     return {
         "classes": classes,
         "primary_stats": primary,
@@ -182,25 +193,51 @@ def default_score_opts(
             k: 1.5 for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA")
         },
         "roles": roles.trio_roles(classes),
+        "character_level": level,
+        "combat_stability_rank": max(0, min(3, int(combat_stability_rank))),
+        "physical_enhancement": bool(physical_enhancement),
+        "ac_softcap": softcap,
+        "ac_post_cap_return": ac_softcap.best_post_cap_return(classes),
+        # When set (loadout greedy), AC is valued vs remaining softcap room.
+        "current_worn_ac": current_worn_ac,
     }
 
 
+def _item_ac(s10: dict) -> float:
+    return num(s10.get("AC"))
+
+
 def max_all_stat_sum(s10: dict, opts: dict[str, Any] | None = None) -> float:
-    """Class-aware Max All Stats weighting."""
+    """Class-aware Max All Stats weighting with AC soft-cap awareness.
+
+    Hit the AA-raised soft cap first (full value under cap); overcap AC is lightly
+    valued via class post-cap return so other stats compete.
+    """
     opts = opts or default_score_opts()
     s10 = dict(s10)
     hp = num(s10.get("HP"))
     mana = num(s10.get("MANA"))
-    ac = num(s10.get("AC"))
+    ac = _item_ac(s10)
     resists = sum(num(s10.get(k)) for k in RESIST_KEYS)
     end = num(s10.get("END"))
     attr_w = opts.get("attr_weights") or {}
     attrs = sum(num(s10.get(k)) * float(attr_w.get(k, 1.5)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"))
 
-    hp_w = 2.2 if opts.get("has_tank") else 1.0
-    ac_w = 4.0 if opts.get("has_tank") else 2.0
+    # Survivability without drowning attrs: HP gets the tank bump; AC uses softcap model.
+    hp_w = 1.55 if opts.get("has_tank") else 1.0
     mana_w = 1.2 if opts.get("uses_mana") else 0.05
-    score = hp * hp_w + mana * mana_w + ac * ac_w + attrs + resists * 1.0 + end * 0.5
+
+    softcap = float(opts.get("ac_softcap") or ac_softcap.softcap_target(opts.get("character_level") or 50))
+    post = float(opts.get("ac_post_cap_return") or ac_softcap.best_post_cap_return(opts.get("classes") or []))
+    # Standalone ranking (no running loadout AC): assume ~half softcap already worn
+    # so mid-build pieces still help fill, but pure AC stacks don't dominate forever.
+    if opts.get("current_worn_ac") is None:
+        current = softcap * 0.45
+    else:
+        current = float(opts.get("current_worn_ac") or 0.0)
+    ac_score = ac_softcap.valued_ac(ac, current, softcap, post)
+
+    score = hp * hp_w + mana * mana_w + ac_score + attrs + resists * 1.0 + end * 0.5
 
     if opts.get("maximize_hp_regen"):
         score += num(s10.get("HP_REGEN")) * 40.0
@@ -263,7 +300,9 @@ def score_max_all(item: dict, opts: dict[str, Any] | None = None) -> tuple[float
         return score, bang, "best ratio"
     why = "max all (class-weighted"
     if opts.get("has_tank"):
-        why += "; tank AC/HP"
+        why += "; tank HP/STA; AC to softcap"
+    else:
+        why += "; AC softcap-aware"
     if opts.get("maximize_hp_regen"):
         why += "; HP regen"
     if not opts.get("uses_mana"):
@@ -283,8 +322,8 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
         ranked = sorted(weights.items(), key=lambda kv: (-kv[1], kv[0]))
         opts["primary_stats"] = [k for k, v in ranked[:2] if v > 0]
         opts["secondary_stats"] = [k for k, v in ranked[2:4] if v > 0]
-        opts["tertiary_stats"] = ["AC", "HP"]
-    # Always emphasize AC/HP; tanks heavier via max_all weights
+        # Prefer STA/HP as soft tertiary; AC handled via softcap-aware max_all.
+        opts["tertiary_stats"] = ["STA", "HP"]
     s10 = enrich_stats_with_regen(item)
     bang = max_all_stat_sum(s10, opts)
     # Extra AI nudges from role tags
@@ -294,7 +333,13 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
         role_bonus += num(s10.get("WIS")) * 2.0 + num(s10.get("INT")) * 2.0 + num(s10.get("MANA")) * 0.8
         role_bonus += num(s10.get("MANA_REGEN")) * 25.0
     if "tank" in tags:
-        role_bonus += num(s10.get("AC")) * 2.5 + num(s10.get("HP")) * 1.5 + num(s10.get("STA")) * 2.0
+        # Softcap model already values under-cap AC; prefer STA/HP here.
+        role_bonus += num(s10.get("HP")) * 1.5 + num(s10.get("STA")) * 2.5
+        # Tiny AC nudge only when still under softcap (fill floor).
+        softcap = float(opts.get("ac_softcap") or 0)
+        current = float(opts.get("current_worn_ac") if opts.get("current_worn_ac") is not None else softcap * 0.45)
+        if softcap and current < softcap:
+            role_bonus += num(s10.get("AC")) * 0.35
     if "melee" in tags or "dps" in tags:
         role_bonus += num(s10.get("STR")) * 1.5 + num(s10.get("DEX")) * 1.2 + num(s10.get("AGI")) * 1.0
     if opts.get("maximize_hp_regen"):
@@ -411,6 +456,7 @@ def rank_for_slot(
             "why": why,
             "zone": item.get("zone") or "",
             "drops_mobs": item.get("drops_mobs") or "",
+            "quest_source": item.get("quest_source") or item.get("source") or "",
             "classes_str": item.get("classes_str") or "",
             "classes": item.get("classes") or [],
             "bis_for": item.get("bis_for") or [],
@@ -445,7 +491,10 @@ def pick_loadout(
         ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
     ]
-    opts = score_opts or default_score_opts(priority_stat=stat_key)
+    opts = dict(score_opts or default_score_opts(priority_stat=stat_key))
+    mode_n = normalize_mode(mode)
+    softcap_aware = mode_n in ("max", "ai")
+    worn_ac = 0.0
 
     best_haste_cand = None
     best_haste_slot_group = None
@@ -467,7 +516,12 @@ def pick_loadout(
     reserved_haste_group = best_haste_slot_group
 
     for group in groups:
-        ranked = rank_for_slot(pool, group[0], mode, stat_key, opts)
+        # Re-score this slot with remaining softcap room so we fill AC to the
+        # AA-raised soft cap first, then prefer other stats.
+        slot_opts = dict(opts)
+        if softcap_aware:
+            slot_opts["current_worn_ac"] = worn_ac
+        ranked = rank_for_slot(pool, group[0], mode, stat_key, slot_opts)
         picks = []
         if reserved_haste_name and group == reserved_haste_group:
             for cand in ranked:
@@ -490,8 +544,12 @@ def pick_loadout(
         for slot, cand in zip(group, picks):
             used_names.add(cand["name"])
             why = cand["why"]
+            if softcap_aware and opts.get("ac_softcap"):
+                if worn_ac < float(opts["ac_softcap"]):
+                    why = f"{why}; AC→softcap"
+                else:
+                    why = f"{why}; past AC softcap"
             if slot.endswith("2") and not cand.get("is_weapon"):
-                mode_n = normalize_mode(mode)
                 if mode_n == "priority":
                     why = "2nd priority tier"
                 elif mode_n == "max":
@@ -503,6 +561,9 @@ def pick_loadout(
             row["slot"] = slot
             # Keep nested item for engine.recommend_bis (stats / ratio / haste).
             loadout[slot] = row
+            if softcap_aware:
+                s10 = cand.get("stats_plus10") or enrich_stats_with_regen(cand.get("item") or {})
+                worn_ac += _item_ac(s10 if isinstance(s10, dict) else {})
         for slot in group:
             if slot not in loadout:
                 loadout[slot] = {

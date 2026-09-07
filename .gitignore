@@ -35,3 +35,7 @@ data/log-research
 # Fetched item icons (keep directory)
 data/item-images/*
 !data/item-images/.gitkeep
+
+# Cached quest guides (keep directory)
+data/quest-guides/*
+!data/quest-guides/.gitkeep

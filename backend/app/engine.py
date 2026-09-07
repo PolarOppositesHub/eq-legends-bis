@@ -28,6 +28,7 @@ from .races import RACES, get_races_payload, race_bases  # noqa: E402
 from . import weapon_dps as wdps  # noqa: E402
 from . import scoring as sc  # noqa: E402
 from . import class_roles as class_roles  # noqa: E402
+from . import ac_softcap as ac_softcap  # noqa: E402
 
 ALL_CLASSES = list(bx.ALL_CLASSES)
 DEFAULT_TRIO = list(bx.DEFAULT_TRIO)
@@ -250,9 +251,10 @@ def build_pool_for_classes(
 ) -> list[dict]:
     """Build item pool for selected classes.
 
-    mode="any" (default): usable by ANY selected class (weapon eligibility).
-    mode="intersection" / require_all=True: usable by ALL selected classes (shared armor/jewelry).
+    mode="any" (default): usable by ANY selected class (BiS armor/jewelry/weapons).
+    mode="intersection" / require_all=True: usable by ALL selected classes (legacy shared-only filter).
     Empty class list → empty pool (UI starts with no classes; do not force DEFAULT_TRIO).
+    Scoring still prefers multi-class overlap on near ties (prefer_multi_class / bis_overlap).
     """
     if require_all is None:
         require_all = str(mode).lower() in ("intersection", "all", "shared")
@@ -365,6 +367,7 @@ def recommend_bis(
         tertiary_stats=tertiary_stats,
         maximize_hp_regen=maximize_hp_regen,
         priority_stat=stat_key if mode_n == "priority" else None,
+        character_level=character_level,
     )
     mode_label = {
         "max": "Max All Stats",
@@ -392,9 +395,10 @@ def recommend_bis(
             "note": "Select at least one class.",
         }
 
-    # Armor/jewelry: intersection (fits whole trio). Weapons: any-class union for ratio ranking.
-    gear_pool = build_pool_for_classes(cleaned, mode="intersection")
-    weapon_pool = build_pool_for_classes(cleaned, mode="any")
+    # Armor/jewelry + weapons: any-class union (item usable by at least one selected class).
+    # Multi-class overlap is a soft scoring preference, not an eligibility gate.
+    gear_pool = build_pool_for_classes(cleaned, mode="any")
+    weapon_pool = gear_pool
     pool = gear_pool  # default ranking pool for non-weapon slots
     loadout = sc.pick_loadout(
         gear_pool,
@@ -457,7 +461,7 @@ def recommend_bis(
 
     for slot in ("PRIMARY", "SECONDARY", "RANGE"):
         if slot == "RANGE" and not prefer_ranged_damage:
-            # Keep intersection + priority/max-stats pick for RANGE when toggle is off.
+            # Keep priority/max-stats pick for RANGE when toggle is off (any-class pool).
             continue
         if dw_enabled and slot in ("PRIMARY", "SECONDARY") and dw_eval and dw_eval.get("mode") in (
             "dual_wield", "two_hand",
@@ -502,6 +506,7 @@ def recommend_bis(
             "priority_value": cand.get("pval"),
             "zone": cand.get("zone") or "",
             "drops_mobs": cand.get("drops_mobs") or "",
+            "quest_source": cand.get("quest_source") or (item or {}).get("quest_source") or (item or {}).get("source") or "",
             "classes_str": cand.get("classes_str") or "",
             "ratio_plus10": cand.get("ratio10") if cand.get("ratio10") is not None else (item or {}).get("ratio_plus10"),
             "ratio_at_upgrade": ratio_u if ratio_u is not None else cand.get("ratio_at_upgrade"),
@@ -607,6 +612,7 @@ def recommend_bis(
                 "why": r.get("why"),
                 "zone": r.get("zone") or "",
                 "drops_mobs": r.get("drops_mobs") or r_item.get("drops_mobs") or "",
+                "quest_source": r.get("quest_source") or r_item.get("quest_source") or r_item.get("source") or "",
                 "ratio_plus10": r.get("ratio10"),
                 "ratio_at_upgrade": r_ratio,
                 "haste": ih if ih > 0 else 0,
@@ -633,13 +639,13 @@ def recommend_bis(
             "pair vs best 2H using eqlwiki Game_Mechanics working Legends expected-damage model "
             f"(L={character_level}; DWChance=Skill/400, skill≈{estimate_dw_skill(character_level)}). "
             "RANGE when Prefer ranged: ratio-only. "
-            "Non-weapon gear: intersection (all selected classes)."
+            "Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
         )
     else:
         weapon_rule = (
             "PRIMARY/SECONDARY (and RANGE when Prefer ranged damage): usable by any selected class; "
             "ranked by DMG/DLY ratio only at selected upgrade (no DW class selected). "
-            "Non-weapon gear: usable by all selected classes (intersection)."
+            "Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
         )
 
     return {
@@ -659,6 +665,18 @@ def recommend_bis(
         },
         "upgrade": upgrade,
         "character_level": character_level,
+        "ac_softcap": {
+            **ac_softcap.softcap_payload(
+                character_level,
+                cleaned,
+                combat_stability_rank=int(score_opts.get("combat_stability_rank") or 3),
+                physical_enhancement=bool(score_opts.get("physical_enhancement", True)),
+            ),
+            "loadout_worn_ac": round(sum(
+                float((s.get("stats_at_upgrade") or s.get("stats_plus10") or {}).get("AC") or 0)
+                for s in slots_out
+            ), 2),
+        },
         "prefer_ranged_damage": prefer_ranged_damage,
         "dual_wield_enabled": dw_enabled,
         "dual_wield_eval": (
@@ -693,17 +711,11 @@ def items_for_slot(
 ) -> list[dict]:
     """Slot item list for UI dropdowns / API.
 
-    Weapon slots (PRIMARY/SECONDARY, RANGE when prefer_ranged): any-class pool.
-    Other slots: intersection so shared BiS armor remains.
+    All slots: any-class union (usable by at least one selected class).
+    prefer_ranged_damage is retained for API compatibility; it no longer changes eligibility.
     """
     slot_u = (slot or "").upper()
-    weaponish = slot_u in ("PRIMARY", "SECONDARY") or (
-        slot_u == "RANGE" and prefer_ranged_damage
-    )
-    pool = build_pool_for_classes(classes, mode="any" if weaponish or not slot else "intersection")
-    # Simulator may request all slots with empty slot → union so named weapons resolve
-    if not slot:
-        pool = build_pool_for_classes(classes, mode="any")
+    pool = build_pool_for_classes(classes, mode="any")
     upgrade = max(0, min(10, int(upgrade)))
     qn = (q or "").strip().lower()
     out = []
@@ -909,11 +921,11 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.4",
+        "version": "1.0.5",
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "
-                "(up to 3 stats per tier)"
+                "(up to 3 stats per tier; defaults from classStats)"
             ),
             "priority_weapon": (
                 "If any DW class selected: expected-dmg DW pair vs 2H "
@@ -921,15 +933,24 @@ def meta_payload() -> dict:
                 "RANGE if prefer ranged: ratio-only."
             ),
             "max_armor": (
-                "Class-weighted attrs from races.json classStats; AC/HP heavier for tanks; "
-                "mana/mana regen only for mana classes; optional HP regen toggle"
+                "Class-weighted attrs from races.json classStats; HP bump for tanks; "
+                "AC softcap-aware (eqlwiki L≤50: level×6+25, +CS/+PE AAs — hit softcap then "
+                "prefer other stats; overcap lightly valued via class post-cap return); "
+                "mana only for mana classes; optional HP regen toggle"
             ),
             "ai_armor": (
-                "Role-aware blend of trio primaries + tank/healer/dps nudges; "
-                "cross-check vs community EQ Legends tools when validating"
+                "Role-aware blend of trio primaries + STA/HP tank nudges; same AC softcap "
+                "model as Max All; cross-check vs community EQ Legends tools when validating"
+            ),
+            "ac_softcap": (
+                "Working model from eqlwiki Statistics/AC + Alternate Advancement "
+                "(Combat Stability + Physical Enhancement). Combat Agility is avoidance only."
             ),
             "max_weapon": "Same as priority_weapon for damaging PRIMARY/SECONDARY/RANGE",
-            "gear_eligibility": "armor/jewelry: intersection (all classes); weapons: any class",
+            "gear_eligibility": (
+                "armor/jewelry/weapons: any selected class (union); "
+                "multi-class overlap preferred on near ties"
+            ),
             "dual_wield_classes": sorted(DUAL_WIELD_CLASSES),
             "dw_chance": "Skill/400; skill≈min(252, level*252/50) when no skill table (L50 cap)",
         },

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   getItems,
   getMeta,
@@ -12,6 +12,8 @@ import {
   searchItems,
   getItemDetail,
   itemImageUrl,
+  ensureItemImage,
+  getPriorityDefaults,
 } from './api.js'
 
 const EMPTY_EQ = {}
@@ -88,45 +90,51 @@ function persistBuilds(builds) {
   localStorage.setItem(BUILDS_KEY, JSON.stringify(builds))
 }
 
-function AltRow({ a, upgrade }) {
-  const stats = a.stats_at_upgrade || a.stats_plus10 || a.stats_plus0
+function itemTipStatsText(item, upgrade) {
+  if (!item) return ''
+  const stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0
   const tipParts = [
-    a.haste ? `Haste +${a.haste}% (not stacked)` : null,
-    (a.ratio_at_upgrade != null || a.ratio_plus10 != null)
-      ? `Ratio@+${upgrade} ${Number(a.ratio_at_upgrade ?? a.ratio_plus10).toFixed(4)}`
+    item.haste ? `Haste +${item.haste}% (not stacked)` : null,
+    (item.ratio_at_upgrade != null || item.ratio_plus10 != null)
+      ? `Ratio@+${upgrade} ${Number(item.ratio_at_upgrade ?? item.ratio_plus10).toFixed(4)}`
       : null,
     fmtStats(stats, SHOW_UP) || null,
-    a.zone ? `Zone: ${a.zone}` : null,
-    a.why || null,
+    item.zone ? `Zone: ${item.zone}` : null,
+    item.why || null,
   ].filter(Boolean)
+  return tipParts.join('\n')
+}
 
+function AltRow({ a, upgrade, onShowTip, onHideTip }) {
+  const statsText = itemTipStatsText(a, upgrade)
+  const show = (e) => {
+    const el = e.currentTarget
+    const r = el.getBoundingClientRect()
+    onShowTip({
+      name: a.name,
+      statsText,
+      x: Math.min(r.left, window.innerWidth - 320),
+      y: r.bottom + 6,
+      image: itemImageUrl(a.name),
+    })
+  }
   return (
     <li className="alt-row">
       <span className="alt-name-wrap">
-        <span className="alt-name" tabIndex={0}>
+        <span
+          className="alt-name"
+          tabIndex={0}
+          onMouseEnter={show}
+          onFocus={show}
+          onMouseLeave={onHideTip}
+          onBlur={onHideTip}
+        >
           {a.url ? (
             <a href={a.url} target="_blank" rel="noreferrer">{a.name}</a>
           ) : (
             a.name
           )}
         </span>
-        {tipParts.length > 0 || a.name ? (
-          <div className="alt-tip">
-            {a.name ? (
-              <img
-                className="item-icon"
-                src={itemImageUrl(a.name)}
-                alt=""
-                onError={hideImg}
-              />
-            ) : null}
-            <div className="alt-tip-text">
-              {tipParts.map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </span>
       {a.haste ? <span className="muted"> (haste +{a.haste}%)</span> : null}
       {(a.ratio_at_upgrade != null || a.ratio_plus10 != null) ? (
@@ -262,7 +270,7 @@ export default function App() {
   const [tab, setTab] = useState('bis')
   const [classes, setClasses] = useState([])
   const [mode, setMode] = useState('priority')
-  const [primaryStats, setPrimaryStats] = useState(() => ['INT', '', ''])
+  const [primaryStats, setPrimaryStats] = useState(() => [...EMPTY_TIERS])
   const [secondaryStats, setSecondaryStats] = useState(() => [...EMPTY_TIERS])
   const [tertiaryStats, setTertiaryStats] = useState(() => [...EMPTY_TIERS])
   const [maximizeHpRegen, setMaximizeHpRegen] = useState(false)
@@ -295,8 +303,29 @@ export default function App() {
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [itemDetail, setItemDetail] = useState(null)
+  const [hoverTip, setHoverTip] = useState(null)
+  const hoverTipClearRef = useRef(null)
+  const skipPriorityDefaultsRef = useRef(false)
+  const ensuredImagesRef = useRef(new Set())
 
   const priorityStat = nonemptyStats(primaryStats)[0] || 'INT'
+
+  const showHoverTip = useCallback((tip) => {
+    if (hoverTipClearRef.current) {
+      clearTimeout(hoverTipClearRef.current)
+      hoverTipClearRef.current = null
+    }
+    setHoverTip(tip)
+    if (tip?.name && !ensuredImagesRef.current.has(tip.name)) {
+      ensuredImagesRef.current.add(tip.name)
+      ensureItemImage(tip.name).catch(() => {})
+    }
+  }, [])
+
+  const hideHoverTip = useCallback(() => {
+    if (hoverTipClearRef.current) clearTimeout(hoverTipClearRef.current)
+    hoverTipClearRef.current = setTimeout(() => setHoverTip(null), 80)
+  }, [])
 
   useEffect(() => {
     getMeta()
@@ -313,6 +342,29 @@ export default function App() {
       })
       .catch((e) => setError(String(e.message || e)))
   }, [])
+
+  useEffect(() => {
+    if (skipPriorityDefaultsRef.current) {
+      skipPriorityDefaultsRef.current = false
+      return
+    }
+    if (!classes.length) {
+      setPrimaryStats([...EMPTY_TIERS])
+      setSecondaryStats([...EMPTY_TIERS])
+      setTertiaryStats([...EMPTY_TIERS])
+      return
+    }
+    let cancelled = false
+    getPriorityDefaults(classes)
+      .then((d) => {
+        if (cancelled) return
+        setPrimaryStats(padTier(d.primary_stats))
+        setSecondaryStats(padTier(d.secondary_stats))
+        setTertiaryStats(padTier(d.tertiary_stats))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [classes])
 
   const toggleClass = (c) => {
     setClasses((prev) => {
@@ -360,10 +412,23 @@ export default function App() {
       setBis(data)
       setBisOverrides({})
       const eq = {}
+      const names = []
       for (const s of data.slots || []) {
-        if (s.name) eq[s.slot] = s.name
+        if (s.name) {
+          eq[s.slot] = s.name
+          names.push(s.name)
+        }
+        for (const a of s.alts || []) {
+          if (a?.name) names.push(a.name)
+        }
       }
       setEquipment(eq)
+      // Best-effort icon cache so list/hover images appear without waiting on hover
+      for (const name of names) {
+        if (!name || ensuredImagesRef.current.has(name)) continue
+        ensuredImagesRef.current.add(name)
+        ensureItemImage(name).catch(() => {})
+      }
     } catch (e) {
       setError(String(e.message || e))
     } finally {
@@ -398,6 +463,13 @@ export default function App() {
   useEffect(() => {
     if (tab === 'sim') loadSlotOptions()
   }, [tab, loadSlotOptions])
+
+  useEffect(() => {
+    if (tab === 'upgrades' && classes.length >= 1 && !suggestions) {
+      runUpgradeSuggestions()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, classes])
 
   const runSim = useCallback(async () => {
     if (classes.length < 1) {
@@ -476,6 +548,7 @@ export default function App() {
     secondary_stats: nonemptyStats(secondaryStats),
     tertiary_stats: nonemptyStats(tertiaryStats),
     maximize_hp_regen: maximizeHpRegen,
+    fetch_quest_guides: true,
   }), [
     classes, upgrade, characterLevel, preferRanged, mode, priorityStat,
     primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
@@ -483,6 +556,14 @@ export default function App() {
 
   const onImportFile = async (file) => {
     if (!file) return
+    const lower = (file.name || '').toLowerCase()
+    if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.bin')) {
+      setImportMsg('')
+      setError(
+        'Pick Inventory.txt from in-game /outputfile inventory — not inventory.exe or other binaries.'
+      )
+      return
+    }
     setImportMsg('Reading…')
     try {
       const text = await file.text()
@@ -500,7 +581,7 @@ export default function App() {
         (parsed.unmatched_count ? ` · unmatched ${parsed.unmatched_count}` : '') +
         ` from ${file.name}`
       )
-      setTab('sim')
+      setTab('upgrades')
       if (classes.length >= 1) {
         const sug = await upgradeSuggestions(suggestionBody(eq))
         setSuggestions(sug)
@@ -571,6 +652,7 @@ export default function App() {
   const loadBuild = (id) => {
     const b = builds.find((x) => x.id === id)
     if (!b) return
+    skipPriorityDefaultsRef.current = true
     setSelectedBuildId(id)
     setClasses(b.classes || [])
     setRace(b.race || 'Human')
@@ -729,6 +811,7 @@ export default function App() {
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
+    { id: 'upgrades', label: 'Upgrade Priority' },
     { id: 'search', label: 'Item Search' },
   ]
 
@@ -747,13 +830,15 @@ export default function App() {
           <p>
             Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
             {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.4'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.5'}
           </p>
         </div>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.5</span>
       </header>
 
       <div className="app-shell">
         <nav className="side-nav" aria-label="Main">
+          <div className="side-nav-heading">Menu</div>
           {navItems.map((n) => (
             <button
               key={n.id}
@@ -797,6 +882,9 @@ export default function App() {
                       <option value="max">Max All Stats</option>
                       <option value="ai">AI Choice</option>
                     </select>
+                    <span className="muted mode-hint">
+                      Priority Stat · Max All Stats · AI Choice
+                    </span>
                   </div>
                   {mode === 'priority' && (
                     <div className="field" style={{ minWidth: '100%' }}>
@@ -821,6 +909,9 @@ export default function App() {
                           onChange={(i, v) => setTierAt(setTertiaryStats, i, v)}
                         />
                       </div>
+                      <p className="note priority-defaults-note">
+                        Defaults from selected classes — change any dropdown
+                      </p>
                     </div>
                   )}
                   <div className="field">
@@ -981,11 +1072,11 @@ export default function App() {
                   <> · Tertiary: <strong>{(bis.tertiary_stats || []).join(', ')}</strong></>
                 ) : null}
                 {bis.maximize_hp_regen ? <> · <strong>HP regen maximized</strong></> : null}
-                <> · Pool: {bis.pool_size} shared gear</>
+                <> · Pool: {bis.pool_size} gear (any selected class)</>
                 {bis.weapon_pool_size != null ? <> · Weapons pool: {bis.weapon_pool_size}</> : null}
                 <> · Stats / ratios at <strong>+{bis.upgrade ?? upgrade}</strong></>
                 <> · Level <strong>{bis.character_level ?? characterLevel}</strong></>
-                <> · Weapons: any selected class · Armor: all selected classes</>
+                <> · Weapons &amp; armor: any selected class (multi-class preferred on ties)</>
               </p>
               {bis.dual_wield_enabled && (
                 <p className="note" style={{ marginTop: '0.5rem' }}>
@@ -1012,7 +1103,42 @@ export default function App() {
                           onError={hideImg}
                         />
                       ) : null}
-                      {s.url ? <a href={s.url} target="_blank" rel="noreferrer">{s.name || '—'}</a> : (s.name || '—')}
+                      {s.name ? (
+                        <span
+                          className="bis-item-name"
+                          tabIndex={0}
+                          onMouseEnter={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            showHoverTip({
+                              name: s.name,
+                              statsText: itemTipStatsText(s, upgrade),
+                              x: Math.min(r.left, window.innerWidth - 320),
+                              y: r.bottom + 6,
+                              image: itemImageUrl(s.name),
+                            })
+                          }}
+                          onFocus={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            showHoverTip({
+                              name: s.name,
+                              statsText: itemTipStatsText(s, upgrade),
+                              x: Math.min(r.left, window.innerWidth - 320),
+                              y: r.bottom + 6,
+                              image: itemImageUrl(s.name),
+                            })
+                          }}
+                          onMouseLeave={hideHoverTip}
+                          onBlur={hideHoverTip}
+                        >
+                          {s.url ? (
+                            <a href={s.url} target="_blank" rel="noreferrer">{s.name}</a>
+                          ) : (
+                            s.name
+                          )}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
                     </div>
                     <div className="meta">
                       {s.zone ? (
@@ -1041,7 +1167,13 @@ export default function App() {
                         <summary>Alternates ({s.alts.length})</summary>
                         <ul>
                           {s.alts.map((a) => (
-                            <AltRow key={a.name} a={a} upgrade={upgrade} />
+                            <AltRow
+                              key={a.name}
+                              a={a}
+                              upgrade={upgrade}
+                              onShowTip={showHoverTip}
+                              onHideTip={hideHoverTip}
+                            />
                           ))}
                         </ul>
                       </details>
@@ -1383,33 +1515,20 @@ export default function App() {
                 {suggestions?.suggestions?.length > 0 && (
                   <div style={{ marginTop: '1.25rem' }}>
                     <h3 style={{ fontSize: '0.95rem', color: 'var(--accent)' }}>Upgrade priorities</h3>
-                    <p className="muted" style={{ fontSize: '0.8rem' }}>{suggestions.note}</p>
+                    <p className="muted" style={{ fontSize: '0.8rem' }}>
+                      {suggestions.suggestions.length} upgrades ranked — open the{' '}
+                      <button type="button" className="zone-link" onClick={() => setTab('upgrades')}>
+                        Upgrade Priority
+                      </button>{' '}
+                      menu for the full rundown (zone, mobs, quest steps).
+                    </p>
                     <ul className="upgrade-list">
-                      {suggestions.suggestions.map((s) => (
+                      {suggestions.suggestions.slice(0, 5).map((s) => (
                         <li key={`${s.slot}-${s.suggested}`}>
-                          <div className="pri">P{s.priority} · {s.slot}</div>
+                          <div className="pri">#{s.rank || s.priority} · {s.slot}</div>
                           <div>
                             {s.current ? <>Have <strong>{s.current}</strong> → </> : <>Empty → </>}
-                            {s.suggested_url ? (
-                              <a href={s.suggested_url} target="_blank" rel="noreferrer">{s.suggested}</a>
-                            ) : (
-                              <strong>{s.suggested}</strong>
-                            )}
-                          </div>
-                          <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {s.reason}
-                            {s.suggested_zone ? (
-                              <>
-                                {' · '}
-                                <button
-                                  type="button"
-                                  className="zone-link"
-                                  onClick={() => openZone(s.suggested_zone, '')}
-                                >
-                                  {s.suggested_zone}
-                                </button>
-                              </>
-                            ) : null}
+                            <strong>{s.suggested}</strong>
                           </div>
                         </li>
                       ))}
@@ -1420,8 +1539,177 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'upgrades' && (
+            <div className="panel upgrade-priority-panel">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Upgrade Priority</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Ordered list of what to upgrade next for your selected trio — driven by the BiS list.
+                Each entry shows how to get the piece: zone + drop mobs and/or quest steps (from item DB + eqlwiki; never invented).
+              </p>
+              <div className="row" style={{ marginBottom: '0.85rem' }}>
+                <button type="button" className="primary" onClick={runUpgradeSuggestions} disabled={loading || classes.length < 1}>
+                  {loading ? 'Building list…' : 'Refresh upgrade list'}
+                </button>
+                <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600 }}>
+                  Import Inventory.txt
+                  <input
+                    type="file"
+                    accept=".txt,text/plain"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      onImportFile(e.target.files?.[0])
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                <button type="button" onClick={openHelp}>Help</button>
+              </div>
+              {classes.length < 1 && (
+                <p className="muted">Pick 1–3 classes above, optionally import Inventory.txt, then refresh.</p>
+              )}
+              {importMsg ? <div className="note" style={{ marginBottom: '0.75rem' }}>{importMsg}</div> : null}
+              {suggestions?.note ? <p className="muted" style={{ fontSize: '0.82rem' }}>{suggestions.note}</p> : null}
+              {!suggestions?.suggestions?.length && classes.length >= 1 && !loading && (
+                <p className="muted">
+                  No gaps yet — either you already match BiS, or click Refresh (empty slots count as upgrades).
+                </p>
+              )}
+              <ol className="upgrade-priority-list">
+                {(suggestions?.suggestions || []).map((s) => {
+                  const obtain = s.obtain || {}
+                  const guide = obtain.quest_guide || {}
+                  const steps = guide.steps || []
+                  const components = guide.components || []
+                  const dropMobs = (obtain.zone_detail && obtain.zone_detail.drop_mobs) || []
+                  return (
+                    <li key={`${s.rank}-${s.slot}-${s.suggested}`} className="upgrade-priority-card">
+                      <div className="upgrade-priority-head">
+                        <span className="pri">#{s.rank || '—'} · {s.slot}</span>
+                        {s.suggested_image_url ? (
+                          <img className="item-icon" src={itemImageUrl(s.suggested)} alt="" onError={hideImg} />
+                        ) : null}
+                        <div className="upgrade-priority-title">
+                          {s.current ? (
+                            <span>Have <strong>{s.current}</strong> → </span>
+                          ) : (
+                            <span>Empty → </span>
+                          )}
+                          {s.suggested_url ? (
+                            <a href={s.suggested_url} target="_blank" rel="noreferrer">{s.suggested}</a>
+                          ) : (
+                            <strong>{s.suggested}</strong>
+                          )}
+                        </div>
+                      </div>
+                      <p className="why" style={{ marginTop: '0.35rem' }}>{s.reason}</p>
+                      {(s.deltas || []).length > 0 && (
+                        <div className="equip-deltas" style={{ marginTop: '0.35rem' }}>
+                          {s.deltas.slice(0, 10).map((d) => (
+                            <span key={d.stat} className={d.delta > 0 ? 'delta-pos' : 'delta-neg'}>
+                              {formatSignedDelta(d)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="obtain-block">
+                        <h4>How to get it</h4>
+                        {obtain.how === 'drop' || s.suggested_drops_mobs || s.suggested_zone ? (
+                          <div className="obtain-section">
+                            <div>
+                              <span className="muted">Zone: </span>
+                              {s.suggested_zone ? (
+                                <button
+                                  type="button"
+                                  className="zone-link"
+                                  onClick={() => openZone(s.suggested_zone, s.suggested_drops_mobs || '')}
+                                >
+                                  {s.suggested_zone}
+                                </button>
+                              ) : (
+                                <span className="muted">unknown</span>
+                              )}
+                            </div>
+                            {(s.suggested_drops_mobs || dropMobs.length > 0) && (
+                              <div style={{ marginTop: '0.35rem' }}>
+                                <span className="muted">Drops from: </span>
+                                {dropMobs.length > 0 ? (
+                                  <ul className="mob-list" style={{ margin: '0.25rem 0 0' }}>
+                                    {dropMobs.map((m) => (
+                                      <li key={m.name}>
+                                        <strong>{m.name}</strong>
+                                        {m.level != null && m.level !== '' ? ` · L${m.level}` : ''}
+                                        {m.spawn_notes ? ` · ${m.spawn_notes}` : ''}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <span>{s.suggested_drops_mobs}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                        {(s.suggested_quest_name || obtain.quest_name) && (
+                          <div className="obtain-section" style={{ marginTop: '0.55rem' }}>
+                            <div>
+                              <span className="muted">Quest: </span>
+                              <strong>{s.suggested_quest_name || obtain.quest_name}</strong>
+                              {guide.url ? (
+                                <>
+                                  {' · '}
+                                  <a href={guide.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                                </>
+                              ) : null}
+                            </div>
+                            {components.length > 0 && (
+                              <table className="quest-components" style={{ marginTop: '0.4rem' }}>
+                                <thead>
+                                  <tr>
+                                    <th>Item</th>
+                                    <th>Who</th>
+                                    <th>Where</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {components.map((c, i) => (
+                                    <tr key={`${c.item}-${i}`}>
+                                      <td>{c.item}</td>
+                                      <td>{c.who}</td>
+                                      <td>{c.where}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                            {steps.length > 0 ? (
+                              <ol className="quest-steps">
+                                {steps.map((step, i) => (
+                                  <li key={i}>{step}</li>
+                                ))}
+                              </ol>
+                            ) : (
+                              <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
+                                {guide.note || guide.error || 'Quest steps not in local DB — open eqlwiki link if shown.'}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {!s.suggested_zone && !s.suggested_drops_mobs && !s.suggested_quest_name && !obtain.quest_name && (
+                          <p className="muted" style={{ fontSize: '0.8rem' }}>
+                            No zone/drop/quest source recorded for this item in the decoded catalog.
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          )}
+
           <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.8rem' }}>
             Item stats from decoded JSON only. Zone details from zone-research (never invented).
+            Quest steps from eqlwiki when available (cached; never invented).
             Race attrs/resists: eqlegendstools (verified; matches eqlwiki).
             HP/Mana/END/AC racial &amp; level pools = not applied (no verified formula).
             Excel export: <code>.venv/bin/python scripts/export_xlsx.py</code>
@@ -1431,6 +1719,30 @@ export default function App() {
 
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
+      {hoverTip ? (
+        <div
+          className="hover-tip"
+          style={{ left: hoverTip.x, top: hoverTip.y }}
+          role="tooltip"
+        >
+          {hoverTip.image ? (
+            <img
+              className="item-icon"
+              src={hoverTip.image}
+              alt=""
+              onError={hideImg}
+            />
+          ) : null}
+          <div className="hover-tip-body">
+            <div className="hover-tip-name">{hoverTip.name}</div>
+            {hoverTip.statsText ? (
+              <pre className="hover-tip-stats">{hoverTip.statsText}</pre>
+            ) : (
+              <div className="muted">No stats</div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

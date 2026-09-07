@@ -15,7 +15,7 @@ from .paths import APP_ROOT
 
 ATTR_KEYS = ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA")
 
-# Classic EQ Legends tank / hybrid tanks — AC/HP weighed heavier in Max-all / AI.
+# Classic EQ Legends tank / hybrid tanks — HP/STA emphasized; AC only a light bump.
 TANK_CLASSES = frozenset({"Warrior", "Paladin", "Shadow Knight"})
 
 # Classes that spend mana as a core resource.
@@ -88,6 +88,33 @@ def trio_primary_attr_weights(classes: list[str]) -> dict[str, float]:
     total = sum(weights.values()) or 1.0
     scale = 30.0 * max(1, len(classes)) / total  # classStats total is 30 each
     return {k: (v * scale) / 10.0 for k, v in weights.items()}  # ~0..4.5 range
+
+
+def trio_default_priority_tiers(classes: list[str]) -> dict[str, list[str]]:
+    """Default selectable priority tiers from the trio's classStats ranking.
+
+    Most important attrs → primary (up to 3), next → secondary, next → tertiary.
+    Empty when no classes selected.
+    """
+    cleaned = [c for c in (classes or []) if c]
+    if not cleaned:
+        return {"primary": [], "secondary": [], "tertiary": []}
+    weights = {k: 0.0 for k in ATTR_KEYS}
+    stats = _load_class_stats()
+    for c in cleaned:
+        row = stats.get(c) or {}
+        for k in ATTR_KEYS:
+            weights[k] += float(row.get(k) or 0)
+    ranked = [k for k, v in sorted(weights.items(), key=lambda kv: (-kv[1], kv[0])) if v > 0]
+    # Fill remaining attrs so secondary/tertiary always have candidates when possible
+    for k in ATTR_KEYS:
+        if k not in ranked:
+            ranked.append(k)
+    return {
+        "primary": ranked[0:3],
+        "secondary": ranked[3:6],
+        "tertiary": ranked[6:9],
+    }
 
 
 def trio_has_tank(classes: list[str]) -> bool:

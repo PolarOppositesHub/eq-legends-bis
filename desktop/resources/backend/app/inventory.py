@@ -6,7 +6,9 @@ from typing import Any
 
 from . import engine
 from . import item_catalog as item_catalog_mod
+from . import quest_guides
 from . import scoring as sc
+from . import zones as zones_mod
 
 # Inventory Location → planner slot(s). Multi-slot locations consume in order.
 LOCATION_TO_SLOTS: dict[str, list[str]] = {
@@ -48,12 +50,45 @@ def _catalog_has_name(name: str) -> bool:
     return item_catalog_mod.get_item_by_name(name) is not None
 
 
+_BINARY_HINT = re.compile(
+    r"(This program cannot be run in DOS mode|\x00MZ|^\x7fELF|^\x89PNG)",
+    re.I | re.M,
+)
+_INVENTORY_HELP = (
+    "Use Inventory.txt from in-game /outputfile inventory "
+    "(not inventory.exe or other binaries)."
+)
+
+
+def looks_like_binary_inventory(text: str) -> bool:
+    """True when payload looks like a PE/ELF/binary dump rather than Inventory.txt TSV."""
+    if text is None:
+        return False
+    sample = text[:4096]
+    if "\x00" in sample:
+        return True
+    if sample.startswith("MZ") or sample.startswith("\x7fELF"):
+        return True
+    if _BINARY_HINT.search(sample):
+        return True
+    # High ratio of non-text bytes in the sample
+    if sample:
+        weird = sum(1 for ch in sample if ord(ch) < 9 or (14 <= ord(ch) < 32 and ch not in "\t\n\r"))
+        if weird / max(1, len(sample)) > 0.08:
+            return True
+    return False
+
+
 def parse_inventory_tsv(text: str) -> dict[str, Any]:
     """Parse Inventory.txt body. Returns worn equipment mapped to planner slots.
 
     Every non-empty inventory line is retained in `all_items` even when not in the
     catalog or not mappable to a planner slot (flagged unmatched / skipped).
+    Raises ValueError when the payload looks like a binary/.exe file.
     """
+    if looks_like_binary_inventory(text or ""):
+        raise ValueError(_INVENTORY_HELP)
+
     lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
     if not lines:
         return {
@@ -128,17 +163,12 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             if entry["unmatched"]:
                 unmatched.append(entry)
             continue
-        # Empty slots: blank / "Empty" name. ID "0" alone is not empty when a name is present.
         if not name or name.lower() == "empty":
             entry["reason"] = "empty"
             entry["planner_slot"] = None
             skipped.append(entry)
             all_items.append(entry)
             continue
-        if item_id == "0" and (not count or count == "0"):
-            # Heuristic: some dumps mark empty with ID 0 and Count 0 even with a leftover name.
-            # Prefer name-based empty above; only skip here when count is also zero-ish.
-            pass
 
         loc_key = location.upper().strip()
         targets = LOCATION_TO_SLOTS.get(loc_key)
@@ -209,6 +239,71 @@ def _stat_delta(worn_stats: dict, bis_stats: dict) -> list[dict[str, Any]]:
     return out
 
 
+def _slot_importance(slot: str) -> int:
+    """Tie-break order when priorities match — weapons/chest before jewelry."""
+    order = [
+        "CHEST", "PRIMARY", "SECONDARY", "LEGS", "HEAD", "ARMS", "HANDS", "FEET",
+        "BACK", "SHOULDERS", "WAIST", "FACE", "NECK", "WRIST", "EAR1", "EAR2",
+        "FINGER1", "FINGER2", "RANGE", "AMMO",
+    ]
+    try:
+        return len(order) - order.index(slot)
+    except ValueError:
+        return 0
+
+
+def _enrich_obtain(row: dict[str, Any], *, fetch_quest: bool = True) -> dict[str, Any]:
+    """Attach zone/mob/quest obtain path for a BiS suggestion target.
+
+    Degrades gracefully when quest wiki / zone research is unavailable — never raises.
+    """
+    name = (row.get("name") or "").strip()
+    try:
+        cat = item_catalog_mod.get_item_by_name(name) if name else None
+    except Exception:
+        cat = None
+    base = {
+        "zone": row.get("zone") or (cat or {}).get("zone") or "",
+        "drops_mobs": row.get("drops_mobs") or (cat or {}).get("drops_mobs") or "",
+        "quest_source": row.get("quest_source") or (cat or {}).get("quest_source") or (cat or {}).get("source") or "",
+        "url": row.get("url") or (cat or {}).get("url") or "",
+        "name": name,
+    }
+    try:
+        obtain = quest_guides.obtain_path_for_item({**(cat or {}), **base}, fetch_quest=fetch_quest)
+    except Exception:
+        obtain = {
+            "how": "unknown",
+            "zone": base.get("zone") or "",
+            "drops_mobs": base.get("drops_mobs") or "",
+            "quest_source": base.get("quest_source") or "",
+            "quest_name": None,
+            "quest_guide": None,
+            "item_url": base.get("url") or "",
+            "error": "obtain path unavailable",
+        }
+    # Zone research summary (mobs with levels when available) — never invent
+    zone_detail = None
+    if obtain.get("zone"):
+        try:
+            zone_detail = zones_mod.zone_detail_for_item(obtain["zone"], obtain.get("drops_mobs") or "")
+        except Exception:
+            zone_detail = None
+    return {
+        **obtain,
+        "zone_detail": {
+            "found": bool((zone_detail or {}).get("found")),
+            "zone": (zone_detail or {}).get("zone") or obtain.get("zone"),
+            "drop_mobs": (zone_detail or {}).get("drop_mobs") or [],
+            "level_requirement": ((zone_detail or {}).get("overview") or {}).get("level_requirement")
+            or (zone_detail or {}).get("level_requirement"),
+            "walkthrough_urls": (zone_detail or {}).get("walkthrough_urls") or [],
+            "map_url": (zone_detail or {}).get("map_url"),
+            "message": (zone_detail or {}).get("message") or "",
+        } if obtain.get("zone") else None,
+    }
+
+
 def suggest_upgrades(
     classes: list[str],
     equipment: dict[str, str],
@@ -223,6 +318,7 @@ def suggest_upgrades(
     secondary_stats: list[str] | None = None,
     tertiary_stats: list[str] | None = None,
     maximize_hp_regen: bool = False,
+    fetch_quest_guides: bool = True,
 ) -> dict[str, Any]:
     """Compare current equipment vs BiS list for the trio; prioritize closing BiS gaps."""
     if not classes:
@@ -298,49 +394,70 @@ def suggest_upgrades(
 
         if not bis_name:
             continue
-        if not current:
-            suggestions.append({
-                "slot": slot,
-                "priority": 100,
-                "reason": "missing BiS (slot empty) — upgrade to BiS list pick",
-                "current": None,
-                "suggested": bis_name,
-                "suggested_url": row.get("url") or "",
-                "suggested_zone": row.get("zone") or "",
-                "suggested_ratio": row.get("ratio_at_upgrade"),
-                "suggested_why": row.get("why") or "",
-                "deltas": deltas,
-            })
-            continue
-        if current.lower() == bis_name.lower():
+        if current and current.lower() == bis_name.lower():
             continue
 
-        # Gap vs BiS list: higher priority when more/larger meaningful deltas favor BiS
         positive_gap = sum(d["delta"] for d in deltas if d["delta"] > 0)
         negative_gap = sum(-d["delta"] for d in deltas if d["delta"] < 0)
-        worse = positive_gap > negative_gap + 1e-9
-        reason = (
-            f"not current BiS — replace with {bis_name}"
-            + (f" (net BiS gain ~{positive_gap - negative_gap:.0f})" if deltas else "")
-        )
-        pri = 95 if worse else 55
-        if not cur_item and not _catalog_has_name(current):
-            pri = 85
-            reason = f"worn item unmatched in DB; BiS list recommends {bis_name}"
+        net_gap = positive_gap - negative_gap
+
+        if not current:
+            pri = 100
+            reason = "missing BiS (slot empty) — upgrade to BiS list pick"
+        else:
+            worse = net_gap > 1e-9
+            reason = (
+                f"not current BiS — replace with {bis_name}"
+                + (f" (net BiS gain ~{net_gap:.0f})" if deltas else "")
+            )
+            # Finer priority: empty=100, large gap=90-99, unmatched=85, small/neutral=50-70
+            if not cur_item and not _catalog_has_name(current):
+                pri = 85
+                reason = f"worn item unmatched in DB; BiS list recommends {bis_name}"
+            elif worse:
+                pri = min(99, 90 + int(min(9, max(0, net_gap) // 20)))
+            else:
+                pri = 55
+
+        obtain = _enrich_obtain(row, fetch_quest=fetch_quest_guides)
+        how_bits = []
+        if obtain.get("how") == "drop" and (obtain.get("zone") or obtain.get("drops_mobs")):
+            how_bits.append(
+                "Drop"
+                + (f" in {obtain['zone']}" if obtain.get("zone") else "")
+                + (f" from {obtain['drops_mobs']}" if obtain.get("drops_mobs") else "")
+            )
+        elif obtain.get("how") == "quest" and obtain.get("quest_name"):
+            how_bits.append(f"Quest: {obtain['quest_name']}")
+        elif obtain.get("zone"):
+            how_bits.append(f"Zone: {obtain['zone']}")
+        if how_bits:
+            reason = f"{reason} · {' · '.join(how_bits)}"
+
         suggestions.append({
             "slot": slot,
             "priority": pri,
+            "rank_score": pri * 1000 + _slot_importance(slot) * 10 + max(0, int(net_gap)),
             "reason": reason,
-            "current": current,
+            "current": current or None,
             "suggested": bis_name,
-            "suggested_url": row.get("url") or "",
-            "suggested_zone": row.get("zone") or "",
+            "suggested_url": row.get("url") or obtain.get("item_url") or "",
+            "suggested_zone": obtain.get("zone") or row.get("zone") or "",
+            "suggested_drops_mobs": obtain.get("drops_mobs") or "",
+            "suggested_quest_source": obtain.get("quest_source") or "",
+            "suggested_quest_name": obtain.get("quest_name"),
             "suggested_ratio": row.get("ratio_at_upgrade"),
             "suggested_why": row.get("why") or "",
+            "suggested_image_url": f"/api/item-image?name={bis_name}" if bis_name else "",
             "deltas": deltas,
+            "obtain": obtain,
         })
 
-    suggestions.sort(key=lambda s: (-s["priority"], s["slot"]))
+    suggestions.sort(key=lambda s: (-s.get("rank_score", 0), -s["priority"], s["slot"]))
+    # Stable 1-based display rank
+    for i, s in enumerate(suggestions, start=1):
+        s["rank"] = i
+
     return {
         "suggestions": suggestions,
         "equipment_compare": equipment_compare,
@@ -353,7 +470,8 @@ def suggest_upgrades(
         },
         "equipment": eq_norm,
         "note": (
-            "Upgrade priorities driven by the BiS list for the selected trio/mode "
-            "(not AC/HP-only heuristic). equipment_compare provides worn | BiS options | deltas."
+            "Upgrade Priority list is ordered by importance (empty slots first, then largest "
+            "BiS gaps). Each entry includes how to get the item: zone + drop mobs and/or quest "
+            "name with steps from eqlwiki when available — never invented."
         ),
     }
