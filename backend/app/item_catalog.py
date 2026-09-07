@@ -237,6 +237,8 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "classes": it.get("classes") or [],
         "classes_str": it.get("classes_str") or ", ".join(it.get("classes") or []),
         "zone": it.get("zone") or "",
+        "drops_mobs": it.get("drops_mobs") or "",
+        "quest_source": it.get("quest_source") or it.get("source") or "",
         "url": it.get("url") or "",
         "sourceUrl": it.get("sourceUrl") or "",
         "zamUrl": it.get("zamUrl") or "",

@@ -456,6 +456,7 @@ def rank_for_slot(
             "why": why,
             "zone": item.get("zone") or "",
             "drops_mobs": item.get("drops_mobs") or "",
+            "quest_source": item.get("quest_source") or item.get("source") or "",
             "classes_str": item.get("classes_str") or "",
             "classes": item.get("classes") or [],
             "bis_for": item.get("bis_for") or [],

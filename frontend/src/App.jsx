@@ -464,6 +464,13 @@ export default function App() {
     if (tab === 'sim') loadSlotOptions()
   }, [tab, loadSlotOptions])
 
+  useEffect(() => {
+    if (tab === 'upgrades' && classes.length >= 1 && !suggestions) {
+      runUpgradeSuggestions()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, classes])
+
   const runSim = useCallback(async () => {
     if (classes.length < 1) {
       setError('Pick at least one class (up to 3).')
@@ -541,6 +548,7 @@ export default function App() {
     secondary_stats: nonemptyStats(secondaryStats),
     tertiary_stats: nonemptyStats(tertiaryStats),
     maximize_hp_regen: maximizeHpRegen,
+    fetch_quest_guides: true,
   }), [
     classes, upgrade, characterLevel, preferRanged, mode, priorityStat,
     primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
@@ -565,7 +573,7 @@ export default function App() {
         (parsed.unmatched_count ? ` · unmatched ${parsed.unmatched_count}` : '') +
         ` from ${file.name}`
       )
-      setTab('sim')
+      setTab('upgrades')
       if (classes.length >= 1) {
         const sug = await upgradeSuggestions(suggestionBody(eq))
         setSuggestions(sug)
@@ -795,6 +803,7 @@ export default function App() {
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
+    { id: 'upgrades', label: 'Upgrade Priority' },
     { id: 'search', label: 'Item Search' },
   ]
 
@@ -1498,33 +1507,20 @@ export default function App() {
                 {suggestions?.suggestions?.length > 0 && (
                   <div style={{ marginTop: '1.25rem' }}>
                     <h3 style={{ fontSize: '0.95rem', color: 'var(--accent)' }}>Upgrade priorities</h3>
-                    <p className="muted" style={{ fontSize: '0.8rem' }}>{suggestions.note}</p>
+                    <p className="muted" style={{ fontSize: '0.8rem' }}>
+                      {suggestions.suggestions.length} upgrades ranked — open the{' '}
+                      <button type="button" className="zone-link" onClick={() => setTab('upgrades')}>
+                        Upgrade Priority
+                      </button>{' '}
+                      menu for the full rundown (zone, mobs, quest steps).
+                    </p>
                     <ul className="upgrade-list">
-                      {suggestions.suggestions.map((s) => (
+                      {suggestions.suggestions.slice(0, 5).map((s) => (
                         <li key={`${s.slot}-${s.suggested}`}>
-                          <div className="pri">P{s.priority} · {s.slot}</div>
+                          <div className="pri">#{s.rank || s.priority} · {s.slot}</div>
                           <div>
                             {s.current ? <>Have <strong>{s.current}</strong> → </> : <>Empty → </>}
-                            {s.suggested_url ? (
-                              <a href={s.suggested_url} target="_blank" rel="noreferrer">{s.suggested}</a>
-                            ) : (
-                              <strong>{s.suggested}</strong>
-                            )}
-                          </div>
-                          <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {s.reason}
-                            {s.suggested_zone ? (
-                              <>
-                                {' · '}
-                                <button
-                                  type="button"
-                                  className="zone-link"
-                                  onClick={() => openZone(s.suggested_zone, '')}
-                                >
-                                  {s.suggested_zone}
-                                </button>
-                              </>
-                            ) : null}
+                            <strong>{s.suggested}</strong>
                           </div>
                         </li>
                       ))}
@@ -1535,8 +1531,177 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'upgrades' && (
+            <div className="panel upgrade-priority-panel">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Upgrade Priority</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Ordered list of what to upgrade next for your selected trio — driven by the BiS list.
+                Each entry shows how to get the piece: zone + drop mobs and/or quest steps (from item DB + eqlwiki; never invented).
+              </p>
+              <div className="row" style={{ marginBottom: '0.85rem' }}>
+                <button type="button" className="primary" onClick={runUpgradeSuggestions} disabled={loading || classes.length < 1}>
+                  {loading ? 'Building list…' : 'Refresh upgrade list'}
+                </button>
+                <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600 }}>
+                  Import Inventory.txt
+                  <input
+                    type="file"
+                    accept=".txt,text/plain"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      onImportFile(e.target.files?.[0])
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                <button type="button" onClick={openHelp}>Help</button>
+              </div>
+              {classes.length < 1 && (
+                <p className="muted">Pick 1–3 classes above, optionally import Inventory.txt, then refresh.</p>
+              )}
+              {importMsg ? <div className="note" style={{ marginBottom: '0.75rem' }}>{importMsg}</div> : null}
+              {suggestions?.note ? <p className="muted" style={{ fontSize: '0.82rem' }}>{suggestions.note}</p> : null}
+              {!suggestions?.suggestions?.length && classes.length >= 1 && !loading && (
+                <p className="muted">
+                  No gaps yet — either you already match BiS, or click Refresh (empty slots count as upgrades).
+                </p>
+              )}
+              <ol className="upgrade-priority-list">
+                {(suggestions?.suggestions || []).map((s) => {
+                  const obtain = s.obtain || {}
+                  const guide = obtain.quest_guide || {}
+                  const steps = guide.steps || []
+                  const components = guide.components || []
+                  const dropMobs = (obtain.zone_detail && obtain.zone_detail.drop_mobs) || []
+                  return (
+                    <li key={`${s.rank}-${s.slot}-${s.suggested}`} className="upgrade-priority-card">
+                      <div className="upgrade-priority-head">
+                        <span className="pri">#{s.rank || '—'} · {s.slot}</span>
+                        {s.suggested_image_url ? (
+                          <img className="item-icon" src={itemImageUrl(s.suggested)} alt="" onError={hideImg} />
+                        ) : null}
+                        <div className="upgrade-priority-title">
+                          {s.current ? (
+                            <span>Have <strong>{s.current}</strong> → </span>
+                          ) : (
+                            <span>Empty → </span>
+                          )}
+                          {s.suggested_url ? (
+                            <a href={s.suggested_url} target="_blank" rel="noreferrer">{s.suggested}</a>
+                          ) : (
+                            <strong>{s.suggested}</strong>
+                          )}
+                        </div>
+                      </div>
+                      <p className="why" style={{ marginTop: '0.35rem' }}>{s.reason}</p>
+                      {(s.deltas || []).length > 0 && (
+                        <div className="equip-deltas" style={{ marginTop: '0.35rem' }}>
+                          {s.deltas.slice(0, 10).map((d) => (
+                            <span key={d.stat} className={d.delta > 0 ? 'delta-pos' : 'delta-neg'}>
+                              {formatSignedDelta(d)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="obtain-block">
+                        <h4>How to get it</h4>
+                        {obtain.how === 'drop' || s.suggested_drops_mobs || s.suggested_zone ? (
+                          <div className="obtain-section">
+                            <div>
+                              <span className="muted">Zone: </span>
+                              {s.suggested_zone ? (
+                                <button
+                                  type="button"
+                                  className="zone-link"
+                                  onClick={() => openZone(s.suggested_zone, s.suggested_drops_mobs || '')}
+                                >
+                                  {s.suggested_zone}
+                                </button>
+                              ) : (
+                                <span className="muted">unknown</span>
+                              )}
+                            </div>
+                            {(s.suggested_drops_mobs || dropMobs.length > 0) && (
+                              <div style={{ marginTop: '0.35rem' }}>
+                                <span className="muted">Drops from: </span>
+                                {dropMobs.length > 0 ? (
+                                  <ul className="mob-list" style={{ margin: '0.25rem 0 0' }}>
+                                    {dropMobs.map((m) => (
+                                      <li key={m.name}>
+                                        <strong>{m.name}</strong>
+                                        {m.level != null && m.level !== '' ? ` · L${m.level}` : ''}
+                                        {m.spawn_notes ? ` · ${m.spawn_notes}` : ''}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <span>{s.suggested_drops_mobs}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                        {(s.suggested_quest_name || obtain.quest_name) && (
+                          <div className="obtain-section" style={{ marginTop: '0.55rem' }}>
+                            <div>
+                              <span className="muted">Quest: </span>
+                              <strong>{s.suggested_quest_name || obtain.quest_name}</strong>
+                              {guide.url ? (
+                                <>
+                                  {' · '}
+                                  <a href={guide.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                                </>
+                              ) : null}
+                            </div>
+                            {components.length > 0 && (
+                              <table className="quest-components" style={{ marginTop: '0.4rem' }}>
+                                <thead>
+                                  <tr>
+                                    <th>Item</th>
+                                    <th>Who</th>
+                                    <th>Where</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {components.map((c, i) => (
+                                    <tr key={`${c.item}-${i}`}>
+                                      <td>{c.item}</td>
+                                      <td>{c.who}</td>
+                                      <td>{c.where}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                            {steps.length > 0 ? (
+                              <ol className="quest-steps">
+                                {steps.map((step, i) => (
+                                  <li key={i}>{step}</li>
+                                ))}
+                              </ol>
+                            ) : (
+                              <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
+                                {guide.note || guide.error || 'Quest steps not in local DB — open eqlwiki link if shown.'}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {!s.suggested_zone && !s.suggested_drops_mobs && !s.suggested_quest_name && !obtain.quest_name && (
+                          <p className="muted" style={{ fontSize: '0.8rem' }}>
+                            No zone/drop/quest source recorded for this item in the decoded catalog.
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          )}
+
           <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.8rem' }}>
             Item stats from decoded JSON only. Zone details from zone-research (never invented).
+            Quest steps from eqlwiki when available (cached; never invented).
             Race attrs/resists: eqlegendstools (verified; matches eqlwiki).
             HP/Mana/END/AC racial &amp; level pools = not applied (no verified formula).
             Excel export: <code>.venv/bin/python scripts/export_xlsx.py</code>

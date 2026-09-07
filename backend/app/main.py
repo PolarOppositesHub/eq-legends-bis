@@ -79,6 +79,7 @@ class UpgradeSuggestRequest(BaseModel):
     tertiary_stats: list[str] = Field(default_factory=list)
     maximize_hp_regen: bool = False
     priority_stat: str = "HP"
+    fetch_quest_guides: bool = True
 
 
 def _norm_classes(classes: list[str] | None, *, allow_empty: bool = True) -> list[str]:
@@ -444,6 +445,7 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
         secondary_stats=body.secondary_stats,
         tertiary_stats=body.tertiary_stats,
         maximize_hp_regen=bool(body.maximize_hp_regen),
+        fetch_quest_guides=bool(body.fetch_quest_guides),
     )
     if parsed is not None:
         out["parsed"] = {
@@ -453,6 +455,13 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
             "skipped_count": parsed.get("skipped_count"),
         }
     return out
+
+
+@app.get("/api/quest-guide")
+def api_quest_guide(name: str = Query(...), fetch: bool = Query(default=True)):
+    """Quest steps from cache/eqlwiki for a quest name (never invented)."""
+    from . import quest_guides as qg
+    return qg.ensure_quest_guide(name, fetch=fetch)
 
 
 @app.get("/api/help/inventory")

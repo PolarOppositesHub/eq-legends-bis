@@ -6,6 +6,14 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 
 ## 1.0.5 — UI visibility, class priority defaults, hover tips, AC softcap (2026-09-07)
 
+### Upgrade Priority tab — Josh feedback
+- [x] Dedicated left-menu **Upgrade Priority** tab (not only a Sim subsection).
+- [x] Ordered rundown by importance (empty slots → largest BiS gaps).
+- [x] Each entry: what to get, worn → BiS, deltas, **how to get it**.
+- [x] Drops: zone + mob names (zone-research levels/spawns when available).
+- [x] Quests: quest name + eqlwiki steps/components when fetchable (Plane of Sky class-test tables supported); never invent steps.
+- [x] Import Inventory.txt from this tab; Sim keeps a short top-5 teaser linking here.
+
 ### AC softcap (Max All / AI) — Josh feedback
 - [x] Do not over-emphasize tank AC at the expense of everything else.
 - [x] Respect AC soft caps; include AA soft-cap increases.

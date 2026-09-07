@@ -1,19 +1,20 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
 Version: **1.0.5** (local tree smoke-ready; Josh does Windows portable + gh release — do not package here)
-Canonical: backend/app/{main,engine,scoring,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
+Canonical: backend/app/{main,engine,scoring,ac_softcap,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
 
 ## Why 1.0.5 (after 1.0.4 complaints)
 Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not on left, no hover stats, only Max All + Priority (no AI Choice), Priority not 3×3 selectable. Source inspection of the published **v1.0.4** portable *does* contain those UI strings — so either an old EXE was still launching, Chromium cached the SPA shell, or hover tips were clipped (CSS absolute tips inside overflow). **1.0.5** makes the UI unmistakable and fixes defaults/hover/cache:
 
 - Header badge **UI 1.0.5** (confirm this after install)
-- Left **Menu** nav (gold border): Best in Slot / Simulator / Item Search
+- Left **Menu** nav (gold border): Best in Slot / Simulator / **Upgrade Priority** / Item Search
 - Modes: Priority Stat · Max All Stats · **AI Choice** + Maximize HP regen
 - Priority: up to **3 primary / 3 secondary / 3 tertiary** selectable dropdowns
 - Defaults from selected classes via `GET /api/priority-defaults` (classStats ranking)
 - Fixed-position hover tip (stats + icon) on BiS / alternate names — not clipped
 - Prefetch item icons after BiS; SPA `Cache-Control: no-store` on index.html
-- **AC softcap-aware** Max All / AI (`backend/app/ac_softcap.py`): eqlwiki `level×6+25` (L≤50) + Combat Stability (+2/5/10%) + Physical Enhancement (+2%); BiS assumes max AAs → L50 target **364**; fill softcap first, then prefer STA/HP/attrs; overcap lightly valued; Combat Agility = avoidance only
+- **Upgrade Priority tab**: ordered BiS-gap rundown with zone + drop mobs and/or quest steps (eqlwiki; cached under data/quest-guides/)
+- **AC softcap-aware** Max All / AI (`ac_softcap.py`): fill AA-raised softcap then prefer other stats
 
 Smoke (2026-09-07):
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA
