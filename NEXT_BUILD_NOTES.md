@@ -21,10 +21,17 @@
 - [ ] **Third column:** stat differences if the selected BiS item replaced the worn item — per-stat signed deltas (e.g. worn 10 AC, BiS 12 AC → `AC +2`).
 - [ ] Only show meaningful deltas (non-zero); keep readable with current dark/gold theme.
 
+### BiS tab — multi-tier priority stats (user-selectable)
+- [ ] When choosing priority stats on the **BiS tab**, allow up to **3 primary**, **3 secondary**, and **3 tertiary** stats (all user-selectable; slots may be left empty).
+- [ ] Ranking/weighting order: **primary → secondary → tertiary**. Within a tier, the selected stats share that tier’s priority.
+- [ ] Example: primary STR + STA, secondary INT + WIS, tertiary CHA → gear ranking favors STR/STA first, then INT/WIS, then CHA.
+- [ ] Do not hardcode a fixed priority set — the user must be able to pick which stats go in which tier.
+
 ### Josh testing notes (paste below as they arrive)
 - Inventory import: some items missing from view — show all even if not in DB.
 - Upgrade priorities: not good — looks like AC/HP only; should go off BiS list for what to upgrade to.
 - Sim equipment: imported worn | selectable BiS column | stat delta column (e.g. AC +2).
+- BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 
