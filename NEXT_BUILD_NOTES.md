@@ -27,11 +27,18 @@
 - [ ] Example: primary STR + STA, secondary INT + WIS, tertiary CHA → gear ranking favors STR/STA first, then INT/WIS, then CHA.
 - [ ] Do not hardcode a fixed priority set — the user must be able to pick which stats go in which tier.
 
+### Left nav pane — BiS, Simulator, Item Search
+- [ ] Move **Best in Slot** and **Simulator** into a **left-side selectable pane** (sidebar navigation), not only top tabs.
+- [ ] Add a third left-nav entry: **Item Search**.
+- [ ] Item Search: searchable list of **all items in the game** from the item database/catalog.
+- [ ] Requirement: every game item should be present in the DB and findable via this search (name and useful filters as fitting existing data — never invent stats).
+
 ### Josh testing notes (paste below as they arrive)
 - Inventory import: some items missing from view — show all even if not in DB.
 - Upgrade priorities: not good — looks like AC/HP only; should go off BiS list for what to upgrade to.
 - Sim equipment: imported worn | selectable BiS column | stat delta column (e.g. AC +2).
 - BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
+- Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 
