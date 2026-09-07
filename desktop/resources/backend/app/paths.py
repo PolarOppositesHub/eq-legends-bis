@@ -84,6 +84,7 @@ def decoded_dir() -> Path:
     for cand in (
         root / "data" / "decoded",
         root / "resources" / "data" / "decoded",
+        root / "desktop" / "resources" / "data" / "decoded",
         root / "decoded",
         legends_root() / "decoded",
     ):

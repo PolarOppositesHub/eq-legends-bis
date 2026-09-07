@@ -26,6 +26,8 @@ _paths.apply_legends_roots()
 
 from .races import RACES, get_races_payload, race_bases  # noqa: E402
 from . import weapon_dps as wdps  # noqa: E402
+from . import scoring as sc  # noqa: E402
+from . import class_roles as class_roles  # noqa: E402
 
 ALL_CLASSES = list(bx.ALL_CLASSES)
 DEFAULT_TRIO = list(bx.DEFAULT_TRIO)
@@ -33,10 +35,11 @@ PLANNER_SLOTS = list(bp.PLANNER_SLOTS)
 
 MAX_CHARACTER_LEVEL = 50
 DEFAULT_CHARACTER_LEVEL = 50
-PRIORITY_STATS = list(bp.PRIORITY_STATS)
-PRIORITY_LABELS = list(bp.PRIORITY_LABELS)
-LABEL_TO_KEY = dict(bp.LABEL_TO_KEY)
-KEY_TO_LABEL = dict(bp.KEY_TO_LABEL)
+# Prefer enhanced priority list (includes regen labels) while keeping vendor keys.
+PRIORITY_STATS = list(sc.PRIORITY_STATS)
+PRIORITY_LABELS = list(sc.PRIORITY_LABELS)
+LABEL_TO_KEY = dict(sc.LABEL_TO_KEY)
+KEY_TO_LABEL = dict(sc.KEY_TO_LABEL)
 
 TOTAL_STAT_KEYS = [
     "HP", "MANA", "END", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA",
@@ -331,6 +334,10 @@ def recommend_bis(
     upgrade: int = 10,
     prefer_ranged_damage: bool = True,
     character_level: int = 50,
+    primary_stats: list[str] | None = None,
+    secondary_stats: list[str] | None = None,
+    tertiary_stats: list[str] | None = None,
+    maximize_hp_regen: bool = False,
 ) -> dict:
     """Return haste-aware BiS loadout + per-slot ranked alts.
 
@@ -342,21 +349,39 @@ def recommend_bis(
     """
     upgrade = max(0, min(10, int(upgrade)))
     character_level = max(1, min(MAX_CHARACTER_LEVEL, int(character_level or DEFAULT_CHARACTER_LEVEL)))
-    mode = "max" if mode in ("max", "max_all", "max-all", "Max All Stats") else "priority"
+    mode_n = sc.normalize_mode(mode)
     # Accept label or key
     stat_key = priority_stat
     if stat_key in LABEL_TO_KEY:
         stat_key = LABEL_TO_KEY[stat_key]
-    if mode == "priority" and stat_key not in KEY_TO_LABEL:
+    if mode_n == "priority" and stat_key not in KEY_TO_LABEL:
         stat_key = "INT"
 
     cleaned = [c for c in classes if c in ALL_CLASSES]
+    score_opts = sc.default_score_opts(
+        classes=cleaned,
+        primary_stats=primary_stats,
+        secondary_stats=secondary_stats,
+        tertiary_stats=tertiary_stats,
+        maximize_hp_regen=maximize_hp_regen,
+        priority_stat=stat_key if mode_n == "priority" else None,
+    )
+    mode_label = {
+        "max": "Max All Stats",
+        "ai": "AI Choice",
+        "priority": "Priority Stat",
+    }.get(mode_n, "Priority Stat")
+
     if not cleaned:
         return {
             "classes": [],
-            "mode": "Max All Stats" if mode == "max" else "Priority Stat",
-            "priority_stat": KEY_TO_LABEL.get(stat_key, stat_key) if mode == "priority" else None,
-            "priority_stat_key": stat_key if mode == "priority" else None,
+            "mode": mode_label,
+            "priority_stat": KEY_TO_LABEL.get(stat_key, stat_key) if mode_n == "priority" else None,
+            "priority_stat_key": stat_key if mode_n == "priority" else None,
+            "primary_stats": score_opts.get("primary_stats") or [],
+            "secondary_stats": score_opts.get("secondary_stats") or [],
+            "tertiary_stats": score_opts.get("tertiary_stats") or [],
+            "maximize_hp_regen": bool(maximize_hp_regen),
             "upgrade": upgrade,
             "character_level": character_level,
             "prefer_ranged_damage": prefer_ranged_damage,
@@ -371,7 +396,12 @@ def recommend_bis(
     gear_pool = build_pool_for_classes(cleaned, mode="intersection")
     weapon_pool = build_pool_for_classes(cleaned, mode="any")
     pool = gear_pool  # default ranking pool for non-weapon slots
-    loadout = bp.pick_loadout(gear_pool, mode, stat_key if mode == "priority" else None)
+    loadout = sc.pick_loadout(
+        gear_pool,
+        mode_n,
+        stat_key if mode_n == "priority" else None,
+        score_opts,
+    )
 
     # Override weapon slots from any-class pool.
     used_names = {
@@ -476,10 +506,11 @@ def recommend_bis(
             "ratio_plus10": cand.get("ratio10") if cand.get("ratio10") is not None else (item or {}).get("ratio_plus10"),
             "ratio_at_upgrade": ratio_u if ratio_u is not None else cand.get("ratio_at_upgrade"),
             "url": cand.get("url") or "",
+            "image_url": f"/api/item-image?name={cand.get('name')}" if cand.get("name") else "",
             "bis_overlap": cand.get("bis_overlap", 0),
             "is_weapon": bool(cand.get("is_weapon") or (item or {}).get("is_weapon")),
             "stats_plus0": s0,
-            "stats_plus10": s10,
+            "stats_plus10": sc.enrich_stats_with_regen({"stats_plus10": s10, "tooltipLines": (item or {}).get("tooltipLines") or [], "special": (item or {}).get("special"), "effect": (item or {}).get("effect")}) if (s10 or item) else {},
             "stats_at_upgrade": s_up,
             "upgrade": upgrade,
             "haste": 0,
@@ -507,9 +538,13 @@ def recommend_bis(
         if slot in ("PRIMARY", "SECONDARY") or (slot == "RANGE" and prefer_ranged_damage):
             ranked = rank_slot_by_ratio(weapon_pool, slot, upgrade)
             if not ranked:
-                ranked = bp.rank_for_slot(weapon_pool, slot, mode, stat_key if mode == "priority" else None)
+                ranked = sc.rank_for_slot(
+                    weapon_pool, slot, mode_n, stat_key if mode_n == "priority" else None, score_opts
+                )
         else:
-            ranked = bp.rank_for_slot(gear_pool, slot, mode, stat_key if mode == "priority" else None)
+            ranked = sc.rank_for_slot(
+                gear_pool, slot, mode_n, stat_key if mode_n == "priority" else None, score_opts
+            )
         alts_list = []
         # When DW compare ran, surface the losing 2H (or DW pair) as first alt on PRIMARY.
         if (
@@ -577,9 +612,10 @@ def recommend_bis(
                 "haste": ih if ih > 0 else 0,
                 "bis_overlap": r.get("bis_overlap", 0),
                 "stats_plus0": r_item.get("stats_plus0") or {},
-                "stats_plus10": r.get("stats_plus10") or {},
+                "stats_plus10": sc.enrich_stats_with_regen(r_item) if r_item else (r.get("stats_plus10") or {}),
                 "stats_at_upgrade": scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {},
                 "url": r.get("url") or "",
+                "image_url": f"/api/item-image?name={r['name']}" if r.get("name") else "",
             })
             if len(alts_list) >= alts:
                 break
@@ -608,9 +644,19 @@ def recommend_bis(
 
     return {
         "classes": cleaned,
-        "mode": "Max All Stats" if mode == "max" else "Priority Stat",
-        "priority_stat": KEY_TO_LABEL.get(stat_key, stat_key) if mode == "priority" else None,
-        "priority_stat_key": stat_key if mode == "priority" else None,
+        "mode": mode_label,
+        "priority_stat": KEY_TO_LABEL.get(stat_key, stat_key) if mode_n == "priority" else None,
+        "priority_stat_key": stat_key if mode_n == "priority" else None,
+        "primary_stats": score_opts.get("primary_stats") or [],
+        "secondary_stats": score_opts.get("secondary_stats") or [],
+        "tertiary_stats": score_opts.get("tertiary_stats") or [],
+        "maximize_hp_regen": bool(maximize_hp_regen),
+        "class_roles": {
+            "has_tank": score_opts.get("has_tank"),
+            "uses_mana": score_opts.get("uses_mana"),
+            "roles": score_opts.get("roles") or [],
+            "attr_weights": score_opts.get("attr_weights") or {},
+        },
         "upgrade": upgrade,
         "character_level": character_level,
         "prefer_ranged_damage": prefer_ranged_damage,
@@ -843,7 +889,11 @@ def meta_payload() -> dict:
         "ui_default_classes": [],
         "slots": PLANNER_SLOTS,
         "priority_stats": [{"key": k, "label": lab} for k, lab in PRIORITY_STATS],
-        "modes": ["Priority Stat", "Max All Stats"],
+        "modes": [
+            {"id": "priority", "label": "Priority Stat"},
+            {"id": "max", "label": "Max All Stats"},
+            {"id": "ai", "label": "AI Choice"},
+        ],
         "haste_rule": summary.get("haste_note") or (
             "Only ONE worn haste item counts (highest %). Haste does not scale with upgrade."
         ),
@@ -852,21 +902,32 @@ def meta_payload() -> dict:
             "else ratio-only. RANGE when Prefer ranged: ratio-only."
         ),
         "races": get_races_payload(),
+        "class_roles": class_roles.class_roles_payload(),
         "data_root": str(DECODED),
         "summary_counts": summary.get("counts") or {},
         "catalog_weapons": len(catalog.get("weapons") or []),
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.3",
+        "version": "1.0.4",
         "scoring": {
-            "priority_armor": "priority_stat×100 + 0.15×other_positive + Haste×2",
+            "priority_armor": (
+                "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "
+                "(up to 3 stats per tier)"
+            ),
             "priority_weapon": (
                 "If any DW class selected: expected-dmg DW pair vs 2H "
                 "(eqlwiki Game_Mechanics working Legends model); else ratio-only. "
                 "RANGE if prefer ranged: ratio-only."
             ),
-            "max_armor": "HP + Mana + AC×2 + attrs×1.5 + resists + END×0.5 + Haste×2",
+            "max_armor": (
+                "Class-weighted attrs from races.json classStats; AC/HP heavier for tanks; "
+                "mana/mana regen only for mana classes; optional HP regen toggle"
+            ),
+            "ai_armor": (
+                "Role-aware blend of trio primaries + tank/healer/dps nudges; "
+                "cross-check vs community EQ Legends tools when validating"
+            ),
             "max_weapon": "Same as priority_weapon for damaging PRIMARY/SECONDARY/RANGE",
             "gear_eligibility": "armor/jewelry: intersection (all classes); weapons: any class",
             "dual_wield_classes": sorted(DUAL_WIELD_CLASSES),

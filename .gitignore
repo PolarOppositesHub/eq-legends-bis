@@ -31,3 +31,7 @@ data/log-research
 # Editor
 .idea/
 .vscode/
+
+# Fetched item icons (keep directory)
+data/item-images/*
+!data/item-images/.gitkeep

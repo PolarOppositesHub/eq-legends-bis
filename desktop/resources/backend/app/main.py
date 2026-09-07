@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from . import engine
 from . import inventory as inventory_mod
 from . import zones as zones_mod
+from . import item_catalog as item_catalog_mod
 from .races import get_races_payload
 
 from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_mode, xlsx_dir
@@ -22,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.3")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.4")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,6 +37,10 @@ class BisRequest(BaseModel):
     classes: list[str] = Field(default_factory=list)
     mode: str = "priority"
     priority_stat: str = "INT"
+    primary_stats: list[str] = Field(default_factory=list)
+    secondary_stats: list[str] = Field(default_factory=list)
+    tertiary_stats: list[str] = Field(default_factory=list)
+    maximize_hp_regen: bool = False
     alts: int = 5
     upgrade: int = 10
     usable_by: str = "any"  # weapons/gear: any selected class (union)
@@ -68,6 +73,12 @@ class UpgradeSuggestRequest(BaseModel):
     character_level: int = 50
     prefer_ranged_damage: bool = True
     inventory_text: str | None = None
+    mode: str = "ai"
+    primary_stats: list[str] = Field(default_factory=list)
+    secondary_stats: list[str] = Field(default_factory=list)
+    tertiary_stats: list[str] = Field(default_factory=list)
+    maximize_hp_regen: bool = False
+    priority_stat: str = "HP"
 
 
 def _norm_classes(classes: list[str] | None, *, allow_empty: bool = True) -> list[str]:
@@ -124,22 +135,25 @@ def get_classes():
         "priority_stats": m["priority_stats"],
         "slots": m["slots"],
         "planner_slots": m["slots"],
-        "modes": [
+        "modes": m.get("modes") or [
             {"id": "priority", "label": "Priority Stat"},
-            {"id": "max", "label": "Max All"},
-            {"id": "weapons", "label": "Weapons (Ratio-first)"},
+            {"id": "max", "label": "Max All Stats"},
+            {"id": "ai", "label": "AI Choice"},
         ],
         "haste_note": m["haste_rule"],
         "notes": {
             "haste": m["haste_rule"],
             "weapons": m.get("weapon_rule") or "Weapons ranked by ratio (any selected class).",
+            "scoring": m.get("scoring") or {},
         },
         "races": m["races"],
+        "class_roles": m.get("class_roles"),
         "upgrade_levels": m["upgrade_levels"],
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.3",
+        "version": m.get("version") or "1.0.4",
+        "scoring": m.get("scoring"),
     }
 
 
@@ -163,11 +177,55 @@ def post_bis(body: BisRequest):
             upgrade=body.upgrade,
             prefer_ranged_damage=body.prefer_ranged_damage,
             character_level=level,
+            primary_stats=body.primary_stats,
+            secondary_stats=body.secondary_stats,
+            tertiary_stats=body.tertiary_stats,
+            maximize_hp_regen=bool(body.maximize_hp_regen),
         )
     except AssertionError as e:
         raise HTTPException(500, f"BiS haste assertion failed: {e}") from e
     except Exception as e:
         raise HTTPException(500, f"BiS failed: {e}") from e
+
+
+@app.get("/api/item-search")
+def api_item_search(
+    q: str = Query(default=""),
+    slot: Optional[str] = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+):
+    """Search all catalog items (full game DB union of flat_* + aggregate)."""
+    return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+
+
+@app.get("/api/item-detail")
+def api_item_detail(name: str = Query(...)):
+    it = item_catalog_mod.get_item_by_name(name)
+    if not it:
+        raise HTTPException(404, f"Item not found: {name}")
+    # Best-effort icon fetch/cache (non-fatal if wiki unavailable)
+    try:
+        img = item_catalog_mod.ensure_item_image(name, fetch=True)
+        it = {**it, "image": img}
+    except Exception as e:
+        it = {**it, "image": {"error": str(e)}}
+    return it
+
+
+@app.get("/api/item-image")
+def api_item_image(name: str = Query(...), fetch: bool = Query(default=True)):
+    """Serve cached item icon; optionally look up on eqlwiki and save."""
+    info = item_catalog_mod.ensure_item_image(name, fetch=fetch)
+    path = item_catalog_mod.local_image_path(name)
+    if path and path.is_file():
+        return FileResponse(path)
+    raise HTTPException(404, info.get("error") or f"No image for {name}")
+
+
+@app.post("/api/item-image/ensure")
+def api_ensure_item_image(name: str = Query(...)):
+    return item_catalog_mod.ensure_item_image(name, fetch=True)
 
 
 @app.get("/api/items")
@@ -332,6 +390,9 @@ def api_inventory_import(body: InventoryParseRequest):
         "equipment": parsed.get("equipment") or {},
         "upgrade_hints": parsed.get("upgrade_hints") or {},
         "worn": parsed.get("worn") or [],
+        "all_items": parsed.get("all_items") or [],
+        "unmatched": parsed.get("unmatched") or [],
+        "unmatched_count": parsed.get("unmatched_count", 0),
         "skipped_count": parsed.get("skipped_count", 0),
         "skipped": parsed.get("skipped") or [],
         "warnings": parsed.get("warnings") or [],
@@ -356,6 +417,12 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
         upgrade=max(0, min(10, int(body.upgrade))),
         character_level=level,
         prefer_ranged_damage=bool(body.prefer_ranged_damage),
+        mode=body.mode or "ai",
+        priority_stat=body.priority_stat or "HP",
+        primary_stats=body.primary_stats,
+        secondary_stats=body.secondary_stats,
+        tertiary_stats=body.tertiary_stats,
+        maximize_hp_regen=bool(body.maximize_hp_regen),
     )
     if parsed is not None:
         out["parsed"] = {

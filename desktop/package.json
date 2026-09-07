@@ -1,7 +1,7 @@
 {
   "name": "eq-legends-bis-desktop",
   "productName": "EQ Legends BiS",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "EQ Legends BiS + build-sim (portable Windows app)",
   "main": "main.js",
   "author": "Josh Monroe",
