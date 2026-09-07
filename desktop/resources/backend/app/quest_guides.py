@@ -21,7 +21,7 @@ from typing import Any
 from .paths import APP_ROOT
 
 GUIDES_DIR = APP_ROOT / "data" / "quest-guides"
-USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
+USER_AGENT = "EQ-Legends-BiS/1.0.6 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
 

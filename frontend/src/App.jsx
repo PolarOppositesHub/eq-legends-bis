@@ -830,10 +830,10 @@ export default function App() {
           <p>
             Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
             {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.5'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.6'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.5</span>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.6</span>
       </header>
 
       <div className="app-shell">

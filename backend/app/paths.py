@@ -77,19 +77,35 @@ def legends_root() -> Path:
 
 
 def decoded_dir() -> Path:
+    """Resolve decoded JSON dir. Env overrides win only when the path exists.
+
+    A missing EQ_DATA_ROOT/EQ_LEGENDS_DATA (common when Electron points at a
+    not-yet-created data/decoded symlink) must fall through to candidates —
+    never force an empty/nonexistent tree that blanks Item Search / import.
+    """
     override = _env_path("EQ_DATA_ROOT") or _env_path("EQ_LEGENDS_DATA")
+    root = app_root()
+    candidates = []
+    if override:
+        candidates.append(override)
+    candidates.extend(
+        [
+            root / "data" / "decoded",
+            root / "resources" / "data" / "decoded",
+            root / "desktop" / "resources" / "data" / "decoded",
+            root / "decoded",
+            legends_root() / "decoded",
+        ]
+    )
+    for cand in candidates:
+        try:
+            if cand.exists() and cand.is_dir():
+                return cand.resolve()
+        except OSError:
+            continue
+    # Prefer override path for error messages even if missing
     if override:
         return override
-    root = app_root()
-    for cand in (
-        root / "data" / "decoded",
-        root / "resources" / "data" / "decoded",
-        root / "desktop" / "resources" / "data" / "decoded",
-        root / "decoded",
-        legends_root() / "decoded",
-    ):
-        if cand.exists():
-            return cand.resolve()
     return (root / "data" / "decoded").resolve()
 
 

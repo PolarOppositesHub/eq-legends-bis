@@ -62,9 +62,16 @@ function rootForScripts() {
 function envForApi() {
   const root = resourcesRoot();
   const appRoot = isDev ? path.resolve(__dirname, '..') : root;
-  const decoded = path.join(root, 'data', 'decoded');
-  const decodedDev = path.join(appRoot, 'data', 'decoded');
-  const dataRoot = fs.existsSync(decoded) ? decoded : decodedDev;
+  // Prefer a decoded tree that actually exists (symlink or real dir).
+  const decodedCandidates = [
+    path.join(root, 'data', 'decoded'),
+    path.join(appRoot, 'data', 'decoded'),
+    path.join(appRoot, 'desktop', 'resources', 'data', 'decoded'),
+    path.join(root, 'desktop', 'resources', 'data', 'decoded'),
+  ];
+  const dataRoot = decodedCandidates.find((p) => {
+    try { return fs.existsSync(p); } catch (_) { return false; }
+  }) || decodedCandidates[0];
   const frontendDist = path.join(root, 'frontend', 'dist');
   const frontendDistDev = path.join(appRoot, 'frontend', 'dist');
   const ui = fs.existsSync(frontendDist) ? frontendDist : frontendDistDev;

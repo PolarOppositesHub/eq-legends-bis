@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.5")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.6")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -153,7 +153,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.5",
+        "version": m.get("version") or "1.0.6",
         "scoring": m.get("scoring"),
     }
 
@@ -217,8 +217,23 @@ def api_item_search(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
-    """Search all catalog items (full game DB union of flat_* + aggregate)."""
-    return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+    """Search all catalog items (flat_* ∪ aggregate ∪ catalog lists ∪ tooltip maps).
+
+    Never 500s — missing decoded data returns empty results with a warning.
+    """
+    try:
+        return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+    except Exception as e:
+        return {
+            "total": 0,
+            "offset": offset,
+            "limit": limit,
+            "query": q,
+            "slot": (slot or "").strip().upper() or None,
+            "items": [],
+            "catalog_size": 0,
+            "warning": f"Item search unavailable: {e}",
+        }
 
 
 @app.get("/api/item-detail")
@@ -406,7 +421,11 @@ def api_inventory_parse(body: InventoryParseRequest):
 
 @app.post("/api/inventory/import")
 def api_inventory_import(body: InventoryParseRequest):
-    """Alias for parse — UI/desktop call this after file picker reads Inventory.txt."""
+    """Alias for parse — UI/desktop call this after file picker reads Inventory.txt.
+
+    Binary/.exe payloads → 400 with Inventory.txt guidance.
+    Catalog/data errors degrade to a successful parse with unmatched flags — never 500.
+    """
     if not (body.text or "").strip():
         raise HTTPException(
             400,
@@ -418,6 +437,24 @@ def api_inventory_import(body: InventoryParseRequest):
         parsed = inventory_mod.parse_inventory_tsv(body.text)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+    except Exception as e:
+        # Last-resort degrade: return empty equipment + warning instead of 500
+        return {
+            "ok": False,
+            "equipment": {},
+            "upgrade_hints": {},
+            "worn": [],
+            "all_items": [],
+            "unmatched": [],
+            "unmatched_count": 0,
+            "skipped_count": 0,
+            "skipped": [],
+            "warnings": [f"Inventory import degraded: {e}"],
+            "note": (
+                "Import failed unexpectedly; try Inventory.txt from "
+                "/outputfile inventory. No invented item data was applied."
+            ),
+        }
     return {
         "ok": True,
         "equipment": parsed.get("equipment") or {},
