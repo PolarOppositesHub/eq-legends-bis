@@ -22,6 +22,22 @@ export const getItems = (params) => {
   const q = new URLSearchParams(params)
   return req(`/api/items?${q}`)
 }
+export const searchItems = (params) => {
+  const q = new URLSearchParams(params)
+  return req(`/api/item-search?${q}`)
+}
+export const getItemDetail = (name) => {
+  const q = new URLSearchParams({ name })
+  return req(`/api/item-detail?${q}`)
+}
+export const ensureItemImage = (name) => {
+  const q = new URLSearchParams({ name })
+  return req(`/api/item-image/ensure?${q}`, { method: 'POST' })
+}
+export const itemImageUrl = (name) => {
+  if (!name) return ''
+  return `/api/item-image?name=${encodeURIComponent(name)}`
+}
 export const postSimulate = (body) => req('/api/simulate', { method: 'POST', body: JSON.stringify(body) })
 export const exportXlsx = (classes) => req('/api/export/xlsx', { method: 'POST', body: JSON.stringify({ classes }) })
 export const getZones = () => req('/api/zones')
