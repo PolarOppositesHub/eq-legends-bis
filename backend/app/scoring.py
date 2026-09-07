@@ -197,9 +197,10 @@ def max_all_stat_sum(s10: dict, opts: dict[str, Any] | None = None) -> float:
     attr_w = opts.get("attr_weights") or {}
     attrs = sum(num(s10.get(k)) * float(attr_w.get(k, 1.5)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"))
 
+    # Survivability: prefer HP (and class attrs / STA via attr_weights) over stacking AC.
     hp_w = 1.6 if opts.get("has_tank") else 1.0
-    # AC matters for everyone; tanks get a mild bump — not enough to drown out class attrs
-    ac_w = 2.6 if opts.get("has_tank") else 2.0
+    # AC useful for everyone; tank bump stays close to non-tank so attrs still compete.
+    ac_w = 1.7 if opts.get("has_tank") else 1.45
     mana_w = 1.2 if opts.get("uses_mana") else 0.05
     score = hp * hp_w + mana * mana_w + ac * ac_w + attrs + resists * 1.0 + end * 0.5
 
@@ -264,7 +265,7 @@ def score_max_all(item: dict, opts: dict[str, Any] | None = None) -> tuple[float
         return score, bang, "best ratio"
     why = "max all (class-weighted"
     if opts.get("has_tank"):
-        why += "; tank AC/HP"
+        why += "; tank HP/STA focus"
     if opts.get("maximize_hp_regen"):
         why += "; HP regen"
     if not opts.get("uses_mana"):
@@ -284,8 +285,9 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
         ranked = sorted(weights.items(), key=lambda kv: (-kv[1], kv[0]))
         opts["primary_stats"] = [k for k, v in ranked[:2] if v > 0]
         opts["secondary_stats"] = [k for k, v in ranked[2:4] if v > 0]
-        opts["tertiary_stats"] = ["AC", "HP"]
-    # Always emphasize AC/HP; tanks heavier via max_all weights
+        # Prefer STA/HP as soft tertiary; AC already counted in max_all (mild weight).
+        opts["tertiary_stats"] = ["STA", "HP"]
+    # Soft survivability via max_all HP/AC + STA tertiary; avoid double-stacking AC.
     s10 = enrich_stats_with_regen(item)
     bang = max_all_stat_sum(s10, opts)
     # Extra AI nudges from role tags
@@ -295,7 +297,8 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
         role_bonus += num(s10.get("WIS")) * 2.0 + num(s10.get("INT")) * 2.0 + num(s10.get("MANA")) * 0.8
         role_bonus += num(s10.get("MANA_REGEN")) * 25.0
     if "tank" in tags:
-        role_bonus += num(s10.get("AC")) * 1.0 + num(s10.get("HP")) * 1.2 + num(s10.get("STA")) * 2.0
+        # Prefer STA/HP; keep a light AC nudge so pure AC still helps but does not dominate.
+        role_bonus += num(s10.get("AC")) * 0.25 + num(s10.get("HP")) * 1.5 + num(s10.get("STA")) * 2.5
     if "melee" in tags or "dps" in tags:
         role_bonus += num(s10.get("STR")) * 1.5 + num(s10.get("DEX")) * 1.2 + num(s10.get("AGI")) * 1.0
     if opts.get("maximize_hp_regen"):

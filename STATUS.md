@@ -13,7 +13,7 @@ Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not 
 - Defaults from selected classes via `GET /api/priority-defaults` (classStats ranking)
 - Fixed-position hover tip (stats + icon) on BiS / alternate names — not clipped
 - Prefetch item icons after BiS; SPA `Cache-Control: no-store` on index.html
-- Tank Max-all / AI: milder AC/HP weights (less AC dominance)
+- Tank Max-all / AI: AC rebalanced (tank ~1.7 / others ~1.45); AI prefers STA/HP over AC stack
 
 Smoke (2026-09-07):
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA

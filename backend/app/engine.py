@@ -921,11 +921,12 @@ def meta_payload() -> dict:
                 "RANGE if prefer ranged: ratio-only."
             ),
             "max_armor": (
-                "Class-weighted attrs from races.json classStats; mild AC/HP bump for tanks "
-                "(attrs still dominate); mana/mana regen only for mana classes; optional HP regen toggle"
+                "Class-weighted attrs from races.json classStats; HP bump + light AC "
+                "(tank ~1.7 / others ~1.45) so attrs/STA compete; mana only for mana classes; "
+                "optional HP regen toggle"
             ),
             "ai_armor": (
-                "Role-aware blend of trio primaries + tank/healer/dps nudges; "
+                "Role-aware blend of trio primaries + STA/HP tank nudges (light AC); "
                 "cross-check vs community EQ Legends tools when validating"
             ),
             "max_weapon": "Same as priority_weapon for damaging PRIMARY/SECONDARY/RANGE",

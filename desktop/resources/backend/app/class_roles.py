@@ -15,7 +15,7 @@ from .paths import APP_ROOT
 
 ATTR_KEYS = ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA")
 
-# Classic EQ Legends tank / hybrid tanks — AC/HP weighed heavier in Max-all / AI.
+# Classic EQ Legends tank / hybrid tanks — HP/STA emphasized; AC only a light bump.
 TANK_CLASSES = frozenset({"Warrior", "Paladin", "Shadow Knight"})
 
 # Classes that spend mana as a core resource.

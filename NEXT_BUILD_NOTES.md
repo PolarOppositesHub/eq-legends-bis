@@ -14,7 +14,7 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 - [x] Only Max All + Priority → Mode select includes **AI Choice** + hint text.
 - [x] Priority not 3×3 → Primary / Secondary / Tertiary (3 dropdowns each), all selectable.
 - [x] Defaults from selected classes → `GET /api/priority-defaults` ranks classStats; most important → primary, next → secondary, next → tertiary.
-- [x] Tank AC over-emphasized → milder AC/HP weights in Max All / AI.
+- [x] Tank AC over-emphasized → rebalanced: Max All AC **1.7 tank / 1.45 others** (was 2.6/2.0); AI tank role_bonus AC **0.25** (was 1.0) with stronger STA/HP; tertiary seed STA+HP (not AC+HP).
 - [x] Stale UI risk → SPA index `Cache-Control: no-store`; version badge **UI 1.0.5**.
 
 ## Prior version (after 1.0.3) → **1.0.4** (shipped; rebuild superseded by 1.0.5)
@@ -58,7 +58,7 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 ### BiS modes — Max all stats, Priority stats, AI choice
 - [x] BiS mode currently has **Max all stats** and **Priority stats**. Keep both; refine Max all; add a third mode.
 - [x] **Max all stats:** do **not** treat every stat equally. Weight by the **important/primary stats of the three classes in the selected trio** (look up each class’s primary stats from reliable EQ Legends sources if not already in-app).
-- [x] **AC and HP:** matter for **all** classes; weigh **heavier for tank classes** in the trio.
+- [x] **AC and HP:** matter for **all** classes; tanks get a **light** AC bump (not dominant) plus HP/STA preference so class attrs still compete.
 - [x] **HP regen:** add a **toggleable checkbox** (e.g. “Maximize HP regen”) that, when on, includes/weights HP regen in BiS gear ranking.
 - [x] **Mana / mana regen:** only weigh for **mana-using classes** in the trio; ignore for non-mana classes.
 - [x] **Priority stats mode:** still uses the user-selected primary/secondary/tertiary tiers (see above).
@@ -72,7 +72,7 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 - BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
 - Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
 - BiS alternates hover: show real DB stats + item picture on name hover (not “hover over stats” text); fetch/save missing item images for reuse app-wide.
-- BiS modes: Max all weights trio primary stats + AC/HP (heavier for tanks); HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
+- BiS modes: Max all weights trio primary stats + light AC + HP/STA for tanks; HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 
