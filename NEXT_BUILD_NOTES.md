@@ -1,8 +1,23 @@
 # Next build notes
 
-**v1.0.4 coding in progress / smoke-ready locally.** Windows rebuild on hold until Josh says start. Never invent item stats.
+**v1.0.5 coding smoke-ready locally.** Josh must rebuild Windows + publish GitHub Release **v1.0.5** (agent cannot). Never invent item stats.
 
-## Next version (after 1.0.3) → **1.0.4**
+Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Slot / Simulator / Item Search, Mode includes **AI Choice**, Priority shows Primary/Secondary/Tertiary dropdowns.
+
+## 1.0.5 — UI visibility, class priority defaults, hover tips (2026-09-07)
+
+### Josh feedback after 1.0.4 update
+- [x] No item images → prefetch icons after BiS; hover tip shows icon; eqlwiki cache under data/item-images/ (needs network first time).
+- [x] No Items tab → left Menu **Item Search** (make nav unmissable).
+- [x] Tabs not on left → sticky left **Menu** with gold border (Best in Slot / Simulator / Item Search).
+- [x] Hover item names → fixed-position tip with real DB stats + picture (main BiS + alternates).
+- [x] Only Max All + Priority → Mode select includes **AI Choice** + hint text.
+- [x] Priority not 3×3 → Primary / Secondary / Tertiary (3 dropdowns each), all selectable.
+- [x] Defaults from selected classes → `GET /api/priority-defaults` ranks classStats; most important → primary, next → secondary, next → tertiary.
+- [x] Tank AC over-emphasized → milder AC/HP weights in Max All / AI.
+- [x] Stale UI risk → SPA index `Cache-Control: no-store`; version badge **UI 1.0.5**.
+
+## Prior version (after 1.0.3) → **1.0.4** (shipped; rebuild superseded by 1.0.5)
 
 ### Inventory import — show every item
 - [x] When importing Inventory.txt, some items do not show up (likely missing from our item DB).

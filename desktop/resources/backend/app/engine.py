@@ -909,11 +909,11 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.4",
+        "version": "1.0.5",
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "
-                "(up to 3 stats per tier)"
+                "(up to 3 stats per tier; defaults from classStats)"
             ),
             "priority_weapon": (
                 "If any DW class selected: expected-dmg DW pair vs 2H "
@@ -921,8 +921,8 @@ def meta_payload() -> dict:
                 "RANGE if prefer ranged: ratio-only."
             ),
             "max_armor": (
-                "Class-weighted attrs from races.json classStats; AC/HP heavier for tanks; "
-                "mana/mana regen only for mana classes; optional HP regen toggle"
+                "Class-weighted attrs from races.json classStats; mild AC/HP bump for tanks "
+                "(attrs still dominate); mana/mana regen only for mana classes; optional HP regen toggle"
             ),
             "ai_armor": (
                 "Role-aware blend of trio primaries + tank/healer/dps nudges; "

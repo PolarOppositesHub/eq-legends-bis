@@ -215,8 +215,18 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   margin: 0 0 0.35rem; font-size: 0.72rem; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.06em;
 }
+.item-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  image-rendering: auto;
+}
 .item-name {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem;
   font-weight: 700; font-size: 0.95rem; margin-top: 0.2rem;
 }
 .item-name a { color: var(--gold); text-decoration: none; }

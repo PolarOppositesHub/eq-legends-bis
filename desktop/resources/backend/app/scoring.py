@@ -197,8 +197,9 @@ def max_all_stat_sum(s10: dict, opts: dict[str, Any] | None = None) -> float:
     attr_w = opts.get("attr_weights") or {}
     attrs = sum(num(s10.get(k)) * float(attr_w.get(k, 1.5)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"))
 
-    hp_w = 2.2 if opts.get("has_tank") else 1.0
-    ac_w = 4.0 if opts.get("has_tank") else 2.0
+    hp_w = 1.6 if opts.get("has_tank") else 1.0
+    # AC matters for everyone; tanks get a mild bump — not enough to drown out class attrs
+    ac_w = 2.6 if opts.get("has_tank") else 2.0
     mana_w = 1.2 if opts.get("uses_mana") else 0.05
     score = hp * hp_w + mana * mana_w + ac * ac_w + attrs + resists * 1.0 + end * 0.5
 
@@ -294,7 +295,7 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
         role_bonus += num(s10.get("WIS")) * 2.0 + num(s10.get("INT")) * 2.0 + num(s10.get("MANA")) * 0.8
         role_bonus += num(s10.get("MANA_REGEN")) * 25.0
     if "tank" in tags:
-        role_bonus += num(s10.get("AC")) * 2.5 + num(s10.get("HP")) * 1.5 + num(s10.get("STA")) * 2.0
+        role_bonus += num(s10.get("AC")) * 1.0 + num(s10.get("HP")) * 1.2 + num(s10.get("STA")) * 2.0
     if "melee" in tags or "dps" in tags:
         role_bonus += num(s10.get("STR")) * 1.5 + num(s10.get("DEX")) * 1.2 + num(s10.get("AGI")) * 1.0
     if opts.get("maximize_hp_regen"):

@@ -412,10 +412,23 @@ export default function App() {
       setBis(data)
       setBisOverrides({})
       const eq = {}
+      const names = []
       for (const s of data.slots || []) {
-        if (s.name) eq[s.slot] = s.name
+        if (s.name) {
+          eq[s.slot] = s.name
+          names.push(s.name)
+        }
+        for (const a of s.alts || []) {
+          if (a?.name) names.push(a.name)
+        }
       }
       setEquipment(eq)
+      // Best-effort icon cache so list/hover images appear without waiting on hover
+      for (const name of names) {
+        if (!name || ensuredImagesRef.current.has(name)) continue
+        ensuredImagesRef.current.add(name)
+        ensureItemImage(name).catch(() => {})
+      }
     } catch (e) {
       setError(String(e.message || e))
     } finally {

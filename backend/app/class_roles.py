@@ -106,11 +106,10 @@ def trio_default_priority_tiers(classes: list[str]) -> dict[str, list[str]]:
         for k in ATTR_KEYS:
             weights[k] += float(row.get(k) or 0)
     ranked = [k for k, v in sorted(weights.items(), key=lambda kv: (-kv[1], kv[0])) if v > 0]
-    # If allotments are sparse, still fill from remaining attrs by role soft preference
-    if len(ranked) < 3:
-        for k in ATTR_KEYS:
-            if k not in ranked:
-                ranked.append(k)
+    # Fill remaining attrs so secondary/tertiary always have candidates when possible
+    for k in ATTR_KEYS:
+        if k not in ranked:
+            ranked.append(k)
     return {
         "primary": ranked[0:3],
         "secondary": ranked[3:6],
