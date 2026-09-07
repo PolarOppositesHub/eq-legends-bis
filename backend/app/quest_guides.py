@@ -30,7 +30,7 @@ USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
 # Bump when step/component wording schema changes so stale caches refresh.
-GUIDE_FORMAT_VERSION = 2
+GUIDE_FORMAT_VERSION = 3
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
 # Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
@@ -269,6 +269,231 @@ def _steps_from_text(text: str, quest_name: str) -> list[str]:
         steps.insert(0, f"Quest: {quest_name}")
     return steps
 
+
+_BRING_ITEMS_RE = re.compile(
+    r"(?:bring(?:\s+to\s+me|\s+me)?|return(?:\s+to\s+me)?|hand\s+me)\s+"
+    r"(?:(?:,\s*)?(?:from\s+[^,]+,\s*)?)?"
+    r"(?:some\s+|a\s+|an\s+|the\s+)?(.+?)(?:[.!]|$)",
+    re.I,
+)
+_AND_SPLIT_RE = re.compile(r"\s+and\s+", re.I)
+_JUNK_ITEM_RE = re.compile(
+    r"^(?:me|him|her|them|your|quest|items?|reward|proof|yourself|to\s+me|from\s+|mist\b|of\s+)\b",
+    re.I,
+)
+
+
+def _looks_like_item_name(name: str) -> bool:
+    s = _WS_RE.sub(" ", (name or "").strip())
+    if len(s) < 4 or len(s) > 64:
+        return False
+    if "," in s or ")" in s:
+        return False
+    if re.search(r"\b(quest start|talk to|hail|you say|reward:|magic item)\b", s, re.I):
+        return False
+    if _JUNK_ITEM_RE.match(s):
+        return False
+    # Prefer names that look like item titles (at least one letter token).
+    if not re.search(r"[A-Za-z]", s):
+        return False
+    return True
+
+
+def _extract_bring_item_names(line: str) -> list[str]:
+    """Pull candidate item names from 'bring/return … X and Y' dialogue lines."""
+    raw_line = _WS_RE.sub(" ", (line or "").strip())
+    low = raw_line.lower()
+    if not any(k in low for k in ("bring", "return to me", "hand me")):
+        return []
+    # Normalize "return to me, from this place of air and mist, a fine cloth…"
+    cleaned = re.sub(
+        r"(return to me|bring(?: to me| me)?|hand me),?\s+from\s+[^,]+,\s*",
+        r"\1 ",
+        raw_line,
+        flags=re.I,
+    )
+    m = _BRING_ITEMS_RE.search(cleaned)
+    if not m:
+        return []
+    blob = _WS_RE.sub(" ", m.group(1)).strip(" .,;:")
+    blob = re.split(
+        r"\s+to\s+(?:reap|receive|claim|earn|prove)\b|\s+and\s+you\s+shall\b",
+        blob,
+        maxsplit=1,
+        flags=re.I,
+    )[0].strip(" .,;:")
+    parts = [p.strip(" .,;:") for p in _AND_SPLIT_RE.split(blob) if p.strip()]
+    out: list[str] = []
+    for p in parts:
+        p = re.sub(r"^(?:some|a|an|the)\s+", "", p, flags=re.I).strip()
+        if not _looks_like_item_name(p):
+            continue
+        out.append(p)
+    return out[:6]
+
+def _append_collect_steps_from_dialogue(
+    steps: list[str],
+    *,
+    fetch: bool = False,
+    default_zone: str = "",
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """After dialogue steps, add explicit Collect lines with zone/mobs when known."""
+    out_steps = list(steps or [])
+    components: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for line in steps or []:
+        for raw in _extract_bring_item_names(line):
+            key = raw.strip().lower()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            resolved = resolve_component_drop(raw, fetch=fetch, default_zone=default_zone)
+            components.append({
+                "item": resolved["item"],
+                "who": resolved["who"],
+                "where": resolved["where"],
+                "mobs": resolved.get("mobs") or [],
+                "wiki_tag": resolved.get("wiki_tag") or "",
+                "drop_known": resolved.get("drop_known"),
+                "kind": "dialogue_required",
+            })
+            step = resolved["collect_step"]
+            if step not in out_steps:
+                out_steps.append(step)
+    return out_steps, components
+
+
+def _expand_island_where(where: str, *, default_zone: str = "Plane of Sky") -> dict[str, Any]:
+    """Turn 'Island 3' / 'Plane of Sky Island 4' into zone + island metadata."""
+    s = _WS_RE.sub(" ", (where or "").strip())
+    out: dict[str, Any] = {"zone": "", "island": None, "island_name": "", "where": s}
+    if not s:
+        return out
+    if re.search(r"\bany\s+island\b", s, re.I):
+        return {
+            "zone": "Plane of Sky",
+            "island": None,
+            "island_name": "",
+            "where": "Plane of Sky (any island)",
+            "mobs": [],
+            "trash": True,
+        }
+    m = re.search(r"(?:plane\s+of\s+sky\s+)?island\s+(\d+)\b", s, re.I)
+    if m:
+        num = int(m.group(1))
+        meta = None
+        for _tag, info in _SKY_DROP_TAGS.items():
+            if info.get("island") == num and not info.get("trash"):
+                meta = info
+                break
+        zone = "Plane of Sky"
+        island_name = (meta or {}).get("island_name") or ""
+        label = f"{zone} Island {num}"
+        if island_name:
+            label += f" ({island_name})"
+        return {
+            "zone": zone,
+            "island": num,
+            "island_name": island_name,
+            "where": label,
+            "mobs": list((meta or {}).get("mobs") or []),
+        }
+    if re.search(r"plane\s+of\s+sky", s, re.I):
+        out["zone"] = "Plane of Sky"
+        out["where"] = "Plane of Sky"
+        return out
+    out["zone"] = s
+    return out
+
+
+def _component_collect_step(c: dict[str, Any]) -> str:
+    """Build a clear Collect line from an enriched component row."""
+    item = (c.get("item") or "").strip() or "required item"
+    where_raw = (c.get("where") or "").strip()
+    who = (c.get("who") or "").strip()
+    mobs = [m for m in (c.get("mobs") or []) if m]
+    if not mobs and who and who.lower() not in {
+        "see wiki", "unknown", "?", "n/a", "npc", "mob", "mobs", "random drop",
+        "drop mob unknown in available data", "drop source unknown in available data",
+    } and "unknown" not in who.lower() and "trash" not in who.lower():
+        # Component table "who" is often the mob name.
+        mobs = [who]
+
+    expanded = _expand_island_where(where_raw)
+    where = expanded.get("where") or where_raw or "location unknown"
+    if expanded.get("trash") and not mobs:
+        info = {
+            "zone": expanded.get("zone") or "Plane of Sky",
+            "island": expanded.get("island"),
+            "island_name": expanded.get("island_name") or "",
+            "mobs": [],
+            "wiki_tag": c.get("wiki_tag") or "",
+            "trash": True,
+        }
+        return _format_collect_step(item, info)
+
+    info = {
+        "zone": expanded.get("zone") or ("Plane of Sky" if "Island" in where else where),
+        "island": expanded.get("island"),
+        "island_name": expanded.get("island_name") or "",
+        "mobs": mobs,
+        "wiki_tag": c.get("wiki_tag") or "",
+        "trash": "trash" in who.lower(),
+    }
+    return _format_collect_step(item, info)
+
+def _prefer_clear_steps(
+    steps: list[str],
+    components: list[dict[str, Any]],
+) -> list[str]:
+    """If we have resolved collect components, keep a short clear step list."""
+    # Dedupe components by normalized item name; prefer rows with known mobs.
+    best: dict[str, dict[str, Any]] = {}
+    for c in components or []:
+        item = (c.get("item") or "").strip()
+        if not item:
+            continue
+        key = item.lower()
+        cur = best.get(key)
+        score = (2 if c.get("mobs") else 0) + (1 if c.get("drop_known") else 0) + (
+            1 if (c.get("who") or "").lower() not in {"", "random drop", "see wiki"} else 0
+        )
+        if not cur or score >= cur.get("_score", -1):
+            best[key] = {**c, "_score": score}
+
+    collect_steps = []
+    for c in best.values():
+        collect_steps.append(_component_collect_step(c))
+
+    if not collect_steps:
+        return steps
+
+    # Keep quest title / hail / hand-in cues; drop long dialogue walls.
+    kept: list[str] = []
+    for s in steps or []:
+        low = s.lower()
+        if s.startswith("Quest:") or s.startswith("Collect ") or s.startswith("See walkthrough"):
+            # Drop prior Collect lines; we rebuild from best components.
+            if s.startswith("Collect "):
+                continue
+            kept.append(s)
+            continue
+        if any(k in low for k in ("hail", "hand the required", "efreeti", "teleport pad", "key master")):
+            if not low.startswith("you say"):
+                kept.append(s)
+            continue
+        if low.startswith("you say") or " says," in low or " says '" in low:
+            continue
+        if "bring" in low or "return to me" in low or "return to me," in low:
+            continue
+        if "proceed upward" in low:
+            continue
+    for cs in collect_steps:
+        if cs not in kept:
+            kept.append(cs)
+    if not any("hand" in s.lower() and "reward" in s.lower() for s in kept):
+        kept.append("Hand the required items to the quest NPC for the reward.")
+    return kept[:16]
 
 def _parse_component_rows(html: str) -> list[dict[str, str]]:
     """Best-effort parse simple wiki tables of Item | Who | Where."""
@@ -590,22 +815,44 @@ def _enrich_component_rows(
         who = (row.get("who") or "").strip()
         where = (row.get("where") or "").strip()
         vague_who = (not who) or who.lower() in {
-            "see wiki", "unknown", "?", "n/a", "npc", "mob", "mobs",
+            "see wiki", "unknown", "?", "n/a", "npc", "mob", "mobs", "random drop",
         }
         vague_where = (not where) or where.lower() in {"see wiki", "unknown", "?", "n/a"}
+        expanded = _expand_island_where(where)
         if item and (vague_who or vague_where):
-            resolved = resolve_component_drop(item, fetch=fetch, default_zone=where)
+            resolved = resolve_component_drop(
+                item,
+                fetch=fetch,
+                default_zone=expanded.get("zone") or where or "Plane of Sky",
+            )
             out.append({
                 **row,
                 "item": resolved["item"],
                 "who": resolved["who"] if vague_who else who,
-                "where": resolved["where"] if vague_where else where,
-                "mobs": resolved.get("mobs") or [],
-                "drop_known": resolved.get("drop_known"),
+                "where": resolved["where"] if vague_where else (expanded.get("where") or where),
+                "mobs": resolved.get("mobs") or (
+                    [] if vague_who else ([who] if who and not vague_who else [])
+                ),
+                "drop_known": resolved.get("drop_known") or (not vague_who),
                 "wiki_tag": resolved.get("wiki_tag") or "",
+                "island": expanded.get("island") or resolved.get("island"),
+                "island_name": expanded.get("island_name") or resolved.get("island_name") or "",
             })
         else:
-            out.append(dict(row))
+            mobs = []
+            if who and not vague_who and "trash" not in who.lower():
+                mobs = [who]
+            where_label = expanded.get("where") or where
+            out.append({
+                **row,
+                "item": item,
+                "who": who,
+                "where": where_label,
+                "mobs": mobs,
+                "drop_known": bool(mobs),
+                "island": expanded.get("island"),
+                "island_name": expanded.get("island_name") or "",
+            })
     return out
 
 
@@ -779,6 +1026,21 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 _parse_component_rows(section),
                 fetch=fetch,
             )
+            # Dialogue often says "bring me X and Y" without zone/mobs — expand those.
+            steps, dialogue_comps = _append_collect_steps_from_dialogue(
+                steps,
+                fetch=fetch,
+                default_zone="Plane of Sky" if "sky" in (name + text).lower() else "",
+            )
+            if dialogue_comps:
+                have = {(c.get("item") or "").strip().lower() for c in components}
+                for c in dialogue_comps:
+                    key = (c.get("item") or "").strip().lower()
+                    if key and key not in have:
+                        components.append(c)
+                        have.add(key)
+            if components:
+                steps = _prefer_clear_steps(steps, components)
             if not steps and not components:
                 last_err = f"no steps parsed from {url}"
                 if name.lower().replace(" ", "_") in url.lower():
@@ -803,7 +1065,11 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 "cached": True,
                 "fetched": True,
                 "source": url,
-                "note": "Steps extracted from eqlwiki; verify in-game. Never invented.",
+                "note": (
+                    "Steps extracted from eqlwiki; collect lines include zone/mobs "
+                    "when known from catalog, item wiki drops, or documented sky tags. "
+                    "Never invented."
+                ),
                 "format_version": GUIDE_FORMAT_VERSION,
             }
             _write_cached_guide(name, guide)
