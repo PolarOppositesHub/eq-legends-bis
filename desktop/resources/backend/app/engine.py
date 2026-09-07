@@ -251,9 +251,10 @@ def build_pool_for_classes(
 ) -> list[dict]:
     """Build item pool for selected classes.
 
-    mode="any" (default): usable by ANY selected class (weapon eligibility).
-    mode="intersection" / require_all=True: usable by ALL selected classes (shared armor/jewelry).
+    mode="any" (default): usable by ANY selected class (BiS armor/jewelry/weapons).
+    mode="intersection" / require_all=True: usable by ALL selected classes (legacy shared-only filter).
     Empty class list → empty pool (UI starts with no classes; do not force DEFAULT_TRIO).
+    Scoring still prefers multi-class overlap on near ties (prefer_multi_class / bis_overlap).
     """
     if require_all is None:
         require_all = str(mode).lower() in ("intersection", "all", "shared")
@@ -394,9 +395,10 @@ def recommend_bis(
             "note": "Select at least one class.",
         }
 
-    # Armor/jewelry: intersection (fits whole trio). Weapons: any-class union for ratio ranking.
-    gear_pool = build_pool_for_classes(cleaned, mode="intersection")
-    weapon_pool = build_pool_for_classes(cleaned, mode="any")
+    # Armor/jewelry + weapons: any-class union (item usable by at least one selected class).
+    # Multi-class overlap is a soft scoring preference, not an eligibility gate.
+    gear_pool = build_pool_for_classes(cleaned, mode="any")
+    weapon_pool = gear_pool
     pool = gear_pool  # default ranking pool for non-weapon slots
     loadout = sc.pick_loadout(
         gear_pool,
@@ -459,7 +461,7 @@ def recommend_bis(
 
     for slot in ("PRIMARY", "SECONDARY", "RANGE"):
         if slot == "RANGE" and not prefer_ranged_damage:
-            # Keep intersection + priority/max-stats pick for RANGE when toggle is off.
+            # Keep priority/max-stats pick for RANGE when toggle is off (any-class pool).
             continue
         if dw_enabled and slot in ("PRIMARY", "SECONDARY") and dw_eval and dw_eval.get("mode") in (
             "dual_wield", "two_hand",
@@ -637,13 +639,13 @@ def recommend_bis(
             "pair vs best 2H using eqlwiki Game_Mechanics working Legends expected-damage model "
             f"(L={character_level}; DWChance=Skill/400, skill≈{estimate_dw_skill(character_level)}). "
             "RANGE when Prefer ranged: ratio-only. "
-            "Non-weapon gear: intersection (all selected classes)."
+            "Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
         )
     else:
         weapon_rule = (
             "PRIMARY/SECONDARY (and RANGE when Prefer ranged damage): usable by any selected class; "
             "ranked by DMG/DLY ratio only at selected upgrade (no DW class selected). "
-            "Non-weapon gear: usable by all selected classes (intersection)."
+            "Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
         )
 
     return {
@@ -709,17 +711,11 @@ def items_for_slot(
 ) -> list[dict]:
     """Slot item list for UI dropdowns / API.
 
-    Weapon slots (PRIMARY/SECONDARY, RANGE when prefer_ranged): any-class pool.
-    Other slots: intersection so shared BiS armor remains.
+    All slots: any-class union (usable by at least one selected class).
+    prefer_ranged_damage is retained for API compatibility; it no longer changes eligibility.
     """
     slot_u = (slot or "").upper()
-    weaponish = slot_u in ("PRIMARY", "SECONDARY") or (
-        slot_u == "RANGE" and prefer_ranged_damage
-    )
-    pool = build_pool_for_classes(classes, mode="any" if weaponish or not slot else "intersection")
-    # Simulator may request all slots with empty slot → union so named weapons resolve
-    if not slot:
-        pool = build_pool_for_classes(classes, mode="any")
+    pool = build_pool_for_classes(classes, mode="any")
     upgrade = max(0, min(10, int(upgrade)))
     qn = (q or "").strip().lower()
     out = []
@@ -951,7 +947,10 @@ def meta_payload() -> dict:
                 "(Combat Stability + Physical Enhancement). Combat Agility is avoidance only."
             ),
             "max_weapon": "Same as priority_weapon for damaging PRIMARY/SECONDARY/RANGE",
-            "gear_eligibility": "armor/jewelry: intersection (all classes); weapons: any class",
+            "gear_eligibility": (
+                "armor/jewelry/weapons: any selected class (union); "
+                "multi-class overlap preferred on near ties"
+            ),
             "dual_wield_classes": sorted(DUAL_WIELD_CLASSES),
             "dw_chance": "Skill/400; skill≈min(252, level*252/50) when no skill table (L50 cap)",
         },

@@ -6,6 +6,12 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 
 ## 1.0.5 — UI visibility, class priority defaults, hover tips, AC softcap (2026-09-07)
 
+### BiS gear eligibility — Josh feedback
+- [x] Non-weapon BiS pool was **intersection** (must fit all selected classes) → now **union** (usable by any one selected class).
+- [x] Example: Paladin-only armor stays BiS-eligible when Paladin is in the trio.
+- [x] Scoring still prefers multi-class overlap on near ties (`prefer_multi_class` / `bis_overlap`); does not exclude single-class items.
+- [x] Weapons unchanged (already any-class). UI/meta copy updated.
+
 ### Upgrade Priority tab — Josh feedback
 - [x] Dedicated left-menu **Upgrade Priority** tab (not only a Sim subsection).
 - [x] Ordered rundown by importance (empty slots → largest BiS gaps).

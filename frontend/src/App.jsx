@@ -1064,11 +1064,11 @@ export default function App() {
                   <> · Tertiary: <strong>{(bis.tertiary_stats || []).join(', ')}</strong></>
                 ) : null}
                 {bis.maximize_hp_regen ? <> · <strong>HP regen maximized</strong></> : null}
-                <> · Pool: {bis.pool_size} shared gear</>
+                <> · Pool: {bis.pool_size} gear (any selected class)</>
                 {bis.weapon_pool_size != null ? <> · Weapons pool: {bis.weapon_pool_size}</> : null}
                 <> · Stats / ratios at <strong>+{bis.upgrade ?? upgrade}</strong></>
                 <> · Level <strong>{bis.character_level ?? characterLevel}</strong></>
-                <> · Weapons: any selected class · Armor: all selected classes</>
+                <> · Weapons &amp; armor: any selected class (multi-class preferred on ties)</>
               </p>
               {bis.dual_wield_enabled && (
                 <p className="note" style={{ marginTop: '0.5rem' }}>

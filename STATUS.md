@@ -19,6 +19,7 @@ Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not 
 Smoke (2026-09-07):
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA
 - Softcap: under-cap prefers AC fill; past softcap prefers balanced; Max All W/C/W worn AC ≈ 388 vs target 364
+- **BiS eligibility:** armor/jewelry usable by **any** selected class (union), not all-three intersection; multi-class still preferred on near ties
 - vite build → `frontend/dist` assets
 - desktop/resources/backend/app synced with canonical backend/app
 
