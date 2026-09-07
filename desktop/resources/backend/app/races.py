@@ -80,6 +80,28 @@ def _saves_map() -> dict[str, dict]:
     return out
 
 
+def _class_stats_map() -> dict[str, dict]:
+    bundle = _load_bundle()
+    out = {}
+    for row in bundle.get("classStats") or []:
+        name = row.get("Class") or ""
+        if not name:
+            continue
+        out[name] = {k: int(row.get(k) or 0) for k in _ATTRS}
+        out[name]["Total"] = int(row.get("Total") or sum(out[name].values()))
+    return out
+
+
+def class_stat_rows(classes: list[str] | None) -> list[dict]:
+    """Creation allotment rows for each selected class (eqlegendstools classStats)."""
+    table = _class_stats_map()
+    rows = []
+    for c in classes or []:
+        if c in table:
+            rows.append({"Class": c, **table[c]})
+    return rows
+
+
 def get_races_payload() -> dict:
     races = _races_from_bundle()
     saves = _saves_map()
@@ -93,10 +115,13 @@ def get_races_payload() -> dict:
         "source": RACE_SOURCE,
         "bases_available": bases_available,
         "races": enriched,
+        "class_stats": [
+            {"Class": k, **v} for k, v in _class_stats_map().items()
+        ],
         "note": (
             "Attribute bases and racial resists from eqlegendstools (verified; matches eqlwiki). "
-            "HP/Mana/Endurance/AC racial pools are not published in that table — "
-            "simulator uses 0 for those from race (gear-only) unless noted."
+            "Live Totals HP/Mana/END use the eqlegendstools char-sheet pool formulas "
+            "(race + class allotments + STA/INT/WIS); gear still from decoded JSON only."
             if bases_available else
             "Race base stats unavailable — using zero bases. Do not invent numbers."
         ),

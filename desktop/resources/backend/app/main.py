@@ -56,6 +56,10 @@ class SimulateRequest(BaseModel):
     equipment: dict[str, Any] = Field(default_factory=dict)
     slots: dict[str, Any] | None = None
     equipped: dict[str, Any] | None = None
+    # Cast Buffs: off | quick (max lines for trio) | manual
+    cast_buffs: str = "off"
+    active_buff_ids: list[str] = Field(default_factory=list)
+    assume_max_aas: bool = True
 
 
 class ExportRequest(BaseModel):
@@ -361,9 +365,27 @@ def post_simulate(body: SimulateRequest):
             equipment,
             upgrade=body.upgrade,
             character_level=level if level is not None else 50,
+            cast_buffs=body.cast_buffs or "off",
+            active_buff_ids=list(body.active_buff_ids or []),
+            assume_max_aas=bool(body.assume_max_aas),
         )
     except Exception as e:
         raise HTTPException(500, f"Simulate failed: {e}") from e
+
+
+@app.get("/api/spell-buffs")
+def api_spell_buffs(classes: Optional[list[str]] = Query(default=None)):
+    """Buff catalog filtered to selected trio classes (eqlegendstools spellBuffs)."""
+    from . import spell_buffs as sb
+
+    cls_list: list[str] = []
+    for entry in classes or []:
+        for part in str(entry).split(","):
+            part = part.strip()
+            if part:
+                cls_list.append(part)
+    cleaned = _norm_classes(cls_list, allow_empty=True)
+    return sb.cast_buffs_payload(cleaned, mode="off")
 
 
 
