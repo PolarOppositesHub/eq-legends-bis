@@ -1300,9 +1300,11 @@ export default function App() {
                     <label>Cast Buffs</label>
                     <select value={castBuffsMode} onChange={(e) => setCastBuffsMode(e.target.value)}>
                       <option value="off">Off</option>
-                      <option value="quick">Quick Buff (max lines)</option>
+                      <option value="quick">Quick Buff (at Character Level)</option>
                     </select>
-                    <span className="muted" style={{ fontSize: '0.75rem' }}>Trio casters → best stacking lines</span>
+                    <span className="muted" style={{ fontSize: '0.75rem' }}>
+                      Trio casters → best stacking lines castable at level {characterLevel}
+                    </span>
                   </div>
                   <div className="field">
                     <label className="check">
@@ -1803,7 +1805,7 @@ export default function App() {
                 </div>
                 <p className="muted">
                   Import <code>Inventory.txt</code> from in-game <code>/outputfile inventory</code>.
-                  Live Totals use race + class allotments + EQLT HP/Mana/END formulas. Turn on <strong>Cast Buffs</strong> for max trio lines.
+                  Live Totals use race + class allotments + EQLT HP/Mana/END formulas. Turn on <strong>Cast Buffs</strong> for the best trio lines castable at your Character Level (not L50-only max spells).
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                   <button type="button" onClick={clearEquipment}>Clear equipment</button>
@@ -1994,6 +1996,7 @@ export default function App() {
                           {sim.cast_buffs.active.map((b) => (
                             <li key={b.id}>
                               <strong>{b.name}</strong>
+                              {b.level != null ? ` (L${b.level})` : ''}
                               {b.classes?.length ? ` · ${(b.classes || []).join(', ')}` : ''}
                               {b.tooltip ? ` — ${b.tooltip}` : ''}
                             </li>

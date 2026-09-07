@@ -1,7 +1,7 @@
 {
   "source": "https://eqlegendstools.com/char-sheet/ (decoded spellBuffs)",
   "verified": true,
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "buffs": [
     {
       "id": "resolution",
@@ -17,8 +17,14 @@
       },
       "stacking": {
         "group": "hp-buff-one",
-        "priority": 4
-      }
+        "priority": 5
+      },
+      "level": 42,
+      "levels_by_class": {
+        "Cleric": 42,
+        "Paladin": 60
+      },
+      "level_source": "https://eqlwiki.com/Resolution"
     },
     {
       "id": "symbol-of-naltron",
@@ -33,8 +39,14 @@
       },
       "stacking": {
         "group": "symbol",
-        "priority": 2
-      }
+        "priority": 4
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Cleric": 41,
+        "Paladin": 58
+      },
+      "level_source": "https://eqlwiki.com/Symbol_of_Naltron"
     },
     {
       "id": "shield-of-words",
@@ -50,7 +62,13 @@
       "stacking": {
         "group": "armor-class",
         "priority": 6
-      }
+      },
+      "level": 45,
+      "levels_by_class": {
+        "Cleric": 45,
+        "Paladin": 60
+      },
+      "level_source": "https://eqlwiki.com/Shield_of_Words"
     },
     {
       "id": "yaulp-iii",
@@ -67,7 +85,13 @@
       "stacking": {
         "group": "yaulp",
         "priority": 3
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Cleric": 41,
+        "Paladin": 56
+      },
+      "level_source": "https://eqlwiki.com/Yaulp_III"
     },
     {
       "id": "armor-of-the-faithful",
@@ -84,7 +108,12 @@
       "stacking": {
         "group": "shielding",
         "priority": 3
-      }
+      },
+      "level": 49,
+      "levels_by_class": {
+        "Cleric": 49
+      },
+      "level_source": "https://eqlwiki.com/Armor_of_the_Faithful"
     },
     {
       "id": "resist-magic",
@@ -102,7 +131,16 @@
       "stacking": {
         "group": "resist-magic",
         "priority": 2
-      }
+      },
+      "level": 43,
+      "levels_by_class": {
+        "Enchanter": 37,
+        "Cleric": 43,
+        "Shaman": 43,
+        "Druid": 49,
+        "Paladin": 55
+      },
+      "level_source": "https://eqlwiki.com/Resist_Magic"
     },
     {
       "id": "resist-cold",
@@ -121,7 +159,17 @@
       "stacking": {
         "group": "resist-cold",
         "priority": 2
-      }
+      },
+      "level": 24,
+      "levels_by_class": {
+        "Cleric": 38,
+        "Druid": 30,
+        "Necromancer": 24,
+        "Ranger": 55,
+        "Shadow Knight": 35,
+        "Shaman": 24
+      },
+      "level_source": "https://eqlwiki.com/Resist_Cold"
     },
     {
       "id": "resist-poison",
@@ -139,7 +187,14 @@
       "stacking": {
         "group": "resist-poison",
         "priority": 2
-      }
+      },
+      "level": 30,
+      "levels_by_class": {
+        "Cleric": 30,
+        "Shaman": 35,
+        "Druid": 44
+      },
+      "level_source": "https://eqlwiki.com/Resist_Poison"
     },
     {
       "id": "resist-disease",
@@ -159,7 +214,17 @@
       "stacking": {
         "group": "resist-disease",
         "priority": 2
-      }
+      },
+      "level": 30,
+      "levels_by_class": {
+        "Beastlord": 51,
+        "Cleric": 36,
+        "Druid": 44,
+        "Necromancer": 31,
+        "Paladin": 50,
+        "Shaman": 30
+      },
+      "level_source": "https://eqlwiki.com/Resist_Disease"
     },
     {
       "id": "resist-fire",
@@ -178,7 +243,15 @@
       "stacking": {
         "group": "resist-fire",
         "priority": 2
-      }
+      },
+      "level": 20,
+      "levels_by_class": {
+        "Druid": 20,
+        "Shaman": 27,
+        "Cleric": 33,
+        "Ranger": 46
+      },
+      "level_source": "https://eqlwiki.com/Resist_Fire"
     },
     {
       "id": "infusion-of-spirit",
@@ -192,7 +265,12 @@
         "STR": 50,
         "STA": 45,
         "DEX": 55
-      }
+      },
+      "level": 49,
+      "levels_by_class": {
+        "Shaman": 49
+      },
+      "level_source": "https://eqlwiki.com/Infusion_of_Spirit"
     },
     {
       "id": "agility",
@@ -208,7 +286,12 @@
       "stacking": {
         "group": "agility",
         "priority": 2
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Shaman": 41
+      },
+      "level_source": "https://eqlwiki.com/Agility"
     },
     {
       "id": "stamina",
@@ -224,7 +307,12 @@
       "stacking": {
         "group": "stamina",
         "priority": 2
-      }
+      },
+      "level": 43,
+      "levels_by_class": {
+        "Shaman": 43
+      },
+      "level_source": "https://eqlwiki.com/Stamina"
     },
     {
       "id": "dexterity",
@@ -240,7 +328,12 @@
       "stacking": {
         "group": "dexterity",
         "priority": 2
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Shaman": 48
+      },
+      "level_source": "https://eqlwiki.com/Dexterity"
     },
     {
       "id": "strength",
@@ -256,7 +349,12 @@
       "stacking": {
         "group": "strength",
         "priority": 4
-      }
+      },
+      "level": 46,
+      "levels_by_class": {
+        "Shaman": 46
+      },
+      "level_source": "https://eqlwiki.com/Strength"
     },
     {
       "id": "talisman-of-jasinth",
@@ -272,7 +370,12 @@
       "stacking": {
         "group": "resist-disease",
         "priority": 3
-      }
+      },
+      "level": 50,
+      "levels_by_class": {
+        "Shaman": 50
+      },
+      "level_source": "https://eqlwiki.com/Talisman_of_Jasinth"
     },
     {
       "id": "guardian",
@@ -288,7 +391,12 @@
       "stacking": {
         "group": "armor-class",
         "priority": 4
-      }
+      },
+      "level": 42,
+      "levels_by_class": {
+        "Shaman": 42
+      },
+      "level_source": "https://eqlwiki.com/Guardian"
     },
     {
       "id": "talisman-of-altuna",
@@ -304,7 +412,12 @@
       "stacking": {
         "group": "shielding",
         "priority": 1
-      }
+      },
+      "level": 40,
+      "levels_by_class": {
+        "Shaman": 40
+      },
+      "level_source": "https://eqlwiki.com/Talisman_of_Altuna"
     },
     {
       "id": "rage",
@@ -323,7 +436,12 @@
       "stacking": {
         "group": "rage",
         "priority": 2
-      }
+      },
+      "level": 45,
+      "levels_by_class": {
+        "Shaman": 45
+      },
+      "level_source": "https://eqlwiki.com/Rage"
     },
     {
       "id": "chloroplast",
@@ -340,7 +458,13 @@
       "stacking": {
         "group": "chloroplast",
         "priority": 1
-      }
+      },
+      "level": 39,
+      "levels_by_class": {
+        "Shaman": 39,
+        "Druid": 42
+      },
+      "level_source": "https://eqlwiki.com/Chloroplast"
     },
     {
       "id": "alacrity",
@@ -356,7 +480,13 @@
       "stacking": {
         "group": "haste",
         "priority": 40
-      }
+      },
+      "level": 42,
+      "levels_by_class": {
+        "Enchanter": 21,
+        "Shaman": 42
+      },
+      "level_source": "https://eqlwiki.com/Alacrity"
     },
     {
       "id": "form-of-the-bear",
@@ -377,7 +507,12 @@
           "illusion-dry-bone",
           "wolf-form"
         ]
-      }
+      },
+      "level": 25,
+      "levels_by_class": {
+        "Shaman": 25
+      },
+      "level_source": "https://eqlwiki.com/Form_of_the_Bear"
     },
     {
       "id": "elemental-armor",
@@ -391,7 +526,13 @@
       "effects": {
         "SVF": 30,
         "SVC": 30
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Magician": 41,
+        "Wizard": 42
+      },
+      "level_source": "https://eqlwiki.com/Elemental_Armor"
     },
     {
       "id": "arch-shielding",
@@ -416,7 +557,15 @@
           "thorncoat",
           "spikecoat"
         ]
-      }
+      },
+      "level": 40,
+      "levels_by_class": {
+        "Enchanter": 40,
+        "Necromancer": 41,
+        "Magician": 43,
+        "Wizard": 44
+      },
+      "level_source": "https://eqlwiki.com/Arch_Shielding"
     },
     {
       "id": "phantom-plate",
@@ -436,7 +585,12 @@
         "excludes": [
           "form-of-the-bear"
         ]
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Magician": 41
+      },
+      "level_source": "https://eqlwiki.com/Phantom_Plate"
     },
     {
       "id": "shield-of-lava",
@@ -448,7 +602,12 @@
       "tooltip": "Shield of Lava adds +25 SV Fire.",
       "effects": {
         "SVF": 25
-      }
+      },
+      "level": 45,
+      "levels_by_class": {
+        "Magician": 45
+      },
+      "level_source": "https://eqlwiki.com/Shield_of_Lava"
     },
     {
       "id": "group-resist-magic",
@@ -464,7 +623,12 @@
       "stacking": {
         "group": "resist-magic",
         "priority": 3
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Enchanter": 48
+      },
+      "level_source": "https://eqlwiki.com/Group_Resist_Magic"
     },
     {
       "id": "shadow",
@@ -480,7 +644,12 @@
       "stacking": {
         "group": "armor-class",
         "priority": 3
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Enchanter": 48
+      },
+      "level_source": "https://eqlwiki.com/Shadow"
     },
     {
       "id": "boon-of-the-garou",
@@ -504,7 +673,12 @@
       "proc": {
         "name": "Lifetap Strike",
         "tooltip": "Lifetap Strike is a 30 damage lifetap proc."
-      }
+      },
+      "level": 40,
+      "levels_by_class": {
+        "Enchanter": 40
+      },
+      "level_source": "https://eqlwiki.com/Boon_of_the_Garou"
     },
     {
       "id": "brilliance",
@@ -517,7 +691,12 @@
       "effects": {
         "INT": 13,
         "WIS": 7
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Enchanter": 41
+      },
+      "level_source": "https://eqlwiki.com/Brilliance"
     },
     {
       "id": "illusion-dry-bone",
@@ -535,7 +714,12 @@
           "boon-of-the-garou",
           "form-of-the-bear"
         ]
-      }
+      },
+      "level": 37,
+      "levels_by_class": {
+        "Enchanter": 37
+      },
+      "level_source": "https://eqlwiki.com/Illusion%3A_Dry_Bone"
     },
     {
       "id": "clarity",
@@ -552,7 +736,12 @@
         "excludes": [
           "lich"
         ]
-      }
+      },
+      "level": 26,
+      "levels_by_class": {
+        "Enchanter": 26
+      },
+      "level_source": "https://eqlwiki.com/Clarity"
     },
     {
       "id": "augmentation",
@@ -570,7 +759,12 @@
       "stacking": {
         "group": "haste",
         "priority": 27
-      }
+      },
+      "level": 28,
+      "levels_by_class": {
+        "Enchanter": 28
+      },
+      "level_source": "https://eqlwiki.com/Augmentation"
     },
     {
       "id": "swift-like-the-wind",
@@ -586,7 +780,12 @@
       "stacking": {
         "group": "haste",
         "priority": 60
-      }
+      },
+      "level": 47,
+      "levels_by_class": {
+        "Enchanter": 47
+      },
+      "level_source": "https://eqlwiki.com/Swift_Like_the_Wind"
     },
     {
       "id": "gift-of-magic",
@@ -598,7 +797,12 @@
       "tooltip": "Gift of Magic adds +50 mana.",
       "effects": {
         "MANA": 50
-      }
+      },
+      "level": 34,
+      "levels_by_class": {
+        "Enchanter": 34
+      },
+      "level_source": "https://eqlwiki.com/Gift_of_Magic"
     },
     {
       "id": "grim-aura",
@@ -617,7 +821,13 @@
           "firefist",
           "natures-precision"
         ]
-      }
+      },
+      "level": 3,
+      "levels_by_class": {
+        "Shadow Knight": 16,
+        "Necromancer": 3
+      },
+      "level_source": "https://eqlwiki.com/Grim_Aura"
     },
     {
       "id": "lich",
@@ -635,7 +845,12 @@
         "excludes": [
           "clarity"
         ]
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Necromancer": 48
+      },
+      "level_source": "https://eqlwiki.com/Lich"
     },
     {
       "id": "dead-men-floating",
@@ -647,7 +862,12 @@
       "tooltip": "Dead Men Floating adds +70 SV Poison.",
       "effects": {
         "SVP": 70
-      }
+      },
+      "level": 45,
+      "levels_by_class": {
+        "Necromancer": 45
+      },
+      "level_source": "https://eqlwiki.com/Dead_Men_Floating"
     },
     {
       "id": "spirit-armor",
@@ -663,7 +883,14 @@
       "stacking": {
         "group": "armor-class",
         "priority": 1
-      }
+      },
+      "level": 16,
+      "levels_by_class": {
+        "Cleric": 15,
+        "Necromancer": 16,
+        "Paladin": 30
+      },
+      "level_source": "https://eqlwiki.com/Spirit_Armor"
     },
     {
       "id": "protection-of-nature",
@@ -681,7 +908,12 @@
       "stacking": {
         "group": "hp-buff-one",
         "priority": 3
-      }
+      },
+      "level": 49,
+      "levels_by_class": {
+        "Druid": 49
+      },
+      "level_source": "https://eqlwiki.com/Protection_of_Nature"
     },
     {
       "id": "thorncoat",
@@ -699,7 +931,13 @@
           "spikecoat",
           "arch-shielding"
         ]
-      }
+      },
+      "level": 47,
+      "levels_by_class": {
+        "Druid": 47,
+        "Ranger": 60
+      },
+      "level_source": "https://eqlwiki.com/Thorncoat"
     },
     {
       "id": "pack-chloroplast",
@@ -716,7 +954,12 @@
       "stacking": {
         "group": "chloroplast",
         "priority": 2
-      }
+      },
+      "level": 45,
+      "levels_by_class": {
+        "Druid": 45
+      },
+      "level_source": "https://eqlwiki.com/Pack_Chloroplast"
     },
     {
       "id": "storm-strength",
@@ -732,7 +975,13 @@
       "stacking": {
         "group": "strength",
         "priority": 3
-      }
+      },
+      "level": 44,
+      "levels_by_class": {
+        "Ranger": 53,
+        "Druid": 44
+      },
+      "level_source": "https://eqlwiki.com/Storm_Strength"
     },
     {
       "id": "form-of-the-great-wolf",
@@ -749,7 +998,12 @@
         "excludes": [
           "boon-of-the-garou"
         ]
-      }
+      },
+      "level": 40,
+      "levels_by_class": {
+        "Druid": 40
+      },
+      "level_source": "https://eqlwiki.com/Form_of_the_Great_Wolf"
     },
     {
       "id": "firefist",
@@ -766,7 +1020,13 @@
         "excludes": [
           "grim-aura"
         ]
-      }
+      },
+      "level": 6,
+      "levels_by_class": {
+        "Druid": 6,
+        "Ranger": 17
+      },
+      "level_source": "https://eqlwiki.com/Firefist"
     },
     {
       "id": "protect",
@@ -782,7 +1042,13 @@
       "stacking": {
         "group": "armor-class",
         "priority": 1
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Shaman": 20,
+        "Beastlord": 48
+      },
+      "level_source": "https://eqlwiki.com/Protect"
     },
     {
       "id": "frenzy",
@@ -801,7 +1067,13 @@
       "stacking": {
         "group": "rage",
         "priority": 1
-      }
+      },
+      "level": 47,
+      "levels_by_class": {
+        "Shaman": 16,
+        "Beastlord": 47
+      },
+      "level_source": "https://eqlwiki.com/Frenzy"
     },
     {
       "id": "spiritual-brawn",
@@ -818,7 +1090,12 @@
       "stacking": {
         "group": "hp-buff-two",
         "priority": 1
-      }
+      },
+      "level": 42,
+      "levels_by_class": {
+        "Beastlord": 42
+      },
+      "level_source": "https://eqlwiki.com/Spiritual_Brawn"
     },
     {
       "id": "spiritual-light",
@@ -832,7 +1109,12 @@
         "MANA_REGEN": 3,
         "HP_REGEN": 3,
         "END_REGEN": 3
-      }
+      },
+      "level": 41,
+      "levels_by_class": {
+        "Beastlord": 41
+      },
+      "level_source": "https://eqlwiki.com/Spiritual_Light"
     },
     {
       "id": "spirit-of-monkey",
@@ -848,7 +1130,13 @@
       "stacking": {
         "group": "dexterity",
         "priority": 1
-      }
+      },
+      "level": 38,
+      "levels_by_class": {
+        "Shaman": 21,
+        "Beastlord": 38
+      },
+      "level_source": "https://eqlwiki.com/Spirit_of_Monkey"
     },
     {
       "id": "spirit-of-ox",
@@ -864,7 +1152,13 @@
       "stacking": {
         "group": "stamina",
         "priority": 1
-      }
+      },
+      "level": 37,
+      "levels_by_class": {
+        "Shaman": 21,
+        "Beastlord": 37
+      },
+      "level_source": "https://eqlwiki.com/Spirit_of_Ox"
     },
     {
       "id": "endure-magic",
@@ -882,7 +1176,17 @@
         "group": "resist-magic",
         "priority": 1,
         "redundantWhenAvailable": "resist-magic"
-      }
+      },
+      "level": 29,
+      "levels_by_class": {
+        "Cleric": 16,
+        "Paladin": 29,
+        "Druid": 34,
+        "Shaman": 19,
+        "Enchanter": 17,
+        "Beastlord": 34
+      },
+      "level_source": "https://eqlwiki.com/Endure_Magic"
     },
     {
       "id": "spirit-strength",
@@ -898,7 +1202,13 @@
       "stacking": {
         "group": "strength",
         "priority": 1
-      }
+      },
+      "level": 28,
+      "levels_by_class": {
+        "Shaman": 18,
+        "Beastlord": 28
+      },
+      "level_source": "https://eqlwiki.com/Spirit_Strength"
     },
     {
       "id": "endure-disease",
@@ -916,7 +1226,18 @@
         "group": "resist-disease",
         "priority": 1,
         "redundantWhenAvailable": "resist-disease"
-      }
+      },
+      "level": 22,
+      "levels_by_class": {
+        "Beastlord": 22,
+        "Cleric": 11,
+        "Paladin": 38,
+        "Shadow Knight": 26,
+        "Druid": 19,
+        "Shaman": 8,
+        "Necromancer": 11
+      },
+      "level_source": "https://eqlwiki.com/Endure_Disease"
     },
     {
       "id": "endure-poison",
@@ -934,7 +1255,16 @@
         "group": "resist-poison",
         "priority": 1,
         "redundantWhenAvailable": "resist-poison"
-      }
+      },
+      "level": 18,
+      "levels_by_class": {
+        "Cleric": 6,
+        "Paladin": 21,
+        "Druid": 19,
+        "Shaman": 11,
+        "Beastlord": 18
+      },
+      "level_source": "https://eqlwiki.com/Endure_Poison"
     },
     {
       "id": "endure-fire",
@@ -951,7 +1281,16 @@
         "group": "resist-fire",
         "priority": 1,
         "redundantWhenAvailable": "resist-fire"
-      }
+      },
+      "level": 9,
+      "levels_by_class": {
+        "Beastlord": 9,
+        "Cleric": 8,
+        "Ranger": 9,
+        "Druid": 1,
+        "Shaman": 5
+      },
+      "level_source": "https://eqlwiki.com/Endure_Fire"
     },
     {
       "id": "endure-cold",
@@ -969,7 +1308,18 @@
         "group": "resist-cold",
         "priority": 1,
         "redundantWhenAvailable": "resist-cold"
-      }
+      },
+      "level": 3,
+      "levels_by_class": {
+        "Beastlord": 3,
+        "Cleric": 13,
+        "Druid": 9,
+        "Necromancer": 3,
+        "Ranger": 18,
+        "Shadow Knight": 10,
+        "Shaman": 1
+      },
+      "level_source": "https://eqlwiki.com/Endure_Cold"
     },
     {
       "id": "force-of-nature",
@@ -983,7 +1333,12 @@
         "HP_REGEN": 16,
         "ATK": 20,
         "END_REGEN": 10
-      }
+      },
+      "level": 50,
+      "levels_by_class": {
+        "Ranger": 50
+      },
+      "level_source": "https://eqlwiki.com/Force_of_Nature"
     },
     {
       "id": "wolf-form",
@@ -1000,7 +1355,13 @@
         "excludes": [
           "form-of-the-bear"
         ]
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Druid": 20,
+        "Ranger": 48
+      },
+      "level_source": "https://eqlwiki.com/Wolf_Form"
     },
     {
       "id": "call-of-earth",
@@ -1012,7 +1373,12 @@
       "tooltip": "Call of Earth adds +20 AC.",
       "effects": {
         "AC": 20
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Ranger": 48
+      },
+      "level_source": "https://eqlwiki.com/Call_of_Earth"
     },
     {
       "id": "spikecoat",
@@ -1030,7 +1396,13 @@
           "thorncoat",
           "arch-shielding"
         ]
-      }
+      },
+      "level": 42,
+      "levels_by_class": {
+        "Druid": 37,
+        "Ranger": 42
+      },
+      "level_source": "https://eqlwiki.com/Spikecoat"
     },
     {
       "id": "skin-like-steel",
@@ -1047,7 +1419,13 @@
       "stacking": {
         "group": "hp-buff-one",
         "priority": 1
-      }
+      },
+      "level": 39,
+      "levels_by_class": {
+        "Ranger": 39,
+        "Druid": 24
+      },
+      "level_source": "https://eqlwiki.com/Skin_Like_Steel"
     },
     {
       "id": "feet-like-cat",
@@ -1063,7 +1441,13 @@
       "stacking": {
         "group": "agility",
         "priority": 1
-      }
+      },
+      "level": 12,
+      "levels_by_class": {
+        "Shaman": 3,
+        "Ranger": 12
+      },
+      "level_source": "https://eqlwiki.com/Feet_like_Cat"
     },
     {
       "id": "natures-precision",
@@ -1080,7 +1464,12 @@
         "excludes": [
           "grim-aura"
         ]
-      }
+      },
+      "level": 37,
+      "levels_by_class": {
+        "Ranger": 37
+      },
+      "level_source": "https://eqlwiki.com/Nature%27s_Precision"
     },
     {
       "id": "strength-of-earth",
@@ -1096,7 +1485,13 @@
       "stacking": {
         "group": "strength",
         "priority": 2
-      }
+      },
+      "level": 26,
+      "levels_by_class": {
+        "Druid": 7,
+        "Ranger": 26
+      },
+      "level_source": "https://eqlwiki.com/Strength_of_Earth"
     },
     {
       "id": "armor-of-faith",
@@ -1112,7 +1507,13 @@
       "stacking": {
         "group": "armor-class",
         "priority": 5
-      }
+      },
+      "level": 48,
+      "levels_by_class": {
+        "Cleric": 35,
+        "Paladin": 48
+      },
+      "level_source": "https://eqlwiki.com/Armor_of_Faith"
     },
     {
       "id": "brells-steadfast-aegis",
@@ -1128,7 +1529,12 @@
       "stacking": {
         "group": "hp-buff-two",
         "priority": 2
-      }
+      },
+      "level": 49,
+      "levels_by_class": {
+        "Paladin": 49
+      },
+      "level_source": "https://eqlwiki.com/Brell%27s_Steadfast_Aegis"
     },
     {
       "id": "valor",
@@ -1145,7 +1551,13 @@
       "stacking": {
         "group": "hp-buff-one",
         "priority": 2
-      }
+      },
+      "level": 47,
+      "levels_by_class": {
+        "Cleric": 32,
+        "Paladin": 47
+      },
+      "level_source": "https://eqlwiki.com/Valor"
     },
     {
       "id": "yaulp-ii",
@@ -1162,7 +1574,13 @@
       "stacking": {
         "group": "yaulp",
         "priority": 2
-      }
+      },
+      "level": 38,
+      "levels_by_class": {
+        "Cleric": 16,
+        "Paladin": 38
+      },
+      "level_source": "https://eqlwiki.com/Yaulp_II"
     },
     {
       "id": "symbol-of-pinzarn",
@@ -1178,7 +1596,13 @@
       "stacking": {
         "group": "symbol",
         "priority": 1
-      }
+      },
+      "level": 46,
+      "levels_by_class": {
+        "Cleric": 31,
+        "Paladin": 46
+      },
+      "level_source": "https://eqlwiki.com/Symbol_of_Pinzarn"
     },
     {
       "id": "divine-purpose",
@@ -1191,7 +1615,12 @@
       "effects": {
         "HP_REGEN": 8,
         "MANA_REGEN": -3
-      }
+      },
+      "level": 37,
+      "levels_by_class": {
+        "Paladin": 37
+      },
+      "level_source": "https://eqlwiki.com/Divine_Purpose"
     },
     {
       "id": "valor-of-marr",
@@ -1207,7 +1636,12 @@
       "stacking": {
         "group": "haste",
         "priority": 25
-      }
+      },
+      "level": 44,
+      "levels_by_class": {
+        "Paladin": 44
+      },
+      "level_source": "https://eqlwiki.com/Valor_of_Marr"
     },
     {
       "id": "dark-temptation",
@@ -1220,7 +1654,575 @@
       "effects": {
         "ATK": 25,
         "HP_REGEN": -3
-      }
+      },
+      "level": 32,
+      "levels_by_class": {
+        "Shadow Knight": 32
+      },
+      "level_source": "https://eqlwiki.com/Dark_Temptation"
+    },
+    {
+      "id": "symbol-of-transal",
+      "name": "Symbol of Transal",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Symbol of Transal (L11) HP +34",
+      "effects": {
+        "HP": 34
+      },
+      "stacking": {
+        "group": "symbol",
+        "priority": 1
+      },
+      "level": 11,
+      "levels_by_class": {
+        "Cleric": 11,
+        "Paladin": 24
+      },
+      "level_source": "https://eqlwiki.com/Symbol_of_Transal",
+      "rank": "lower"
+    },
+    {
+      "id": "symbol-of-ryltan",
+      "name": "Symbol of Ryltan",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Symbol of Ryltan (L21) HP +94",
+      "effects": {
+        "HP": 94
+      },
+      "stacking": {
+        "group": "symbol",
+        "priority": 2
+      },
+      "level": 21,
+      "levels_by_class": {
+        "Cleric": 21,
+        "Paladin": 33
+      },
+      "level_source": "https://eqlwiki.com/Symbol_of_Ryltan",
+      "rank": "lower"
+    },
+    {
+      "id": "symbol-of-pinzarn-cleric",
+      "name": "Symbol of Pinzarn",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Symbol of Pinzarn (L31) HP +224",
+      "effects": {
+        "HP": 224
+      },
+      "stacking": {
+        "group": "symbol",
+        "priority": 3
+      },
+      "level": 31,
+      "levels_by_class": {
+        "Cleric": 31,
+        "Paladin": 46
+      },
+      "level_source": "https://eqlwiki.com/Symbol_of_Pinzarn",
+      "rank": "lower"
+    },
+    {
+      "id": "center",
+      "name": "Center",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Center (L7) AC +5, HP +44",
+      "effects": {
+        "AC": 5,
+        "HP": 44
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 1
+      },
+      "level": 7,
+      "levels_by_class": {
+        "Cleric": 7,
+        "Paladin": 20
+      },
+      "level_source": "https://eqlwiki.com/Center",
+      "rank": "lower"
+    },
+    {
+      "id": "courage",
+      "name": "Courage",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Courage (L1) AC +3, HP +11",
+      "effects": {
+        "AC": 3,
+        "HP": 11
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 2
+      },
+      "level": 1,
+      "levels_by_class": {
+        "Cleric": 1,
+        "Paladin": 8
+      },
+      "level_source": "https://eqlwiki.com/Courage",
+      "rank": "lower"
+    },
+    {
+      "id": "daring",
+      "name": "Daring",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Daring (L17) AC +7, HP +84",
+      "effects": {
+        "AC": 7,
+        "HP": 84
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 3
+      },
+      "level": 17,
+      "levels_by_class": {
+        "Cleric": 17,
+        "Paladin": 37
+      },
+      "level_source": "https://eqlwiki.com/Daring",
+      "rank": "lower"
+    },
+    {
+      "id": "holy-armor",
+      "name": "Holy Armor",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Holy Armor (L1) AC +6",
+      "effects": {
+        "AC": 6
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 2
+      },
+      "level": 1,
+      "levels_by_class": {
+        "Cleric": 1,
+        "Paladin": 15
+      },
+      "level_source": "https://eqlwiki.com/Holy_Armor",
+      "rank": "lower"
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Guard (L25) AC +18",
+      "effects": {
+        "AC": 18
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 3
+      },
+      "level": 25,
+      "levels_by_class": {
+        "Cleric": 25,
+        "Paladin": 39
+      },
+      "level_source": "https://eqlwiki.com/Guard",
+      "rank": "lower"
+    },
+    {
+      "id": "armor-of-faith-cleric",
+      "name": "Armor of Faith",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Armor of Faith (L35) AC +24",
+      "effects": {
+        "AC": 24
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 5
+      },
+      "level": 35,
+      "levels_by_class": {
+        "Cleric": 35,
+        "Paladin": 48
+      },
+      "level_source": "https://eqlwiki.com/Armor_of_Faith",
+      "rank": "lower"
+    },
+    {
+      "id": "yaulp",
+      "name": "Yaulp",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Yaulp (L1) AC +6",
+      "effects": {
+        "AC": 6
+      },
+      "stacking": {
+        "group": "yaulp",
+        "priority": 1
+      },
+      "level": 1,
+      "levels_by_class": {
+        "Cleric": 1,
+        "Paladin": 9
+      },
+      "level_source": "https://eqlwiki.com/Yaulp",
+      "rank": "lower"
+    },
+    {
+      "id": "talisman-of-tnarg",
+      "name": "Talisman of Tnarg",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Talisman of Tnarg (L32) HP +134",
+      "effects": {
+        "HP": 134
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 32,
+      "levels_by_class": {
+        "Shaman": 32
+      },
+      "level_source": "https://eqlwiki.com/Talisman_of_Tnarg",
+      "rank": "lower"
+    },
+    {
+      "id": "scale-skin",
+      "name": "Scale Skin",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Scale Skin (L3) AC +3",
+      "effects": {
+        "AC": 3
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 1
+      },
+      "level": 3,
+      "levels_by_class": {
+        "Shaman": 3,
+        "Beastlord": 10
+      },
+      "level_source": "https://eqlwiki.com/Scale_Skin",
+      "rank": "lower"
+    },
+    {
+      "id": "turtle-skin",
+      "name": "Turtle Skin",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Turtle Skin (L11) AC +5",
+      "effects": {
+        "AC": 5
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 2
+      },
+      "level": 11,
+      "levels_by_class": {
+        "Shaman": 11,
+        "Beastlord": 26
+      },
+      "level_source": "https://eqlwiki.com/Turtle_Skin",
+      "rank": "lower"
+    },
+    {
+      "id": "protect-shaman",
+      "name": "Protect",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Protect (L20) AC +11",
+      "effects": {
+        "AC": 11
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 3
+      },
+      "level": 20,
+      "levels_by_class": {
+        "Shaman": 20,
+        "Beastlord": 48
+      },
+      "level_source": "https://eqlwiki.com/Protect",
+      "rank": "lower"
+    },
+    {
+      "id": "minor-shielding",
+      "name": "Minor Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Minor Shielding (L1) AC +10",
+      "effects": {
+        "AC": 10
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 1,
+      "levels_by_class": {
+        "Necromancer": 1,
+        "Wizard": 1,
+        "Magician": 1,
+        "Enchanter": 1
+      },
+      "level_source": "https://eqlwiki.com/Minor_Shielding",
+      "rank": "lower"
+    },
+    {
+      "id": "lesser-shielding",
+      "name": "Lesser Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Lesser Shielding (L5) AC +6",
+      "effects": {
+        "AC": 6
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 5,
+      "levels_by_class": {
+        "Magician": 5,
+        "Enchanter": 6,
+        "Wizard": 6,
+        "Necromancer": 8
+      },
+      "level_source": "https://eqlwiki.com/Lesser_Shielding",
+      "rank": "lower"
+    },
+    {
+      "id": "shielding",
+      "name": "Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Shielding (L15) AC +15, SVM +12",
+      "effects": {
+        "AC": 15,
+        "SVM": 12
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 15,
+      "levels_by_class": {
+        "Wizard": 15,
+        "Enchanter": 16,
+        "Magician": 16,
+        "Necromancer": 16
+      },
+      "level_source": "https://eqlwiki.com/Shielding",
+      "rank": "lower"
+    },
+    {
+      "id": "major-shielding",
+      "name": "Major Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Major Shielding (L23) AC +16, SVM +14",
+      "effects": {
+        "AC": 16,
+        "SVM": 14
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 23,
+      "levels_by_class": {
+        "Enchanter": 23,
+        "Wizard": 23,
+        "Magician": 24,
+        "Necromancer": 24
+      },
+      "level_source": "https://eqlwiki.com/Major_Shielding",
+      "rank": "lower"
+    },
+    {
+      "id": "greater-shielding",
+      "name": "Greater Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Greater Shielding (L31) AC +28",
+      "effects": {
+        "AC": 28
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      },
+      "level": 31,
+      "levels_by_class": {
+        "Enchanter": 31,
+        "Magician": 32,
+        "Necromancer": 33,
+        "Wizard": 33
+      },
+      "level_source": "https://eqlwiki.com/Greater_Shielding",
+      "rank": "lower"
+    },
+    {
+      "id": "skin-like-wood",
+      "name": "Skin like Wood",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Skin like Wood (L1) AC +2, HP +11",
+      "effects": {
+        "AC": 2,
+        "HP": 11
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 1
+      },
+      "level": 1,
+      "levels_by_class": {
+        "Druid": 1,
+        "Ranger": 7
+      },
+      "level_source": "https://eqlwiki.com/Skin_like_Wood",
+      "rank": "lower"
+    },
+    {
+      "id": "skin-like-rock",
+      "name": "Skin like Rock",
+      "classes": [
+        "Druid",
+        "Ranger"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Skin like Rock (L14) AC +5, HP +54",
+      "effects": {
+        "AC": 5,
+        "HP": 54
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 1
+      },
+      "level": 14,
+      "levels_by_class": {
+        "Druid": 14,
+        "Ranger": 21
+      },
+      "level_source": "https://eqlwiki.com/Skin_like_Rock",
+      "rank": "lower"
+    },
+    {
+      "id": "quickness",
+      "name": "Quickness",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Quickness (L15) HASTE+28",
+      "effects": {
+        "HASTE": 28
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 10
+      },
+      "level": 15,
+      "levels_by_class": {
+        "Enchanter": 15,
+        "Shaman": 26
+      },
+      "level_source": "https://eqlwiki.com/Quickness",
+      "rank": "lower"
+    },
+    {
+      "id": "celerity",
+      "name": "Celerity",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Celerity (L39) HASTE+47",
+      "effects": {
+        "HASTE": 47
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 50
+      },
+      "level": 39,
+      "levels_by_class": {
+        "Shaman": 56,
+        "Enchanter": 39
+      },
+      "level_source": "https://eqlwiki.com/Celerity",
+      "rank": "lower"
     }
-  ]
+  ],
+  "levelNote": "Cast levels from eqlwiki spell pages (Classes: Class - Level N). level = minimum among the buff's casting classes. Never invented."
 }

@@ -386,8 +386,11 @@ def post_simulate(body: SimulateRequest):
 
 
 @app.get("/api/spell-buffs")
-def api_spell_buffs(classes: Optional[list[str]] = Query(default=None)):
-    """Buff catalog filtered to selected trio classes (eqlegendstools spellBuffs)."""
+def api_spell_buffs(
+    classes: Optional[list[str]] = Query(default=None),
+    character_level: int = Query(default=50, ge=1, le=50),
+):
+    """Buff catalog filtered to selected trio classes at character_level."""
     from . import spell_buffs as sb
 
     cls_list: list[str] = []
@@ -397,7 +400,11 @@ def api_spell_buffs(classes: Optional[list[str]] = Query(default=None)):
             if part:
                 cls_list.append(part)
     cleaned = _norm_classes(cls_list, allow_empty=True)
-    return sb.cast_buffs_payload(cleaned, mode="off")
+    return sb.cast_buffs_payload(
+        cleaned,
+        mode="off",
+        character_level=character_level,
+    )
 
 
 

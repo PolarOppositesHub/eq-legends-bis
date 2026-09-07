@@ -838,6 +838,7 @@ def simulate(
         cleaned,
         mode=cast_buffs or "off",
         active_ids=list(active_buff_ids or []),
+        character_level=character_level if character_level is not None else 50,
     )
     buff_effects = dict(buffs_info.get("effects") or {})
     buff_haste = float(buff_effects.pop("HASTE", 0) or 0)
