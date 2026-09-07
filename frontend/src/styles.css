@@ -302,16 +302,26 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   line-height: 1.35;
   color: #e8e8e8;
 }
-.sim-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 0.85rem; align-items: start; }
-@media (max-width: 1000px) { .sim-grid { grid-template-columns: 1fr; } }
+.sim-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+.sim-equip-panel,
+.sim-totals-panel {
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+}
 .equip-list { display: flex; flex-direction: column; gap: 0.35rem; }
 .equip-row { display: grid; grid-template-columns: 110px 1fr; gap: 0.4rem; align-items: center; }
 .equip-row label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
 .equip-compare-head,
 .equip-compare-row {
   display: grid;
-  grid-template-columns: 90px minmax(120px, 1.1fr) minmax(120px, 1.1fr) minmax(160px, 1.15fr);
-  gap: 0.4rem;
+  grid-template-columns: 100px minmax(140px, 1.15fr) minmax(140px, 1.15fr) minmax(180px, 1.2fr);
+  gap: 0.45rem;
   align-items: start;
 }
 .equip-compare-head {
@@ -328,9 +338,11 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   text-transform: uppercase;
   padding-top: 0.45rem;
 }
+.equip-list.equip-compare,
 .equip-compare {
-  /* Full equipment table — no inner scrollbar next to Live Totals. */
+  /* Never clip the slot list in its own scrollport. */
   max-height: none !important;
+  height: auto !important;
   overflow: visible !important;
 }
 .equip-deltas {

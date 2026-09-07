@@ -1486,7 +1486,7 @@ export default function App() {
 
           {tab === 'sim' && (
             <div className="sim-grid">
-              <div className="panel">
+              <div className="panel sim-equip-panel">
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Equipment</h2>
                 <p className="muted" style={{ marginTop: 0, marginBottom: '0.65rem' }}>
                   Deltas update live as you change Worn / BiS. Apply / Recalculate also refreshes Upgrade Priority.
@@ -1669,7 +1669,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="panel">
+              <div className="panel sim-totals-panel">
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Live Totals</h2>
                 {sim ? (
                   <>
