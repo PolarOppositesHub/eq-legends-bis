@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   getItems,
   getMeta,
@@ -12,6 +12,8 @@ import {
   searchItems,
   getItemDetail,
   itemImageUrl,
+  ensureItemImage,
+  getPriorityDefaults,
 } from './api.js'
 
 const EMPTY_EQ = {}
@@ -88,45 +90,51 @@ function persistBuilds(builds) {
   localStorage.setItem(BUILDS_KEY, JSON.stringify(builds))
 }
 
-function AltRow({ a, upgrade }) {
-  const stats = a.stats_at_upgrade || a.stats_plus10 || a.stats_plus0
+function itemTipStatsText(item, upgrade) {
+  if (!item) return ''
+  const stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0
   const tipParts = [
-    a.haste ? `Haste +${a.haste}% (not stacked)` : null,
-    (a.ratio_at_upgrade != null || a.ratio_plus10 != null)
-      ? `Ratio@+${upgrade} ${Number(a.ratio_at_upgrade ?? a.ratio_plus10).toFixed(4)}`
+    item.haste ? `Haste +${item.haste}% (not stacked)` : null,
+    (item.ratio_at_upgrade != null || item.ratio_plus10 != null)
+      ? `Ratio@+${upgrade} ${Number(item.ratio_at_upgrade ?? item.ratio_plus10).toFixed(4)}`
       : null,
     fmtStats(stats, SHOW_UP) || null,
-    a.zone ? `Zone: ${a.zone}` : null,
-    a.why || null,
+    item.zone ? `Zone: ${item.zone}` : null,
+    item.why || null,
   ].filter(Boolean)
+  return tipParts.join('\n')
+}
 
+function AltRow({ a, upgrade, onShowTip, onHideTip }) {
+  const statsText = itemTipStatsText(a, upgrade)
+  const show = (e) => {
+    const el = e.currentTarget
+    const r = el.getBoundingClientRect()
+    onShowTip({
+      name: a.name,
+      statsText,
+      x: Math.min(r.left, window.innerWidth - 320),
+      y: r.bottom + 6,
+      image: itemImageUrl(a.name),
+    })
+  }
   return (
     <li className="alt-row">
       <span className="alt-name-wrap">
-        <span className="alt-name" tabIndex={0}>
+        <span
+          className="alt-name"
+          tabIndex={0}
+          onMouseEnter={show}
+          onFocus={show}
+          onMouseLeave={onHideTip}
+          onBlur={onHideTip}
+        >
           {a.url ? (
             <a href={a.url} target="_blank" rel="noreferrer">{a.name}</a>
           ) : (
             a.name
           )}
         </span>
-        {tipParts.length > 0 || a.name ? (
-          <div className="alt-tip">
-            {a.name ? (
-              <img
-                className="item-icon"
-                src={itemImageUrl(a.name)}
-                alt=""
-                onError={hideImg}
-              />
-            ) : null}
-            <div className="alt-tip-text">
-              {tipParts.map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </span>
       {a.haste ? <span className="muted"> (haste +{a.haste}%)</span> : null}
       {(a.ratio_at_upgrade != null || a.ratio_plus10 != null) ? (
@@ -262,7 +270,7 @@ export default function App() {
   const [tab, setTab] = useState('bis')
   const [classes, setClasses] = useState([])
   const [mode, setMode] = useState('priority')
-  const [primaryStats, setPrimaryStats] = useState(() => ['INT', '', ''])
+  const [primaryStats, setPrimaryStats] = useState(() => [...EMPTY_TIERS])
   const [secondaryStats, setSecondaryStats] = useState(() => [...EMPTY_TIERS])
   const [tertiaryStats, setTertiaryStats] = useState(() => [...EMPTY_TIERS])
   const [maximizeHpRegen, setMaximizeHpRegen] = useState(false)
@@ -295,8 +303,29 @@ export default function App() {
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [itemDetail, setItemDetail] = useState(null)
+  const [hoverTip, setHoverTip] = useState(null)
+  const hoverTipClearRef = useRef(null)
+  const skipPriorityDefaultsRef = useRef(false)
+  const ensuredImagesRef = useRef(new Set())
 
   const priorityStat = nonemptyStats(primaryStats)[0] || 'INT'
+
+  const showHoverTip = useCallback((tip) => {
+    if (hoverTipClearRef.current) {
+      clearTimeout(hoverTipClearRef.current)
+      hoverTipClearRef.current = null
+    }
+    setHoverTip(tip)
+    if (tip?.name && !ensuredImagesRef.current.has(tip.name)) {
+      ensuredImagesRef.current.add(tip.name)
+      ensureItemImage(tip.name).catch(() => {})
+    }
+  }, [])
+
+  const hideHoverTip = useCallback(() => {
+    if (hoverTipClearRef.current) clearTimeout(hoverTipClearRef.current)
+    hoverTipClearRef.current = setTimeout(() => setHoverTip(null), 80)
+  }, [])
 
   useEffect(() => {
     getMeta()
@@ -313,6 +342,29 @@ export default function App() {
       })
       .catch((e) => setError(String(e.message || e)))
   }, [])
+
+  useEffect(() => {
+    if (skipPriorityDefaultsRef.current) {
+      skipPriorityDefaultsRef.current = false
+      return
+    }
+    if (!classes.length) {
+      setPrimaryStats([...EMPTY_TIERS])
+      setSecondaryStats([...EMPTY_TIERS])
+      setTertiaryStats([...EMPTY_TIERS])
+      return
+    }
+    let cancelled = false
+    getPriorityDefaults(classes)
+      .then((d) => {
+        if (cancelled) return
+        setPrimaryStats(padTier(d.primary_stats))
+        setSecondaryStats(padTier(d.secondary_stats))
+        setTertiaryStats(padTier(d.tertiary_stats))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [classes])
 
   const toggleClass = (c) => {
     setClasses((prev) => {
@@ -571,6 +623,7 @@ export default function App() {
   const loadBuild = (id) => {
     const b = builds.find((x) => x.id === id)
     if (!b) return
+    skipPriorityDefaultsRef.current = true
     setSelectedBuildId(id)
     setClasses(b.classes || [])
     setRace(b.race || 'Human')
@@ -747,13 +800,15 @@ export default function App() {
           <p>
             Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
             {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.4'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.5'}
           </p>
         </div>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.5</span>
       </header>
 
       <div className="app-shell">
         <nav className="side-nav" aria-label="Main">
+          <div className="side-nav-heading">Menu</div>
           {navItems.map((n) => (
             <button
               key={n.id}
@@ -797,6 +852,9 @@ export default function App() {
                       <option value="max">Max All Stats</option>
                       <option value="ai">AI Choice</option>
                     </select>
+                    <span className="muted mode-hint">
+                      Priority Stat · Max All Stats · AI Choice
+                    </span>
                   </div>
                   {mode === 'priority' && (
                     <div className="field" style={{ minWidth: '100%' }}>
@@ -821,6 +879,9 @@ export default function App() {
                           onChange={(i, v) => setTierAt(setTertiaryStats, i, v)}
                         />
                       </div>
+                      <p className="note priority-defaults-note">
+                        Defaults from selected classes — change any dropdown
+                      </p>
                     </div>
                   )}
                   <div className="field">
@@ -1012,7 +1073,42 @@ export default function App() {
                           onError={hideImg}
                         />
                       ) : null}
-                      {s.url ? <a href={s.url} target="_blank" rel="noreferrer">{s.name || '—'}</a> : (s.name || '—')}
+                      {s.name ? (
+                        <span
+                          className="bis-item-name"
+                          tabIndex={0}
+                          onMouseEnter={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            showHoverTip({
+                              name: s.name,
+                              statsText: itemTipStatsText(s, upgrade),
+                              x: Math.min(r.left, window.innerWidth - 320),
+                              y: r.bottom + 6,
+                              image: itemImageUrl(s.name),
+                            })
+                          }}
+                          onFocus={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            showHoverTip({
+                              name: s.name,
+                              statsText: itemTipStatsText(s, upgrade),
+                              x: Math.min(r.left, window.innerWidth - 320),
+                              y: r.bottom + 6,
+                              image: itemImageUrl(s.name),
+                            })
+                          }}
+                          onMouseLeave={hideHoverTip}
+                          onBlur={hideHoverTip}
+                        >
+                          {s.url ? (
+                            <a href={s.url} target="_blank" rel="noreferrer">{s.name}</a>
+                          ) : (
+                            s.name
+                          )}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
                     </div>
                     <div className="meta">
                       {s.zone ? (
@@ -1041,7 +1137,13 @@ export default function App() {
                         <summary>Alternates ({s.alts.length})</summary>
                         <ul>
                           {s.alts.map((a) => (
-                            <AltRow key={a.name} a={a} upgrade={upgrade} />
+                            <AltRow
+                              key={a.name}
+                              a={a}
+                              upgrade={upgrade}
+                              onShowTip={showHoverTip}
+                              onHideTip={hideHoverTip}
+                            />
                           ))}
                         </ul>
                       </details>
@@ -1431,6 +1533,30 @@ export default function App() {
 
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
+      {hoverTip ? (
+        <div
+          className="hover-tip"
+          style={{ left: hoverTip.x, top: hoverTip.y }}
+          role="tooltip"
+        >
+          {hoverTip.image ? (
+            <img
+              className="item-icon"
+              src={hoverTip.image}
+              alt=""
+              onError={hideImg}
+            />
+          ) : null}
+          <div className="hover-tip-body">
+            <div className="hover-tip-name">{hoverTip.name}</div>
+            {hoverTip.statsText ? (
+              <pre className="hover-tip-stats">{hoverTip.statsText}</pre>
+            ) : (
+              <div className="muted">No stats</div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

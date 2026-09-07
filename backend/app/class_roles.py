@@ -90,6 +90,34 @@ def trio_primary_attr_weights(classes: list[str]) -> dict[str, float]:
     return {k: (v * scale) / 10.0 for k, v in weights.items()}  # ~0..4.5 range
 
 
+def trio_default_priority_tiers(classes: list[str]) -> dict[str, list[str]]:
+    """Default selectable priority tiers from the trio's classStats ranking.
+
+    Most important attrs → primary (up to 3), next → secondary, next → tertiary.
+    Empty when no classes selected.
+    """
+    cleaned = [c for c in (classes or []) if c]
+    if not cleaned:
+        return {"primary": [], "secondary": [], "tertiary": []}
+    weights = {k: 0.0 for k in ATTR_KEYS}
+    stats = _load_class_stats()
+    for c in cleaned:
+        row = stats.get(c) or {}
+        for k in ATTR_KEYS:
+            weights[k] += float(row.get(k) or 0)
+    ranked = [k for k, v in sorted(weights.items(), key=lambda kv: (-kv[1], kv[0])) if v > 0]
+    # If allotments are sparse, still fill from remaining attrs by role soft preference
+    if len(ranked) < 3:
+        for k in ATTR_KEYS:
+            if k not in ranked:
+                ranked.append(k)
+    return {
+        "primary": ranked[0:3],
+        "secondary": ranked[3:6],
+        "tertiary": ranked[6:9],
+    }
+
+
 def trio_has_tank(classes: list[str]) -> bool:
     return any(c in TANK_CLASSES for c in classes)
 

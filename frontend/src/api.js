@@ -18,6 +18,11 @@ async function req(path, opts = {}) {
 
 export const getMeta = () => req('/api/meta')
 export const postBis = (body) => req('/api/bis', { method: 'POST', body: JSON.stringify(body) })
+export const getPriorityDefaults = (classes) => {
+  const q = new URLSearchParams()
+  for (const c of classes || []) q.append('classes', c)
+  return req(`/api/priority-defaults?${q}`)
+}
 export const getItems = (params) => {
   const q = new URLSearchParams(params)
   return req(`/api/items?${q}`)

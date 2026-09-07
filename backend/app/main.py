@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.4")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.5")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -152,7 +152,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.4",
+        "version": m.get("version") or "1.0.5",
         "scoring": m.get("scoring"),
     }
 
@@ -186,6 +186,27 @@ def post_bis(body: BisRequest):
         raise HTTPException(500, f"BiS haste assertion failed: {e}") from e
     except Exception as e:
         raise HTTPException(500, f"BiS failed: {e}") from e
+
+
+@app.get("/api/priority-defaults")
+def api_priority_defaults(classes: Optional[list[str]] = Query(default=None)):
+    """Suggested primary/secondary/tertiary priority stats for the selected trio."""
+    cls_list: list[str] = []
+    for entry in classes or []:
+        for part in str(entry).split(","):
+            part = part.strip()
+            if part:
+                cls_list.append(part)
+    cleaned = _norm_classes(cls_list, allow_empty=True)
+    from . import class_roles as cr
+    tiers = cr.trio_default_priority_tiers(cleaned)
+    return {
+        "classes": cleaned,
+        "primary_stats": tiers["primary"],
+        "secondary_stats": tiers["secondary"],
+        "tertiary_stats": tiers["tertiary"],
+        "note": "Defaults from races.json classStats ranking across the trio; user may override.",
+    }
 
 
 @app.get("/api/item-search")
@@ -504,7 +525,14 @@ def _mount_spa() -> None:
 
     @app.get("/")
     def spa_index():
-        return FileResponse(dist / "index.html")
+        # Avoid stale Electron/Chromium caches of the SPA shell after updates
+        return FileResponse(
+            dist / "index.html",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
 
     @app.get("/{full_path:path}")
     def spa_fallback(full_path: str):
@@ -513,7 +541,13 @@ def _mount_spa() -> None:
         candidate = dist / full_path
         if candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(dist / "index.html")
+        return FileResponse(
+            dist / "index.html",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
 
 
 if packaged_mode() or FRONTEND_DIST.exists():
