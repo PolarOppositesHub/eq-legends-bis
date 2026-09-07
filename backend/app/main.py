@@ -157,7 +157,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.5",
+        "version": m.get("version") or "1.0.8",
         "scoring": m.get("scoring"),
     }
 

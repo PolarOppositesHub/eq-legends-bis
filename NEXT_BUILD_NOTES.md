@@ -1,6 +1,37 @@
 # Next build notes
 
-**v1.0.5 READY TO SHIP — coding smoke green.** Agent cannot build Windows `.exe` or create GitHub Releases. Josh rebuilds + publishes on **Joshs_Notebook**. Never invent item stats.
+**v1.0.8 READY TO SHIP — overnight grok bot release.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+
+## Overnight / Josh — GitHub Release v1.0.8
+
+```powershell
+git pull origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
+```
+
+Artifacts in `dist-desktop/`:
+- Prefer **NSIS**: `EQ-Legends-BiS-1.0.8-win-x64.exe` (updater-friendly)
+- Also: `EQ-Legends-BiS-1.0.8-portable.exe`
+
+Publish: GitHub Release **v1.0.8** for `PolarOppositesHub/eq-legends-bis` including `latest.yml`.
+
+### Post-install verify
+- [ ] Header badge **UI 1.0.8** (and API · v1.0.8)
+- [ ] BiS item icons visible next to names (not blank)
+- [ ] Alternate hover tip appears to the **right** of the cursor
+- [ ] Weapon slots show short why labels (no HandMod/DWChance dump)
+- [ ] Simulator Live Totals: race+class HP/Mana/END (not gear-only)
+- [ ] Cast Buffs → Quick Buff lists active max lines for the trio
+
+## 1.0.8 — icons 8-bit + Live Totals Cast Buffs (2026-09-07)
+- [x] Wiki Item_### icons were 16-bit RGBA → Chromium blank; convert to 8-bit (Pillow)
+- [x] Live Totals pools from eqlegendstools char-sheet formulas
+- [x] Cast Buffs Quick Buff from verified spellBuffs catalog
+- [x] Versions aligned to **1.0.8** / UI **1.0.8**
+
+---
+
+**Prior: v1.0.5 READY TO SHIP — coding smoke green.** Agent cannot build Windows `.exe` or create GitHub Releases. Josh rebuilds + publishes on **Joshs_Notebook**. Never invent item stats.
 
 ## Josh Windows rebuild + GitHub Release v1.0.5
 
