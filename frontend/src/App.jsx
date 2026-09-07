@@ -556,6 +556,14 @@ export default function App() {
 
   const onImportFile = async (file) => {
     if (!file) return
+    const lower = (file.name || '').toLowerCase()
+    if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.bin')) {
+      setImportMsg('')
+      setError(
+        'Pick Inventory.txt from in-game /outputfile inventory — not inventory.exe or other binaries.'
+      )
+      return
+    }
     setImportMsg('Reading…')
     try {
       const text = await file.text()

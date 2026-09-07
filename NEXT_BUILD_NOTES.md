@@ -19,6 +19,7 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 - [x] Drops: zone + mob names (zone-research levels/spawns when available).
 - [x] Quests: quest name + eqlwiki steps/components when fetchable (Plane of Sky class-test tables supported); never invent steps.
 - [x] Import Inventory.txt from this tab; Sim keeps a short top-5 teaser linking here.
+- [x] **Import 500 fix:** catalog drop lists misread as quest names blew up quest-guide cache filenames (`OSError: File name too long`) after import → Upgrade Priority. Now classify Zone:mob lists as drops, truncate/hash cache slugs, wrap obtain/quest/zone enrich so suggestions never 500. Binary/.exe picker → clear 400 pointing at Inventory.txt from `/outputfile inventory`.
 
 ### AC softcap (Max All / AI) — Josh feedback
 - [x] Do not over-emphasize tank AC at the expense of everything else.

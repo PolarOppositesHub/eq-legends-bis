@@ -8,6 +8,7 @@ wiki URL only — never fabricate steps.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import urllib.error
@@ -21,8 +22,15 @@ from .paths import APP_ROOT
 
 GUIDES_DIR = APP_ROOT / "data" / "quest-guides"
 USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
+# Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
+_MAX_SLUG_LEN = 120
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
+# Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
+_ZONE_MOB_DROP = re.compile(
+    r"^[A-Za-z][\w' .\-]{1,60}:\s*[A-Za-z][\w' .\-]{1,80}"
+    r"(?:\s*;\s*[A-Za-z][\w' .\-]{1,60}:\s*[A-Za-z][\w' .\-]{1,80})+\s*$"
+)
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 
@@ -30,7 +38,13 @@ _WS_RE = re.compile(r"\s+")
 def _slug(name: str) -> str:
     s = (name or "").strip().lower()
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
-    return s or "quest"
+    if not s:
+        return "quest"
+    if len(s) <= _MAX_SLUG_LEN:
+        return s
+    digest = hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
+    keep = max(16, _MAX_SLUG_LEN - 13)
+    return f"{s[:keep].rstrip('-')}-{digest}"
 
 
 def is_drop_source(quest_source: str | None) -> bool:
@@ -38,7 +52,15 @@ def is_drop_source(quest_source: str | None) -> bool:
     s = (quest_source or "").strip()
     if not s:
         return False
-    return bool(_DROP_PREFIX.match(s)) or s.lower().startswith("craft") or s.lower().startswith("bought")
+    if bool(_DROP_PREFIX.match(s)) or s.lower().startswith("craft") or s.lower().startswith("bought"):
+        return True
+    # Multi "Zone: mob; Zone: mob" lists from catalog source fields
+    if ";" in s and _ZONE_MOB_DROP.match(s):
+        return True
+    # Extremely long blobs are never a single quest title
+    if len(s) > 160 and ";" in s:
+        return True
+    return False
 
 
 def quest_name_from_source(quest_source: str | None) -> str | None:
@@ -49,12 +71,16 @@ def quest_name_from_source(quest_source: str | None) -> str | None:
     # "Reward from Plane of Sky Quest: Wizard Test of Focus"
     m = re.search(r"quest:\s*(.+)$", s, re.I)
     if m:
-        return m.group(1).strip()
+        title = m.group(1).strip()
+        return title if title and not is_drop_source(title) and len(title) <= 160 else None
     m = re.search(r"reward from(?:\s+[\w\s]+)?\s+quest:\s*(.+)$", s, re.I)
     if m:
-        return m.group(1).strip()
+        title = m.group(1).strip()
+        return title if title and not is_drop_source(title) and len(title) <= 160 else None
     # Bare quest title
     if "drops from" in s.lower():
+        return None
+    if len(s) > 160:
         return None
     return s
 
@@ -214,18 +240,29 @@ def _parse_component_rows(html: str) -> list[dict[str, str]]:
 
 
 def cache_path(quest_name: str) -> Path:
-    GUIDES_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        GUIDES_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return GUIDES_DIR / f"{_slug(quest_name)}.json"
 
 
 def load_cached_guide(quest_name: str) -> dict[str, Any] | None:
-    path = cache_path(quest_name)
-    if not path.is_file():
-        return None
     try:
+        path = cache_path(quest_name)
+        if not path.is_file():
+            return None
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def _write_cached_guide(quest_name: str, guide: dict[str, Any]) -> None:
+    """Best-effort cache write — never raise (path length / permissions / disk)."""
+    try:
+        cache_path(quest_name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
+    except Exception:
+        pass
 
 
 def _parse_sky_quest_row(html: str, quest_name: str) -> dict[str, Any] | None:
@@ -287,103 +324,115 @@ def _parse_sky_quest_row(html: str, quest_name: str) -> dict[str, Any] | None:
 
 
 def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]:
-    """Return quest guide payload; optionally fetch/cache from eqlwiki."""
+    """Return quest guide payload; optionally fetch/cache from eqlwiki.
+
+    Never raises — missing wiki / cache / OS errors degrade to empty steps.
+    """
     name = (quest_name or "").strip()
     if not name:
         return {"quest": "", "steps": [], "components": [], "url": None, "error": "empty quest"}
-    cached = load_cached_guide(name)
-    # Ignore stub caches that only stored the quest title line
-    if cached and (cached.get("components") or len(cached.get("steps") or []) > 1):
-        return cached
+    try:
+        cached = load_cached_guide(name)
+        # Ignore stub caches that only stored the quest title line
+        if cached and (cached.get("components") or len(cached.get("steps") or []) > 1):
+            return cached
 
-    urls = wiki_urls_for_quest(name)
-    if not fetch:
-        return {
+        urls = wiki_urls_for_quest(name)
+        if not fetch:
+            return {
+                "quest": name,
+                "steps": [],
+                "components": [],
+                "url": urls[0] if urls else None,
+                "cached": False,
+                "error": "not fetched",
+            }
+
+        last_err = "no wiki page found"
+        for url in urls:
+            blob = _http_get(url)
+            if not blob:
+                last_err = f"failed fetch {url}"
+                continue
+            try:
+                html = blob.decode("utf-8", errors="ignore")
+            except Exception:
+                continue
+            if "does not exist" in html.lower() and "create the page" in html.lower():
+                last_err = f"missing page {url}"
+                continue
+
+            sky = _parse_sky_quest_row(html, name)
+            if sky and sky.get("steps"):
+                guide = {
+                    "quest": name,
+                    "steps": sky["steps"],
+                    "components": sky.get("components") or [],
+                    "keyword": sky.get("keyword") or "",
+                    "url": url,
+                    "cached": True,
+                    "fetched": True,
+                    "source": url,
+                    "note": "Steps from eqlwiki Plane of Sky class-test table (EQL simplified turn-ins).",
+                }
+                _write_cached_guide(name, guide)
+                return guide
+
+            section = _extract_quest_section(html, name)
+            text = _html_to_text(section)
+            steps = _steps_from_text(text, name)
+            components = _parse_component_rows(section)
+            if not steps and not components:
+                last_err = f"no steps parsed from {url}"
+                if name.lower().replace(" ", "_") in url.lower():
+                    guide = {
+                        "quest": name,
+                        "steps": [f"See walkthrough: {url}"],
+                        "components": [],
+                        "url": url,
+                        "cached": True,
+                        "fetched": True,
+                        "source": url,
+                    }
+                    _write_cached_guide(name, guide)
+                    return guide
+                continue
+            guide = {
+                "quest": name,
+                "steps": steps,
+                "components": components,
+                "url": url,
+                "cached": True,
+                "fetched": True,
+                "source": url,
+                "note": "Steps extracted from eqlwiki; verify in-game. Never invented.",
+            }
+            _write_cached_guide(name, guide)
+            return guide
+
+        guide = {
             "quest": name,
             "steps": [],
             "components": [],
             "url": urls[0] if urls else None,
             "cached": False,
-            "error": "not fetched",
+            "fetched": False,
+            "error": last_err,
+            "note": "Quest name known from item DB; steps not available locally. Open wiki URL if present.",
         }
-
-    last_err = "no wiki page found"
-    for url in urls:
-        blob = _http_get(url)
-        if not blob:
-            last_err = f"failed fetch {url}"
-            continue
-        try:
-            html = blob.decode("utf-8", errors="ignore")
-        except Exception:
-            continue
-        if "does not exist" in html.lower() and "create the page" in html.lower():
-            last_err = f"missing page {url}"
-            continue
-
-        sky = _parse_sky_quest_row(html, name)
-        if sky and sky.get("steps"):
-            guide = {
-                "quest": name,
-                "steps": sky["steps"],
-                "components": sky.get("components") or [],
-                "keyword": sky.get("keyword") or "",
-                "url": url,
-                "cached": True,
-                "fetched": True,
-                "source": url,
-                "note": "Steps from eqlwiki Plane of Sky class-test table (EQL simplified turn-ins).",
-            }
-            cache_path(name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
-            return guide
-
-        section = _extract_quest_section(html, name)
-        text = _html_to_text(section)
-        steps = _steps_from_text(text, name)
-        components = _parse_component_rows(section)
-        if not steps and not components:
-            last_err = f"no steps parsed from {url}"
-            if name.lower().replace(" ", "_") in url.lower():
-                guide = {
-                    "quest": name,
-                    "steps": [f"See walkthrough: {url}"],
-                    "components": [],
-                    "url": url,
-                    "cached": True,
-                    "fetched": True,
-                    "source": url,
-                }
-                cache_path(name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
-                return guide
-            continue
-        guide = {
-            "quest": name,
-            "steps": steps,
-            "components": components,
-            "url": url,
-            "cached": True,
-            "fetched": True,
-            "source": url,
-            "note": "Steps extracted from eqlwiki; verify in-game. Never invented.",
-        }
-        cache_path(name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
+        _write_cached_guide(name, guide)
         return guide
-
-    guide = {
-        "quest": name,
-        "steps": [],
-        "components": [],
-        "url": urls[0] if urls else None,
-        "cached": False,
-        "fetched": False,
-        "error": last_err,
-        "note": "Quest name known from item DB; steps not available locally. Open wiki URL if present.",
-    }
-    try:
-        cache_path(name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
-    except Exception:
-        pass
-    return guide
+    except Exception as e:
+        return {
+            "quest": name,
+            "steps": [],
+            "components": [],
+            "url": None,
+            "cached": False,
+            "fetched": False,
+            "error": f"quest guide unavailable: {e}",
+            "note": "Quest wiki/cache unavailable; no invented steps.",
+        }
 
 
 def obtain_path_for_item(item: dict[str, Any] | None, *, fetch_quest: bool = True) -> dict[str, Any]:
@@ -394,17 +443,35 @@ def obtain_path_for_item(item: dict[str, Any] | None, *, fetch_quest: bool = Tru
     quest_source = (it.get("quest_source") or it.get("source") or "").strip()
     qname = quest_name_from_source(quest_source)
     if not qname and quest_source and not is_drop_source(quest_source):
-        qname = quest_source
+        # Bare title only when short enough to be a real quest name
+        if len(quest_source) <= 160:
+            qname = quest_source
 
     how = "unknown"
     if drops or (quest_source and is_drop_source(quest_source)):
         how = "drop"
+        # Prefer mob list from Zone: mob; Zone: mob source when drops_mobs empty
+        if not drops and quest_source and is_drop_source(quest_source) and not _DROP_PREFIX.match(quest_source):
+            drops = quest_source
+            if not zone and ":" in quest_source:
+                zone = quest_source.split(":", 1)[0].strip()
     elif qname:
         how = "quest"
     elif zone:
         how = "zone"
 
-    guide = ensure_quest_guide(qname, fetch=fetch_quest) if qname else None
+    guide = None
+    if qname:
+        try:
+            guide = ensure_quest_guide(qname, fetch=fetch_quest)
+        except Exception:
+            guide = {
+                "quest": qname,
+                "steps": [],
+                "components": [],
+                "url": None,
+                "error": "quest guide unavailable",
+            }
     return {
         "how": how,
         "zone": zone,

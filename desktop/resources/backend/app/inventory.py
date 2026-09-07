@@ -50,12 +50,45 @@ def _catalog_has_name(name: str) -> bool:
     return item_catalog_mod.get_item_by_name(name) is not None
 
 
+_BINARY_HINT = re.compile(
+    r"(This program cannot be run in DOS mode|\x00MZ|^\x7fELF|^\x89PNG)",
+    re.I | re.M,
+)
+_INVENTORY_HELP = (
+    "Use Inventory.txt from in-game /outputfile inventory "
+    "(not inventory.exe or other binaries)."
+)
+
+
+def looks_like_binary_inventory(text: str) -> bool:
+    """True when payload looks like a PE/ELF/binary dump rather than Inventory.txt TSV."""
+    if text is None:
+        return False
+    sample = text[:4096]
+    if "\x00" in sample:
+        return True
+    if sample.startswith("MZ") or sample.startswith("\x7fELF"):
+        return True
+    if _BINARY_HINT.search(sample):
+        return True
+    # High ratio of non-text bytes in the sample
+    if sample:
+        weird = sum(1 for ch in sample if ord(ch) < 9 or (14 <= ord(ch) < 32 and ch not in "\t\n\r"))
+        if weird / max(1, len(sample)) > 0.08:
+            return True
+    return False
+
+
 def parse_inventory_tsv(text: str) -> dict[str, Any]:
     """Parse Inventory.txt body. Returns worn equipment mapped to planner slots.
 
     Every non-empty inventory line is retained in `all_items` even when not in the
     catalog or not mappable to a planner slot (flagged unmatched / skipped).
+    Raises ValueError when the payload looks like a binary/.exe file.
     """
+    if looks_like_binary_inventory(text or ""):
+        raise ValueError(_INVENTORY_HELP)
+
     lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
     if not lines:
         return {
@@ -220,9 +253,15 @@ def _slot_importance(slot: str) -> int:
 
 
 def _enrich_obtain(row: dict[str, Any], *, fetch_quest: bool = True) -> dict[str, Any]:
-    """Attach zone/mob/quest obtain path for a BiS suggestion target."""
+    """Attach zone/mob/quest obtain path for a BiS suggestion target.
+
+    Degrades gracefully when quest wiki / zone research is unavailable — never raises.
+    """
     name = (row.get("name") or "").strip()
-    cat = item_catalog_mod.get_item_by_name(name) if name else None
+    try:
+        cat = item_catalog_mod.get_item_by_name(name) if name else None
+    except Exception:
+        cat = None
     base = {
         "zone": row.get("zone") or (cat or {}).get("zone") or "",
         "drops_mobs": row.get("drops_mobs") or (cat or {}).get("drops_mobs") or "",
@@ -230,7 +269,19 @@ def _enrich_obtain(row: dict[str, Any], *, fetch_quest: bool = True) -> dict[str
         "url": row.get("url") or (cat or {}).get("url") or "",
         "name": name,
     }
-    obtain = quest_guides.obtain_path_for_item({**(cat or {}), **base}, fetch_quest=fetch_quest)
+    try:
+        obtain = quest_guides.obtain_path_for_item({**(cat or {}), **base}, fetch_quest=fetch_quest)
+    except Exception:
+        obtain = {
+            "how": "unknown",
+            "zone": base.get("zone") or "",
+            "drops_mobs": base.get("drops_mobs") or "",
+            "quest_source": base.get("quest_source") or "",
+            "quest_name": None,
+            "quest_guide": None,
+            "item_url": base.get("url") or "",
+            "error": "obtain path unavailable",
+        }
     # Zone research summary (mobs with levels when available) — never invent
     zone_detail = None
     if obtain.get("zone"):

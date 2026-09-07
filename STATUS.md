@@ -20,6 +20,7 @@ Smoke (2026-09-07):
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA
 - Softcap: under-cap prefers AC fill; past softcap prefers balanced; Max All W/C/W worn AC ≈ 388 vs target 364
 - **BiS eligibility:** armor/jewelry usable by **any** selected class (union), not all-three intersection; multi-class still preferred on near ties
+- Inventory import + Upgrade Priority: no 500 when catalog `source` is a long Zone:mob drop list (was OSError on quest-guide cache path); binary/.exe → clear 400; quest/zone enrich degrades gracefully
 - vite build → `frontend/dist` assets
 - desktop/resources/backend/app synced with canonical backend/app
 
