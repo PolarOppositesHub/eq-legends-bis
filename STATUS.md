@@ -1,7 +1,20 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.5** (local tree smoke-ready; Josh does Windows portable + gh release — do not package here)
+Version: **1.0.5 — READY FOR JOSH WINDOWS REBUILD + GitHub Release**
 Canonical: backend/app/{main,engine,scoring,ac_softcap,quest_guides,class_roles,item_catalog,weapon_dps,zones,inventory,races,paths}.py + frontend **App.jsx** (+ styles.css) + desktop/main.js
+
+**Agent cannot** build Windows `.exe` or create GitHub Releases. Code + docs are ship-ready on this tree / merged PR #2; Josh publishes from **Joshs_Notebook**.
+
+## Ship checklist (Josh)
+- [ ] On Windows: `git pull` latest `main` (includes PR #2 / v1.0.5)
+- [ ] Rebuild: `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
+- [ ] Prefer **NSIS** `EQ-Legends-BiS-1.0.5-win-x64.exe` for updater; portable also built
+- [ ] Publish GitHub Release **v1.0.5** + `latest.yml` (electron-builder GitHub publish)
+- [ ] After install: header shows **UI 1.0.5** (and API · v1.0.5)
+- [ ] Confirm left Menu: Best in Slot / Simulator / **Upgrade Priority** / Item Search
+- [ ] Confirm Mode includes **AI Choice**; Priority 3×3 dropdowns
+- [ ] BiS with Paladin in trio: single-class (e.g. Valorium) pieces allowed (`mode=any`)
+- [ ] Import **Inventory.txt** only (from `/outputfile inventory`) — not `.exe`
 
 ## Why 1.0.5 (after 1.0.4 complaints)
 Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not on left, no hover stats, only Max All + Priority (no AI Choice), Priority not 3×3 selectable. Source inspection of the published **v1.0.4** portable *does* contain those UI strings — so either an old EXE was still launching, Chromium cached the SPA shell, or hover tips were clipped (CSS absolute tips inside overflow). **1.0.5** makes the UI unmistakable and fixes defaults/hover/cache:
@@ -16,13 +29,14 @@ Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not 
 - **Upgrade Priority tab**: ordered BiS-gap rundown with zone + drop mobs and/or quest steps (eqlwiki; cached under data/quest-guides/)
 - **AC softcap-aware** Max All / AI (`ac_softcap.py`): fill AA-raised softcap then prefer other stats
 
-Smoke (2026-09-07):
+## Smoke (2026-09-07) — green before ship handoff
+- Versions aligned: root / frontend / desktop package.json **1.0.5**; FastAPI + engine meta **1.0.5**; UI badge **UI 1.0.5**
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA
 - Softcap: under-cap prefers AC fill; past softcap prefers balanced; Max All W/C/W worn AC ≈ 388 vs target 364
 - **BiS eligibility:** armor/jewelry usable by **any** selected class (union), not all-three intersection; multi-class still preferred on near ties
-- Inventory import + Upgrade Priority: no 500 when catalog `source` is a long Zone:mob drop list (was OSError on quest-guide cache path); binary/.exe → clear 400; quest/zone enrich degrades gracefully
-- vite build → `frontend/dist` assets
-- desktop/resources/backend/app synced with canonical backend/app
+- Paladin/Monk/Wizard pool: **any** 485 vs **all** 134; Valorium pieces in any-only pool; `recommend_bis` uses `mode="any"`
+- Inventory import text OK; binary/.exe → clear 400; Upgrade Priority / upgrade-suggestions **200** (no 500)
+- desktop/resources/backend/app synced with canonical backend/app (ac_softcap, quest_guides, scoring, engine, inventory, main, item_catalog, class_roles)
 
 ## Dual wield vs 2H (unchanged model, L50 cap)
 - Module: `backend/app/weapon_dps.py`
@@ -30,7 +44,7 @@ Smoke (2026-09-07):
 - If no DW class: ratio-only PRIMARY/SECONDARY
 
 ## Features (1.0.4 + 1.0.5)
-- Left nav: Best in Slot, Simulator, Item Search
+- Left nav: Best in Slot, Simulator, Upgrade Priority, Item Search
 - BiS multi-tier priority + Max All class weights + AI Choice + HP regen
 - Alternate/main hover: real DB stats + item picture (eqlwiki cache under data/item-images/)
 - Inventory: unmatched items; BiS-driven upgrades; worn | BiS | deltas
