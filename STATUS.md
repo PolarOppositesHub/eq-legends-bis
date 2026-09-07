@@ -1,33 +1,20 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.10 READY TO SHIP** — BiS icons seed + sim deltas + search/import harden + clearer quest steps
+Version: **1.0.10 on main** (PR #7 merged). Next: **1.0.11** Item Search token match + class filter.
 Canonical: backend/app/{main,engine,item_catalog,paths,inventory,quest_guides,...}.py + frontend App.jsx + desktop/main.js
-PR: https://github.com/PolarOppositesHub/eq-legends-bis/pull/7 (`cursor/bis-icons-seed-sim-deltas-d4a5` → `main`)
 
-**Agent cannot** build Windows `.exe` or create GitHub Releases. Overnight grok bot / Josh: **merge PR #7**, then publish from **main**.
+**Agent cannot** build Windows `.exe` or create GitHub Releases. Overnight grok bot / Josh publishes from **main**.
 
-## Overnight ship steps
-1. Merge PR **#7** into `main`
-2. `git pull origin main`
-3. `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
-4. Publish GitHub Release **v1.0.10** with NSIS + portable + `latest.yml`
-5. Prefer NSIS `EQ-Legends-BiS-1.0.10-win-x64.exe`
-6. Confirm header **UI 1.0.10** (API · v1.0.10)
+## Overnight (1.0.10) if not published yet
+1. `git pull origin main`
+2. `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
+3. Publish GitHub Release **v1.0.10** (NSIS + portable + `latest.yml`)
+4. Confirm header **UI 1.0.10**
 
-## Why 1.0.10
-- BiS icons: ship seeded `data/item-images` + read bundled seeds when userData cache is empty; copy seed→writable; softer ItemIcon fallback
-- Simulator: live worn/BiS deltas without Suggest upgrades; Apply/Recalculate also refreshes upgrade priorities; equipment table no inner scrollbar
-- Item Search / Inventory import: stop 500s from image-cache coupling (`name_in_catalog`, hardened `_public_item`, endpoint guards, Electron decoded-path probe)
-- Upgrade Priority quest steps: expand tags like `4-KoS` to zone + mob names
+## Next build (1.0.11) — Josh feedback
+- [ ] Item Search: looser matching — every query token can appear anywhere in the name (order-independent). Example: `blade of ocean` finds **Aldryn, Blade of the Ocean** (ignore filler words like `of`/`the`).
+- [ ] Item Search: add **usable class** selector/filter in addition to slot (AND with slot; empty = all classes).
+- Details: `NEXT_BUILD_NOTES.md` → “Josh feedback — Item Search”
 
-## Search / Inventory regression (vs 1.0.3)
-- **1.0.3:** Inventory import was TSV-only (no catalog/image I/O). Item Search did not exist.
-- **1.0.4+:** Import called `get_item_by_name` → `_public_item` → `local_image_path` per row; packaged read-only `item-images` mkdir → **500 Internal Server Error**. Search had the same coupling.
-- **1.0.10 fix:** `name_in_catalog` (no image I/O); `_public_item` / search never raise; Electron probes real decoded dirs + writable `EQ_IMAGES_DIR`; empty/missing decoded degrades with a warning instead of 500.
-
-## Coding smoke (green)
-- Search `aegis` / `sword` → 200, catalog ~940
-- Inventory.txt Location/Name TSV import → `ok: true`, worn slots mapped
-- Mock `local_image_path` OSError → search 200 + import 200
-- Quest guide "Wizard Test of Focus" mentions Keeper of Souls / Island 4
-- Versions: root / frontend / desktop / engine / UI badge all **1.0.10**
+## 1.0.10 (shipped in source)
+- BiS icons seed + sim live deltas + search/import 500 harden + clearer quest steps
