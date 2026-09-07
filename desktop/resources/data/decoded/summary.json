@@ -1,0 +1,485 @@
+{
+  "source": "https://eqlegendstools.com",
+  "meta_version": "af678b9a6ffc",
+  "classes": [
+    "Bard",
+    "Beastlord",
+    "Berserker",
+    "Cleric",
+    "Druid",
+    "Enchanter",
+    "Magician",
+    "Monk",
+    "Necromancer",
+    "Paladin",
+    "Ranger",
+    "Rogue",
+    "Shadow Knight",
+    "Shaman",
+    "Warrior",
+    "Wizard"
+  ],
+  "default_planner_trio": [
+    "Paladin",
+    "Monk",
+    "Wizard"
+  ],
+  "counts": {
+    "catalog_weapons": 202,
+    "aggregate": 677,
+    "merged_unique": 674,
+    "tri_bis_intersection_PAL_MNK_WIZ": 130,
+    "usable_by_PAL_MNK_WIZ": 130,
+    "items_with_worn_haste": 23,
+    "catalog_tip_worn_haste": 12,
+    "bis_Bard": 263,
+    "bis_Beastlord": 182,
+    "bis_Berserker": 189,
+    "bis_Cleric": 284,
+    "bis_Druid": 228,
+    "bis_Enchanter": 241,
+    "bis_Magician": 244,
+    "bis_Monk": 199,
+    "bis_Necromancer": 245,
+    "bis_Paladin": 263,
+    "bis_Ranger": 246,
+    "bis_Rogue": 249,
+    "bis_Shadow Knight": 274,
+    "bis_Shaman": 255,
+    "bis_Warrior": 276,
+    "bis_Wizard": 239
+  },
+  "haste_note": "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). Spell/focus/effect haste text is NOT treated as worn haste. Only ONE worn haste item counts in a loadout.",
+  "haste_top": [
+    {
+      "name": "Belt of the Four Winds",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Warrior"
+      ]
+    },
+    {
+      "name": "Diaphonous Waistband",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Beastlord"
+      ]
+    },
+    {
+      "name": "Girdle of Faith",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Paladin"
+      ]
+    },
+    {
+      "name": "Golden Sash of Tranquility",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Monk"
+      ]
+    },
+    {
+      "name": "Pegasus-Hide Belt",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Shadow Knight"
+      ]
+    },
+    {
+      "name": "Renard's Belt of Quickness",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Rogue"
+      ]
+    },
+    {
+      "name": "Sash of Ferocity",
+      "haste": 41,
+      "slot": "WAIST",
+      "bis_for": [
+        "Berserker"
+      ]
+    },
+    {
+      "name": "Cloak of Flames",
+      "haste": 36,
+      "slot": "BACK",
+      "bis_for": [
+        "Bard",
+        "Beastlord",
+        "Berserker",
+        "Cleric",
+        "Druid",
+        "Enchanter",
+        "Magician",
+        "Monk",
+        "Necromancer",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Shadow Knight",
+        "Shaman",
+        "Warrior",
+        "Wizard"
+      ]
+    },
+    {
+      "name": "Rakusha Cloak",
+      "haste": 36,
+      "slot": "BACK",
+      "bis_for": [
+        "Monk"
+      ]
+    },
+    {
+      "name": "Runed Bolster Belt",
+      "haste": 31,
+      "slot": "WAIST",
+      "bis_for": [
+        "Bard",
+        "Beastlord",
+        "Berserker",
+        "Cleric",
+        "Druid",
+        "Enchanter",
+        "Magician",
+        "Monk",
+        "Necromancer",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Shadow Knight",
+        "Shaman",
+        "Warrior",
+        "Wizard"
+      ]
+    },
+    {
+      "name": "Honeycomb Belt",
+      "haste": 26,
+      "slot": "WAIST",
+      "bis_for": [
+        "Druid"
+      ]
+    },
+    {
+      "name": "Belt of Contention",
+      "haste": 21,
+      "slot": "WAIST",
+      "bis_for": [
+        "Warrior"
+      ]
+    },
+    {
+      "name": "Belt of Tranquility",
+      "haste": 21,
+      "slot": "WAIST",
+      "bis_for": [
+        "Monk"
+      ]
+    },
+    {
+      "name": "Belt of Transience",
+      "haste": 21,
+      "slot": "WAIST",
+      "bis_for": [
+        "Rogue"
+      ]
+    },
+    {
+      "name": "Flowing Black Silk Sash",
+      "haste": 21,
+      "slot": "WAIST",
+      "bis_for": [
+        "Bard",
+        "Beastlord",
+        "Berserker",
+        "Cleric",
+        "Druid",
+        "Enchanter",
+        "Magician",
+        "Monk",
+        "Necromancer",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Shadow Knight",
+        "Shaman",
+        "Warrior",
+        "Wizard"
+      ]
+    },
+    {
+      "name": "Belt of Concordance",
+      "haste": 16,
+      "slot": "WAIST",
+      "bis_for": [
+        "Bard"
+      ]
+    },
+    {
+      "name": "Belt of Iniquity",
+      "haste": 16,
+      "slot": "WAIST",
+      "bis_for": [
+        "Shadow Knight"
+      ]
+    },
+    {
+      "name": "Belt of Virtue",
+      "haste": 16,
+      "slot": "WAIST",
+      "bis_for": [
+        "Paladin"
+      ]
+    },
+    {
+      "name": "Belt of the Pine",
+      "haste": 16,
+      "slot": "WAIST",
+      "bis_for": [
+        "Ranger"
+      ]
+    },
+    {
+      "name": "Swirlspine Belt",
+      "haste": 16,
+      "slot": "WAIST",
+      "bis_for": [
+        "Bard",
+        "Monk",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Shadow Knight",
+        "Warrior"
+      ]
+    }
+  ],
+  "upgrade_scaling": {
+    "available": true,
+    "note": "Site computes +0..+10 client-side; +10 columns derived with site formula from base stats.",
+    "scalable_stats": [
+      "AC",
+      "AGI",
+      "ATK",
+      "CHA",
+      "DEX",
+      "DMG",
+      "END",
+      "HP",
+      "INT",
+      "MANA",
+      "STA",
+      "STR",
+      "SVC",
+      "SVD",
+      "SVF",
+      "SVM",
+      "SVP",
+      "SVV",
+      "WIS"
+    ],
+    "non_scalable": [
+      "DLY",
+      "Haste",
+      "FIRE_DMG",
+      "COLD_DMG"
+    ]
+  },
+  "stat_keys_seen": {
+    "AC": 593,
+    "HP": 144,
+    "WIS": 170,
+    "SVM": 131,
+    "SVD": 97,
+    "MANA": 194,
+    "STR": 244,
+    "INT": 177,
+    "SVF": 113,
+    "SVC": 101,
+    "SVP": 95,
+    "STA": 141,
+    "DEX": 188,
+    "CHA": 105,
+    "AGI": 139,
+    "END": 37,
+    "Haste": 23,
+    "DMG": 16,
+    "FIRE_DMG": 2,
+    "COLD_DMG": 3,
+    "DLY": 9,
+    "SVV": 1
+  },
+  "sample_items": [
+    {
+      "name": "Abalone Gorget",
+      "slot": "NECK",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "bis_for": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "zone": "Kedge Keep",
+      "drops_mobs": "a frenzied bull shark, a frenzied cauldron shark",
+      "level": 38,
+      "effect": "",
+      "stats_plus0": {
+        "AC": 8,
+        "WIS": 9
+      },
+      "stats_plus10": {
+        "AC": 18.0,
+        "WIS": 19.0
+      },
+      "url": "https://eqlegendstools.com/items/abalone-gorget/"
+    },
+    {
+      "name": "Adamantite Band",
+      "slot": "FINGER",
+      "classes": [
+        "ALL"
+      ],
+      "bis_for": [
+        "Bard",
+        "Beastlord",
+        "Berserker",
+        "Cleric",
+        "Druid",
+        "Enchanter",
+        "Magician",
+        "Monk",
+        "Necromancer",
+        "Paladin",
+        "Ranger",
+        "Rogue",
+        "Shadow Knight",
+        "Shaman",
+        "Warrior",
+        "Wizard"
+      ],
+      "zone": "Lower Guk",
+      "drops_mobs": "a reanimated hand (Lower Guk)",
+      "level": 28,
+      "effect": "Focus: Summoning Haste I",
+      "stats_plus0": {
+        "HP": 75,
+        "SVM": -10
+      },
+      "stats_plus10": {
+        "HP": 150,
+        "SVM": 0
+      },
+      "url": "https://eqlegendstools.com/items/adamantite-band/"
+    },
+    {
+      "name": "A Shimmering Orb",
+      "slot": "SECONDARY",
+      "classes": [
+        "Bard",
+        "Enchanter",
+        "Magician",
+        "Necromancer",
+        "Wizard"
+      ],
+      "bis_for": [
+        "Bard",
+        "Enchanter",
+        "Magician",
+        "Necromancer",
+        "Wizard"
+      ],
+      "zone": "Upper Guk",
+      "drops_mobs": "a froglok scryer",
+      "level": 10,
+      "effect": "Focus: Summoning Haste I",
+      "stats_plus0": {
+        "AC": 15,
+        "HP": 20
+      },
+      "stats_plus10": {
+        "AC": 30,
+        "HP": 40
+      },
+      "url": "https://eqlegendstools.com/items/a-shimmering-orb/"
+    },
+    {
+      "name": "Abalone Gorget",
+      "slot": "NECK",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "bis_for": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "zone": "Kedge Keep",
+      "drops_mobs": "a frenzied bull shark, a frenzied cauldron shark",
+      "level": 38,
+      "effect": "",
+      "stats_plus0": {
+        "AC": 8,
+        "WIS": 9
+      },
+      "stats_plus10": {
+        "AC": 18.0,
+        "WIS": 19.0
+      },
+      "url": "https://eqlegendstools.com/items/abalone-gorget/"
+    },
+    {
+      "name": "Abalone Gorget",
+      "slot": "NECK",
+      "classes": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "bis_for": [
+        "Bard",
+        "Cleric",
+        "Paladin",
+        "Shadow Knight",
+        "Warrior"
+      ],
+      "zone": "Kedge Keep",
+      "drops_mobs": "a frenzied bull shark, a frenzied cauldron shark",
+      "level": 38,
+      "effect": "",
+      "stats_plus0": {
+        "AC": 8,
+        "WIS": 9
+      },
+      "stats_plus10": {
+        "AC": 18.0,
+        "WIS": 19.0
+      },
+      "url": "https://eqlegendstools.com/items/abalone-gorget/"
+    }
+  ]
+}

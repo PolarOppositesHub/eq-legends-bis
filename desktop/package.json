@@ -1,0 +1,90 @@
+{
+  "name": "eq-legends-bis-desktop",
+  "productName": "EQ Legends BiS",
+  "version": "1.0.3",
+  "description": "EQ Legends BiS + build-sim (portable Windows app)",
+  "main": "main.js",
+  "author": "Josh Monroe",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:linux": "electron-builder --linux AppImage"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.eqlegends.bis",
+    "productName": "EQ Legends BiS",
+    "copyright": "Copyright \u00a9 Josh Monroe",
+    "directories": {
+      "output": "../dist-desktop",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": ".",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "EQ-Legends-BiS-${version}-${os}-${arch}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EQ Legends BiS"
+    },
+    "portable": {
+      "artifactName": "EQ-Legends-BiS-${version}-portable.exe"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "PolarOppositesHub",
+        "repo": "eq-legends-bis",
+        "releaseType": "release"
+      }
+    ],
+    "generateUpdatesFilesForAllChannels": false
+  }
+}

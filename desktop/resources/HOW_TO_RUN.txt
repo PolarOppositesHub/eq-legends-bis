@@ -1,0 +1,6 @@
+EQ Legends BiS - how to run
+1. Double-click the portable .exe
+2. Wait for the window
+3. Zip and send portable exe to brother
+Build: scripts/build-windows.ps1 on Josh PC
+See PACKAGING.md for updates

@@ -1,0 +1,940 @@
+{
+  "source": "https://eqlegendstools.com/char-sheet/ (decoded core bundle)",
+  "verified": true,
+  "raceStats": [
+    {
+      "Race": "Barbarian",
+      "STR": 103,
+      "STA": 95,
+      "AGI": 82,
+      "DEX": 70,
+      "WIS": 70,
+      "INT": 60,
+      "CHA": 55,
+      "Total": 535
+    },
+    {
+      "Race": "Dark Elf",
+      "STR": 60,
+      "STA": 65,
+      "AGI": 90,
+      "DEX": 75,
+      "WIS": 83,
+      "INT": 99,
+      "CHA": 60,
+      "Total": 532
+    },
+    {
+      "Race": "Dwarf",
+      "STR": 90,
+      "STA": 90,
+      "AGI": 70,
+      "DEX": 90,
+      "WIS": 83,
+      "INT": 60,
+      "CHA": 45,
+      "Total": 528
+    },
+    {
+      "Race": "Erudite",
+      "STR": 60,
+      "STA": 70,
+      "AGI": 70,
+      "DEX": 70,
+      "WIS": 83,
+      "INT": 107,
+      "CHA": 70,
+      "Total": 530
+    },
+    {
+      "Race": "Froglok",
+      "STR": 70,
+      "STA": 80,
+      "AGI": 100,
+      "DEX": 100,
+      "WIS": 75,
+      "INT": 75,
+      "CHA": 50,
+      "Total": 550
+    },
+    {
+      "Race": "Gnome",
+      "STR": 60,
+      "STA": 70,
+      "AGI": 85,
+      "DEX": 85,
+      "WIS": 67,
+      "INT": 98,
+      "CHA": 60,
+      "Total": 525
+    },
+    {
+      "Race": "Half-Elf",
+      "STR": 70,
+      "STA": 70,
+      "AGI": 90,
+      "DEX": 85,
+      "WIS": 60,
+      "INT": 75,
+      "CHA": 75,
+      "Total": 525
+    },
+    {
+      "Race": "Halfling",
+      "STR": 70,
+      "STA": 75,
+      "AGI": 95,
+      "DEX": 90,
+      "WIS": 80,
+      "INT": 67,
+      "CHA": 50,
+      "Total": 527
+    },
+    {
+      "Race": "High Elf",
+      "STR": 55,
+      "STA": 65,
+      "AGI": 85,
+      "DEX": 70,
+      "WIS": 95,
+      "INT": 92,
+      "CHA": 80,
+      "Total": 542
+    },
+    {
+      "Race": "Human",
+      "STR": 75,
+      "STA": 75,
+      "AGI": 75,
+      "DEX": 75,
+      "WIS": 75,
+      "INT": 75,
+      "CHA": 75,
+      "Total": 525
+    },
+    {
+      "Race": "Iksar",
+      "STR": 70,
+      "STA": 70,
+      "AGI": 90,
+      "DEX": 85,
+      "WIS": 80,
+      "INT": 75,
+      "CHA": 55,
+      "Total": 525
+    },
+    {
+      "Race": "Kerran",
+      "STR": 90,
+      "STA": 70,
+      "AGI": 90,
+      "DEX": 70,
+      "WIS": 70,
+      "INT": 65,
+      "CHA": 65,
+      "Total": 520
+    },
+    {
+      "Race": "Ogre",
+      "STR": 130,
+      "STA": 127,
+      "AGI": 70,
+      "DEX": 70,
+      "WIS": 67,
+      "INT": 60,
+      "CHA": 37,
+      "Total": 556
+    },
+    {
+      "Race": "Troll",
+      "STR": 108,
+      "STA": 114,
+      "AGI": 83,
+      "DEX": 75,
+      "WIS": 60,
+      "INT": 52,
+      "CHA": 40,
+      "Total": 527
+    },
+    {
+      "Race": "Wood Elf",
+      "STR": 65,
+      "STA": 65,
+      "AGI": 95,
+      "DEX": 80,
+      "WIS": 80,
+      "INT": 75,
+      "CHA": 75,
+      "Total": 535
+    }
+  ],
+  "raceSaves": [
+    {
+      "Race": "Barbarian",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 35,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Dark Elf",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Dwarf",
+      "SV Magic": 30,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 20
+    },
+    {
+      "Race": "Erudite",
+      "SV Magic": 30,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 10,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Froglok",
+      "SV Magic": 30,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 30
+    },
+    {
+      "Race": "Gnome",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Half-Elf",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Halfling",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 20,
+      "SV Poison": 20
+    },
+    {
+      "Race": "High Elf",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Human",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Iksar",
+      "SV Magic": 25,
+      "SV Fire": 30,
+      "SV Cold": 15,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Kerran",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Ogre",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Troll",
+      "SV Magic": 25,
+      "SV Fire": 5,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    },
+    {
+      "Race": "Wood Elf",
+      "SV Magic": 25,
+      "SV Fire": 25,
+      "SV Cold": 25,
+      "SV Disease": 15,
+      "SV Poison": 15
+    }
+  ],
+  "classStats": [
+    {
+      "Class": "Bard",
+      "STR": 5,
+      "STA": 0,
+      "AGI": 0,
+      "DEX": 10,
+      "WIS": 0,
+      "INT": 0,
+      "CHA": 15,
+      "Total": 30
+    },
+    {
+      "Class": "Beastlord",
+      "STR": 0,
+      "STA": 10,
+      "AGI": 5,
+      "DEX": 0,
+      "WIS": 10,
+      "INT": 0,
+      "CHA": 5,
+      "Total": 30
+    },
+    {
+      "Class": "Berserker",
+      "STR": 15,
+      "STA": 5,
+      "AGI": 0,
+      "DEX": 10,
+      "WIS": 0,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Cleric",
+      "STR": 5,
+      "STA": 10,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 15,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Druid",
+      "STR": 0,
+      "STA": 15,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 15,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Enchanter",
+      "STR": 0,
+      "STA": 0,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 0,
+      "INT": 15,
+      "CHA": 15,
+      "Total": 30
+    },
+    {
+      "Class": "Magician",
+      "STR": 0,
+      "STA": 15,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 0,
+      "INT": 15,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Monk",
+      "STR": 5,
+      "STA": 5,
+      "AGI": 10,
+      "DEX": 10,
+      "WIS": 0,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Necromancer",
+      "STR": 0,
+      "STA": 0,
+      "AGI": 0,
+      "DEX": 15,
+      "WIS": 0,
+      "INT": 15,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Paladin",
+      "STR": 10,
+      "STA": 5,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 5,
+      "INT": 0,
+      "CHA": 10,
+      "Total": 30
+    },
+    {
+      "Class": "Ranger",
+      "STR": 5,
+      "STA": 10,
+      "AGI": 10,
+      "DEX": 0,
+      "WIS": 5,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Rogue",
+      "STR": 0,
+      "STA": 0,
+      "AGI": 15,
+      "DEX": 15,
+      "WIS": 0,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Shadow Knight",
+      "STR": 10,
+      "STA": 5,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 0,
+      "INT": 10,
+      "CHA": 5,
+      "Total": 30
+    },
+    {
+      "Class": "Shaman",
+      "STR": 0,
+      "STA": 10,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 15,
+      "INT": 0,
+      "CHA": 5,
+      "Total": 30
+    },
+    {
+      "Class": "Warrior",
+      "STR": 10,
+      "STA": 15,
+      "AGI": 5,
+      "DEX": 0,
+      "WIS": 0,
+      "INT": 0,
+      "CHA": 0,
+      "Total": 30
+    },
+    {
+      "Class": "Wizard",
+      "STR": 0,
+      "STA": 15,
+      "AGI": 0,
+      "DEX": 0,
+      "WIS": 0,
+      "INT": 15,
+      "CHA": 0,
+      "Total": 30
+    }
+  ],
+  "raw_decoded_race": {
+    "raceStats": [
+      {
+        "Race": "Barbarian",
+        "STR": 103,
+        "STA": 95,
+        "AGI": 82,
+        "DEX": 70,
+        "WIS": 70,
+        "INT": 60,
+        "CHA": 55,
+        "Total": 535
+      },
+      {
+        "Race": "Dark Elf",
+        "STR": 60,
+        "STA": 65,
+        "AGI": 90,
+        "DEX": 75,
+        "WIS": 83,
+        "INT": 99,
+        "CHA": 60,
+        "Total": 532
+      },
+      {
+        "Race": "Dwarf",
+        "STR": 90,
+        "STA": 90,
+        "AGI": 70,
+        "DEX": 90,
+        "WIS": 83,
+        "INT": 60,
+        "CHA": 45,
+        "Total": 528
+      },
+      {
+        "Race": "Erudite",
+        "STR": 60,
+        "STA": 70,
+        "AGI": 70,
+        "DEX": 70,
+        "WIS": 83,
+        "INT": 107,
+        "CHA": 70,
+        "Total": 530
+      },
+      {
+        "Race": "Froglok",
+        "STR": 70,
+        "STA": 80,
+        "AGI": 100,
+        "DEX": 100,
+        "WIS": 75,
+        "INT": 75,
+        "CHA": 50,
+        "Total": 550
+      },
+      {
+        "Race": "Gnome",
+        "STR": 60,
+        "STA": 70,
+        "AGI": 85,
+        "DEX": 85,
+        "WIS": 67,
+        "INT": 98,
+        "CHA": 60,
+        "Total": 525
+      },
+      {
+        "Race": "Half-Elf",
+        "STR": 70,
+        "STA": 70,
+        "AGI": 90,
+        "DEX": 85,
+        "WIS": 60,
+        "INT": 75,
+        "CHA": 75,
+        "Total": 525
+      },
+      {
+        "Race": "Halfling",
+        "STR": 70,
+        "STA": 75,
+        "AGI": 95,
+        "DEX": 90,
+        "WIS": 80,
+        "INT": 67,
+        "CHA": 50,
+        "Total": 527
+      },
+      {
+        "Race": "High Elf",
+        "STR": 55,
+        "STA": 65,
+        "AGI": 85,
+        "DEX": 70,
+        "WIS": 95,
+        "INT": 92,
+        "CHA": 80,
+        "Total": 542
+      },
+      {
+        "Race": "Human",
+        "STR": 75,
+        "STA": 75,
+        "AGI": 75,
+        "DEX": 75,
+        "WIS": 75,
+        "INT": 75,
+        "CHA": 75,
+        "Total": 525
+      },
+      {
+        "Race": "Iksar",
+        "STR": 70,
+        "STA": 70,
+        "AGI": 90,
+        "DEX": 85,
+        "WIS": 80,
+        "INT": 75,
+        "CHA": 55,
+        "Total": 525
+      },
+      {
+        "Race": "Kerran",
+        "STR": 90,
+        "STA": 70,
+        "AGI": 90,
+        "DEX": 70,
+        "WIS": 70,
+        "INT": 65,
+        "CHA": 65,
+        "Total": 520
+      },
+      {
+        "Race": "Ogre",
+        "STR": 130,
+        "STA": 127,
+        "AGI": 70,
+        "DEX": 70,
+        "WIS": 67,
+        "INT": 60,
+        "CHA": 37,
+        "Total": 556
+      },
+      {
+        "Race": "Troll",
+        "STR": 108,
+        "STA": 114,
+        "AGI": 83,
+        "DEX": 75,
+        "WIS": 60,
+        "INT": 52,
+        "CHA": 40,
+        "Total": 527
+      },
+      {
+        "Race": "Wood Elf",
+        "STR": 65,
+        "STA": 65,
+        "AGI": 95,
+        "DEX": 80,
+        "WIS": 80,
+        "INT": 75,
+        "CHA": 75,
+        "Total": 535
+      }
+    ],
+    "classStats": [
+      {
+        "Class": "Bard",
+        "STR": 5,
+        "STA": 0,
+        "AGI": 0,
+        "DEX": 10,
+        "WIS": 0,
+        "INT": 0,
+        "CHA": 15,
+        "Total": 30
+      },
+      {
+        "Class": "Beastlord",
+        "STR": 0,
+        "STA": 10,
+        "AGI": 5,
+        "DEX": 0,
+        "WIS": 10,
+        "INT": 0,
+        "CHA": 5,
+        "Total": 30
+      },
+      {
+        "Class": "Berserker",
+        "STR": 15,
+        "STA": 5,
+        "AGI": 0,
+        "DEX": 10,
+        "WIS": 0,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Cleric",
+        "STR": 5,
+        "STA": 10,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 15,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Druid",
+        "STR": 0,
+        "STA": 15,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 15,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Enchanter",
+        "STR": 0,
+        "STA": 0,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 0,
+        "INT": 15,
+        "CHA": 15,
+        "Total": 30
+      },
+      {
+        "Class": "Magician",
+        "STR": 0,
+        "STA": 15,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 0,
+        "INT": 15,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Monk",
+        "STR": 5,
+        "STA": 5,
+        "AGI": 10,
+        "DEX": 10,
+        "WIS": 0,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Necromancer",
+        "STR": 0,
+        "STA": 0,
+        "AGI": 0,
+        "DEX": 15,
+        "WIS": 0,
+        "INT": 15,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Paladin",
+        "STR": 10,
+        "STA": 5,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 5,
+        "INT": 0,
+        "CHA": 10,
+        "Total": 30
+      },
+      {
+        "Class": "Ranger",
+        "STR": 5,
+        "STA": 10,
+        "AGI": 10,
+        "DEX": 0,
+        "WIS": 5,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Rogue",
+        "STR": 0,
+        "STA": 0,
+        "AGI": 15,
+        "DEX": 15,
+        "WIS": 0,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Shadow Knight",
+        "STR": 10,
+        "STA": 5,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 0,
+        "INT": 10,
+        "CHA": 5,
+        "Total": 30
+      },
+      {
+        "Class": "Shaman",
+        "STR": 0,
+        "STA": 10,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 15,
+        "INT": 0,
+        "CHA": 5,
+        "Total": 30
+      },
+      {
+        "Class": "Warrior",
+        "STR": 10,
+        "STA": 15,
+        "AGI": 5,
+        "DEX": 0,
+        "WIS": 0,
+        "INT": 0,
+        "CHA": 0,
+        "Total": 30
+      },
+      {
+        "Class": "Wizard",
+        "STR": 0,
+        "STA": 15,
+        "AGI": 0,
+        "DEX": 0,
+        "WIS": 0,
+        "INT": 15,
+        "CHA": 0,
+        "Total": 30
+      }
+    ],
+    "raceSaves": [
+      {
+        "Race": "Barbarian",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 35,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Dark Elf",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Dwarf",
+        "SV Magic": 30,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 20
+      },
+      {
+        "Race": "Erudite",
+        "SV Magic": 30,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 10,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Froglok",
+        "SV Magic": 30,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 30
+      },
+      {
+        "Race": "Gnome",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Half-Elf",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Halfling",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 20,
+        "SV Poison": 20
+      },
+      {
+        "Race": "High Elf",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Human",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Iksar",
+        "SV Magic": 25,
+        "SV Fire": 30,
+        "SV Cold": 15,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Kerran",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Ogre",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Troll",
+        "SV Magic": 25,
+        "SV Fire": 5,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      },
+      {
+        "Race": "Wood Elf",
+        "SV Magic": 25,
+        "SV Fire": 25,
+        "SV Cold": 25,
+        "SV Disease": 15,
+        "SV Poison": 15
+      }
+    ]
+  }
+}

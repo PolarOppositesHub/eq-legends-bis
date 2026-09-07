@@ -1,0 +1,65 @@
+const API = ''
+
+async function j<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
+    ...init,
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`${res.status}: ${text}`)
+  }
+  return res.json()
+}
+
+export type PriorityStat = { key: string; label: string }
+export type ClassesResp = {
+  classes: string[]
+  default_trio: string[]
+  priority_stats: PriorityStat[]
+  slots: string[]
+  modes: { id: string; label: string }[]
+  notes: Record<string, string>
+}
+export type Race = {
+  id: string; name: string; abbrev: string
+  bases: Record<string, number>
+  resists?: Record<string, number>
+}
+export type RacesResp = {
+  bases_available: boolean
+  races: Race[]
+  note: string
+  source: Record<string, string>
+}
+export type ItemRow = {
+  name: string
+  score: number
+  why: string
+  zone?: string
+  classes_str?: string
+  ratio10?: number | null
+  haste?: number
+  stats_plus0?: Record<string, number>
+  stats_plus10?: Record<string, number>
+  url?: string
+  is_weapon?: boolean
+  slot?: string
+}
+export type ItemsResp = {
+  classes: string[]
+  mode: string
+  stat: string
+  by_slot: Record<string, ItemRow[]>
+  suggested_loadout?: Record<string, ItemRow>
+  suggested_totals?: any
+  pool_size: number
+}
+
+export const api = {
+  classes: () => j<ClassesResp>('/api/classes'),
+  races: () => j<RacesResp>('/api/races'),
+  items: (params: URLSearchParams) => j<ItemsResp>(`/api/items?${params}`),
+  simulate: (body: unknown) => j<any>('/api/simulate', { method: 'POST', body: JSON.stringify(body) }),
+  exportXlsx: (classes: string[]) => j<any>('/api/export/xlsx', { method: 'POST', body: JSON.stringify({ classes }) }),
+}

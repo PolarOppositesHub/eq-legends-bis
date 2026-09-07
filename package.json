@@ -1,0 +1,15 @@
+{
+  "name": "eq-legends-bis-workspace",
+  "private": true,
+  "version": "1.0.3",
+  "description": "Workspace scripts; Windows packaging lives in desktop/",
+  "scripts": {
+    "prepare:resources": "python3 scripts/bundle_desktop_resources.py",
+    "build:ui": "cd frontend && npm run build",
+    "dist:win": "cd desktop && npm run dist:win",
+    "dist:win:dir": "cd desktop && npx electron-builder --win dir --x64",
+    "dist:linux:dir": "cd desktop && npx electron-builder --linux dir --x64",
+    "pack:smoke": "cd desktop && npm run pack",
+    "start:electron": "cd desktop && npm start"
+  }
+}

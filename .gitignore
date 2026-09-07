@@ -1,0 +1,33 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+
+# Build
+build/
+dist/
+dist-desktop/
+frontend/dist/
+desktop/build/
+desktop/dist/
+*.exe
+*.blockmap
+
+# Scratch
+HELLO.txt
+_w.py
+*.log
+.env
+.env.*
+
+# Workspace symlinks
+data/decoded
+data/zone-research
+data/log-research
+
+# Editor
+.idea/
+.vscode/
