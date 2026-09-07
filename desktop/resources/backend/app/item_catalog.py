@@ -14,9 +14,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .paths import APP_ROOT, decoded_dir, images_dir
+from .paths import APP_ROOT, decoded_dir, image_seed_dirs, images_dir
 
-USER_AGENT = "EQLegendsBiS/1.0.9 (local; josh; item-icon-cache)"
+USER_AGENT = "EQLegendsBiS/1.0.10 (local; josh; item-icon-cache)"
+
+# Serialize wiki fetches so BiS first-paint does not stampede eqlwiki.
+_ensure_locks: dict[str, Any] = {}
+_ensure_guard = None
 
 
 def _images_dir() -> Path:
@@ -26,6 +30,27 @@ def _images_dir() -> Path:
 def _slug(name: str) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "-", (name or "").strip()).strip("-").lower()
     return s or "item"
+
+
+def _threading_lock():
+    global _ensure_guard
+    if _ensure_guard is None:
+        import threading
+
+        _ensure_guard = threading.Lock()
+    return _ensure_guard
+
+
+def _lock_for(name: str):
+    import threading
+
+    key = (name or "").strip().lower() or "item"
+    with _threading_lock():
+        lock = _ensure_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _ensure_locks[key] = lock
+        return lock
 
 
 def _merge_row(by_name: dict[str, dict[str, Any]], row: dict[str, Any]) -> None:
@@ -229,9 +254,24 @@ def get_item_by_name(name: str) -> dict[str, Any] | None:
     return None
 
 
+def name_in_catalog(name: str) -> bool:
+    """True if name exists in catalog — does not touch image cache."""
+    key = (name or "").strip().lower()
+    if not key:
+        return False
+    for it in _all_flat_items():
+        if (it.get("name") or "").strip().lower() == key:
+            return True
+    return False
+
+
 def _public_item(it: dict[str, Any]) -> dict[str, Any]:
     name = it.get("name") or ""
-    local = local_image_path(name)
+    local = None
+    try:
+        local = local_image_path(name)
+    except Exception:
+        local = None
     return {
         "name": name,
         "itemID": it.get("itemID"),
@@ -250,22 +290,70 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "ratio_plus0": it.get("ratio_plus0"),
         "ratio_plus10": it.get("ratio_plus10"),
         "tooltipLines": it.get("tooltipLines") or [],
-        "image_url": f"/api/item-image?name={urllib.parse.quote(name)}" if local or True else "",
-        "has_local_image": local is not None and local.is_file(),
+        "image_url": f"/api/item-image?name={urllib.parse.quote(name)}" if name else "",
+        "has_local_image": bool(local and local.is_file()),
     }
 
 
-def local_image_path(name: str) -> Path | None:
-    img_dir = _images_dir()
+def _safe_resolve(p: Path) -> Path:
     try:
-        img_dir.mkdir(parents=True, exist_ok=True)
+        return p.resolve()
+    except Exception:
+        return p
+
+
+def _find_image_file(name: str, directories: list[Path]) -> Path | None:
+    slug = _slug(name)
+    for img_dir in directories:
+        try:
+            for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
+                p = img_dir / f"{slug}{ext}"
+                if p.is_file() and p.stat().st_size > 0:
+                    return p
+        except Exception:
+            continue
+    return None
+
+
+def local_image_path(name: str) -> Path | None:
+    """Prefer writable cache, then bundled/seed dirs."""
+    try:
+        img_dir = _images_dir()
+    except Exception:
+        img_dir = None
+    dirs: list[Path] = []
+    if img_dir is not None:
+        try:
+            img_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        dirs.append(img_dir)
+    try:
+        for seed in image_seed_dirs():
+            if img_dir is None or _safe_resolve(seed) != _safe_resolve(img_dir):
+                dirs.append(seed)
     except Exception:
         pass
-    for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif"):
-        p = img_dir / f"{_slug(name)}{ext}"
-        if p.is_file() and p.stat().st_size > 0:
-            return p
-    return None
+    return _find_image_file(name, dirs)
+
+
+def _copy_seed_into_cache(name: str) -> Path | None:
+    """If icon exists only in a bundled seed dir, copy into writable cache."""
+    img_dir = _images_dir()
+    existing = _find_image_file(name, [img_dir])
+    if existing:
+        return existing
+    seed_hit = _find_image_file(name, image_seed_dirs())
+    if not seed_hit:
+        return None
+    try:
+        img_dir.mkdir(parents=True, exist_ok=True)
+        dest = img_dir / seed_hit.name
+        if not dest.exists() or dest.stat().st_size == 0:
+            dest.write_bytes(seed_hit.read_bytes())
+        return dest if dest.is_file() and dest.stat().st_size > 0 else seed_hit
+    except Exception:
+        return seed_hit
 
 
 def _ssl_context():
@@ -378,10 +466,26 @@ def _normalize_image_blob(blob: bytes, ext: str) -> bytes:
 
 def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
     """Return local image path info; optionally fetch from eqlwiki and save."""
+    with _lock_for(name):
+        return _ensure_item_image_unlocked(name, fetch=fetch)
+
+
+def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, Any]:
     img_dir = _images_dir()
     try:
         img_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
+        # Still allow serving from read-only seed if present.
+        seeded = _find_image_file(name, image_seed_dirs())
+        if seeded:
+            return {
+                "name": name,
+                "cached": True,
+                "path": str(seeded),
+                "url": f"/api/item-image?name={urllib.parse.quote(name)}",
+                "images_dir": str(img_dir),
+                "seed": True,
+            }
         return {
             "name": name,
             "cached": False,
@@ -397,7 +501,7 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
         except Exception:
             return str(p)
 
-    existing = local_image_path(name)
+    existing = _copy_seed_into_cache(name) or local_image_path(name)
     if existing:
         # Re-encode legacy 16-bit wiki PNGs already on disk (Chromium blank otherwise).
         try:
@@ -405,7 +509,13 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
             if existing.suffix.lower() == ".png" and len(raw) > 25 and raw[24] == 16:
                 fixed = _normalize_image_blob(raw, ".png")
                 if fixed and fixed != raw:
-                    existing.write_bytes(fixed)
+                    try:
+                        existing.write_bytes(fixed)
+                    except Exception:
+                        # Seed may be read-only — write fixed copy into writable cache.
+                        dest = img_dir / f"{_slug(name)}.png"
+                        dest.write_bytes(fixed)
+                        existing = dest
         except Exception:
             pass
         return {
@@ -437,10 +547,12 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
 
     img_url = None
     wiki_tried = 0
+    last_http_err = None
     for wiki in _wiki_urls_for_item(it):
         wiki_tried += 1
         html_b = _http_get(wiki)
         if not html_b:
+            last_http_err = f"http failed: {wiki}"
             continue
         try:
             html = html_b.decode("utf-8", errors="ignore")
@@ -457,6 +569,7 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
             "url": None,
             "error": "no wiki image found",
             "wiki_tried": wiki_tried,
+            "last_http_err": last_http_err,
             "images_dir": str(img_dir),
         }
 

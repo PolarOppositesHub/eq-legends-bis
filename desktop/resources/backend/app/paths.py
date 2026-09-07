@@ -62,6 +62,46 @@ def _dir_writable(path: Path) -> bool:
         return False
 
 
+def image_seed_dirs() -> list[Path]:
+    """Read-only / bundled icon seeds (may not be writable).
+
+    Packaged Electron builds ship icons under resources/data/item-images while
+    the writable cache lives in userData (EQ_IMAGES_DIR). Fresh installs must
+    still be able to *read* the bundled seeds before any wiki fetch.
+    """
+    root = app_root()
+    cands = [
+        root / "data" / "item-images",
+        root / "resources" / "data" / "item-images",
+        root / "desktop" / "resources" / "data" / "item-images",
+        Path.cwd() / "data" / "item-images",
+    ]
+    # Also check next to frozen exe / Electron resources
+    if is_frozen():
+        exe = Path(sys.executable).resolve().parent
+        cands.extend(
+            [
+                exe / "data" / "item-images",
+                exe / "resources" / "data" / "item-images",
+                exe.parent / "resources" / "data" / "item-images",
+            ]
+        )
+    out: list[Path] = []
+    seen: set[str] = set()
+    for cand in cands:
+        try:
+            p = cand.resolve()
+        except Exception:
+            p = cand
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        if p.is_dir():
+            out.append(p)
+    return out
+
+
 def images_dir() -> Path:
     """Writable cache for item icons.
 
@@ -120,7 +160,9 @@ def legends_root() -> Path:
 
 def decoded_dir() -> Path:
     override = _env_path("EQ_DATA_ROOT") or _env_path("EQ_LEGENDS_DATA")
-    if override:
+    # Only honor env override when the directory actually exists (bad packages
+    # used to pin an empty/missing resources path and zero the catalog).
+    if override and override.is_dir() and any(override.glob("*.json")):
         return override
     root = app_root()
     for cand in (
@@ -129,8 +171,10 @@ def decoded_dir() -> Path:
         root / "desktop" / "resources" / "data" / "decoded",
         root / "decoded",
         legends_root() / "decoded",
+        # Fall back to a non-empty override last (may still be empty).
+        override if override and override.is_dir() else None,
     ):
-        if cand.exists():
+        if cand and cand.exists():
             return cand.resolve()
     return (root / "data" / "decoded").resolve()
 

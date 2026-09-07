@@ -5,6 +5,11 @@ When a real quest name is present (not a "Drops From:" blob), we best-effort
 fetch the eqlwiki page, extract dialogue/handoff steps + component tables,
 and cache under data/quest-guides/. If fetch fails, return the quest name +
 wiki URL only — never fabricate steps.
+
+Collection steps resolve zone + drop mobs from local catalog and/or the
+component item's eqlwiki "Drops From" section. Plane of Sky table tags like
+"(4-KoS)" are expanded only via the documented island-boss legend on
+eqlwiki Plane of Sky — never invented. When mobs are unknown, steps say so.
 """
 from __future__ import annotations
 
@@ -24,6 +29,8 @@ GUIDES_DIR = APP_ROOT / "data" / "quest-guides"
 USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
+# Bump when step/component wording schema changes so stale caches refresh.
+GUIDE_FORMAT_VERSION = 2
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
 # Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
@@ -33,6 +40,56 @@ _ZONE_MOB_DROP = re.compile(
 )
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
+# Wiki sky-table tags: "Woven Skull Cap (4-KoS)" / "Gem of Invigoration (7-Trash)"
+_SKY_REQ_TAG = re.compile(
+    r"^(?P<item>.+?)\s*\((?P<tag>\d+\s*-\s*[A-Za-z][A-Za-z0-9]*)\)\s*$"
+)
+
+# Documented eqlwiki Plane of Sky island bosses (same abbreviations used in class-test tables).
+# Keys are normalized lowercase without spaces: "4-kos", "7-trash", etc.
+_SKY_DROP_TAGS: dict[str, dict[str, Any]] = {
+    "2-pos": {
+        "island": 2,
+        "island_name": "Azarack Island",
+        "mobs": ["Protector of Sky"],
+    },
+    "3-gorga": {
+        "island": 3,
+        "island_name": "Harpy Island",
+        "mobs": ["Gorgalosk"],
+    },
+    "4-kos": {
+        "island": 4,
+        "island_name": "Pegasus Island",
+        "mobs": ["Keeper of Souls"],
+    },
+    "5-sl": {
+        "island": 5,
+        "island_name": "Spiroc Island",
+        "mobs": ["The Spiroc Lord"],
+    },
+    "6-bz": {
+        "island": 6,
+        "island_name": "Bee Island",
+        "mobs": ["Bazzt Zzzt"],
+    },
+    "7-sots": {
+        "island": 7,
+        "island_name": "Drake Island",
+        "mobs": ["Sister of the Spire"],
+    },
+    "7-trash": {
+        "island": 7,
+        "island_name": "Drake Island",
+        "mobs": [],
+        "trash": True,
+    },
+    "8-eov": {
+        "island": 8,
+        "island_name": "Veeshan Island",
+        "mobs": ["Eye of Veeshan"],
+    },
+}
 
 
 def _slug(name: str) -> str:
@@ -239,6 +296,319 @@ def _parse_component_rows(html: str) -> list[dict[str, str]]:
     return rows[:20]
 
 
+def _norm_sky_tag(tag: str) -> str:
+    return re.sub(r"\s+", "", (tag or "").strip().lower())
+
+
+def _split_item_and_sky_tag(raw: str) -> tuple[str, str | None]:
+    """Split 'Woven Skull Cap (4-KoS)' → ('Woven Skull Cap', '4-KoS')."""
+    s = _WS_RE.sub(" ", (raw or "").strip())
+    if not s:
+        return "", None
+    m = _SKY_REQ_TAG.match(s)
+    if m:
+        return m.group("item").strip(), m.group("tag").replace(" ", "")
+    # Parenthetical that is not an N-Abbr tag — keep full string as item name
+    return s, None
+
+
+def _parse_drops_from_source_blob(blob: str) -> tuple[str, list[str]]:
+    """Parse 'Drops From: Plane of Sky: Mob A, Mob B' → zone, mobs."""
+    s = _WS_RE.sub(" ", (blob or "").strip())
+    if not s:
+        return "", []
+    s = re.sub(r"^\s*drops?\s+from\s*:\s*", "", s, flags=re.I).strip()
+    if ":" in s:
+        zone, rest = s.split(":", 1)
+        zone = zone.strip()
+        mobs = [p.strip() for p in re.split(r"\s*,\s*", rest) if p.strip()]
+        return zone, mobs
+    return s, []
+
+
+def _catalog_drop_info(item_name: str) -> dict[str, Any]:
+    """Zone + drop mobs from local decoded catalog only (no invention)."""
+    name = (item_name or "").strip()
+    if not name:
+        return {}
+    try:
+        from . import item_catalog as item_catalog_mod
+
+        it = item_catalog_mod.get_item_by_name(name)
+    except Exception:
+        it = None
+    if not it:
+        return {}
+    zone = (it.get("zone") or "").strip()
+    mobs_raw = (it.get("drops_mobs") or "").strip()
+    mobs = [p.strip() for p in re.split(r"\s*,\s*", mobs_raw) if p.strip()] if mobs_raw else []
+    if not zone or not mobs:
+        src = (it.get("quest_source") or it.get("source") or "").strip()
+        if src and is_drop_source(src):
+            z2, m2 = _parse_drops_from_source_blob(src)
+            zone = zone or z2
+            if not mobs and m2:
+                mobs = m2
+    if not zone and not mobs:
+        return {}
+    return {"zone": zone, "mobs": mobs, "source": "catalog"}
+
+
+def _parse_wiki_item_drops(html: str) -> dict[str, Any]:
+    """Extract zone + mobs from an eqlwiki item page 'Drops From' section."""
+    if not html:
+        return {}
+    m = re.search(
+        r"Drops From(.*?)(?:Sold by|Used in|Retrieved from|Categories|Quest Reward|Reward from)",
+        html,
+        re.I | re.S,
+    )
+    if not m:
+        return {}
+    chunk = m.group(1)
+    # Prefer visible link text (natural casing) over title= attributes.
+    link_names: list[str] = []
+    for title, inner in re.findall(
+        r'<a[^>]+title="([^"]+)"[^>]*>(.*?)</a>',
+        chunk,
+        re.I | re.S,
+    ):
+        text = _WS_RE.sub(" ", _TAG_RE.sub(" ", inner)).strip()
+        name = text or _WS_RE.sub(" ", title).strip()
+        if name:
+            link_names.append(name)
+    if not link_names:
+        link_names = [
+            _WS_RE.sub(" ", t).strip()
+            for t in re.findall(r'<a[^>]+title="([^"]+)"', chunk, re.I)
+            if t.strip()
+        ]
+    zone = ""
+    mobs: list[str] = []
+    for t in link_names:
+        low = t.lower()
+        if not zone and (
+            low.startswith("plane of ")
+            or "plane of" in low
+            or low.endswith(" hills")
+            or "dungeon" in low
+            or low in {
+                "nagafen's lair",
+                "the hole",
+                "kedge keep",
+                "old sebilis",
+                "velketor's labyrinth",
+                "crushbone",
+                "guk",
+                "lower guk",
+                "upper guk",
+            }
+        ):
+            zone = t
+            continue
+        if zone and t.lower() == zone.lower():
+            continue
+        if t not in mobs:
+            mobs.append(t)
+    if not zone and not mobs:
+        plain = _WS_RE.sub(" ", _TAG_RE.sub(" ", chunk)).strip()
+        if plain and plain.lower() not in {"none", "unknown", "n/a"}:
+            # Last resort: whole plain text as zone-ish note — do not invent mobs
+            return {"zone": plain, "mobs": [], "source": "eqlwiki-item"}
+    if not zone and not mobs:
+        return {}
+    return {"zone": zone, "mobs": mobs, "source": "eqlwiki-item"}
+
+
+def _fetch_item_drop_info(item_name: str) -> dict[str, Any]:
+    """Best-effort eqlwiki item page drop lookup."""
+    name = (item_name or "").strip()
+    if not name:
+        return {}
+    for title in (name.replace(" ", "_"), name):
+        url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
+        blob = _http_get(url)
+        if not blob:
+            continue
+        try:
+            html = blob.decode("utf-8", errors="ignore")
+        except Exception:
+            continue
+        if "does not exist" in html.lower() and "create the page" in html.lower():
+            continue
+        info = _parse_wiki_item_drops(html)
+        if info:
+            info["url"] = url
+            return info
+    return {}
+
+
+def _sky_tag_info(tag: str | None) -> dict[str, Any]:
+    """Expand a documented Plane of Sky table tag (e.g. 4-KoS)."""
+    if not tag:
+        return {}
+    hit = _SKY_DROP_TAGS.get(_norm_sky_tag(tag))
+    if not hit:
+        return {}
+    return {
+        "zone": "Plane of Sky",
+        "island": hit.get("island"),
+        "island_name": hit.get("island_name") or "",
+        "mobs": list(hit.get("mobs") or []),
+        "trash": bool(hit.get("trash")),
+        "source": "eqlwiki-sky-tag",
+        "wiki_tag": tag,
+    }
+
+
+def _merge_drop_info(*parts: dict[str, Any]) -> dict[str, Any]:
+    """Merge drop sources; prefer explicit mobs/zone; never invent."""
+    out: dict[str, Any] = {
+        "zone": "",
+        "mobs": [],
+        "island": None,
+        "island_name": "",
+        "trash": False,
+        "sources": [],
+        "wiki_tag": "",
+    }
+    for p in parts:
+        if not p:
+            continue
+        if p.get("zone") and not out["zone"]:
+            out["zone"] = p["zone"]
+        if p.get("mobs") and not out["mobs"]:
+            out["mobs"] = list(p["mobs"])
+        if p.get("island") and not out["island"]:
+            out["island"] = p["island"]
+            out["island_name"] = p.get("island_name") or ""
+        if p.get("trash"):
+            out["trash"] = True
+        if p.get("wiki_tag") and not out["wiki_tag"]:
+            out["wiki_tag"] = p["wiki_tag"]
+        src = p.get("source")
+        if src and src not in out["sources"]:
+            out["sources"].append(src)
+    return out
+
+
+def _where_label(info: dict[str, Any]) -> str:
+    zone = (info.get("zone") or "").strip() or "zone unknown"
+    island = info.get("island")
+    island_name = (info.get("island_name") or "").strip()
+    if island:
+        label = f"{zone} Island {island}"
+        if island_name:
+            label += f" ({island_name})"
+        return label
+    return zone
+
+
+def _format_collect_step(item_name: str, info: dict[str, Any]) -> str:
+    """Human-readable collect step with zone + mobs, or an explicit unknown."""
+    item = (item_name or "").strip() or "required item"
+    where = _where_label(info)
+    mobs = [m for m in (info.get("mobs") or []) if m]
+    tag = (info.get("wiki_tag") or "").strip()
+    if mobs:
+        return f"Collect {item} — {where}; drops from {', '.join(mobs)}."
+    if info.get("trash"):
+        msg = (
+            f"Collect {item} — {where}; Island trash drop "
+            "(specific mob unknown in available data)."
+        )
+        if tag:
+            msg = msg[:-1] + f"; wiki tag {tag}."
+        return msg
+    if (info.get("zone") or info.get("island")) and not mobs:
+        msg = f"Collect {item} — {where}; specific drop mob unknown in available data."
+        if tag:
+            msg = msg[:-1] + f"; wiki tag {tag}."
+        return msg
+    if tag:
+        return (
+            f"Collect {item} — drop source unknown in available data "
+            f"(wiki tag {tag}; not in documented sky-tag map)."
+        )
+    return f"Collect {item} — drop source unknown in available data."
+
+
+def resolve_component_drop(
+    raw: str,
+    *,
+    fetch: bool = False,
+    default_zone: str = "",
+) -> dict[str, Any]:
+    """Resolve a required/rune item string to zone + mobs from real data only."""
+    item, tag = _split_item_and_sky_tag(raw)
+    cat = _catalog_drop_info(item)
+    wiki = _fetch_item_drop_info(item) if fetch else {}
+    sky = _sky_tag_info(tag)
+    # Prefer catalog/wiki mobs over tag abbreviations; tag still supplies island.
+    info = _merge_drop_info(cat, wiki, sky)
+    if not info.get("zone") and default_zone:
+        info["zone"] = default_zone
+    if tag and not info.get("wiki_tag"):
+        info["wiki_tag"] = tag
+    who = ", ".join(info.get("mobs") or [])
+    if not who:
+        if info.get("trash"):
+            who = "Island trash (specific mob unknown in available data)"
+        elif info.get("zone"):
+            who = "drop mob unknown in available data"
+        else:
+            who = "drop source unknown in available data"
+        if tag and "wiki tag" not in who.lower():
+            who = f"{who} (wiki tag {tag})"
+    return {
+        "item": item,
+        "raw": raw,
+        "who": who,
+        "where": _where_label(info) if (info.get("zone") or info.get("island")) else (
+            f"location unknown (wiki tag {tag})" if tag else "location unknown"
+        ),
+        "zone": info.get("zone") or "",
+        "mobs": list(info.get("mobs") or []),
+        "island": info.get("island"),
+        "island_name": info.get("island_name") or "",
+        "wiki_tag": tag or "",
+        "drop_known": bool(info.get("mobs")),
+        "sources": list(info.get("sources") or []),
+        "collect_step": _format_collect_step(item, info),
+    }
+
+
+def _enrich_component_rows(
+    rows: list[dict[str, Any]],
+    *,
+    fetch: bool = False,
+) -> list[dict[str, Any]]:
+    """Fill vague who/where on generic wiki component tables when possible."""
+    out: list[dict[str, Any]] = []
+    for row in rows or []:
+        item = (row.get("item") or "").strip()
+        who = (row.get("who") or "").strip()
+        where = (row.get("where") or "").strip()
+        vague_who = (not who) or who.lower() in {
+            "see wiki", "unknown", "?", "n/a", "npc", "mob", "mobs",
+        }
+        vague_where = (not where) or where.lower() in {"see wiki", "unknown", "?", "n/a"}
+        if item and (vague_who or vague_where):
+            resolved = resolve_component_drop(item, fetch=fetch, default_zone=where)
+            out.append({
+                **row,
+                "item": resolved["item"],
+                "who": resolved["who"] if vague_who else who,
+                "where": resolved["where"] if vague_where else where,
+                "mobs": resolved.get("mobs") or [],
+                "drop_known": resolved.get("drop_known"),
+                "wiki_tag": resolved.get("wiki_tag") or "",
+            })
+        else:
+            out.append(dict(row))
+    return out
+
+
 def cache_path(quest_name: str) -> Path:
     try:
         GUIDES_DIR.mkdir(parents=True, exist_ok=True)
@@ -252,7 +622,11 @@ def load_cached_guide(quest_name: str) -> dict[str, Any] | None:
         path = cache_path(quest_name)
         if not path.is_file():
             return None
-        return json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
+        # Stale schema (pre zone/mob collect wording) — force refresh
+        if int(data.get("format_version") or 0) != GUIDE_FORMAT_VERSION:
+            return None
+        return data
     except Exception:
         return None
 
@@ -260,12 +634,18 @@ def load_cached_guide(quest_name: str) -> dict[str, Any] | None:
 def _write_cached_guide(quest_name: str, guide: dict[str, Any]) -> None:
     """Best-effort cache write — never raise (path length / permissions / disk)."""
     try:
-        cache_path(quest_name).write_text(json.dumps(guide, indent=2), encoding="utf-8")
+        payload = {**guide, "format_version": GUIDE_FORMAT_VERSION}
+        cache_path(quest_name).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     except Exception:
         pass
 
 
-def _parse_sky_quest_row(html: str, quest_name: str) -> dict[str, Any] | None:
+def _parse_sky_quest_row(
+    html: str,
+    quest_name: str,
+    *,
+    fetch: bool = False,
+) -> dict[str, Any] | None:
     """Parse EQL Plane of Sky class-test table row for quest_name."""
     if not html or not quest_name:
         return None
@@ -298,24 +678,32 @@ def _parse_sky_quest_row(html: str, quest_name: str) -> dict[str, Any] | None:
         f"Hail the class Efreeti quest NPC and use the keyword '{keyword}' to confirm turn-ins."
         if keyword else "Hail the class Efreeti quest NPC to confirm turn-ins.",
     ]
-    if runes:
-        steps.append("Collect wind rune(s): " + ", ".join(runes) + " (drop from Plane of Sky mobs).")
-    if reqs:
-        steps.append("Collect required item(s): " + ", ".join(reqs) + ".")
-    steps.append(f"Hand the required items to the quest NPC to receive the {quest_name} reward.")
-    components = []
-    for r in runes:
-        components.append({"item": r, "who": "Plane of Sky trash / mobs", "where": "Plane of Sky"})
-    for r in reqs:
-        # e.g. "Woven Skull Cap (4-KoS)"
-        who_where = ""
-        if "(" in r and ")" in r:
-            who_where = r[r.find("(") + 1:r.rfind(")")]
+    components: list[dict[str, Any]] = []
+    for raw in runes:
+        resolved = resolve_component_drop(raw, fetch=fetch, default_zone="Plane of Sky")
+        steps.append(resolved["collect_step"])
         components.append({
-            "item": r.split("(")[0].strip(),
-            "who": who_where or "see wiki",
-            "where": "Plane of Sky",
+            "item": resolved["item"],
+            "who": resolved["who"],
+            "where": resolved["where"],
+            "mobs": resolved.get("mobs") or [],
+            "wiki_tag": resolved.get("wiki_tag") or "",
+            "drop_known": resolved.get("drop_known"),
+            "kind": "wind_rune",
         })
+    for raw in reqs:
+        resolved = resolve_component_drop(raw, fetch=fetch, default_zone="Plane of Sky")
+        steps.append(resolved["collect_step"])
+        components.append({
+            "item": resolved["item"],
+            "who": resolved["who"],
+            "where": resolved["where"],
+            "mobs": resolved.get("mobs") or [],
+            "wiki_tag": resolved.get("wiki_tag") or "",
+            "drop_known": resolved.get("drop_known"),
+            "kind": "required",
+        })
+    steps.append(f"Hand the required items to the quest NPC to receive the {quest_name} reward.")
     return {
         "keyword": keyword,
         "steps": steps,
@@ -346,6 +734,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 "url": urls[0] if urls else None,
                 "cached": False,
                 "error": "not fetched",
+                "format_version": GUIDE_FORMAT_VERSION,
             }
 
         last_err = "no wiki page found"
@@ -362,7 +751,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 last_err = f"missing page {url}"
                 continue
 
-            sky = _parse_sky_quest_row(html, name)
+            sky = _parse_sky_quest_row(html, name, fetch=fetch)
             if sky and sky.get("steps"):
                 guide = {
                     "quest": name,
@@ -373,7 +762,12 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                     "cached": True,
                     "fetched": True,
                     "source": url,
-                    "note": "Steps from eqlwiki Plane of Sky class-test table (EQL simplified turn-ins).",
+                    "note": (
+                        "Steps from eqlwiki Plane of Sky class-test table "
+                        "(EQL simplified turn-ins). Collect steps use catalog/"
+                        "eqlwiki item drops and documented sky island tags only."
+                    ),
+                    "format_version": GUIDE_FORMAT_VERSION,
                 }
                 _write_cached_guide(name, guide)
                 return guide
@@ -381,7 +775,10 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
             section = _extract_quest_section(html, name)
             text = _html_to_text(section)
             steps = _steps_from_text(text, name)
-            components = _parse_component_rows(section)
+            components = _enrich_component_rows(
+                _parse_component_rows(section),
+                fetch=fetch,
+            )
             if not steps and not components:
                 last_err = f"no steps parsed from {url}"
                 if name.lower().replace(" ", "_") in url.lower():
@@ -393,6 +790,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                         "cached": True,
                         "fetched": True,
                         "source": url,
+                        "format_version": GUIDE_FORMAT_VERSION,
                     }
                     _write_cached_guide(name, guide)
                     return guide
@@ -406,6 +804,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 "fetched": True,
                 "source": url,
                 "note": "Steps extracted from eqlwiki; verify in-game. Never invented.",
+                "format_version": GUIDE_FORMAT_VERSION,
             }
             _write_cached_guide(name, guide)
             return guide
@@ -419,6 +818,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
             "fetched": False,
             "error": last_err,
             "note": "Quest name known from item DB; steps not available locally. Open wiki URL if present.",
+            "format_version": GUIDE_FORMAT_VERSION,
         }
         _write_cached_guide(name, guide)
         return guide
@@ -432,6 +832,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
             "fetched": False,
             "error": f"quest guide unavailable: {e}",
             "note": "Quest wiki/cache unavailable; no invented steps.",
+            "format_version": GUIDE_FORMAT_VERSION,
         }
 
 

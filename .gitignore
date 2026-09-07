@@ -32,9 +32,9 @@ data/log-research
 .idea/
 .vscode/
 
-# Fetched item icons (keep directory)
-data/item-images/*
-!data/item-images/.gitkeep
+# Seed item icons ARE committed so packaged Windows builds show BiS pictures offline.
+# Runtime cache may still grow under Electron userData / EQ_IMAGES_DIR.
+# data/item-images/*  (no longer ignored — ship with app)
 
 # Cached quest guides (keep directory)
 data/quest-guides/*

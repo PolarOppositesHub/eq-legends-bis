@@ -39,6 +39,14 @@ def main():
             shutil.rmtree(dst_zr)
         shutil.copytree(zr, dst_zr, ignore=lambda d, names: {n for n in names if n.startswith('.') or n.startswith('_batch')})
         print('  zone-research ->', dst_zr)
+    # Seed item icons so packaged installs show BiS pictures without first-run wiki fetches.
+    icons_src = ROOT / 'data' / 'item-images'
+    if icons_src.is_dir() and any(icons_src.glob('*.png')):
+        icons_dst = RES / 'data' / 'item-images'
+        if icons_dst.exists():
+            shutil.rmtree(icons_dst)
+        shutil.copytree(icons_src, icons_dst)
+        print('  item-images ->', icons_dst, f'({sum(1 for _ in icons_dst.glob("*.png"))} png)')
     lr = ROOT / 'data' / 'log-research'
     if not lr.exists():
         lr = LEGENDS / 'log-research'
