@@ -322,11 +322,52 @@ def _pick_wiki_image(html: str) -> str | None:
     return None
 
 
+def _normalize_image_blob(blob: bytes, ext: str) -> bytes:
+    """Re-encode icons to 8-bit PNG/JPEG so Chromium can display them.
+
+    eqlwiki Item_### assets are often 16-bit RGBA PNGs; browsers leave those blank.
+    """
+    if not blob:
+        return blob
+    try:
+        from PIL import Image
+        import io
+
+        im = Image.open(io.BytesIO(blob))
+        im.load()
+        if im.mode not in ("RGB", "RGBA"):
+            im = im.convert("RGBA" if "A" in (im.mode or "") or im.mode == "P" else "RGB")
+        # Force 8-bit channels via a fresh RGBA/RGB canvas
+        if im.mode == "RGBA":
+            out_im = Image.new("RGBA", im.size)
+            out_im.paste(im, (0, 0))
+        else:
+            out_im = Image.new("RGB", im.size)
+            out_im.paste(im.convert("RGB"), (0, 0))
+        buf = io.BytesIO()
+        if ext in (".jpg", ".jpeg"):
+            out_im.convert("RGB").save(buf, format="JPEG", quality=92)
+        else:
+            out_im.save(buf, format="PNG", optimize=True)
+        return buf.getvalue() or blob
+    except Exception:
+        return blob
+
+
 def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
     """Return local image path info; optionally fetch from eqlwiki and save."""
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     existing = local_image_path(name)
     if existing:
+        # Re-encode legacy 16-bit wiki PNGs already on disk (Chromium blank otherwise).
+        try:
+            raw = existing.read_bytes()
+            if existing.suffix.lower() == ".png" and len(raw) > 25 and raw[24] == 16:
+                fixed = _normalize_image_blob(raw, ".png")
+                if fixed and fixed != raw:
+                    existing.write_bytes(fixed)
+        except Exception:
+            pass
         return {
             "name": name,
             "cached": True,
@@ -370,6 +411,12 @@ def ensure_item_image(name: str, *, fetch: bool = True) -> dict[str, Any]:
         if e in low:
             ext = e if e != ".jpeg" else ".jpg"
             break
+    # Always store browser-safe 8-bit PNG for wiki icons (gif/webp → png).
+    if ext in (".gif", ".webp", ".png"):
+        ext = ".png"
+        blob = _normalize_image_blob(blob, ".png")
+    elif ext in (".jpg", ".jpeg"):
+        blob = _normalize_image_blob(blob, ".jpg")
     dest = IMAGES_DIR / f"{_slug(name)}{ext}"
     dest.write_bytes(blob)
     return {
