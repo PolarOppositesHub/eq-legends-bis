@@ -40,6 +40,16 @@
 - [ ] If an equipable item has **no picture saved** in the DB/assets: look it up from a reliable source, **download/save** it into the project/data store, and reuse that image throughout the app (BiS, Sim, Item Search, etc.).
 - [ ] Do not leave “hover over stats” as the visible content; that was only meant as the interaction cue, not the tooltip body.
 
+### BiS modes — Max all stats, Priority stats, AI choice
+- [ ] BiS mode currently has **Max all stats** and **Priority stats**. Keep both; refine Max all; add a third mode.
+- [ ] **Max all stats:** do **not** treat every stat equally. Weight by the **important/primary stats of the three classes in the selected trio** (look up each class’s primary stats from reliable EQ Legends sources if not already in-app).
+- [ ] **AC and HP:** matter for **all** classes; weigh **heavier for tank classes** in the trio.
+- [ ] **HP regen:** add a **toggleable checkbox** (e.g. “Maximize HP regen”) that, when on, includes/weights HP regen in BiS gear ranking.
+- [ ] **Mana / mana regen:** only weigh for **mana-using classes** in the trio; ignore for non-mana classes.
+- [ ] **Priority stats mode:** still uses the user-selected primary/secondary/tertiary tiers (see above).
+- [ ] **New third mode — AI choice:** pick BiS per slot for every trio using best available knowledge of class roles, primary stats, tank vs mana needs, EQ Legends item/data realities, and trio synergy — never invent item stats.
+- [ ] Cross-check AI choice results against other online EQ Legends tools (including community “EQ Legends” gear/BiS tools). Answers should be similar, or differ only with a clear documented reason.
+
 ### Josh testing notes (paste below as they arrive)
 - Inventory import: some items missing from view — show all even if not in DB.
 - Upgrade priorities: not good — looks like AC/HP only; should go off BiS list for what to upgrade to.
@@ -47,6 +57,7 @@
 - BiS priority stats: allow 3 primary / 3 secondary / 3 tertiary selectable stats; rank in that order (e.g. STR+STA then INT+WIS then CHA).
 - Left pane: BiS + Simulator selectable; add Item Search with full game item DB searchable.
 - BiS alternates hover: show real DB stats + item picture on name hover (not “hover over stats” text); fetch/save missing item images for reuse app-wide.
+- BiS modes: Max all weights trio primary stats + AC/HP (heavier for tanks); HP regen checkbox; mana/mana regen only for mana classes; add AI choice mode cross-checked vs online EQ Legends tools.
 
 ## 1.0.3 — Zone details, inventory import, theme, updater (2026-09-06) — shipped
 
