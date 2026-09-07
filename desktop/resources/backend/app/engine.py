@@ -28,6 +28,7 @@ from .races import RACES, get_races_payload, race_bases  # noqa: E402
 from . import weapon_dps as wdps  # noqa: E402
 from . import scoring as sc  # noqa: E402
 from . import class_roles as class_roles  # noqa: E402
+from . import ac_softcap as ac_softcap  # noqa: E402
 
 ALL_CLASSES = list(bx.ALL_CLASSES)
 DEFAULT_TRIO = list(bx.DEFAULT_TRIO)
@@ -365,6 +366,7 @@ def recommend_bis(
         tertiary_stats=tertiary_stats,
         maximize_hp_regen=maximize_hp_regen,
         priority_stat=stat_key if mode_n == "priority" else None,
+        character_level=character_level,
     )
     mode_label = {
         "max": "Max All Stats",
@@ -659,6 +661,18 @@ def recommend_bis(
         },
         "upgrade": upgrade,
         "character_level": character_level,
+        "ac_softcap": {
+            **ac_softcap.softcap_payload(
+                character_level,
+                cleaned,
+                combat_stability_rank=int(score_opts.get("combat_stability_rank") or 3),
+                physical_enhancement=bool(score_opts.get("physical_enhancement", True)),
+            ),
+            "loadout_worn_ac": round(sum(
+                float((s.get("stats_at_upgrade") or s.get("stats_plus10") or {}).get("AC") or 0)
+                for s in slots_out
+            ), 2),
+        },
         "prefer_ranged_damage": prefer_ranged_damage,
         "dual_wield_enabled": dw_enabled,
         "dual_wield_eval": (
@@ -921,13 +935,18 @@ def meta_payload() -> dict:
                 "RANGE if prefer ranged: ratio-only."
             ),
             "max_armor": (
-                "Class-weighted attrs from races.json classStats; HP bump + light AC "
-                "(tank ~1.7 / others ~1.45) so attrs/STA compete; mana only for mana classes; "
-                "optional HP regen toggle"
+                "Class-weighted attrs from races.json classStats; HP bump for tanks; "
+                "AC softcap-aware (eqlwiki L≤50: level×6+25, +CS/+PE AAs — hit softcap then "
+                "prefer other stats; overcap lightly valued via class post-cap return); "
+                "mana only for mana classes; optional HP regen toggle"
             ),
             "ai_armor": (
-                "Role-aware blend of trio primaries + STA/HP tank nudges (light AC); "
-                "cross-check vs community EQ Legends tools when validating"
+                "Role-aware blend of trio primaries + STA/HP tank nudges; same AC softcap "
+                "model as Max All; cross-check vs community EQ Legends tools when validating"
+            ),
+            "ac_softcap": (
+                "Working model from eqlwiki Statistics/AC + Alternate Advancement "
+                "(Combat Stability + Physical Enhancement). Combat Agility is avoidance only."
             ),
             "max_weapon": "Same as priority_weapon for damaging PRIMARY/SECONDARY/RANGE",
             "gear_eligibility": "armor/jewelry: intersection (all classes); weapons: any class",

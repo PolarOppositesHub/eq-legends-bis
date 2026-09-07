@@ -13,11 +13,12 @@ Josh reported after updating to 1.0.4: no item images, no Item Search, tabs not 
 - Defaults from selected classes via `GET /api/priority-defaults` (classStats ranking)
 - Fixed-position hover tip (stats + icon) on BiS / alternate names — not clipped
 - Prefetch item icons after BiS; SPA `Cache-Control: no-store` on index.html
-- Tank Max-all / AI: AC rebalanced (tank ~1.7 / others ~1.45); AI prefers STA/HP over AC stack
+- **AC softcap-aware** Max All / AI (`backend/app/ac_softcap.py`): eqlwiki `level×6+25` (L≤50) + Combat Stability (+2/5/10%) + Physical Enhancement (+2%); BiS assumes max AAs → L50 target **364**; fill softcap first, then prefer STA/HP/attrs; overcap lightly valued; Combat Agility = avoidance only
 
 Smoke (2026-09-07):
 - meta version **1.0.5**; Warrior/Cleric/Wizard defaults → primary STA,INT,STR · secondary WIS,AGI,DEX · tertiary CHA
-- vite build → `frontend/dist` assets index-XHF-qixJ.js / index-C9glluE6.css
+- Softcap: under-cap prefers AC fill; past softcap prefers balanced; Max All W/C/W worn AC ≈ 388 vs target 364
+- vite build → `frontend/dist` assets
 - desktop/resources/backend/app synced with canonical backend/app
 
 ## Dual wield vs 2H (unchanged model, L50 cap)

@@ -4,7 +4,15 @@
 
 Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Slot / Simulator / Item Search, Mode includes **AI Choice**, Priority shows Primary/Secondary/Tertiary dropdowns.
 
-## 1.0.5 — UI visibility, class priority defaults, hover tips (2026-09-07)
+## 1.0.5 — UI visibility, class priority defaults, hover tips, AC softcap (2026-09-07)
+
+### AC softcap (Max All / AI) — Josh feedback
+- [x] Do not over-emphasize tank AC at the expense of everything else.
+- [x] Respect AC soft caps; include AA soft-cap increases.
+- [x] Working model (eqlwiki): softcap ≈ `level × 6 + 25` (L≤50); Combat Stability +2/+5/+10%; Physical Enhancement +2%; BiS assumes max CS+PE → L50 target **364**.
+- [x] Loadout greedy: value AC fully until softcap, then lightly (class post-cap return); prefer STA/HP/attrs after.
+- [x] Combat Agility = avoidance only (does not raise softcap).
+- [ ] Josh spot-check softcap numbers vs in-game EQL (wiki notes caps may differ).
 
 ### Josh feedback after 1.0.4 update
 - [x] No item images → prefetch icons after BiS; hover tip shows icon; eqlwiki cache under data/item-images/ (needs network first time).
@@ -14,7 +22,7 @@ Confirm after install: header badge shows **UI 1.0.5**, left Menu has Best in Sl
 - [x] Only Max All + Priority → Mode select includes **AI Choice** + hint text.
 - [x] Priority not 3×3 → Primary / Secondary / Tertiary (3 dropdowns each), all selectable.
 - [x] Defaults from selected classes → `GET /api/priority-defaults` ranks classStats; most important → primary, next → secondary, next → tertiary.
-- [x] Tank AC over-emphasized → rebalanced: Max All AC **1.7 tank / 1.45 others** (was 2.6/2.0); AI tank role_bonus AC **0.25** (was 1.0) with stronger STA/HP; tertiary seed STA+HP (not AC+HP).
+- [x] Tank AC over-emphasized → softcap-aware AC (hit AA-raised softcap, then other stats) + STA/HP focus.
 - [x] Stale UI risk → SPA index `Cache-Control: no-store`; version badge **UI 1.0.5**.
 
 ## Prior version (after 1.0.3) → **1.0.4** (shipped; rebuild superseded by 1.0.5)
