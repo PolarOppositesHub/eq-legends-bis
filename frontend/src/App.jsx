@@ -370,6 +370,8 @@ export default function App() {
 
   const [race, setRace] = useState('Human')
   const [characterLevel, setCharacterLevel] = useState(MAX_LEVEL)
+  const [castBuffsMode, setCastBuffsMode] = useState('off') // off | quick
+  const [assumeMaxAas, setAssumeMaxAas] = useState(true)
   const [equipment, setEquipment] = useState(EMPTY_EQ)
   const [slotItems, setSlotItems] = useState({})
   const [bisOverrides, setBisOverrides] = useState({})
@@ -586,6 +588,8 @@ export default function App() {
         upgrade,
         character_level: characterLevel,
         equipment,
+        cast_buffs: castBuffsMode,
+        assume_max_aas: assumeMaxAas,
       })
       setSim(data)
     } catch (e) {
@@ -593,11 +597,11 @@ export default function App() {
     } finally {
       setLoading(false)
     }
-  }, [classes, race, upgrade, characterLevel, equipment])
+  }, [classes, race, upgrade, characterLevel, equipment, castBuffsMode, assumeMaxAas])
 
   useEffect(() => {
     if (tab === 'sim' && Object.keys(equipment).length) runSim()
-  }, [tab, upgrade, race, characterLevel]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, upgrade, race, characterLevel, castBuffsMode, assumeMaxAas]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearEquipment = () => {
     setEquipment({})
@@ -934,7 +938,7 @@ export default function App() {
             {meta?.version ? ` · v${meta.version}` : ' · v1.0.5'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.7</span>
+        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.8</span>
       </header>
 
       <div className="app-shell">
@@ -1105,7 +1109,21 @@ export default function App() {
                         <option key={lv} value={lv}>{lv}</option>
                       ))}
                     </select>
-                    <span className="muted" style={{ fontSize: '0.75rem' }}>HP = gear only</span>
+                    <span className="muted" style={{ fontSize: '0.75rem' }}>Pools use race+class+STA (EQLT)</span>
+                  </div>
+                  <div className="field">
+                    <label>Cast Buffs</label>
+                    <select value={castBuffsMode} onChange={(e) => setCastBuffsMode(e.target.value)}>
+                      <option value="off">Off</option>
+                      <option value="quick">Quick Buff (max lines)</option>
+                    </select>
+                    <span className="muted" style={{ fontSize: '0.75rem' }}>Trio casters → best stacking lines</span>
+                  </div>
+                  <div className="field">
+                    <label className="check">
+                      <input type="checkbox" checked={assumeMaxAas} onChange={(e) => setAssumeMaxAas(e.target.checked)} />
+                      Max AAs (sheet)
+                    </label>
                   </div>
                   <div className="field">
                     <label>Upgrade +0…+10</label>
@@ -1400,7 +1418,7 @@ export default function App() {
                 </div>
                 <p className="muted">
                   Import <code>Inventory.txt</code> from in-game <code>/outputfile inventory</code>.
-                  Character level {characterLevel} is recorded only — HP/Mana/END are <strong>gear-only</strong>.
+                  Live Totals use race + class allotments + EQLT HP/Mana/END formulas. Turn on <strong>Cast Buffs</strong> for max trio lines.
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                   <button type="button" onClick={clearEquipment}>Clear equipment</button>
@@ -1559,16 +1577,23 @@ export default function App() {
                       {(sim.haste?.candidates?.length || 0) > 1 && (
                         <span className="badge warn">Extra haste ignored</span>
                       )}
-                      <span className="badge warn">HP/Mana/END/AC = gear-only (no racial/level pools)</span>
-                      {sim.character_level != null && (
-                        <span className="badge">Level {sim.character_level} (display only)</span>
+                      <span className="badge">Pools: race+class+STA/INT/WIS (EQLT)</span>
+                      {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' && (
+                        <span className="badge">Cast Buffs: {sim.cast_buffs.active?.length || 0} active</span>
                       )}
+                      {sim.assume_max_aas && <span className="badge">Max AAs</span>}
+                      {sim.character_level != null && (
+                        <span className="badge">Level {sim.character_level}</span>
+                      )}
+                      {sim.haste?.buff_pct ? (
+                        <span className="badge">Spell haste +{sim.haste.buff_pct}%</span>
+                      ) : null}
                     </div>
                     <div className="totals">
                       {['HP','MANA','END','AC','STR','STA','AGI','DEX','WIS','INT','CHA','SVF','SVC','SVM','SVP','SVD','SVV','ATK'].map((k) => (
                         <div className="tot" key={k}>
                           <div className="k">
-                            {k === 'MANA' ? 'Mana' : k === 'END' ? 'Endurance' : k === 'HP' ? 'HP (gear)' : k}
+                            {k === 'MANA' ? 'Mana' : k === 'END' ? 'Endurance' : k === 'HP' ? 'HP' : k}
                           </div>
                           <div className="v">{sim.totals?.[k] ?? 0}</div>
                         </div>
@@ -1578,6 +1603,20 @@ export default function App() {
                         <div className="v">{sim.haste?.applied_pct || 0}%</div>
                       </div>
                     </div>
+                    {sim.cast_buffs?.active?.length > 0 && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <h3 style={{ fontSize: '0.95rem' }}>Active Cast Buffs</h3>
+                        <ul className="muted" style={{ margin: '0.35rem 0 0', paddingLeft: '1.1rem' }}>
+                          {sim.cast_buffs.active.map((b) => (
+                            <li key={b.id}>
+                              <strong>{b.name}</strong>
+                              {b.classes?.length ? ` · ${(b.classes || []).join(', ')}` : ''}
+                              {b.tooltip ? ` — ${b.tooltip}` : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {sim.weapons?.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
                         <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios @ +{upgrade}</h3>
@@ -1801,7 +1840,7 @@ export default function App() {
             Item stats from decoded JSON only. Zone details from zone-research (never invented).
             Quest steps from eqlwiki when available (cached; never invented).
             Race attrs/resists: eqlegendstools (verified; matches eqlwiki).
-            HP/Mana/END/AC racial &amp; level pools = not applied (no verified formula).
+            HP/Mana/END pools: eqlegendstools char-sheet formulas (race+class+STA/INT/WIS). Cast Buffs from their spellBuffs catalog.
             Excel export: <code>.venv/bin/python scripts/export_xlsx.py</code>
           </footer>
         </div>

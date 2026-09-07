@@ -1,0 +1,1226 @@
+{
+  "source": "https://eqlegendstools.com/char-sheet/ (decoded spellBuffs)",
+  "verified": true,
+  "schemaVersion": 1,
+  "buffs": [
+    {
+      "id": "resolution",
+      "name": "Resolution",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resolution adds +254 HP and +14 AC.",
+      "effects": {
+        "HP": 254,
+        "AC": 14
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 4
+      }
+    },
+    {
+      "id": "symbol-of-naltron",
+      "name": "Symbol of Naltron",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Symbol of Naltron adds +535 HP.",
+      "effects": {
+        "HP": 535
+      },
+      "stacking": {
+        "group": "symbol",
+        "priority": 2
+      }
+    },
+    {
+      "id": "shield-of-words",
+      "name": "Shield of Words",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Shield of Words adds +26 AC.",
+      "effects": {
+        "AC": 26
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 6
+      }
+    },
+    {
+      "id": "yaulp-iii",
+      "name": "Yaulp III",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Yaulp III adds +10 AC and +30 STR.",
+      "effects": {
+        "AC": 10,
+        "STR": 30
+      },
+      "stacking": {
+        "group": "yaulp",
+        "priority": 3
+      }
+    },
+    {
+      "id": "armor-of-the-faithful",
+      "name": "Armor of the Faithful",
+      "classes": [
+        "Cleric"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Armor of the Faithful adds +19 AC and +260 HP.",
+      "effects": {
+        "AC": 19,
+        "HP": 260
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 3
+      }
+    },
+    {
+      "id": "resist-magic",
+      "name": "Resist Magic",
+      "classes": [
+        "Cleric",
+        "Shaman",
+        "Druid"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resist Magic adds +40 SV Magic.",
+      "effects": {
+        "SVM": 40
+      },
+      "stacking": {
+        "group": "resist-magic",
+        "priority": 2
+      }
+    },
+    {
+      "id": "resist-cold",
+      "name": "Resist Cold",
+      "classes": [
+        "Cleric",
+        "Shaman",
+        "Necromancer",
+        "Druid"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resist Cold adds +40 SV Cold.",
+      "effects": {
+        "SVC": 40
+      },
+      "stacking": {
+        "group": "resist-cold",
+        "priority": 2
+      }
+    },
+    {
+      "id": "resist-poison",
+      "name": "Resist Poison",
+      "classes": [
+        "Cleric",
+        "Shaman",
+        "Druid"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resist Poison adds +40 SV Poison.",
+      "effects": {
+        "SVP": 40
+      },
+      "stacking": {
+        "group": "resist-poison",
+        "priority": 2
+      }
+    },
+    {
+      "id": "resist-disease",
+      "name": "Resist Disease",
+      "classes": [
+        "Cleric",
+        "Shaman",
+        "Necromancer",
+        "Druid",
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resist Disease adds +40 SV Disease.",
+      "effects": {
+        "SVD": 40
+      },
+      "stacking": {
+        "group": "resist-disease",
+        "priority": 2
+      }
+    },
+    {
+      "id": "resist-fire",
+      "name": "Resist Fire",
+      "classes": [
+        "Cleric",
+        "Shaman",
+        "Druid",
+        "Ranger"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Resist Fire adds +40 SV Fire.",
+      "effects": {
+        "SVF": 40
+      },
+      "stacking": {
+        "group": "resist-fire",
+        "priority": 2
+      }
+    },
+    {
+      "id": "infusion-of-spirit",
+      "name": "Infusion of Spirit",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Infusion of Spirit adds +50 STR, +45 STA and +55 DEX.",
+      "effects": {
+        "STR": 50,
+        "STA": 45,
+        "DEX": 55
+      }
+    },
+    {
+      "id": "agility",
+      "name": "Agility",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Agility adds +45 AGI.",
+      "effects": {
+        "AGI": 45
+      },
+      "stacking": {
+        "group": "agility",
+        "priority": 2
+      }
+    },
+    {
+      "id": "stamina",
+      "name": "Stamina",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Stamina adds +40 STA.",
+      "effects": {
+        "STA": 40
+      },
+      "stacking": {
+        "group": "stamina",
+        "priority": 2
+      }
+    },
+    {
+      "id": "dexterity",
+      "name": "Dexterity",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Dexterity adds +50 DEX.",
+      "effects": {
+        "DEX": 50
+      },
+      "stacking": {
+        "group": "dexterity",
+        "priority": 2
+      }
+    },
+    {
+      "id": "strength",
+      "name": "Strength",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Strength adds +67 STR.",
+      "effects": {
+        "STR": 67
+      },
+      "stacking": {
+        "group": "strength",
+        "priority": 4
+      }
+    },
+    {
+      "id": "talisman-of-jasinth",
+      "name": "Talisman of Jasinth",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Talisman of Jasinth adds +45 SV Disease.",
+      "effects": {
+        "SVD": 45
+      },
+      "stacking": {
+        "group": "resist-disease",
+        "priority": 3
+      }
+    },
+    {
+      "id": "guardian",
+      "name": "Guardian",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Guardian adds +20 AC.",
+      "effects": {
+        "AC": 20
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 4
+      }
+    },
+    {
+      "id": "talisman-of-altuna",
+      "name": "Talisman of Altuna",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Talisman of Altuna adds +254 HP.",
+      "effects": {
+        "HP": 254
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 1
+      }
+    },
+    {
+      "id": "rage",
+      "name": "Rage",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Rage adds +15 AC, +51 STR, +52 DEX and +52 AGI.",
+      "effects": {
+        "AC": 15,
+        "STR": 51,
+        "DEX": 52,
+        "AGI": 52
+      },
+      "stacking": {
+        "group": "rage",
+        "priority": 2
+      }
+    },
+    {
+      "id": "chloroplast",
+      "name": "Chloroplast",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "CHLOROPLAST.png",
+      "tooltip": "Chloroplast adds +16 HP regen per tick and +10 Endurance regen per tick.",
+      "effects": {
+        "HP_REGEN": 16,
+        "END_REGEN": 10
+      },
+      "stacking": {
+        "group": "chloroplast",
+        "priority": 1
+      }
+    },
+    {
+      "id": "alacrity",
+      "name": "Alacrity",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Alacrity adds +40% Haste.",
+      "effects": {
+        "HASTE": 40
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 40
+      }
+    },
+    {
+      "id": "form-of-the-bear",
+      "name": "Form of the Bear",
+      "classes": [
+        "Shaman"
+      ],
+      "icon": "ILLUSION_FIREFIST_FORMOFTHEBEAR.png",
+      "tooltip": "Form of the Bear adds +1 HP regen per tick and +5 WIS.",
+      "effects": {
+        "HP_REGEN": 1,
+        "WIS": 5
+      },
+      "stacking": {
+        "excludes": [
+          "phantom-plate",
+          "boon-of-the-garou",
+          "illusion-dry-bone",
+          "wolf-form"
+        ]
+      }
+    },
+    {
+      "id": "elemental-armor",
+      "name": "Elemental Armor",
+      "classes": [
+        "Wizard",
+        "Magician"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Elemental Armor adds +30 SV Fire and +30 SV Cold.",
+      "effects": {
+        "SVF": 30,
+        "SVC": 30
+      }
+    },
+    {
+      "id": "arch-shielding",
+      "name": "Arch Shielding",
+      "classes": [
+        "Wizard",
+        "Magician",
+        "Enchanter",
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Arch Shielding adds +150 HP, +22 AC and +20 SV Magic.",
+      "effects": {
+        "HP": 150,
+        "AC": 22,
+        "SVM": 20
+      },
+      "stacking": {
+        "group": "shielding",
+        "priority": 2,
+        "excludes": [
+          "thorncoat",
+          "spikecoat"
+        ]
+      }
+    },
+    {
+      "id": "phantom-plate",
+      "name": "Phantom Plate",
+      "classes": [
+        "Magician"
+      ],
+      "icon": "ILLUSION_FIREFIST_FORMOFTHEBEAR.png",
+      "tooltip": "Phantom Plate adds +15 AC and +3 HP regen per tick.",
+      "effects": {
+        "AC": 15,
+        "HP_REGEN": 3
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 1,
+        "excludes": [
+          "form-of-the-bear"
+        ]
+      }
+    },
+    {
+      "id": "shield-of-lava",
+      "name": "Shield of Lava",
+      "classes": [
+        "Magician"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Shield of Lava adds +25 SV Fire.",
+      "effects": {
+        "SVF": 25
+      }
+    },
+    {
+      "id": "group-resist-magic",
+      "name": "Group Resist Magic",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Group Resist Magic adds +55 SV Magic.",
+      "effects": {
+        "SVM": 55
+      },
+      "stacking": {
+        "group": "resist-magic",
+        "priority": 3
+      }
+    },
+    {
+      "id": "shadow",
+      "name": "Shadow",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Shadow adds +16 AC.",
+      "effects": {
+        "AC": 16
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 3
+      }
+    },
+    {
+      "id": "boon-of-the-garou",
+      "name": "Boon of the Garou",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "ILLUSION_FIREFIST_FORMOFTHEBEAR.png",
+      "tooltip": "Boon of the Garou adds +100 DEX and +30 ATK. It also adds a Lifetap Strike proc while a primary weapon is equipped.",
+      "effects": {
+        "DEX": 100,
+        "ATK": 30
+      },
+      "stacking": {
+        "excludes": [
+          "form-of-the-great-wolf",
+          "illusion-dry-bone",
+          "form-of-the-bear"
+        ]
+      },
+      "proc": {
+        "name": "Lifetap Strike",
+        "tooltip": "Lifetap Strike is a 30 damage lifetap proc."
+      }
+    },
+    {
+      "id": "brilliance",
+      "name": "Brilliance",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "CLARITY_BRILLIANCE_GIFTOFMANA.png",
+      "tooltip": "Brilliance adds +13 INT and +7 WIS.",
+      "effects": {
+        "INT": 13,
+        "WIS": 7
+      }
+    },
+    {
+      "id": "illusion-dry-bone",
+      "name": "Illusion: Dry Bone",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "ILLUSION_FIREFIST_FORMOFTHEBEAR.png",
+      "tooltip": "Illusion: Dry Bone adds +25 SV Fire.",
+      "effects": {
+        "SVF": 25
+      },
+      "stacking": {
+        "excludes": [
+          "boon-of-the-garou",
+          "form-of-the-bear"
+        ]
+      }
+    },
+    {
+      "id": "clarity",
+      "name": "Clarity",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "CLARITY_BRILLIANCE_GIFTOFMANA.png",
+      "tooltip": "Clarity adds +9 mana regen per tick.",
+      "effects": {
+        "MANA_REGEN": 9
+      },
+      "stacking": {
+        "excludes": [
+          "lich"
+        ]
+      }
+    },
+    {
+      "id": "augmentation",
+      "name": "Augmentation",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Augmentation adds +30 AGI, +7 AC and +27% Haste.",
+      "effects": {
+        "AGI": 30,
+        "AC": 7,
+        "HASTE": 27
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 27
+      }
+    },
+    {
+      "id": "swift-like-the-wind",
+      "name": "Swift Like the Wind",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Swift Like the Wind adds +60% Haste.",
+      "effects": {
+        "HASTE": 60
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 60
+      }
+    },
+    {
+      "id": "gift-of-magic",
+      "name": "Gift of Magic",
+      "classes": [
+        "Enchanter"
+      ],
+      "icon": "CLARITY_BRILLIANCE_GIFTOFMANA.png",
+      "tooltip": "Gift of Magic adds +50 mana.",
+      "effects": {
+        "MANA": 50
+      }
+    },
+    {
+      "id": "grim-aura",
+      "name": "Grim Aura",
+      "classes": [
+        "Necromancer",
+        "Shadow Knight"
+      ],
+      "icon": "GRIMAURA.png",
+      "tooltip": "Grim Aura adds +10 ATK.",
+      "effects": {
+        "ATK": 10
+      },
+      "stacking": {
+        "excludes": [
+          "firefist",
+          "natures-precision"
+        ]
+      }
+    },
+    {
+      "id": "lich",
+      "name": "Lich",
+      "classes": [
+        "Necromancer"
+      ],
+      "icon": "LICH.png",
+      "tooltip": "Lich adds +20 mana regen per tick and -22 HP regen per tick.",
+      "effects": {
+        "MANA_REGEN": 20,
+        "HP_REGEN": -22
+      },
+      "stacking": {
+        "excludes": [
+          "clarity"
+        ]
+      }
+    },
+    {
+      "id": "dead-men-floating",
+      "name": "Dead Men Floating",
+      "classes": [
+        "Necromancer"
+      ],
+      "icon": "DEADMENFLOATING.png",
+      "tooltip": "Dead Men Floating adds +70 SV Poison.",
+      "effects": {
+        "SVP": 70
+      }
+    },
+    {
+      "id": "spirit-armor",
+      "name": "Spirit Armor",
+      "classes": [
+        "Necromancer"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Spirit Armor adds +11 AC.",
+      "effects": {
+        "AC": 11
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 1
+      }
+    },
+    {
+      "id": "protection-of-nature",
+      "name": "Protection of Nature",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Protection of Nature adds +13 AC, +250 HP and +2 HP regen per tick.",
+      "effects": {
+        "AC": 13,
+        "HP": 250,
+        "HP_REGEN": 2
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 3
+      }
+    },
+    {
+      "id": "thorncoat",
+      "name": "Thorncoat",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "THORNCOAT_SPIKECOAT.png",
+      "tooltip": "Thorncoat adds +26 AC.",
+      "effects": {
+        "AC": 26
+      },
+      "stacking": {
+        "excludes": [
+          "spikecoat",
+          "arch-shielding"
+        ]
+      }
+    },
+    {
+      "id": "pack-chloroplast",
+      "name": "Pack Chloroplast",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "CHLOROPLAST.png",
+      "tooltip": "Pack Chloroplast adds +16 HP regen per tick and +10 Endurance regen per tick.",
+      "effects": {
+        "HP_REGEN": 16,
+        "END_REGEN": 10
+      },
+      "stacking": {
+        "group": "chloroplast",
+        "priority": 2
+      }
+    },
+    {
+      "id": "storm-strength",
+      "name": "Storm Strength",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Storm Strength adds +35 STR.",
+      "effects": {
+        "STR": 35
+      },
+      "stacking": {
+        "group": "strength",
+        "priority": 3
+      }
+    },
+    {
+      "id": "form-of-the-great-wolf",
+      "name": "Form of the Great Wolf",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "WOLF_WOLFFORM_GREATWOLF_SPIRITUALLIGHT.png",
+      "tooltip": "Form of the Great Wolf adds +51 ATK. Bonuses are granted by Illusion Benefit: Dena.",
+      "effects": {
+        "ATK": 51
+      },
+      "stacking": {
+        "excludes": [
+          "boon-of-the-garou"
+        ]
+      }
+    },
+    {
+      "id": "firefist",
+      "name": "Firefist",
+      "classes": [
+        "Druid"
+      ],
+      "icon": "ILLUSION_FIREFIST_FORMOFTHEBEAR.png",
+      "tooltip": "Firefist adds +10 ATK.",
+      "effects": {
+        "ATK": 10
+      },
+      "stacking": {
+        "excludes": [
+          "grim-aura"
+        ]
+      }
+    },
+    {
+      "id": "protect",
+      "name": "Protect",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Protect adds +11 AC.",
+      "effects": {
+        "AC": 11
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 1
+      }
+    },
+    {
+      "id": "frenzy",
+      "name": "Frenzy",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Frenzy adds +8 AC, +25 AGI, +27 STR and +25 DEX.",
+      "effects": {
+        "AC": 8,
+        "AGI": 25,
+        "STR": 27,
+        "DEX": 25
+      },
+      "stacking": {
+        "group": "rage",
+        "priority": 1
+      }
+    },
+    {
+      "id": "spiritual-brawn",
+      "name": "Spiritual Brawn",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Spiritual Brawn adds +10 ATK and +75 HP.",
+      "effects": {
+        "ATK": 10,
+        "HP": 75
+      },
+      "stacking": {
+        "group": "hp-buff-two",
+        "priority": 1
+      }
+    },
+    {
+      "id": "spiritual-light",
+      "name": "Spiritual Light",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "WOLF_WOLFFORM_GREATWOLF_SPIRITUALLIGHT.png",
+      "tooltip": "Spiritual Light adds +3 mana, HP and Endurance regen per tick.",
+      "effects": {
+        "MANA_REGEN": 3,
+        "HP_REGEN": 3,
+        "END_REGEN": 3
+      }
+    },
+    {
+      "id": "spirit-of-monkey",
+      "name": "Spirit of Monkey",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Spirit of Monkey adds +20 DEX.",
+      "effects": {
+        "DEX": 20
+      },
+      "stacking": {
+        "group": "dexterity",
+        "priority": 1
+      }
+    },
+    {
+      "id": "spirit-of-ox",
+      "name": "Spirit of Ox",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Spirit of Ox adds +23 STA.",
+      "effects": {
+        "STA": 23
+      },
+      "stacking": {
+        "group": "stamina",
+        "priority": 1
+      }
+    },
+    {
+      "id": "endure-magic",
+      "name": "Endure Magic",
+      "classes": [
+        "Beastlord",
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Endure Magic adds +20 SV Magic.",
+      "effects": {
+        "SVM": 20
+      },
+      "stacking": {
+        "group": "resist-magic",
+        "priority": 1,
+        "redundantWhenAvailable": "resist-magic"
+      }
+    },
+    {
+      "id": "spirit-strength",
+      "name": "Spirit Strength",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Spirit Strength adds +18 STR.",
+      "effects": {
+        "STR": 18
+      },
+      "stacking": {
+        "group": "strength",
+        "priority": 1
+      }
+    },
+    {
+      "id": "endure-disease",
+      "name": "Endure Disease",
+      "classes": [
+        "Beastlord",
+        "Shadow Knight"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Endure Disease adds +20 SV Disease.",
+      "effects": {
+        "SVD": 20
+      },
+      "stacking": {
+        "group": "resist-disease",
+        "priority": 1,
+        "redundantWhenAvailable": "resist-disease"
+      }
+    },
+    {
+      "id": "endure-poison",
+      "name": "Endure Poison",
+      "classes": [
+        "Beastlord",
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Endure Poison adds +20 SV Poison.",
+      "effects": {
+        "SVP": 20
+      },
+      "stacking": {
+        "group": "resist-poison",
+        "priority": 1,
+        "redundantWhenAvailable": "resist-poison"
+      }
+    },
+    {
+      "id": "endure-fire",
+      "name": "Endure Fire",
+      "classes": [
+        "Beastlord"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Endure Fire adds +20 SV Fire.",
+      "effects": {
+        "SVF": 20
+      },
+      "stacking": {
+        "group": "resist-fire",
+        "priority": 1,
+        "redundantWhenAvailable": "resist-fire"
+      }
+    },
+    {
+      "id": "endure-cold",
+      "name": "Endure Cold",
+      "classes": [
+        "Beastlord",
+        "Ranger"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Endure Cold adds +20 SV Cold.",
+      "effects": {
+        "SVC": 20
+      },
+      "stacking": {
+        "group": "resist-cold",
+        "priority": 1,
+        "redundantWhenAvailable": "resist-cold"
+      }
+    },
+    {
+      "id": "force-of-nature",
+      "name": "Force of Nature",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "WOLF_WOLFFORM_GREATWOLF_SPIRITUALLIGHT.png",
+      "tooltip": "Force of Nature adds +16 HP regen per tick, +20 ATK and +10 Endurance regen per tick.",
+      "effects": {
+        "HP_REGEN": 16,
+        "ATK": 20,
+        "END_REGEN": 10
+      }
+    },
+    {
+      "id": "wolf-form",
+      "name": "Wolf Form",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "WOLF_WOLFFORM_GREATWOLF_SPIRITUALLIGHT.png",
+      "tooltip": "Wolf Form adds +30 ATK.",
+      "effects": {
+        "ATK": 30
+      },
+      "stacking": {
+        "excludes": [
+          "form-of-the-bear"
+        ]
+      }
+    },
+    {
+      "id": "call-of-earth",
+      "name": "Call of Earth",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "THORNCOAT_SPIKECOAT.png",
+      "tooltip": "Call of Earth adds +20 AC.",
+      "effects": {
+        "AC": 20
+      }
+    },
+    {
+      "id": "spikecoat",
+      "name": "Spikecoat",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "THORNCOAT_SPIKECOAT.png",
+      "tooltip": "Spikecoat adds +21 AC.",
+      "effects": {
+        "AC": 21
+      },
+      "stacking": {
+        "excludes": [
+          "thorncoat",
+          "arch-shielding"
+        ]
+      }
+    },
+    {
+      "id": "skin-like-steel",
+      "name": "Skin Like Steel",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Skin Like Steel adds +8 AC and +100 HP.",
+      "effects": {
+        "AC": 8,
+        "HP": 100
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 1
+      }
+    },
+    {
+      "id": "feet-like-cat",
+      "name": "Feet like Cat",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Feet like Cat adds +18 AGI.",
+      "effects": {
+        "AGI": 18
+      },
+      "stacking": {
+        "group": "agility",
+        "priority": 1
+      }
+    },
+    {
+      "id": "natures-precision",
+      "name": "Nature's Precision",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Nature's Precision adds +15 ATK.",
+      "effects": {
+        "ATK": 15
+      },
+      "stacking": {
+        "excludes": [
+          "grim-aura"
+        ]
+      }
+    },
+    {
+      "id": "strength-of-earth",
+      "name": "Strength of Earth",
+      "classes": [
+        "Ranger"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Strength of Earth adds +15 STR.",
+      "effects": {
+        "STR": 15
+      },
+      "stacking": {
+        "group": "strength",
+        "priority": 2
+      }
+    },
+    {
+      "id": "armor-of-faith",
+      "name": "Armor of Faith",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Armor of Faith adds +21 AC.",
+      "effects": {
+        "AC": 21
+      },
+      "stacking": {
+        "group": "armor-class",
+        "priority": 5
+      }
+    },
+    {
+      "id": "brells-steadfast-aegis",
+      "name": "Brell's Steadfast Aegis",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Brell's Steadfast Aegis adds +145 HP.",
+      "effects": {
+        "HP": 145
+      },
+      "stacking": {
+        "group": "hp-buff-two",
+        "priority": 2
+      }
+    },
+    {
+      "id": "valor",
+      "name": "Valor",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Valor adds +11 AC and +200 HP.",
+      "effects": {
+        "AC": 11,
+        "HP": 200
+      },
+      "stacking": {
+        "group": "hp-buff-one",
+        "priority": 2
+      }
+    },
+    {
+      "id": "yaulp-ii",
+      "name": "Yaulp II",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Yaulp II adds +7 AC and +20 STR.",
+      "effects": {
+        "AC": 7,
+        "STR": 20
+      },
+      "stacking": {
+        "group": "yaulp",
+        "priority": 2
+      }
+    },
+    {
+      "id": "symbol-of-pinzarn",
+      "name": "Symbol of Pinzarn",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Symbol of Pinzarn adds +307 HP.",
+      "effects": {
+        "HP": 307
+      },
+      "stacking": {
+        "group": "symbol",
+        "priority": 1
+      }
+    },
+    {
+      "id": "divine-purpose",
+      "name": "Divine Purpose",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+      "tooltip": "Divine Purpose adds +8 HP regen per tick and -3 mana regen per tick.",
+      "effects": {
+        "HP_REGEN": 8,
+        "MANA_REGEN": -3
+      }
+    },
+    {
+      "id": "valor-of-marr",
+      "name": "Valor of Marr",
+      "classes": [
+        "Paladin"
+      ],
+      "icon": "STRENGTH_STAMINA_AGILITY_DEXTERITY_AUGMENTATION_YAULP_FRENZY_RAGE_NATURESPRECISION.png",
+      "tooltip": "Valor of Marr adds +25% Haste.",
+      "effects": {
+        "HASTE": 25
+      },
+      "stacking": {
+        "group": "haste",
+        "priority": 25
+      }
+    },
+    {
+      "id": "dark-temptation",
+      "name": "Dark Temptation",
+      "classes": [
+        "Shadow Knight"
+      ],
+      "icon": "GRIMAURA.png",
+      "tooltip": "Dark Temptation adds +25 ATK and -3 HP regen per tick.",
+      "effects": {
+        "ATK": 25,
+        "HP_REGEN": -3
+      }
+    }
+  ]
+}

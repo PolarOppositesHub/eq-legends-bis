@@ -517,3 +517,8 @@ a { color: var(--gold); }
   padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.85rem;
 }
 .import-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+
+.field label.check {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  margin-top: 1.35rem; font-size: 0.82rem; color: var(--muted); cursor: pointer;
+}

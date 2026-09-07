@@ -24,11 +24,13 @@ from decode_local import SCALABLE_STATS, scale_item_stat  # noqa: E402
 
 _paths.apply_legends_roots()
 
-from .races import RACES, get_races_payload, race_bases  # noqa: E402
+from .races import RACES, get_races_payload, race_bases, class_stat_rows  # noqa: E402
 from . import weapon_dps as wdps  # noqa: E402
 from . import scoring as sc  # noqa: E402
 from . import class_roles as class_roles  # noqa: E402
 from . import ac_softcap as ac_softcap  # noqa: E402
+from . import character_pools as pools  # noqa: E402
+from . import spell_buffs as spell_buffs  # noqa: E402
 
 ALL_CLASSES = list(bx.ALL_CLASSES)
 DEFAULT_TRIO = list(bx.DEFAULT_TRIO)
@@ -764,19 +766,26 @@ def simulate(
     equipment: dict[str, str],
     upgrade: int = 10,
     character_level: int | None = None,
+    cast_buffs: str = "off",
+    active_buff_ids: list[str] | None = None,
+    assume_max_aas: bool = True,
 ) -> dict:
-    """Live totals for equipped gear. Enforces single-haste (highest % only).
+    """Live totals for equipped gear with race/class pools + optional Cast Buffs.
 
-    character_level is accepted for UI but does NOT invent HP/Mana/END formulas
-    (eqlegendstools race tables lack them) — totals remain gear-only for those pools.
+    Pool math mirrors eqlegendstools char-sheet (race + class allotments +
+    STA/INT/WIS formulas). Item stats still come only from decoded JSON.
+    Cast Buffs use their verified spellBuffs catalog (Quick Buff = max line
+    per stacking group for the selected trio).
     """
     upgrade = max(0, min(10, int(upgrade)))
-    pool = build_pool_for_classes(classes, mode="any")
+    cleaned = [c for c in classes if c in ALL_CLASSES]
+    pool = build_pool_for_classes(cleaned, mode="any")
     by_name = {(it.get("name") or "").strip().lower(): it for it in pool}
 
     equipped = []
     haste_candidates = []
     warnings = []
+    gear_stats: dict[str, float] = {}
 
     for slot in PLANNER_SLOTS:
         raw_name = (equipment or {}).get(slot) or (equipment or {}).get(slot.lower()) or ""
@@ -789,7 +798,6 @@ def simulate(
             equipped.append({"slot": slot, "name": str(raw_name), "missing": True, "included_stats": {}, "haste": 0, "haste_applied": False})
             continue
         stats = scale_stats_to_level(item.get("stats_plus0") or {}, upgrade)
-        # Prefer precomputed +10 when upgrade==10
         if upgrade == 10 and item.get("stats_plus10"):
             stats = dict(item["stats_plus10"])
         h = bp.item_haste(item)
@@ -807,8 +815,11 @@ def simulate(
         equipped.append(entry)
         if h > 0:
             haste_candidates.append(entry)
+        for k, v in stats.items():
+            if k == "Haste":
+                continue
+            gear_stats[k] = gear_stats.get(k, 0.0) + _num(v)
 
-    # Only highest haste applies
     applied_haste = 0.0
     applied_slot = None
     if haste_candidates:
@@ -823,24 +834,37 @@ def simulate(
                 f"({best['name']} +{int(applied_haste)}%). Ignored: {', '.join(others)}"
             )
 
+    buffs_info = spell_buffs.cast_buffs_payload(
+        cleaned,
+        mode=cast_buffs or "off",
+        active_ids=list(active_buff_ids or []),
+    )
+    buff_effects = dict(buffs_info.get("effects") or {})
+    buff_haste = float(buff_effects.pop("HASTE", 0) or 0)
+
     bases = race_bases(race)
-    # Attrs + racial resists from verified race table; HP/Mana/END/AC pools not published → 0
-    totals = {k: float(bases.get(k, 0)) for k in ("STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA")}
-    for k in ("HP", "MANA", "END", "AC", "ATK"):
-        totals[k] = 0.0
-    for k in ("SVF", "SVC", "SVM", "SVP", "SVD", "SVV"):
-        totals[k] = float(bases.get(k, 0) or 0)
+    race_attrs = {k: bases.get(k, 0) for k in pools.ATTR_KEYS}
+    race_resists = {k: bases.get(k, 0) for k in pools.RESIST_KEYS}
+    class_rows = class_stat_rows(cleaned)
+
+    pooled = pools.compute_pools(
+        classes=cleaned,
+        race_attrs=race_attrs,
+        race_resists=race_resists,
+        class_stat_rows=class_rows,
+        gear_stats=gear_stats,
+        buff_stats=buff_effects,
+        assume_max_aas=bool(assume_max_aas),
+    )
+    totals = dict(pooled["totals"])
+
+    worn_haste = int(applied_haste)
+    total_haste = max(worn_haste, int(buff_haste))
+    totals["Haste"] = total_haste
 
     weapon_ratios = []
     for e in equipped:
-        if not e.get("name") or e.get("missing"):
-            continue
-        stats = e.get("included_stats") or {}
-        for k in TOTAL_STAT_KEYS:
-            if k == "Haste":
-                continue
-            totals[k] = totals.get(k, 0.0) + _num(stats.get(k))
-        if e.get("is_weapon") and e.get("ratio") is not None:
+        if e.get("is_weapon") and e.get("ratio") is not None and e.get("name") and not e.get("missing"):
             weapon_ratios.append({
                 "slot": e["slot"],
                 "name": e["name"],
@@ -849,33 +873,42 @@ def simulate(
                 "dly": _num((e.get("included_stats") or {}).get("DLY")),
             })
 
-    # Round nicely
-    totals_out = {k: (int(v) if float(v).is_integer() else round(v, 2)) for k, v in totals.items()}
+    def _nice(v):
+        try:
+            fv = float(v)
+        except (TypeError, ValueError):
+            return 0
+        return int(fv) if fv.is_integer() else round(fv, 2)
+
+    totals_out = {k: _nice(v) for k, v in totals.items()}
 
     haste_items = [{"slot": e["slot"], "name": e["name"], "haste": e["haste"]} for e in haste_candidates]
     return {
-        "classes": [c for c in classes if c in ALL_CLASSES],
+        "classes": cleaned,
         "race": race,
-        "character_level": character_level,  # echoed only; no HP formula applied
+        "character_level": character_level,
         "race_bases": bases,
-        "race_note": (
-            "Attr bases from eqlwiki / eqlegendstools Character Races. "
-            "HP/Mana/Endurance/AC shown below are gear-only (racial pools not published)."
-        ),
+        "class_stats": class_rows,
+        "race_note": pools.SOURCE_NOTE,
         "upgrade": upgrade,
-        "hp_label": "gear-only HP",
+        "hp_label": "pool HP (race+class+STA+gear+buffs)",
         "haste": {
-            "applied": int(applied_haste),
-            "applied_pct": int(applied_haste),
+            "applied": total_haste,
+            "applied_pct": total_haste,
             "applied_slot": applied_slot,
-            "rule": "Only ONE worn haste item counts (highest %).",
+            "worn_pct": worn_haste,
+            "buff_pct": int(buff_haste),
+            "rule": "Worn haste: only ONE item (highest %). Spell haste from Cast Buffs takes max with worn.",
             "candidates": haste_items,
             "items": haste_items,
         },
-        "haste_applied": int(applied_haste),
+        "haste_applied": total_haste,
         "haste_pieces": haste_items,
         "haste_warning": warnings[0] if warnings else None,
-        "totals": {**totals_out, "Haste": int(applied_haste)},
+        "totals": totals_out,
+        "pool_breakdown": pooled.get("breakdown") or {},
+        "cast_buffs": buffs_info,
+        "assume_max_aas": bool(assume_max_aas),
         "weapons": weapon_ratios,
         "equipment": [
             {
@@ -892,9 +925,16 @@ def simulate(
         ],
         "warnings": warnings,
         "note": (
-            "Race contributes attribute bases + resists from eqlegendstools only. "
-            "HP/Mana/END/AC totals are gear-only at the selected upgrade (plus race attrs on STR..CHA). "
-            "No verified published HP/Mana/END-by-level formula — character level does not invent pools."
+            f"{pools.SOURCE_NOTE} "
+            + (
+                f"Cast Buffs ({buffs_info.get('mode')}): "
+                + (", ".join(b['name'] for b in buffs_info.get('active') or []) or "none")
+                + ". "
+                if buffs_info.get("mode") != "off"
+                else "Cast Buffs off. "
+            )
+            + ("Max AAs assumed for sheet AAs (Natural Durability, Eminence, etc.). " if assume_max_aas else "")
+            + "Pool math matches EQLT L50 sheet formulas; gear still from decoded JSON only."
         ),
     }
 
