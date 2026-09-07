@@ -215,13 +215,15 @@ def evaluate_dw_vs_2h(
         "(assumption: no skill table in decoded data; monk-style high-skill default)"
     )
 
-    def cand(item: dict, *, score: float, why: str, pval: float | None = None) -> dict:
+    def cand(item: dict, *, score: float, why: str, why_ui: str, pval: float | None = None) -> dict:
         ratio = ratio_at_level_fn(item, upgrade)
         return {
             "name": item["name"],
             "score": float(score),
             "pval": float(pval if pval is not None else score),
+            # Full scoring rationale for API/debug; UI should prefer why_ui.
             "why": why,
+            "why_ui": why_ui,
             "zone": item.get("zone") or "",
             "drops_mobs": item.get("drops_mobs") or "",
             "classes_str": item.get("classes_str") or "",
@@ -272,13 +274,18 @@ def evaluate_dw_vs_2h(
             "pair_score": total,
             "two_hand_score": two_sc if best_2h is not None else None,
             "two_hand_name": two_name if best_2h else None,
-            "primary": cand(main, score=total, why=why_main, pval=m_sc),
-            "secondary": cand(off, score=o_sc, why=why_off, pval=o_sc),
+            "primary": cand(
+                main, score=total, why=why_main, why_ui="Best dual-wield pair", pval=m_sc
+            ),
+            "secondary": cand(
+                off, score=o_sc, why=why_off, why_ui="Dual-wield offhand", pval=o_sc
+            ),
             "runner_up_2h": (
                 cand(
                     best_2h,
                     score=best_2h_score,
                     why=f"best 2H expected-dmg {best_2h_score:.4f} (lost to DW pair); {model_note}",
+                    why_ui="Runner-up two-hander",
                     pval=best_2h_score,
                 )
                 if best_2h is not None
@@ -303,7 +310,13 @@ def evaluate_dw_vs_2h(
         "pair_score": pair_sc if best_pair is not None else None,
         "two_hand_score": best_2h_score,
         "two_hand_name": best_2h["name"],
-        "primary": cand(best_2h, score=best_2h_score, why=why, pval=best_2h_score),
+        "primary": cand(
+            best_2h,
+            score=best_2h_score,
+            why=why,
+            why_ui="Best two-handed weapon",
+            pval=best_2h_score,
+        ),
         "secondary": None,
         "runner_up_dw": (
             {

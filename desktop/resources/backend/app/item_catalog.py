@@ -291,11 +291,15 @@ def _wiki_urls_for_item(it: dict[str, Any]) -> list[str]:
     return out
 
 
+# eqlwiki icons live under hashed dirs, e.g. /images/6/61/Item_641.png
 _IMG_RE = re.compile(
-    r"(?:src|content)=[\"']([^\"']+/images/[^\"']+\.(?:png|jpg|jpeg|webp|gif))[\"']",
+    r"(?:src|content)=[\"']((?:https?://[^\"']+)?/images/[^\"']+\.(?:png|jpg|jpeg|webp|gif))[\"']",
     re.I,
 )
-_ITEM_IMG_RE = re.compile(r"/images/[a-z0-9]/f]/[A-Za-z0-9._-]*Item_[^\"'\s>]+\.(?:png|jpg|jpeg|webp)", re.I)
+_ITEM_IMG_RE = re.compile(
+    r"(?:https?://eqlwiki\.(?:com|org))?(/images/(?:[A-Za-z0-9._~-]+/)+Item_\d+\.(?:png|gif|jpe?g|webp))",
+    re.I,
+)
 
 
 def _pick_wiki_image(html: str) -> str | None:

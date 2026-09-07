@@ -224,6 +224,19 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   border: 1px solid var(--border);
   border-radius: 4px;
   image-rendering: auto;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+.item-icon-placeholder {
+  display: inline-block;
+  box-sizing: border-box;
+  background: repeating-linear-gradient(
+    -45deg,
+    #121212,
+    #121212 4px,
+    #1a1a1a 4px,
+    #1a1a1a 8px
+  );
 }
 .item-name {
   display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem;
@@ -244,7 +257,7 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
 .alts summary { cursor: pointer; color: var(--muted); }
 .alts ul { margin: 0.35rem 0 0; padding-left: 1rem; }
 .alts li { margin-bottom: 0.35rem; }
-.alt-name-wrap { position: relative; display: inline-block; }
+.alt-name-wrap { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; }
 .alt-name,
 .bis-item-name {
   color: var(--gold); cursor: help; font-weight: 600;
