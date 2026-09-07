@@ -128,7 +128,7 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             if entry["unmatched"]:
                 unmatched.append(entry)
             continue
-        if not name or name.lower() == "empty" or item_id == "0":
+        if not name or name.lower() == "empty":
             entry["reason"] = "empty"
             entry["planner_slot"] = None
             skipped.append(entry)

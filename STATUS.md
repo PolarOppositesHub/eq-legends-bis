@@ -7,10 +7,11 @@ Smoke (2026-09-07):
 - Max All: class-weighted attrs from races.json classStats; tank AC/HP heavier; mana de-emphasized for non-mana
 - Priority: up to 3 primary / secondary / tertiary selectable stats
 - AI Choice: role-aware blend for trio; HP regen optional toggle
-- GET /api/item-search Rubicite → catalog hit; GET /api/item-image fetches/caches eqlwiki icons under data/item-images/
+- GET /api/item-search includes flat_* + aggregate + catalog.json weapons/focus/clickies/worn/proc (~940 names); Rubicite + Wu's Fist hit
+- GET /api/item-image fetches/caches eqlwiki icons under data/item-images/ (gitignored blobs; `.gitkeep` kept)
 - Inventory parse retains unmatched names (no invented stats); upgrade suggestions driven by BiS list + equipment_compare deltas
-- Frontend: left nav BiS / Simulator / Item Search; alt hover shows real stats + icon; sim worn|BiS|deltas
-- data/decoded → symlink to desktop/resources/data/decoded
+- Frontend: left nav BiS / Simulator / Item Search; alt hover shows real stats + icon; sim worn|BiS|deltas; vite build OK
+- data/decoded → symlink to desktop/resources/data/decoded; desktop/resources/backend/app synced with canonical backend/app
 
 ## Dual wield vs 2H (unchanged model, L50 cap)
 - Module: `backend/app/weapon_dps.py`

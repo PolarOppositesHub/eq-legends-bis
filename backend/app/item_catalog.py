@@ -25,9 +25,101 @@ def _slug(name: str) -> str:
     return s or "item"
 
 
+def _merge_row(by_name: dict[str, dict[str, Any]], row: dict[str, Any]) -> None:
+    name = (row.get("name") or "").strip()
+    if not name:
+        return
+    key = name.lower()
+    if key not in by_name:
+        by_name[key] = row
+        return
+    cur = by_name[key]
+    # Prefer entry with more stats / url; fill missing fields from new row
+    if not (cur.get("stats_plus10") or cur.get("stats_plus0")) and (
+        row.get("stats_plus10") or row.get("stats_plus0")
+    ):
+        by_name[key] = {**row, **{k: cur[k] for k in cur if cur.get(k) and not row.get(k)}}
+        cur = by_name[key]
+    for fld in ("url", "sourceUrl", "zamUrl", "zone", "itemID", "classes_str"):
+        if not cur.get(fld) and row.get(fld):
+            cur[fld] = row[fld]
+    if not cur.get("classes") and row.get("classes"):
+        cur["classes"] = row["classes"]
+    if not cur.get("slots") and row.get("slots"):
+        cur["slots"] = row["slots"]
+    if not cur.get("tooltipLines") and row.get("tooltipLines"):
+        cur["tooltipLines"] = row["tooltipLines"]
+    if row.get("is_weapon"):
+        cur["is_weapon"] = True
+
+
+def _weapon_row_from_catalog(w: dict[str, Any]) -> dict[str, Any] | None:
+    """Normalize catalog.weapons / proc rows into search shape (real DMG/DLY only)."""
+    name = (w.get("weaponName") or w.get("itemName") or w.get("name") or "").strip()
+    if not name:
+        return None
+    classes = list(w.get("classNames") or w.get("classes") or [])
+    slots = [str(s).strip().upper() for s in (w.get("slots") or []) if s]
+    s0: dict[str, Any] = {}
+    dmg = w.get("dmg")
+    dly = w.get("dly")
+    if dmg is not None:
+        s0["DMG"] = dmg
+    if dly is not None:
+        s0["DLY"] = dly
+    zone = (w.get("sourceZone") or w.get("sourceDisplay") or "").strip()
+    if not zone:
+        locs = []
+        for e in w.get("dropsFromEntries") or []:
+            if isinstance(e, dict) and e.get("location"):
+                locs.append(str(e["location"]))
+        zone = ", ".join(dict.fromkeys(locs))
+    return {
+        "name": name,
+        "itemID": w.get("itemID"),
+        "slots": slots,
+        "slot": " / ".join(slots),
+        "classes": classes,
+        "classes_str": ", ".join(classes),
+        "stats_plus0": s0,
+        "stats_plus10": dict(s0),
+        "url": w.get("sourceHref") or "",
+        "sourceUrl": w.get("sourceUrl") or "",
+        "zamUrl": w.get("zamUrl") or "",
+        "zone": zone,
+        "tooltipLines": w.get("tooltipLines") or [],
+        "is_weapon": True,
+        "from_catalog_weapons": True,
+    }
+
+
+def _named_catalog_row(row: dict[str, Any], *, kind: str) -> dict[str, Any] | None:
+    name = (row.get("itemName") or row.get("weaponName") or row.get("name") or "").strip()
+    if not name:
+        return None
+    classes = list(row.get("classNames") or row.get("classes") or [])
+    slots = [str(s).strip().upper() for s in (row.get("slots") or []) if s]
+    return {
+        "name": name,
+        "itemID": row.get("itemID"),
+        "slots": slots,
+        "slot": " / ".join(slots) if slots else (row.get("slot") or ""),
+        "classes": classes,
+        "classes_str": ", ".join(classes),
+        "stats_plus0": row.get("stats") or row.get("stats_plus0") or {},
+        "stats_plus10": row.get("stats_plus10") or row.get("stats") or {},
+        "url": row.get("sourceHref") or "",
+        "sourceUrl": row.get("sourceUrl") or "",
+        "zamUrl": row.get("zamUrl") or "",
+        "zone": (row.get("sourceZone") or row.get("sourceDisplay") or "").strip(),
+        "tooltipLines": row.get("tooltipLines") or [],
+        "catalog_kind": kind,
+    }
+
+
 @lru_cache(maxsize=1)
 def _all_flat_items() -> list[dict[str, Any]]:
-    """Union of flat_* class catalogs + aggregate names for search."""
+    """Union of flat_* + aggregate + catalog.json (weapons/focus/clickies/worn/proc)."""
     decoded = decoded_dir()
     by_name: dict[str, dict[str, Any]] = {}
     for path in sorted(decoded.glob("flat_*.json")):
@@ -38,21 +130,7 @@ def _all_flat_items() -> list[dict[str, Any]]:
         if not isinstance(rows, list):
             continue
         for row in rows:
-            name = (row.get("name") or "").strip()
-            if not name:
-                continue
-            key = name.lower()
-            if key not in by_name:
-                by_name[key] = row
-            else:
-                # Prefer entry with more stats / url
-                cur = by_name[key]
-                if not cur.get("url") and row.get("url"):
-                    cur["url"] = row["url"]
-                if not (cur.get("stats_plus10") or cur.get("stats_plus0")) and (
-                    row.get("stats_plus10") or row.get("stats_plus0")
-                ):
-                    by_name[key] = row
+            _merge_row(by_name, row)
     agg = decoded / "aggregate.json"
     if agg.is_file():
         try:
@@ -63,29 +141,39 @@ def _all_flat_items() -> list[dict[str, Any]]:
             name = (row.get("name") or "").strip()
             if not name:
                 continue
-            key = name.lower()
-            if key not in by_name:
-                # Normalize aggregate → search shape
-                by_name[key] = {
-                    "name": name,
-                    "itemID": row.get("itemID"),
-                    "slots": row.get("slots") or [],
-                    "classes": row.get("classes") or [],
-                    "stats_plus0": row.get("stats") or {},
-                    "stats_plus10": row.get("stats") or {},
-                    "url": row.get("sourceHref") or row.get("sourceUrl") or "",
-                    "sourceUrl": row.get("sourceUrl") or "",
-                    "zamUrl": row.get("zamUrl") or "",
-                    "zone": row.get("sourceZone") or "",
-                    "tooltipLines": row.get("tooltipLines") or [],
-                    "from_aggregate_only": True,
-                }
-            else:
-                cur = by_name[key]
-                if not cur.get("sourceUrl") and row.get("sourceUrl"):
-                    cur["sourceUrl"] = row["sourceUrl"]
-                if not cur.get("zamUrl") and row.get("zamUrl"):
-                    cur["zamUrl"] = row["zamUrl"]
+            _merge_row(by_name, {
+                "name": name,
+                "itemID": row.get("itemID"),
+                "slots": row.get("slots") or [],
+                "classes": row.get("classes") or [],
+                "stats_plus0": row.get("stats") or {},
+                "stats_plus10": row.get("stats") or {},
+                "url": row.get("sourceHref") or row.get("sourceUrl") or "",
+                "sourceUrl": row.get("sourceUrl") or "",
+                "zamUrl": row.get("zamUrl") or "",
+                "zone": row.get("sourceZone") or "",
+                "tooltipLines": row.get("tooltipLines") or [],
+                "from_aggregate_only": True,
+            })
+    cat_path = decoded / "catalog.json"
+    if cat_path.is_file():
+        try:
+            catalog = json.loads(cat_path.read_text(encoding="utf-8"))
+        except Exception:
+            catalog = {}
+        for w in catalog.get("weapons") or []:
+            norm = _weapon_row_from_catalog(w)
+            if norm:
+                _merge_row(by_name, norm)
+        for w in catalog.get("proc") or []:
+            norm = _weapon_row_from_catalog(w)
+            if norm:
+                _merge_row(by_name, norm)
+        for kind in ("focus", "bardResonance", "clickies", "worn"):
+            for row in catalog.get(kind) or []:
+                norm = _named_catalog_row(row if isinstance(row, dict) else {}, kind=kind)
+                if norm:
+                    _merge_row(by_name, norm)
     return list(by_name.values())
 
 

@@ -31,7 +31,7 @@
 - [x] Move **Best in Slot** and **Simulator** into a **left-side selectable pane** (sidebar navigation), not only top tabs.
 - [x] Add a third left-nav entry: **Item Search**.
 - [x] Item Search: searchable list of **all items in the game** from the item database/catalog.
-- [x] Requirement: every game item should be present in the DB and findable via this search (name and useful filters as fitting existing data — never invent stats).
+- [x] Requirement: every game item should be present in the DB and findable via this search (name and useful filters as fitting existing data — never invent stats). *(search index = flat_* ∪ aggregate ∪ catalog.json weapons/focus/clickies/worn/proc)*
 
 ### BiS alternates hover — real stats + item picture (fix)
 - [x] Current bug/UX: hovering alternate items shows placeholder text like **"hover over stats"** — that is **not** what was requested.

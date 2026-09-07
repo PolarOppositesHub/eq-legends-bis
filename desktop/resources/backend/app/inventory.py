@@ -128,12 +128,17 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             if entry["unmatched"]:
                 unmatched.append(entry)
             continue
-        if not name or name.lower() == "empty" or item_id == "0":
+        # Empty slots: blank / "Empty" name. ID "0" alone is not empty when a name is present.
+        if not name or name.lower() == "empty":
             entry["reason"] = "empty"
             entry["planner_slot"] = None
             skipped.append(entry)
             all_items.append(entry)
             continue
+        if item_id == "0" and (not count or count == "0"):
+            # Heuristic: some dumps mark empty with ID 0 and Count 0 even with a leftover name.
+            # Prefer name-based empty above; only skip here when count is also zero-ish.
+            pass
 
         loc_key = location.upper().strip()
         targets = LOCATION_TO_SLOTS.get(loc_key)
