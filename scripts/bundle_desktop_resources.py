@@ -20,7 +20,13 @@ def main():
     (RES / 'eq-api').mkdir(parents=True, exist_ok=True)
     print('  JSON from', DECODED)
     for src in DECODED.glob('*.json'):
-        shutil.copy2(src, RES / 'data' / 'decoded' / src.name)
+        dst = RES / 'data' / 'decoded' / src.name
+        try:
+            if src.resolve() == dst.resolve():
+                continue
+        except OSError:
+            pass
+        shutil.copy2(src, dst)
     races = ROOT / 'data' / 'races.json'
     if races.exists():
         shutil.copy2(races, RES / 'data' / 'races.json')

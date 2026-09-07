@@ -62,9 +62,21 @@ function rootForScripts() {
 function envForApi() {
   const root = resourcesRoot();
   const appRoot = isDev ? path.resolve(__dirname, '..') : root;
-  const decoded = path.join(root, 'data', 'decoded');
-  const decodedDev = path.join(appRoot, 'data', 'decoded');
-  const dataRoot = fs.existsSync(decoded) ? decoded : decodedDev;
+  // Prefer a decoded tree that actually exists (packaged / repo / nested).
+  // Wrong EQ_DATA_ROOT → empty catalog → Item Search / inventory import look broken.
+  const decodedCandidates = [
+    path.join(root, 'data', 'decoded'),
+    path.join(appRoot, 'data', 'decoded'),
+    path.join(appRoot, 'desktop', 'resources', 'data', 'decoded'),
+    path.join(root, 'desktop', 'resources', 'data', 'decoded'),
+  ];
+  const dataRoot = decodedCandidates.find((p) => {
+    try {
+      return fs.existsSync(p) && fs.readdirSync(p).some((f) => f.endsWith('.json'));
+    } catch (_) {
+      return false;
+    }
+  }) || decodedCandidates[0];
   const frontendDist = path.join(root, 'frontend', 'dist');
   const frontendDistDev = path.join(appRoot, 'frontend', 'dist');
   const ui = fs.existsSync(frontendDist) ? frontendDist : frontendDistDev;
@@ -83,6 +95,13 @@ function envForApi() {
     legendsRoot,
     process.env.PYTHONPATH || '',
   ].filter(Boolean).join(path.delimiter);
+  // Writable icon cache under userData (ASAR / Program Files are often read-only).
+  const imagesDir = path.join(app.getPath('userData'), 'item-images');
+  try {
+    fs.mkdirSync(imagesDir, { recursive: true });
+  } catch (_) {
+    /* best-effort */
+  }
   return {
     ...process.env,
     EQ_PACKAGED: '1',
@@ -92,7 +111,7 @@ function envForApi() {
     EQ_FRONTEND_DIST: ui,
     EQ_LEGENDS_ROOT: legendsRoot,
     EQ_XLSX_DIR: app.getPath('userData'),
-    EQ_IMAGES_DIR: path.join(app.getPath('userData'), 'item-images'),
+    EQ_IMAGES_DIR: imagesDir,
     EQ_API_PORT: String(apiPort),
     PYTHONPATH: pyPath,
   };

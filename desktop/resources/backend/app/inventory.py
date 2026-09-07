@@ -47,7 +47,11 @@ def _strip_upgrade_suffix(name: str) -> tuple[str, int | None]:
 
 
 def _catalog_has_name(name: str) -> bool:
-    return item_catalog_mod.name_in_catalog(name)
+    # Never let catalog/image I/O break Inventory.txt import (worked as TSV-only in 1.0.3).
+    try:
+        return item_catalog_mod.name_in_catalog(name)
+    except Exception:
+        return False
 
 
 _BINARY_HINT = re.compile(

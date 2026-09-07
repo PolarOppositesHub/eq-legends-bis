@@ -16,7 +16,13 @@ Canonical: backend/app/{main,engine,item_catalog,paths,inventory,quest_guides,..
 - Item Search / Inventory import: stop 500s from image-cache coupling (`name_in_catalog`, hardened `_public_item`, endpoint guards)
 - Upgrade Priority quest steps: expand tags like `4-KoS` to zone + mob names
 
+## Search / Inventory regression (vs 1.0.3)
+- **1.0.3:** Inventory import was TSV-only (no catalog/image I/O). Item Search did not exist.
+- **1.0.4+:** Import called `get_item_by_name` → `_public_item` → `local_image_path` per row; packaged read-only `item-images` mkdir → **500 Internal Server Error**. Search had the same coupling.
+- **1.0.10 fix:** `name_in_catalog` (no image I/O); `_public_item` / search never raise; Electron probes real decoded dirs + writable `EQ_IMAGES_DIR`; empty/missing decoded degrades with a warning instead of 500.
+
 ## Smoke notes
 - Ensure with empty EQ_IMAGES_DIR still serves icons from seed
-- Search `aegis` returns hits; Inventory.txt Location/Name TSV imports
+- Search `aegis` returns hits; Inventory.txt Location/Name TSV imports (catalog miss still maps worn slots)
+- Mock `local_image_path` OSError → search 200 + import 200
 - Quest guide "Wizard Test of Focus" mentions Keeper of Souls / Island 4

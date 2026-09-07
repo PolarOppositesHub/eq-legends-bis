@@ -9,8 +9,35 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path("/workspace/eq-legends")
-OUT = ROOT / "decoded"
+import os
+from pathlib import Path as _Path
+
+def _resolve_root():
+    for key in ("EQ_LEGENDS_ROOT", "EQ_APP_ROOT"):
+        v = os.environ.get(key)
+        if v and _Path(v).exists():
+            return _Path(v)
+    if (_Path("/workspace/eq-legends") / "decoded").exists():
+        return _Path("/workspace/eq-legends")
+    data = os.environ.get("EQ_LEGENDS_DATA") or os.environ.get("EQ_DATA_ROOT")
+    if data:
+        d = _Path(data)
+        return d.parent if d.name == "decoded" else d
+    return _Path(__file__).resolve().parent
+
+def _resolve_out(root):
+    data = os.environ.get("EQ_LEGENDS_DATA") or os.environ.get("EQ_DATA_ROOT")
+    if data and _Path(data).exists():
+        return _Path(data)
+    if (root / "decoded").exists():
+        return root / "decoded"
+    app_data = _Path(__file__).resolve().parents[2] / "data" / "decoded"
+    if app_data.exists():
+        return app_data
+    return root / "decoded"
+
+ROOT = _resolve_root()
+OUT = _resolve_out(ROOT)
 RUNTIME = ROOT / "catalog-runtime.js"
 BASE = "https://eqlegendstools.com"
 

@@ -15,8 +15,47 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 import build_xlsx as bx
 
-ROOT = Path("/workspace/eq-legends")
-OUT = ROOT / "decoded"
+
+import os
+from pathlib import Path as _Path
+
+def _resolve_root():
+    for key in ("EQ_LEGENDS_ROOT", "EQ_APP_ROOT"):
+        v = os.environ.get(key)
+        if v and _Path(v).exists():
+            return _Path(v)
+    here = _Path(__file__).resolve().parent
+    # vendor copy lives in backend/vendor; decoded may be sibling data
+    for cand in (
+        here,
+        here.parent.parent / "data",
+        _Path("/workspace/eq-legends"),
+    ):
+        if (cand / "decoded").exists() or (cand / "build_planner.py").exists():
+            # Prefer real legends tree when present
+            pass
+    if (_Path("/workspace/eq-legends") / "decoded").exists():
+        return _Path("/workspace/eq-legends")
+    # Packaged: EQ_LEGENDS_DATA parent or resources
+    data = os.environ.get("EQ_LEGENDS_DATA")
+    if data:
+        return _Path(data).parent if _Path(data).name == "decoded" else _Path(data)
+    return here
+
+def _resolve_out(root):
+    data = os.environ.get("EQ_LEGENDS_DATA")
+    if data and _Path(data).exists():
+        return _Path(data)
+    if (root / "decoded").exists():
+        return root / "decoded"
+    # backend/vendor -> ../../data/decoded
+    app_data = _Path(__file__).resolve().parents[2] / "data" / "decoded"
+    if app_data.exists():
+        return app_data
+    return root / "decoded"
+
+ROOT = _resolve_root()
+OUT = _resolve_out(ROOT)
 XLSX = ROOT / "EQ_Legends_BiS.xlsx"
 XLSX_FIXED = ROOT / "EQ_Legends_BiS_fixed.xlsx"
 VERIFY = ROOT / "planner_verify.json"
@@ -398,6 +437,12 @@ def build_item_pool(merged, catalog, slug_map) -> list[dict]:
             existing["ratio_plus10"] = item["ratio_plus10"]
             existing["ratio_plus0"] = item.get("ratio_plus0")
             existing["is_weapon"] = True
+        if item.get("oneHanded") and not existing.get("oneHanded"):
+            existing["oneHanded"] = item.get("oneHanded")
+        if item.get("hand") and not existing.get("hand"):
+            existing["hand"] = item.get("hand")
+        if item.get("offhandUsable") and not existing.get("offhandUsable"):
+            existing["offhandUsable"] = item.get("offhandUsable")
         # union planner slots
         slots = list(dict.fromkeys((existing.get("planner_slots") or []) + (item.get("planner_slots") or [])))
         existing["planner_slots"] = slots
@@ -519,6 +564,9 @@ def build_item_pool(merged, catalog, slug_map) -> list[dict]:
             "ratio_plus0": bx.ratio(dmg0, dly),
             "ratio_plus10": bx.ratio(dmg10, dly),
             "is_weapon": True,
+            "oneHanded": (w.get("oneHanded") or "").strip(),
+            "hand": bx.handedness(w),
+            "offhandUsable": (w.get("offhandUsable") or "").strip(),
         }
         upsert(item)
 

@@ -865,7 +865,9 @@ export default function App() {
       if (searchSlot) params.slot = searchSlot
       const res = await searchItems(params)
       setSearchResults(res)
+      if (res?.warning) setError(String(res.warning))
     } catch (e) {
+      setSearchResults(null)
       setError(String(e.message || e))
     } finally {
       setSearchLoading(false)
