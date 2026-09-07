@@ -1,10 +1,35 @@
 # Next build notes
 
-**v1.0.10 READY TO SHIP — overnight grok bot release.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+**Next after 1.0.10 → v1.0.11 (pending).** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+
+## Josh feedback — Item Search (after 1.0.10)
+
+### Looser name matching (token / anywhere-in-name)
+- [ ] Today search requires the query as one contiguous substring (and also checks classes/zone blob). Typing `blade of ocean` misses **Aldryn, Blade of the Ocean** because of word order / missing `the` / leading proper name.
+- [ ] **Requirement:** match when **every significant query token** appears somewhere in the item name (order-independent). Example: `blade of ocean` and `aldryn blade` both find `Aldryn, Blade of the Ocean`.
+- [ ] Ignore trivial tokens (`of`, `the`, `a`, `an`, `and`) or treat them as optional so partial phrases still hit.
+- [ ] Keep case-insensitive; still never invent items/stats — only filter the real catalog.
+- [ ] Prefer name matches ahead of incidental class/zone blob hits when ranking (name token hits first).
+
+### Class usable filter (in addition to slot)
+- [ ] Item Search UI today: query + **slot** selector only.
+- [ ] **Requirement:** add a **usable class** selector/filter (same class list as BiS / meta classes).
+- [ ] Filter to items whose `classes` / `classes_str` includes that class (or ALL/empty class list if that is how catalog marks unrestricted — use existing catalog fields only).
+- [ ] Slot + class filters combine (AND). Empty class = all classes.
+- [ ] Wire API: e.g. `GET /api/item-search?q=…&slot=…&class=Paladin` (or `usable_by=`); UI dropdown next to slot.
+
+### Acceptance examples
+- [ ] Query `blade of ocean` → includes **Aldryn, Blade of the Ocean**
+- [ ] Query `ald` → still finds it (prefix/substring of a token remains OK)
+- [ ] Class filter `Paladin` + slot `PRIMARY` narrows results to Paladin-usable primary weapons from the DB
+
+---
+
+**v1.0.10 SHIPPED / merge PR #7 — overnight rebuild.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.10
 
-1. Merge PR **#7** (`cursor/bis-icons-seed-sim-deltas-d4a5` → `main`) if not already on main.
+1. Ensure PR **#7** is on `main` (merged).
 2. Build + publish:
 
 ```powershell
