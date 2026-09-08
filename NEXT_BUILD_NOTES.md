@@ -1,11 +1,10 @@
 # Next build notes
 
-**v1.0.11 — Search My Bags + Quest Hub + import UX (this PR).** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+**v1.0.11 READY TO SHIP — PR #9 merged on `main`.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.11
 
-1. Merge bags/quest-hub PR → `main`
-2. Build + publish:
+Code is already on **`main`**. Build + publish only:
 
 ```powershell
 git pull origin main
@@ -15,18 +14,27 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
 Artifacts: `EQ-Legends-BiS-1.0.11-win-x64.exe` (+ portable) + `latest.yml`.
 
 ### Post-install verify
-- [ ] Header **UI 1.0.11**
+- [ ] Header **Version 1.0.11** (not UI)
 - [ ] After Inventory import → Simulator shows worn-slot count; unmatched list is **closed** (debug)
+- [ ] Change BiS **mode**, return to Simulator → **imported worn gear still there** (not replaced by BiS)
+- [ ] Edit a worn slot, then **Reset to imported worn** → restores Inventory.txt worn
+- [ ] BiS / Simulator show **ANY1 / ANY2** (Any Slot); scored without weapon DMG
 - [ ] Menu **Search My Bags** finds bag/bank items from the import
-- [ ] Menu **Quest Hub** lists quests; open Wizard Test of Focus → prerequisites + Have?/Need components vs import
+- [ ] Menu **Quest Hub** lists quests; open Wizard Test of Focus → prerequisites + Have?/Need vs import
 - [ ] Upgrade Priority quest row → **Open in Quest Hub**
+- [ ] Cast Buffs Quick Buff at Character Level 35 excludes L42+ lines (e.g. no Resolution)
 
-## 1.0.11 — bags, quest hub, import UX
+## 1.0.11 — bags, quest hub, any slots, worn-gear fix
 - [x] Unmatched names default closed; emphasize worn slots filled
 - [x] Search My Bags menu (imported inventory lines)
 - [x] Quest Hub menu (catalog quest index + guide + prereqs + inventory ownership)
 - [x] Upgrade Priority → Open in Quest Hub
+- [x] Cast Buffs level-gated to Character Level (+ lower-rank lines)
+- [x] ANY1/ANY2 Any Slot in BiS + Simulator (no DMG scoring)
+- [x] BiS recalc does not overwrite Simulator worn; Reset to imported worn
+- [x] Header badge **Version 1.0.11**
 - [x] Versions **1.0.11**
+- [x] PR #9 merged → `main`
 
 ### Still pending after 1.0.11
 - [ ] Item Search token/anywhere-in-name (`blade of ocean` → Aldryn, Blade of the Ocean); ignore filler words
