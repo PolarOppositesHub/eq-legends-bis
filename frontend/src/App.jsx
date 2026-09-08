@@ -645,11 +645,15 @@ export default function App() {
     primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
   ])
 
-  const runSim = useCallback(async () => {
+  const runSim = useCallback(async (equipmentOverride) => {
     if (classes.length < 1) {
       setError('Pick at least one class (up to 3).')
       return
     }
+    const eq =
+      equipmentOverride && typeof equipmentOverride === 'object' && !equipmentOverride.nativeEvent
+        ? equipmentOverride
+        : equipment
     setLoading(true)
     setError('')
     try {
@@ -658,14 +662,14 @@ export default function App() {
         race,
         upgrade,
         character_level: characterLevel,
-        equipment,
+        equipment: eq,
         cast_buffs: castBuffsMode,
         assume_max_aas: assumeMaxAas,
       })
       setSim(data)
       // Also refresh upgrade priorities (replaces separate Suggest upgrades button).
       try {
-        const sug = await upgradeSuggestions(suggestionBody(equipment))
+        const sug = await upgradeSuggestions(suggestionBody(eq))
         setSuggestions(sug)
       } catch (_) {
         /* sim totals still useful if upgrade ranking fails */
@@ -709,10 +713,14 @@ export default function App() {
       setError('Import Inventory.txt first to restore worn gear from that file.')
       return
     }
-    setEquipment({ ...eq })
+    const restored = { ...eq }
+    setEquipment(restored)
     setBisOverrides({})
-    setImportMsg(`Restored ${Object.keys(eq).length} worn slots from last Inventory.txt import`)
+    setImportMsg(`Restored ${Object.keys(restored).length} worn slots from last Inventory.txt import`)
     setTab('sim')
+    if (classes.length >= 1) {
+      runSim(restored)
+    }
   }
 
   const openZone = async (zone, dropsMobs = '') => {
