@@ -571,19 +571,15 @@ export default function App() {
       const data = await postBis(bisRequestBody())
       setBis(data)
       setBisOverrides({})
-      const eq = {}
       const names = []
       for (const s of data.slots || []) {
-        if (s.name) {
-          eq[s.slot] = s.name
-          names.push(s.name)
-        }
+        if (s.name) names.push(s.name)
         for (const a of s.alts || []) {
           if (a?.name) names.push(a.name)
         }
       }
-      setEquipment(eq)
-      // Best-effort icon cache so list/hover images appear without waiting on hover
+      // Do not overwrite Simulator worn gear here — BiS mode/upgrades must leave
+      // imported equipment alone. Use "Load from BiS" to copy BiS into worn slots.
       for (const name of names) {
         if (!name || ensuredImagesRef.current.has(name)) continue
         ensuredImagesRef.current.add(name)
@@ -704,6 +700,18 @@ export default function App() {
     }
     setEquipment(eq)
     setBisOverrides({})
+    setTab('sim')
+  }
+
+  const resetToImportedWorn = () => {
+    const eq = importMeta?.equipment
+    if (!eq || !Object.keys(eq).length) {
+      setError('Import Inventory.txt first to restore worn gear from that file.')
+      return
+    }
+    setEquipment({ ...eq })
+    setBisOverrides({})
+    setImportMsg(`Restored ${Object.keys(eq).length} worn slots from last Inventory.txt import`)
     setTab('sim')
   }
 
@@ -1819,6 +1827,14 @@ export default function App() {
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                   <button type="button" onClick={clearEquipment}>Clear equipment</button>
+                  <button
+                    type="button"
+                    onClick={resetToImportedWorn}
+                    disabled={!importMeta?.equipment || !Object.keys(importMeta.equipment).length}
+                    title="Restore worn slots from the last Inventory.txt import"
+                  >
+                    Reset to imported worn
+                  </button>
                   <button type="button" onClick={loadFromBis} disabled={!bis?.slots?.length}>
                     Load from BiS
                   </button>
