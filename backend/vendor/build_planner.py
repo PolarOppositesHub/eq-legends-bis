@@ -66,10 +66,12 @@ TARGET_SET = set(TARGET)
 ALL_CLASSES = bx.ALL_CLASSES
 
 # Planner equipment slots (display order). FINGER/EAR get two distinct picks.
+# ANY1/ANY2 = EQ Legends worn "Any Slot" (Inventory.txt Location: Any Slot).
 PLANNER_SLOTS = [
     "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST",
     "HANDS", "CHEST", "BACK", "WAIST", "LEGS", "FEET",
     "FINGER1", "FINGER2", "PRIMARY", "SECONDARY", "RANGE", "AMMO",
+    "ANY1", "ANY2",
 ]
 
 # Base pool slot -> which planner slots it can fill
@@ -92,6 +94,9 @@ SLOT_ALIASES = {
     "SECONDARY": ["SECONDARY"],
     "RANGE": ["RANGE"],
     "AMMO": ["AMMO"],
+    "ANY": ["ANY1", "ANY2"],
+    "ANYSLOT": ["ANY1", "ANY2"],
+    "CHARM": ["ANY1", "ANY2"],
 }
 
 WEAPON_SLOTS = {"PRIMARY", "SECONDARY", "RANGE", "AMMO"}
@@ -636,6 +641,7 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
         ["HEAD"], ["FACE"], ["EAR1", "EAR2"], ["NECK"], ["SHOULDERS"], ["ARMS"],
         ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
+        ["ANY1", "ANY2"],
     ]
 
     # Phase 1: find best single haste item across all slots

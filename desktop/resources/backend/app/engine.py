@@ -34,7 +34,8 @@ from . import spell_buffs as spell_buffs  # noqa: E402
 
 ALL_CLASSES = list(bx.ALL_CLASSES)
 DEFAULT_TRIO = list(bx.DEFAULT_TRIO)
-PLANNER_SLOTS = list(bp.PLANNER_SLOTS)
+# Prefer scoring PLANNER_SLOTS (includes ANY1/ANY2) over vendor build_planner list.
+PLANNER_SLOTS = list(sc.PLANNER_SLOTS)
 
 MAX_CHARACTER_LEVEL = 50
 DEFAULT_CHARACTER_LEVEL = 50
@@ -235,8 +236,13 @@ def evaluate_dw_vs_2h(weapon_pool: list[dict], upgrade: int, character_level: in
 
 
 def _slot_uses_ratio_rank(slot: str, item: dict | None, prefer_ranged_damage: bool) -> bool:
-    """PRIMARY/SECONDARY with DMG always ratio-only; RANGE with DMG when prefer_ranged on."""
+    """PRIMARY/SECONDARY with DMG always ratio-only; RANGE with DMG when prefer_ranged on.
+
+    ANY1/ANY2 never use weapon ratio — damage does not matter in Any Slot.
+    """
     if not item or not _has_weapon_ratio(item):
+        return False
+    if slot in sc.ANY_SLOTS:
         return False
     if slot in ("PRIMARY", "SECONDARY"):
         return True
@@ -487,14 +493,69 @@ def recommend_bis(
         used_names.add(pick["name"])
         loadout[slot] = pick
 
+    # After weapon overrides free/claim names, refill Any Slot from leftovers.
+    # Damage/ratio never applies here — score other stats only.
+    for slot in ("ANY1", "ANY2"):
+        cur = (loadout.get(slot) or {}).get("name")
+        if cur:
+            used_names.discard(cur)
+    any_opts = dict(score_opts)
+    any_opts["ignore_weapon_ratio"] = True
+    for slot in ("ANY1", "ANY2"):
+        ranked = sc.rank_for_slot(
+            gear_pool,
+            slot,
+            mode_n,
+            stat_key if mode_n == "priority" else None,
+            any_opts,
+        )
+        pick = None
+        for cand in ranked:
+            if cand["name"] not in used_names:
+                pick = cand
+                break
+        if pick is None:
+            loadout[slot] = {
+                "slot": slot,
+                "name": "",
+                "score": 0,
+                "pval": 0,
+                "why": "no item",
+                "zone": "",
+                "drops_mobs": "",
+                "classes_str": "",
+                "ratio10": None,
+                "ratio_at_upgrade": None,
+                "url": "",
+                "bis_overlap": 0,
+                "tri_classes": 0,
+                "is_weapon": False,
+                "stats_plus10": {},
+                "stats_plus0": {},
+                "planner_slots": [slot],
+                "item": None,
+            }
+        else:
+            used_names.add(pick["name"])
+            row = dict(pick)
+            row["slot"] = slot
+            loadout[slot] = row
+
     slots_out = []
     haste_items = []
     for slot in PLANNER_SLOTS:
         cand = loadout.get(slot) or {}
         item = cand.get("item")
-        use_ratio = _slot_uses_ratio_rank(slot, item, prefer_ranged_damage) or (
-            slot in ("PRIMARY", "SECONDARY") and _has_weapon_ratio(item or {})
-        ) or (slot == "RANGE" and prefer_ranged_damage and _has_weapon_ratio(item or {}))
+        use_ratio = (
+            slot not in sc.ANY_SLOTS
+            and (
+                _slot_uses_ratio_rank(slot, item, prefer_ranged_damage)
+                or (
+                    slot in ("PRIMARY", "SECONDARY") and _has_weapon_ratio(item or {})
+                )
+                or (slot == "RANGE" and prefer_ranged_damage and _has_weapon_ratio(item or {}))
+            )
+        )
         ratio_u = ratio_at_level(item, upgrade) if item else None
         s0 = (item or {}).get("stats_plus0") or {}
         s10 = cand.get("stats_plus10") or (item or {}).get("stats_plus10") or {}
@@ -730,13 +791,18 @@ def items_for_slot(
     for item in pool:
         pslots = item.get("planner_slots") or []
         if slot:
-            match = {slot_u}
-            if slot_u in ("EAR1", "EAR2"):
-                match = {"EAR1", "EAR2"}
-            elif slot_u in ("FINGER1", "FINGER2"):
-                match = {"FINGER1", "FINGER2"}
-            if not (set(pslots) & match):
-                continue
+            if slot_u in sc.ANY_SLOTS:
+                # Any Slot can hold general worn gear (no catalog ANY token).
+                if not pslots:
+                    continue
+            else:
+                match = {slot_u}
+                if slot_u in ("EAR1", "EAR2"):
+                    match = {"EAR1", "EAR2"}
+                elif slot_u in ("FINGER1", "FINGER2"):
+                    match = {"FINGER1", "FINGER2"}
+                if not (set(pslots) & match):
+                    continue
         if qn and qn not in (item.get("name") or "").lower():
             continue
         out.append(_public_item(item, upgrade))
@@ -838,6 +904,7 @@ def simulate(
         cleaned,
         mode=cast_buffs or "off",
         active_ids=list(active_buff_ids or []),
+        character_level=character_level if character_level is not None else 50,
     )
     buff_effects = dict(buffs_info.get("effects") or {})
     buff_haste = float(buff_effects.pop("HASTE", 0) or 0)
@@ -957,7 +1024,8 @@ def meta_payload() -> dict:
         ),
         "weapon_rule": (
             "PRIMARY/SECONDARY: DW pair vs 2H expected-dmg when any DW class selected; "
-            "else ratio-only. RANGE when Prefer ranged: ratio-only."
+            "else ratio-only. RANGE when Prefer ranged: ratio-only. "
+            "ANY1/ANY2: stats only (weapon DMG/ratio ignored)."
         ),
         "races": get_races_payload(),
         "class_roles": class_roles.class_roles_payload(),
@@ -967,7 +1035,7 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.10",
+        "version": "1.0.11",
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "

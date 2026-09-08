@@ -16,6 +16,7 @@ PLANNER_SLOTS = [
     "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST",
     "HANDS", "CHEST", "BACK", "WAIST", "LEGS", "FEET",
     "FINGER1", "FINGER2", "PRIMARY", "SECONDARY", "RANGE", "AMMO",
+    "ANY1", "ANY2",
 ]
 
 SLOT_ALIASES = {
@@ -24,7 +25,12 @@ SLOT_ALIASES = {
     "CHEST": ["CHEST"], "BACK": ["BACK"], "WAIST": ["WAIST"], "LEGS": ["LEGS"],
     "FEET": ["FEET"], "FINGER": ["FINGER1", "FINGER2"], "PRIMARY": ["PRIMARY"],
     "SECONDARY": ["SECONDARY"], "RANGE": ["RANGE"], "RANGED": ["RANGE"], "AMMO": ["AMMO"],
+    # EQ Legends has two "Any Slot" worn slots (Inventory.txt Location: Any Slot).
+    "ANY": ["ANY1", "ANY2"], "ANYSLOT": ["ANY1", "ANY2"], "CHARM": ["ANY1", "ANY2"],
 }
+
+ANY_SLOTS = frozenset({"ANY1", "ANY2"})
+WEAPON_SLOTS = frozenset({"PRIMARY", "SECONDARY", "RANGE", "AMMO"})
 
 ATTR_KEYS = ["AC", "HP", "MANA", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA"]
 RESIST_KEYS = ["SVF", "SVC", "SVM", "SVP", "SVD", "SVV"]
@@ -274,12 +280,14 @@ def score_priority_tiers(item: dict, opts: dict[str, Any]) -> tuple[float, float
     if opts.get("maximize_hp_regen") and "HP_REGEN" not in used:
         tier_score += num(s10.get("HP_REGEN")) * 35.0
 
-    if weapon:
+    if weapon and not opts.get("ignore_weapon_ratio"):
         ratio10 = num(item.get("ratio_plus10"))
         score = ratio10 * 10000.0 + tier_score * 0.1 + 0.15 * other + hb
         return score, pval, "best ratio"
     score = tier_score + 0.15 * other + hb
     why = "priority " + " > ".join(labels) if labels else "priority (none selected)"
+    if opts.get("ignore_weapon_ratio"):
+        why = f"{why}; any-slot (no DMG)"
     return score, pval, why
 
 
@@ -294,7 +302,7 @@ def score_max_all(item: dict, opts: dict[str, Any] | None = None) -> tuple[float
     bang = max_all_stat_sum(s10, opts)
     hb = haste_bonus(item)
     weapon = item.get("is_weapon") and item.get("ratio_plus10") is not None
-    if weapon:
+    if weapon and not opts.get("ignore_weapon_ratio"):
         ratio10 = num(item.get("ratio_plus10"))
         score = ratio10 * 10000.0 + 0.2 * bang + hb
         return score, bang, "best ratio"
@@ -307,6 +315,8 @@ def score_max_all(item: dict, opts: dict[str, Any] | None = None) -> tuple[float
         why += "; HP regen"
     if not opts.get("uses_mana"):
         why += "; mana de-emphasized"
+    if opts.get("ignore_weapon_ratio"):
+        why += "; any-slot (no DMG)"
     why += ")"
     return bang + hb, bang, why
 
@@ -349,12 +359,15 @@ def score_ai_choice(item: dict, opts: dict[str, Any]) -> tuple[float, float, str
 
     hb = haste_bonus(item)
     weapon = item.get("is_weapon") and item.get("ratio_plus10") is not None
-    if weapon:
+    if weapon and not opts.get("ignore_weapon_ratio"):
         ratio10 = num(item.get("ratio_plus10"))
         score = ratio10 * 10000.0 + 0.25 * bang + 0.15 * role_bonus + hb
         return score, bang + role_bonus, "AI choice (best ratio)"
     trio = "/".join(classes) if classes else "trio"
-    return bang + role_bonus + hb, bang + role_bonus, f"AI choice for {trio}"
+    why = f"AI choice for {trio}"
+    if opts.get("ignore_weapon_ratio"):
+        why = f"{why}; any-slot (no DMG)"
+    return bang + role_bonus + hb, bang + role_bonus, why
 
 
 def score_item(item: dict, mode: str, stat_key: str | None, opts: dict[str, Any] | None = None) -> tuple[float, float, str]:
@@ -432,21 +445,35 @@ def rank_for_slot(
     stat_key: str | None,
     score_opts: dict[str, Any] | None = None,
 ) -> list[dict]:
-    if planner_slot in ("EAR1", "EAR2"):
+    any_slot = planner_slot in ANY_SLOTS
+    if any_slot:
+        # EQ Legends Any Slot accepts general worn gear; catalog has no ANY token.
+        match_slots = None
+    elif planner_slot in ("EAR1", "EAR2"):
         match_slots = {"EAR1", "EAR2"}
     elif planner_slot in ("FINGER1", "FINGER2"):
         match_slots = {"FINGER1", "FINGER2"}
     else:
         match_slots = {planner_slot}
 
-    opts = score_opts or default_score_opts(priority_stat=stat_key)
+    opts = dict(score_opts or default_score_opts(priority_stat=stat_key))
+    if any_slot:
+        # Damage/weapon ratio does not matter in Any Slot; other stats still score.
+        opts["ignore_weapon_ratio"] = True
     candidates = []
     for item in pool:
         pslots = set(item.get("planner_slots") or [])
-        if not (pslots & match_slots):
+        if match_slots is None:
+            if not pslots:
+                continue
+        elif not (pslots & match_slots):
             continue
         score, pval, why = score_item(item, mode, stat_key, opts)
-        if item.get("is_weapon") and item.get("ratio_plus10") is not None:
+        if (
+            item.get("is_weapon")
+            and item.get("ratio_plus10") is not None
+            and not opts.get("ignore_weapon_ratio")
+        ):
             why = "best ratio" if normalize_mode(mode) != "ai" else why
         s10 = enrich_stats_with_regen(item)
         candidates.append({
@@ -490,6 +517,8 @@ def pick_loadout(
         ["HEAD"], ["FACE"], ["EAR1", "EAR2"], ["NECK"], ["SHOULDERS"], ["ARMS"],
         ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
+        # Fill dedicated slots first; Any Slot uses leftover best-stat gear (no DMG).
+        ["ANY1", "ANY2"],
     ]
     opts = dict(score_opts or default_score_opts(priority_stat=stat_key))
     mode_n = normalize_mode(mode)

@@ -32,6 +32,10 @@ LOCATION_TO_SLOTS: dict[str, list[str]] = {
     "RANGE": ["RANGE"],
     "RANGED": ["RANGE"],
     "AMMO": ["AMMO"],
+    # EQ Legends has two worn "Any Slot" locations (Inventory.txt: Any Slot).
+    "ANY SLOT": ["ANY1", "ANY2"],
+    "ANY": ["ANY1", "ANY2"],
+    "CHARM": ["ANY1", "ANY2"],
 }
 
 
@@ -159,7 +163,7 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             if entry["unmatched"]:
                 unmatched.append(entry)
             continue
-        if location.lower() in ("any slot", "keyring", "augmentation", "charm"):
+        if location.lower() in ("keyring", "augmentation"):
             entry["reason"] = "non-planner worn"
             entry["planner_slot"] = None
             skipped.append(entry)
@@ -185,8 +189,13 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
                 unmatched.append(entry)
             continue
 
-        idx = slot_counts.get(loc_key, 0)
-        if idx >= len(targets):
+        # Prefer next free planner target (shared across aliases e.g. Any Slot / Charm).
+        planner_slot = None
+        for cand in targets:
+            if cand not in equipment:
+                planner_slot = cand
+                break
+        if planner_slot is None:
             entry["reason"] = "extra duplicate location"
             entry["planner_slot"] = None
             skipped.append(entry)
@@ -194,8 +203,7 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             if entry["unmatched"]:
                 unmatched.append(entry)
             continue
-        planner_slot = targets[idx]
-        slot_counts[loc_key] = idx + 1
+        slot_counts[loc_key] = slot_counts.get(loc_key, 0) + 1
 
         entry["planner_slot"] = planner_slot
         entry["reason"] = None if in_catalog else "not in item DB (shown anyway)"

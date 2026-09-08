@@ -1,33 +1,15 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.10 READY TO SHIP** — BiS icons seed + sim deltas + search/import harden + clearer quest steps
-Canonical: backend/app/{main,engine,item_catalog,paths,inventory,quest_guides,...}.py + frontend App.jsx + desktop/main.js
-PR: https://github.com/PolarOppositesHub/eq-legends-bis/pull/7 (`cursor/bis-icons-seed-sim-deltas-d4a5` → `main`)
+Version: **1.0.11** — Bags + Quest Hub + Cast Buffs level-gate + Any Slots BiS
+Canonical: backend/app/{main,engine,spell_buffs,quest_hub,quest_guides,scoring,inventory,...}.py + frontend App.jsx
+Branch: `cursor/bags-quest-hub-d4a5` · PR https://github.com/PolarOppositesHub/eq-legends-bis/pull/9
 
-**Agent cannot** build Windows `.exe` or create GitHub Releases. Overnight grok bot / Josh: **merge PR #7**, then publish from **main**.
+**Agent cannot** build Windows `.exe` or create GitHub Releases.
 
-## Overnight ship steps
-1. Merge PR **#7** into `main`
-2. `git pull origin main`
-3. `powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1`
-4. Publish GitHub Release **v1.0.10** with NSIS + portable + `latest.yml`
-5. Prefer NSIS `EQ-Legends-BiS-1.0.10-win-x64.exe`
-6. Confirm header **UI 1.0.10** (API · v1.0.10)
+## 1.0.11
+- Search My Bags + Quest Hub + quieter inventory import
+- **Cast Buffs / Quick Buff is level-gated** to Simulator Character Level (eqlwiki cast levels). Lower-rank lines added so L35 is not stuck waiting for L50 max spells (e.g. Symbol of Pinzarn instead of Naltron; no Resolution until L42).
+- **ANY1 / ANY2** planner slots for EQ Legends worn Any Slot. BiS + Simulator include them; inventory `Location: Any Slot` maps into them. Scoring ignores weapon DMG/ratio in those slots (other stats still count); dedicated slots fill first.
 
-## Why 1.0.10
-- BiS icons: ship seeded `data/item-images` + read bundled seeds when userData cache is empty; copy seed→writable; softer ItemIcon fallback
-- Simulator: live worn/BiS deltas without Suggest upgrades; Apply/Recalculate also refreshes upgrade priorities; equipment table no inner scrollbar
-- Item Search / Inventory import: stop 500s from image-cache coupling (`name_in_catalog`, hardened `_public_item`, endpoint guards, Electron decoded-path probe)
-- Upgrade Priority quest steps: expand tags like `4-KoS` to zone + mob names
-
-## Search / Inventory regression (vs 1.0.3)
-- **1.0.3:** Inventory import was TSV-only (no catalog/image I/O). Item Search did not exist.
-- **1.0.4+:** Import called `get_item_by_name` → `_public_item` → `local_image_path` per row; packaged read-only `item-images` mkdir → **500 Internal Server Error**. Search had the same coupling.
-- **1.0.10 fix:** `name_in_catalog` (no image I/O); `_public_item` / search never raise; Electron probes real decoded dirs + writable `EQ_IMAGES_DIR`; empty/missing decoded degrades with a warning instead of 500.
-
-## Coding smoke (green)
-- Search `aegis` / `sword` → 200, catalog ~940
-- Inventory.txt Location/Name TSV import → `ok: true`, worn slots mapped
-- Mock `local_image_path` OSError → search 200 + import 200
-- Quest guide "Wizard Test of Focus" mentions Keeper of Souls / Island 4
-- Versions: root / frontend / desktop / engine / UI badge all **1.0.10**
+## Overnight
+Merge PR #9 → `main`, then `.\scripts\build-windows.ps1` → Release **v1.0.11**.

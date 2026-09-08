@@ -14,12 +14,20 @@ import {
   itemImageUrl,
   ensureItemImage,
   getPriorityDefaults,
+  listQuests,
+  getQuestDetail,
 } from './api.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
 const MAX_LEVEL = 50
 const EMPTY_TIERS = ['', '', '']
+
+function slotLabel(slot) {
+  if (slot === 'ANY1') return 'ANY1 (Any Slot)'
+  if (slot === 'ANY2') return 'ANY2 (Any Slot)'
+  return slot
+}
 
 function fmtStats(stats, keys) {
   if (!stats) return ''
@@ -424,6 +432,14 @@ export default function App() {
   const [suggestions, setSuggestions] = useState(null)
   const [importMsg, setImportMsg] = useState('')
   const [importMeta, setImportMeta] = useState(null)
+  const [bagsQ, setBagsQ] = useState('')
+  const [bagsLoc, setBagsLoc] = useState('')
+  const [questQ, setQuestQ] = useState('')
+  const [questResults, setQuestResults] = useState(null)
+  const [questLoading, setQuestLoading] = useState(false)
+  const [questDetail, setQuestDetail] = useState(null)
+  const [questDetailLoading, setQuestDetailLoading] = useState(false)
+  const [selectedQuestName, setSelectedQuestName] = useState('')
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -555,19 +571,15 @@ export default function App() {
       const data = await postBis(bisRequestBody())
       setBis(data)
       setBisOverrides({})
-      const eq = {}
       const names = []
       for (const s of data.slots || []) {
-        if (s.name) {
-          eq[s.slot] = s.name
-          names.push(s.name)
-        }
+        if (s.name) names.push(s.name)
         for (const a of s.alts || []) {
           if (a?.name) names.push(a.name)
         }
       }
-      setEquipment(eq)
-      // Best-effort icon cache so list/hover images appear without waiting on hover
+      // Do not overwrite Simulator worn gear here — BiS mode/upgrades must leave
+      // imported equipment alone. Use "Load from BiS" to copy BiS into worn slots.
       for (const name of names) {
         if (!name || ensuredImagesRef.current.has(name)) continue
         ensuredImagesRef.current.add(name)
@@ -633,11 +645,15 @@ export default function App() {
     primaryStats, secondaryStats, tertiaryStats, maximizeHpRegen,
   ])
 
-  const runSim = useCallback(async () => {
+  const runSim = useCallback(async (equipmentOverride) => {
     if (classes.length < 1) {
       setError('Pick at least one class (up to 3).')
       return
     }
+    const eq =
+      equipmentOverride && typeof equipmentOverride === 'object' && !equipmentOverride.nativeEvent
+        ? equipmentOverride
+        : equipment
     setLoading(true)
     setError('')
     try {
@@ -646,14 +662,14 @@ export default function App() {
         race,
         upgrade,
         character_level: characterLevel,
-        equipment,
+        equipment: eq,
         cast_buffs: castBuffsMode,
         assume_max_aas: assumeMaxAas,
       })
       setSim(data)
       // Also refresh upgrade priorities (replaces separate Suggest upgrades button).
       try {
-        const sug = await upgradeSuggestions(suggestionBody(equipment))
+        const sug = await upgradeSuggestions(suggestionBody(eq))
         setSuggestions(sug)
       } catch (_) {
         /* sim totals still useful if upgrade ranking fails */
@@ -689,6 +705,22 @@ export default function App() {
     setEquipment(eq)
     setBisOverrides({})
     setTab('sim')
+  }
+
+  const resetToImportedWorn = () => {
+    const eq = importMeta?.equipment
+    if (!eq || !Object.keys(eq).length) {
+      setError('Import Inventory.txt first to restore worn gear from that file.')
+      return
+    }
+    const restored = { ...eq }
+    setEquipment(restored)
+    setBisOverrides({})
+    setImportMsg(`Restored ${Object.keys(restored).length} worn slots from last Inventory.txt import`)
+    setTab('sim')
+    if (classes.length >= 1) {
+      runSim(restored)
+    }
   }
 
   const openZone = async (zone, dropsMobs = '') => {
@@ -732,12 +764,16 @@ export default function App() {
         unmatched_count: parsed.unmatched_count || 0,
         unmatched: parsed.unmatched || [],
         all_items: parsed.all_items || [],
+        worn: parsed.worn || [],
+        equipment: eq,
+        skipped_count: parsed.skipped_count || 0,
       })
+      const wornN = Object.keys(eq).length
       setImportMsg(
-        `Imported ${Object.keys(eq).length} worn slots` +
-        (parsed.skipped_count ? ` · skipped ${parsed.skipped_count}` : '') +
-        (parsed.unmatched_count ? ` · unmatched ${parsed.unmatched_count}` : '') +
-        ` from ${file.name}`
+        `Imported ${wornN} worn slots` +
+        (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
+        ` from ${file.name}` +
+        (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item DB (see debug)` : '')
       )
       setTab('sim')
       if (classes.length >= 1) {
@@ -1012,19 +1048,91 @@ export default function App() {
     return computeStatDeltas(effectiveWorn, bisStats || {}).filter((d) => Math.abs(d.delta) >= 1e-9)
   }
 
+  const openQuestHub = useCallback((questName) => {
+    const n = (questName || '').trim()
+    if (!n) return
+    setSelectedQuestName(n)
+    setQuestQ(n)
+    setTab('quests')
+  }, [])
+
+  const loadQuestDetail = useCallback(async (questName) => {
+    const n = (questName || '').trim()
+    if (!n) return
+    setQuestDetailLoading(true)
+    setSelectedQuestName(n)
+    setError('')
+    try {
+      const inv = importMeta?.all_items || []
+      const d = await getQuestDetail({
+        name: n,
+        fetch: true,
+        inventory_items: inv,
+      })
+      setQuestDetail(d)
+    } catch (e) {
+      setQuestDetail(null)
+      setError(String(e.message || e))
+    } finally {
+      setQuestDetailLoading(false)
+    }
+  }, [importMeta])
+
+  useEffect(() => {
+    if (tab !== 'quests') return undefined
+    let cancelled = false
+    const t = setTimeout(async () => {
+      setQuestLoading(true)
+      try {
+        const res = await listQuests({ q: questQ || '', limit: 120 })
+        if (!cancelled) setQuestResults(res)
+      } catch (e) {
+        if (!cancelled) {
+          setQuestResults(null)
+          setError(String(e.message || e))
+        }
+      } finally {
+        if (!cancelled) setQuestLoading(false)
+      }
+    }, 220)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [tab, questQ])
+
+  useEffect(() => {
+    if (tab !== 'quests' || !selectedQuestName) return
+    loadQuestDetail(selectedQuestName)
+  }, [tab, selectedQuestName, loadQuestDetail])
+
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
+    { id: 'bags', label: 'Search My Bags' },
+    { id: 'quests', label: 'Quest Hub' },
     { id: 'search', label: 'Item Search' },
   ]
 
   const unmatchedNames = (importMeta?.unmatched || [])
     .map((u) => (typeof u === 'string' ? u : (u.name || u.base_name || '')))
     .filter(Boolean)
-  const allItemNames = (importMeta?.all_items || [])
-    .map((u) => (typeof u === 'string' ? u : (u.name || u.base_name || '')))
-    .filter(Boolean)
+  const allImportedItems = importMeta?.all_items || []
+  const wornSlotCount = Object.keys(importMeta?.equipment || equipment || {}).length
+
+  const bagHits = useMemo(() => {
+    const q = (bagsQ || '').trim().toLowerCase()
+    const tokens = q.split(/[^a-z0-9']+/i).filter((t) => t && !['of', 'the', 'a', 'an', 'and'].includes(t))
+    const locFilter = (bagsLoc || '').trim().toLowerCase()
+    return allImportedItems.filter((row) => {
+      const name = String(row?.base_name || row?.name || row || '').toLowerCase()
+      const loc = String(row?.location || '').toLowerCase()
+      if (locFilter && !loc.includes(locFilter)) return false
+      if (!tokens.length) return true
+      return tokens.every((t) => name.includes(t) || loc.includes(t))
+    })
+  }, [allImportedItems, bagsQ, bagsLoc])
 
   return (
     <div className="app">
@@ -1034,10 +1142,10 @@ export default function App() {
           <p>
             Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
             {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.10'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.11'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.10</span>
+        <span className="ui-build-badge" title="App version">Version 1.0.11</span>
       </header>
 
       <div className="app-shell">
@@ -1214,9 +1322,11 @@ export default function App() {
                     <label>Cast Buffs</label>
                     <select value={castBuffsMode} onChange={(e) => setCastBuffsMode(e.target.value)}>
                       <option value="off">Off</option>
-                      <option value="quick">Quick Buff (max lines)</option>
+                      <option value="quick">Quick Buff (at Character Level)</option>
                     </select>
-                    <span className="muted" style={{ fontSize: '0.75rem' }}>Trio casters → best stacking lines</span>
+                    <span className="muted" style={{ fontSize: '0.75rem' }}>
+                      Trio casters → best stacking lines castable at level {characterLevel}
+                    </span>
                   </div>
                   <div className="field">
                     <label className="check">
@@ -1302,10 +1412,14 @@ export default function App() {
                   (formulas stay in the API only).
                 </p>
               ) : null}
+              <p className="note" style={{ marginTop: '0.5rem' }}>
+                ANY1/ANY2 are the two worn Any Slots — BiS scored on stats only (weapon damage ignored);
+                filled after dedicated slots from leftover gear.
+              </p>
               <div className="grid-slots">
                 {bis.slots.map((s) => (
                   <div className="slot-card" key={s.slot}>
-                    <h3>{s.slot}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
+                    <h3>{slotLabel(s.slot)}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
                     <div className="item-name">
                       {s.name ? <ItemIcon name={s.name} /> : null}
                       {s.name ? (
@@ -1391,6 +1505,203 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'bags' && (
+            <div className="panel item-search">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Search My Bags</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Search everything from your last Inventory.txt import (worn, bags, bank, nested slots).
+                Import from Simulator or Upgrade Priority first.
+              </p>
+              {!allImportedItems.length ? (
+                <p className="muted">No inventory imported yet — use Import Inventory.txt on the Simulator tab.</p>
+              ) : (
+                <>
+                  <div className="item-search-bar">
+                    <input
+                      type="text"
+                      placeholder="Find an item in your bags…"
+                      value={bagsQ}
+                      onChange={(e) => setBagsQ(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Location filter (e.g. General, Bank)"
+                      value={bagsLoc}
+                      onChange={(e) => setBagsLoc(e.target.value)}
+                      style={{ maxWidth: 220 }}
+                    />
+                  </div>
+                  <p className="muted" style={{ marginTop: '0.65rem' }}>
+                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'} · {allImportedItems.length} imported lines
+                  </p>
+                  <ul className="item-search-list">
+                    {bagHits.slice(0, 200).map((row, i) => {
+                      const name = row?.base_name || row?.name || String(row)
+                      const loc = row?.location || '—'
+                      const count = row?.count || ''
+                      return (
+                        <li key={`${loc}-${name}-${i}`}>
+                          <div className="item-search-result" style={{ cursor: 'default' }}>
+                            <div>
+                              <div className="item-search-name">{name}</div>
+                              <div className="muted" style={{ fontSize: '0.78rem' }}>
+                                {loc}{count ? ` · ×${count}` : ''}
+                                {row?.in_catalog === false ? ' · not in item DB' : ''}
+                                {row?.planner_slot ? ` · worn ${row.planner_slot}` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+
+          {tab === 'quests' && (
+            <div className="panel item-search">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Quest Hub</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Look up quests known from the item database (rewardFromQuests / quest_source). Open a quest for steps,
+                prerequisites, and whether imported inventory already has turn-in items.
+              </p>
+              <div className="item-search-bar">
+                <input
+                  type="text"
+                  placeholder="Search quests…"
+                  value={questQ}
+                  onChange={(e) => setQuestQ(e.target.value)}
+                />
+              </div>
+              {questResults && (
+                <p className="muted" style={{ marginTop: '0.65rem' }}>
+                  {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
+                  {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
+                </p>
+              )}
+              {questResults?.note ? (
+                <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
+              ) : null}
+              <div className="item-search-layout">
+                <ul className="item-search-list">
+                  {(questResults?.quests || []).map((q) => (
+                    <li key={q.name}>
+                      <button
+                        type="button"
+                        className="item-search-result"
+                        onClick={() => setSelectedQuestName(q.name)}
+                        style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
+                      >
+                        <div>
+                          <div className="item-search-name">{q.name}</div>
+                          <div className="muted" style={{ fontSize: '0.78rem' }}>
+                            {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
+                            {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="item-detail-panel">
+                  {!selectedQuestName && (
+                    <p className="muted">Select a quest to view steps, prerequisites, and inventory checks.</p>
+                  )}
+                  {questDetailLoading && <p className="muted">Loading quest…</p>}
+                  {questDetail && !questDetailLoading && (
+                    <>
+                      <div className="item-name">
+                        <strong>{questDetail.quest || selectedQuestName}</strong>
+                        {questDetail.url ? (
+                          <>
+                            {' · '}
+                            <a href={questDetail.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                          </>
+                        ) : null}
+                      </div>
+                      {questDetail.inventory?.imported ? (
+                        <p className="muted" style={{ fontSize: '0.82rem' }}>
+                          Inventory check: have {questDetail.inventory.have_count || 0} / need{' '}
+                          {(questDetail.inventory.have_count || 0) + (questDetail.inventory.need_count || 0)} component
+                          {(questDetail.inventory.have_count || 0) + (questDetail.inventory.need_count || 0) === 1 ? '' : 's'}
+                        </p>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.82rem' }}>
+                          Import Inventory.txt to mark which turn-in items you already have.
+                        </p>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
+                      {(questDetail.prerequisites || []).length ? (
+                        <ul className="mob-list">
+                          {(questDetail.prerequisites || []).map((p, i) => (
+                            <li key={`${p.name}-${i}`}>
+                              {p.kind === 'quest' ? (
+                                <button type="button" className="zone-link" onClick={() => setSelectedQuestName(p.name)}>
+                                  {p.name}
+                                </button>
+                              ) : (
+                                <span>{p.name}</span>
+                              )}
+                              {p.source ? <span className="muted"> · {p.source}</span> : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          {questDetail.prerequisites_note || 'No prerequisites listed in available sources.'}
+                        </p>
+                      )}
+                      {(questDetail.components || []).length > 0 && (
+                        <>
+                          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Components</h3>
+                          <table className="quest-components">
+                            <thead>
+                              <tr>
+                                <th>Have?</th>
+                                <th>Item</th>
+                                <th>Who / Where</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(questDetail.components || []).map((c, i) => (
+                                <tr key={`${c.item}-${i}`}>
+                                  <td>{c.have ? 'Yes' : 'No'}</td>
+                                  <td>
+                                    {c.item}
+                                    {c.have_locations?.length ? (
+                                      <div className="muted" style={{ fontSize: '0.72rem' }}>
+                                        {c.have_locations.join(' · ')}
+                                      </div>
+                                    ) : null}
+                                  </td>
+                                  <td>{[c.who, c.where].filter(Boolean).join(' · ')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Steps</h3>
+                      {(questDetail.steps || []).length ? (
+                        <ol className="quest-steps">
+                          {(questDetail.steps || []).map((step, i) => (
+                            <li key={i}>{step}</li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          {questDetail.note || questDetail.error || 'Steps not available locally.'}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {tab === 'search' && (
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
@@ -1405,7 +1716,7 @@ export default function App() {
                 <select value={searchSlot} onChange={(e) => setSearchSlot(e.target.value)}>
                   <option value="">All slots</option>
                   {(meta?.slots || []).map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{slotLabel(s)}</option>
                   ))}
                 </select>
                 <button type="button" className="primary" disabled={searchLoading} onClick={runSearch}>
@@ -1520,10 +1831,18 @@ export default function App() {
                 </div>
                 <p className="muted">
                   Import <code>Inventory.txt</code> from in-game <code>/outputfile inventory</code>.
-                  Live Totals use race + class allotments + EQLT HP/Mana/END formulas. Turn on <strong>Cast Buffs</strong> for max trio lines.
+                  Live Totals use race + class allotments + EQLT HP/Mana/END formulas. Turn on <strong>Cast Buffs</strong> for the best trio lines castable at your Character Level (not L50-only max spells).
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                   <button type="button" onClick={clearEquipment}>Clear equipment</button>
+                  <button
+                    type="button"
+                    onClick={resetToImportedWorn}
+                    disabled={!importMeta?.equipment || !Object.keys(importMeta.equipment).length}
+                    title="Restore worn slots from the last Inventory.txt import"
+                  >
+                    Reset to imported worn
+                  </button>
                   <button type="button" onClick={loadFromBis} disabled={!bis?.slots?.length}>
                     Load from BiS
                   </button>
@@ -1543,25 +1862,20 @@ export default function App() {
                   <button type="button" onClick={openHelp}>Help</button>
                 </div>
 
-                {importMeta && (importMeta.unmatched_count > 0 || unmatchedNames.length > 0 || allItemNames.length > 0) && (
+                {importMeta && (
                   <div className="import-unmatched">
-                    <p className="muted" style={{ marginTop: 0 }}>
-                      Unmatched: <strong>{importMeta.unmatched_count ?? unmatchedNames.length}</strong>
-                      {allItemNames.length ? ` · all items listed: ${allItemNames.length}` : ''}
+                    <p style={{ marginTop: 0, marginBottom: '0.35rem' }}>
+                      Inventory import: <strong>{wornSlotCount}</strong> worn slots filled
+                      {importMeta.skipped_count ? ` · ${importMeta.skipped_count} bag/nested lines kept for Search My Bags` : ''}
                     </p>
-                    {unmatchedNames.length > 0 && (
-                      <details open>
-                        <summary>Unmatched names</summary>
+                    <p className="muted" style={{ marginTop: 0, fontSize: '0.8rem' }}>
+                      Bag/bank contents are searchable under <strong>Search My Bags</strong>. Names missing from the item DB do not block worn-slot import.
+                    </p>
+                    {(importMeta.unmatched_count > 0 || unmatchedNames.length > 0) && (
+                      <details>
+                        <summary className="muted">Debug: {importMeta.unmatched_count ?? unmatchedNames.length} names not in item DB</summary>
                         <ul className="mob-list">
                           {unmatchedNames.map((n, i) => <li key={`${n}-${i}`}>{n}</li>)}
-                        </ul>
-                      </details>
-                    )}
-                    {allItemNames.length > 0 && (
-                      <details>
-                        <summary>All imported item names</summary>
-                        <ul className="mob-list">
-                          {allItemNames.map((n, i) => <li key={`all-${n}-${i}`}>{n}</li>)}
                         </ul>
                       </details>
                     )}
@@ -1595,7 +1909,7 @@ export default function App() {
 
                     return (
                       <div className="equip-compare-row" key={slot}>
-                        <label>{slot}</label>
+                        <label>{slotLabel(slot)}</label>
                         <select
                           className="slot-select"
                           value={equipment[slot] || ''}
@@ -1716,6 +2030,7 @@ export default function App() {
                           {sim.cast_buffs.active.map((b) => (
                             <li key={b.id}>
                               <strong>{b.name}</strong>
+                              {b.level != null ? ` (L${b.level})` : ''}
                               {b.classes?.length ? ` · ${(b.classes || []).join(', ')}` : ''}
                               {b.tooltip ? ` — ${b.tooltip}` : ''}
                             </li>
@@ -1916,6 +2231,15 @@ export default function App() {
                                 </tbody>
                               </table>
                             )}
+                            <div style={{ marginTop: '0.45rem' }}>
+                              <button
+                                type="button"
+                                className="primary"
+                                onClick={() => openQuestHub(s.suggested_quest_name || obtain.quest_name)}
+                              >
+                                Open in Quest Hub
+                              </button>
+                            </div>
                             {steps.length > 0 ? (
                               <ol className="quest-steps">
                                 {steps.map((step, i) => (

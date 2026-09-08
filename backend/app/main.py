@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.5")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.11")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -157,7 +157,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.10",
+        "version": m.get("version") or "1.0.11",
         "scoring": m.get("scoring"),
     }
 
@@ -386,8 +386,11 @@ def post_simulate(body: SimulateRequest):
 
 
 @app.get("/api/spell-buffs")
-def api_spell_buffs(classes: Optional[list[str]] = Query(default=None)):
-    """Buff catalog filtered to selected trio classes (eqlegendstools spellBuffs)."""
+def api_spell_buffs(
+    classes: Optional[list[str]] = Query(default=None),
+    character_level: int = Query(default=50, ge=1, le=50),
+):
+    """Buff catalog filtered to selected trio classes at character_level."""
     from . import spell_buffs as sb
 
     cls_list: list[str] = []
@@ -397,7 +400,11 @@ def api_spell_buffs(classes: Optional[list[str]] = Query(default=None)):
             if part:
                 cls_list.append(part)
     cleaned = _norm_classes(cls_list, allow_empty=True)
-    return sb.cast_buffs_payload(cleaned, mode="off")
+    return sb.cast_buffs_payload(
+        cleaned,
+        mode="off",
+        character_level=character_level,
+    )
 
 
 
@@ -538,6 +545,59 @@ def api_quest_guide(name: str = Query(...), fetch: bool = Query(default=True)):
     """Quest steps from cache/eqlwiki for a quest name (never invented)."""
     from . import quest_guides as qg
     return qg.ensure_quest_guide(name, fetch=fetch)
+
+
+@app.get("/api/quests")
+def api_quests(
+    q: str = Query(default=""),
+    limit: int = Query(default=200, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """Quest Hub index — names from decoded catalog rewardFromQuests / quest_source."""
+    from . import quest_hub as qh
+    try:
+        return qh.search_quests(q, limit=limit, offset=offset)
+    except Exception as e:
+        return {
+            "total": 0,
+            "offset": offset,
+            "limit": limit,
+            "query": q or "",
+            "quests": [],
+            "catalog_size": 0,
+            "warning": f"quest list unavailable: {e}",
+        }
+
+
+class QuestDetailRequest(BaseModel):
+    name: str
+    fetch: bool = True
+    # Imported inventory rows or names for ownership check against components.
+    inventory_items: list[Any] = Field(default_factory=list)
+
+
+@app.post("/api/quest-detail")
+def api_quest_detail(body: QuestDetailRequest):
+    """Quest Hub detail: guide + prerequisites + inventory ownership for components."""
+    from . import quest_hub as qh
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(400, "Provide a quest name")
+    try:
+        return qh.quest_detail(
+            name,
+            fetch=bool(body.fetch),
+            inventory_items=list(body.inventory_items or []),
+        )
+    except Exception as e:
+        return {
+            "quest": name,
+            "steps": [],
+            "components": [],
+            "prerequisites": [],
+            "error": f"quest detail unavailable: {e}",
+            "note": "No invented steps.",
+        }
 
 
 @app.get("/api/help/inventory")

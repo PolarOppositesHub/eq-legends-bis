@@ -30,7 +30,7 @@ USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
 # Bump when step/component wording schema changes so stale caches refresh.
-GUIDE_FORMAT_VERSION = 3
+GUIDE_FORMAT_VERSION = 4
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
 # Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
@@ -43,6 +43,11 @@ _WS_RE = re.compile(r"\s+")
 # Wiki sky-table tags: "Woven Skull Cap (4-KoS)" / "Gem of Invigoration (7-Trash)"
 _SKY_REQ_TAG = re.compile(
     r"^(?P<item>.+?)\s*\((?P<tag>\d+\s*-\s*[A-Za-z][A-Za-z0-9]*)\)\s*$"
+)
+_PREREQ_LINE = re.compile(
+    r"(?:prerequisite|prerequisites|previous\s+quest|requires?\s+quest|"
+    r"must\s+(?:first\s+)?complete)\s*:?\s*(.+)",
+    re.I,
 )
 
 # Documented eqlwiki Plane of Sky island bosses (same abbreviations used in class-test tables).
@@ -856,6 +861,116 @@ def _enrich_component_rows(
     return out
 
 
+def _prerequisites_from_html(html: str, quest_name: str) -> list[dict[str, Any]]:
+    """Named prerequisite quests explicitly listed on eqlwiki (never invented)."""
+    if not html:
+        return []
+    section = _extract_quest_section(html, quest_name) if quest_name else html
+    scan = _TAG_RE.sub(" ", section or html)
+    scan = _WS_RE.sub(" ", scan)
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    qkey = (quest_name or "").strip().lower()
+    for m in _PREREQ_LINE.finditer(scan):
+        rest = m.group(1).strip()
+        parts = re.split(r"\s*(?:,|;|\||/| and )\s*", rest)
+        for part in parts[:8]:
+            name = part.strip(" .")
+            name = re.split(r"\.\s+|!\s+|\?\s+", name)[0].strip()
+            if len(name) < 4 or len(name) > 90:
+                continue
+            if name.lower().startswith("http"):
+                continue
+            key = name.lower()
+            if key in seen or key == qkey:
+                continue
+            seen.add(key)
+            out.append({"name": name, "kind": "quest", "source": "eqlwiki"})
+    return out
+
+
+def _sky_island_from_payload(components: list[dict[str, Any]], steps: list[str]) -> int | None:
+    for c in components or []:
+        tag = (c.get("wiki_tag") or "").strip().lower().replace(" ", "")
+        if re.match(r"^\d+-", tag):
+            try:
+                return int(tag.split("-", 1)[0])
+            except ValueError:
+                pass
+        where = c.get("where") or ""
+        m = re.search(r"Island\s+(\d+)", where, re.I)
+        if m:
+            try:
+                return int(m.group(1))
+            except ValueError:
+                pass
+    for step in steps or []:
+        m = re.search(r"Island\s+(\d+)", str(step), re.I)
+        if m:
+            try:
+                return int(m.group(1))
+            except ValueError:
+                pass
+    return None
+
+
+def _sky_access_prerequisites(island: int) -> list[dict[str, Any]]:
+    """Documented Plane of Sky island progression (eqlwiki Plane of Sky)."""
+    out = [{
+        "name": "Enter Plane of Sky (Island 1) — buy Efreeti's Key from the Key Master",
+        "kind": "access",
+        "source": "eqlwiki Plane of Sky",
+        "island": 1,
+    }]
+    if island and island >= 2:
+        out.append({
+            "name": (
+                f"Progress Plane of Sky access through Island {island - 1} "
+                "(keys / teleports per eqlwiki Plane of Sky)"
+            ),
+            "kind": "access",
+            "source": "eqlwiki Plane of Sky",
+            "island": island - 1,
+        })
+    return out
+
+
+def _attach_prerequisites(
+    guide: dict[str, Any],
+    *,
+    html: str | None = None,
+) -> dict[str, Any]:
+    g = dict(guide or {})
+    quest = (g.get("quest") or "").strip()
+    prereqs = list(g.get("prerequisites") or [])
+    if html:
+        for p in _prerequisites_from_html(html, quest):
+            if not any((x.get("name") or "").lower() == (p.get("name") or "").lower() for x in prereqs):
+                prereqs.append(p)
+    island = _sky_island_from_payload(g.get("components") or [], g.get("steps") or [])
+    blob = " ".join(
+        str(x) for x in (
+            g.get("url") or "",
+            g.get("source") or "",
+            g.get("note") or "",
+            *(g.get("steps") or [])[:3],
+        )
+    ).lower()
+    if island is not None or "plane of sky" in blob or "sky" in (quest or "").lower():
+        if island is None:
+            island = 1
+        for a in _sky_access_prerequisites(island):
+            if not any((x.get("name") or "").lower() == (a.get("name") or "").lower() for x in prereqs):
+                prereqs.append(a)
+    g["prerequisites"] = prereqs
+    g["prerequisites_note"] = (
+        ""
+        if prereqs
+        else "No prerequisite quests listed in available eqlwiki/source text for this quest."
+    )
+    return g
+
+
 def cache_path(quest_name: str) -> Path:
     try:
         GUIDES_DIR.mkdir(parents=True, exist_ok=True)
@@ -970,6 +1085,8 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
         cached = load_cached_guide(name)
         # Ignore stub caches that only stored the quest title line
         if cached and (cached.get("components") or len(cached.get("steps") or []) > 1):
+            if "prerequisites" not in cached:
+                return _attach_prerequisites(cached, html=None)
             return cached
 
         urls = wiki_urls_for_quest(name)
@@ -1016,6 +1133,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                     ),
                     "format_version": GUIDE_FORMAT_VERSION,
                 }
+                guide = _attach_prerequisites(guide, html=html)
                 _write_cached_guide(name, guide)
                 return guide
 
@@ -1054,6 +1172,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                         "source": url,
                         "format_version": GUIDE_FORMAT_VERSION,
                     }
+                    guide = _attach_prerequisites(guide, html=html)
                     _write_cached_guide(name, guide)
                     return guide
                 continue
@@ -1072,6 +1191,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 ),
                 "format_version": GUIDE_FORMAT_VERSION,
             }
+            guide = _attach_prerequisites(guide, html=html)
             _write_cached_guide(name, guide)
             return guide
 
@@ -1086,6 +1206,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
             "note": "Quest name known from item DB; steps not available locally. Open wiki URL if present.",
             "format_version": GUIDE_FORMAT_VERSION,
         }
+        guide = _attach_prerequisites(guide, html=None)
         _write_cached_guide(name, guide)
         return guide
     except Exception as e:
@@ -1099,6 +1220,8 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
             "error": f"quest guide unavailable: {e}",
             "note": "Quest wiki/cache unavailable; no invented steps.",
             "format_version": GUIDE_FORMAT_VERSION,
+            "prerequisites": [],
+            "prerequisites_note": "Quest wiki/cache unavailable; prerequisites unknown.",
         }
 
 

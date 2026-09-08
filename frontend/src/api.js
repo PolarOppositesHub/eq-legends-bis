@@ -67,3 +67,13 @@ export const importInventory = (text) =>
 export const upgradeSuggestions = (body) =>
   req('/api/inventory/upgrade-suggestions', { method: 'POST', body: JSON.stringify(body) })
 export const getInventoryHelp = () => req('/api/help/inventory')
+export const listQuests = (params = {}) => {
+  const q = new URLSearchParams(params)
+  return req(`/api/quests?${q}`)
+}
+export const getQuestGuide = (name, fetch = true) => {
+  const q = new URLSearchParams({ name, fetch: String(!!fetch) })
+  return req(`/api/quest-guide?${q}`)
+}
+export const getQuestDetail = (body) =>
+  req('/api/quest-detail', { method: 'POST', body: JSON.stringify(body) })
