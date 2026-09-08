@@ -53,6 +53,18 @@ def main():
             shutil.rmtree(icons_dst)
         shutil.copytree(icons_src, icons_dst)
         print('  item-images ->', icons_dst, f'({sum(1 for _ in icons_dst.glob("*.png"))} png)')
+    # Cast Buff / Quick Buff spell icons (eqlegendstools spellicons filenames).
+    spell_icons_src = ROOT / 'data' / 'spell-icons'
+    if spell_icons_src.is_dir() and any(spell_icons_src.glob('*.png')):
+        spell_icons_dst = RES / 'data' / 'spell-icons'
+        if spell_icons_dst.exists():
+            shutil.rmtree(spell_icons_dst)
+        shutil.copytree(spell_icons_src, spell_icons_dst)
+        print('  spell-icons ->', spell_icons_dst, f'({sum(1 for _ in spell_icons_dst.glob("*.png"))} png)')
+    buffs_json = ROOT / 'data' / 'spell_buffs.json'
+    if buffs_json.exists():
+        shutil.copy2(buffs_json, RES / 'data' / 'spell_buffs.json')
+        print('  spell_buffs.json ->', RES / 'data' / 'spell_buffs.json')
     lr = ROOT / 'data' / 'log-research'
     if not lr.exists():
         lr = LEGENDS / 'log-research'

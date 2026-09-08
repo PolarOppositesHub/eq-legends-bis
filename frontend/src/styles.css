@@ -535,6 +535,87 @@ a { color: var(--gold); }
 }
 .import-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
 
+.cast-buffs-panel {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0c0c0c;
+}
+.cast-buffs-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+.cast-buffs-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--gold);
+}
+.cast-buff-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.cast-buff-group-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.cast-buff-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.cast-buff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.55rem 0.28rem 0.3rem;
+  border-radius: 8px;
+  border: 1px solid #3a3a3a;
+  background: #161616;
+  color: var(--text);
+  cursor: help;
+  font: inherit;
+  font-size: 0.8rem;
+}
+.cast-buff-chip:hover,
+.cast-buff-chip:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+.cast-buff-name {
+  color: #eee;
+  font-weight: 600;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.buff-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  background: #000;
+}
+.buff-icon-placeholder {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: #222;
+  border: 1px solid var(--border);
+}
+
 .field label.check {
   display: inline-flex; align-items: center; gap: 0.4rem;
   margin-top: 1.35rem; font-size: 0.82rem; color: var(--muted); cursor: pointer;

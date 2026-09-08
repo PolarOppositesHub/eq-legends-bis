@@ -12,6 +12,7 @@ import {
   searchItems,
   getItemDetail,
   itemImageUrl,
+  spellIconUrl,
   ensureItemImage,
   getPriorityDefaults,
   listQuests,
@@ -241,6 +242,114 @@ function itemTipStatsText(item, upgrade) {
   return tipParts.join('\n')
 }
 
+function BuffIcon({ icon, name, className = 'buff-icon' }) {
+  const [src, setSrc] = useState(icon ? spellIconUrl(icon) : '')
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    setSrc(icon ? spellIconUrl(icon) : '')
+    setFailed(false)
+  }, [icon])
+  if (!icon || failed || !src) {
+    return <span className={`${className} buff-icon-placeholder`} title={name || ''} aria-hidden="true" />
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      width={32}
+      height={32}
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
+function buffTipText(buff) {
+  if (buff?.hover_text) return buff.hover_text
+  const parts = []
+  if (buff?.tooltip) parts.push(buff.tooltip)
+  const effects = buff?.effects || {}
+  const lines = Object.entries(effects)
+    .filter(([, v]) => Number(v) !== 0)
+    .map(([k, v]) => {
+      const n = Number(v)
+      if (k === 'HASTE') return `Haste +${n}%`
+      return `${k} ${n > 0 ? '+' : ''}${n}`
+    })
+  if (lines.length) parts.push(`Effects:\n${lines.map((l) => `  ${l}`).join('\n')}`)
+  const meta = []
+  if (buff?.classes?.length) meta.push(buff.classes.join(', '))
+  if (buff?.level != null) meta.push(`L${buff.level}`)
+  if (meta.length) parts.push(meta.join(' · '))
+  return parts.join('\n\n') || 'No buff details in catalog.'
+}
+
+function CastBuffsPanel({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
+  if (!castBuffs || castBuffs.mode === 'off') return null
+  const groups = castBuffs.groups?.length
+    ? castBuffs.groups
+    : [{
+      id: 'active',
+      label: 'Active Buffs',
+      buffs: castBuffs.active || [],
+    }]
+  const total = (castBuffs.active || []).length
+  return (
+    <div className="cast-buffs-panel">
+      <div className="cast-buffs-head">
+        <h3>Cast Buffs — {castBuffs.mode === 'quick' ? 'Quick Buff' : castBuffs.mode}</h3>
+        <span className="muted">
+          {total} active
+          {castBuffs.character_level != null ? ` · at L${castBuffs.character_level}` : ''}
+        </span>
+      </div>
+      {total === 0 ? (
+        <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+          No buffs castable for this trio at the current Character Level.
+        </p>
+      ) : (
+        <div className="cast-buff-groups">
+          {groups.map((g) => (
+            <div className="cast-buff-group" key={g.id || g.label}>
+              <div className="cast-buff-group-label">{g.label}</div>
+              <div className="cast-buff-row">
+                {(g.buffs || []).map((b) => {
+                  const show = (e) => {
+                    const { x, y } = tipCoordsFromPointer(e)
+                    onShowTip({
+                      name: b.name,
+                      statsText: buffTipText(b),
+                      x,
+                      y,
+                      image: b.icon_url || spellIconUrl(b.icon),
+                      kind: 'buff',
+                    })
+                  }
+                  return (
+                    <button
+                      type="button"
+                      className="cast-buff-chip"
+                      key={b.id}
+                      onMouseEnter={show}
+                      onMouseMove={onMoveTip}
+                      onFocus={show}
+                      onMouseLeave={onHideTip}
+                      onBlur={onHideTip}
+                    >
+                      <BuffIcon icon={b.icon} name={b.name} />
+                      <span className="cast-buff-name">{b.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
@@ -463,6 +572,8 @@ export default function App() {
       hoverTipClearRef.current = null
     }
     setHoverTip(tip)
+    // Item icons only — buff tips already carry icon_url / kind:'buff'.
+    if (tip?.kind === 'buff' || tip?.skipItemImage) return
     if (tip?.name && !ensuredImagesRef.current.has(tip.name)) {
       ensuredImagesRef.current.add(tip.name)
       ensureItemImage(tip.name)
@@ -1989,6 +2100,14 @@ export default function App() {
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Live Totals</h2>
                 {sim ? (
                   <>
+                    {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' ? (
+                      <CastBuffsPanel
+                        castBuffs={sim.cast_buffs}
+                        onShowTip={showHoverTip}
+                        onMoveTip={moveHoverTip}
+                        onHideTip={hideHoverTip}
+                      />
+                    ) : null}
                     <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span className="badge">Haste applied: +{sim.haste?.applied_pct || 0}%</span>
                       {sim.haste?.applied_slot && (
@@ -2023,21 +2142,6 @@ export default function App() {
                         <div className="v">{sim.haste?.applied_pct || 0}%</div>
                       </div>
                     </div>
-                    {sim.cast_buffs?.active?.length > 0 && (
-                      <div style={{ marginTop: '1rem' }}>
-                        <h3 style={{ fontSize: '0.95rem' }}>Active Cast Buffs</h3>
-                        <ul className="muted" style={{ margin: '0.35rem 0 0', paddingLeft: '1.1rem' }}>
-                          {sim.cast_buffs.active.map((b) => (
-                            <li key={b.id}>
-                              <strong>{b.name}</strong>
-                              {b.level != null ? ` (L${b.level})` : ''}
-                              {b.classes?.length ? ` · ${(b.classes || []).join(', ')}` : ''}
-                              {b.tooltip ? ` — ${b.tooltip}` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                     {sim.weapons?.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
                         <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios @ +{upgrade}</h3>
@@ -2284,7 +2388,18 @@ export default function App() {
           style={{ left: hoverTip.x, top: hoverTip.y }}
           role="tooltip"
         >
-          <ItemIcon name={hoverTip.name} />
+          {hoverTip.kind === 'buff' ? (
+            <img
+              className="item-icon buff-icon"
+              src={hoverTip.image || spellIconUrl(hoverTip.icon)}
+              alt=""
+              width={40}
+              height={40}
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          ) : (
+            <ItemIcon name={hoverTip.name} />
+          )}
           <div className="hover-tip-body">
             <div className="hover-tip-name">{hoverTip.name}</div>
             {hoverTip.statsText ? (
