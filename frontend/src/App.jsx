@@ -1129,7 +1129,7 @@ export default function App() {
             {meta?.version ? ` · v${meta.version}` : ' · v1.0.11'}
           </p>
         </div>
-        <span className="ui-build-badge" title="Frontend UI build">UI 1.0.11</span>
+        <span className="ui-build-badge" title="App version">Version 1.0.11</span>
       </header>
 
       <div className="app-shell">
