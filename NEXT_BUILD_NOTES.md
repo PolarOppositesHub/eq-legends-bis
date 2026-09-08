@@ -1,10 +1,11 @@
 # Next build notes
 
-**v1.0.11 READY TO SHIP — PR #9 merged on `main`.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
+**v1.0.11 READY TO SHIP — merge Cast Buffs icons PR, then build.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.11
 
-Code is already on **`main`**. Build + publish only:
+1. Merge `cursor/cast-buffs-icons-list-d4a5` → `main` (Quick Buff icon list).
+2. Build + publish:
 
 ```powershell
 git pull origin main
