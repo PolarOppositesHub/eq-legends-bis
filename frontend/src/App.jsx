@@ -1335,6 +1335,35 @@ export default function App() {
     }
   }
 
+  // Load full catalog size (and empty-query page) when opening Item Search.
+  useEffect(() => {
+    if (tab !== 'search') return undefined
+    let cancelled = false
+    const t = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const params = { q: searchQ || '', limit: 80 }
+        if (searchSlot) params.slot = searchSlot
+        const res = await searchItems(params)
+        if (!cancelled) {
+          setSearchResults(res)
+          if (res?.warning) setError(String(res.warning))
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setSearchResults(null)
+          setError(String(e.message || e))
+        }
+      } finally {
+        if (!cancelled) setSearchLoading(false)
+      }
+    }, 180)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [tab, searchQ, searchSlot])
+
   const races = meta?.races?.races || []
   const priorityOptions = meta?.priority_stats || []
   const classButtons = useMemo(() => meta?.classes || [], [meta])
@@ -2622,7 +2651,8 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Full EQ Legends item list (gear, clickies, food, reagents, and other non-equipables).
+                Full EQ Legends catalog (~11k+ names from eqlwiki Category:Items, plus tools stats when known).
+                Open an item for description, tooltip, and quests (Quest Hub links when the quest is indexed).
                 Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
               </p>
               <div className="item-search-bar">
@@ -2725,6 +2755,47 @@ export default function App() {
                     {!itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
                       <p className="muted" style={{ marginTop: '0.65rem', fontSize: '0.8rem' }}>
                         No parsed wiki tooltip yet — open the eqlwiki link above for the full page.
+                      </p>
+                    )}
+                    {(itemDetail.quests || []).length > 0 ? (
+                      <div style={{ marginTop: '0.85rem' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem' }}>
+                          Quests this item is for
+                        </div>
+                        <ul className="mob-list" style={{ margin: 0, paddingLeft: '1.1rem' }}>
+                          {(itemDetail.quests || []).map((q) => {
+                            const qn = q?.name || q
+                            const label = typeof qn === 'string' ? qn : String(qn || '')
+                            if (!label) return null
+                            const inHub = Boolean(q?.in_hub)
+                            return (
+                              <li key={label} style={{ marginBottom: '0.25rem', fontSize: '0.85rem' }}>
+                                {inHub ? (
+                                  <button
+                                    type="button"
+                                    className="zone-link"
+                                    onClick={() => openQuestHub(label)}
+                                    title="Open in Quest Hub"
+                                  >
+                                    {label}
+                                  </button>
+                                ) : (
+                                  <span>{label}</span>
+                                )}
+                                {q?.mentioned_as && q.mentioned_as !== label ? (
+                                  <span className="muted"> · as {q.mentioned_as}</span>
+                                ) : null}
+                                {!inHub ? (
+                                  <span className="muted"> · not in Quest Hub</span>
+                                ) : null}
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="muted" style={{ marginTop: '0.85rem', fontSize: '0.8rem' }}>
+                        No linked quests in decoded rewards or eqlwiki Related quests yet.
                       </p>
                     )}
                   </div>
