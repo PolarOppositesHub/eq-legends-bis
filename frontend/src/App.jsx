@@ -529,6 +529,8 @@ export default function App() {
   const [suggestions, setSuggestions] = useState(null)
   const [importMsg, setImportMsg] = useState('')
   const [importMeta, setImportMeta] = useState(null)
+  const [eqInstallFolder, setEqInstallFolder] = useState('')
+  const [eqInventoryInfo, setEqInventoryInfo] = useState(null)
   const [bagsQ, setBagsQ] = useState('')
   const [bagsLoc, setBagsLoc] = useState('')
   const [questQ, setQuestQ] = useState('')
@@ -860,6 +862,73 @@ export default function App() {
     }
   }
 
+  const isDesktopApp = typeof window !== 'undefined' && !!window.eqDesktop?.isDesktop
+
+  useEffect(() => {
+    if (!window.eqDesktop?.getSettings) return undefined
+    let cancelled = false
+    window.eqDesktop.getSettings().then((s) => {
+      if (cancelled || !s) return
+      if (s.eqInstallFolder) setEqInstallFolder(s.eqInstallFolder)
+      if (s.lastInventoryName) {
+        setEqInventoryInfo({
+          name: s.lastInventoryName,
+          path: s.lastInventoryPath || '',
+          mtimeMs: s.lastInventoryMtimeMs || null,
+        })
+      }
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  const applyInventoryText = useCallback(async (text, sourceLabel, opts = {}) => {
+    const parsed = await importInventory(text)
+    if (parsed && parsed.ok === false) {
+      setImportMsg('')
+      setError((parsed.warnings && parsed.warnings[0]) || parsed.note || 'Inventory import failed.')
+      return false
+    }
+    const eq = parsed.equipment || {}
+    const wornUpg = upgradesFromImportHints(eq, parsed.upgrade_hints, parsed.worn)
+    setEquipment(eq)
+    setWornUpgrades(wornUpg)
+    setImportMeta({
+      unmatched_count: parsed.unmatched_count || 0,
+      unmatched: parsed.unmatched || [],
+      all_items: parsed.all_items || [],
+      worn: parsed.worn || [],
+      equipment: eq,
+      wornUpgrades: wornUpg,
+      upgrade_hints: parsed.upgrade_hints || {},
+      skipped_count: parsed.skipped_count || 0,
+      source: sourceLabel || '',
+    })
+    const wornN = Object.keys(eq).length
+    const hinted = Object.values(wornUpg).filter((n) => n > 0).length
+    setImportMsg(
+      `Imported ${wornN} worn slots` +
+      (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
+      (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
+      (sourceLabel ? ` from ${sourceLabel}` : '') +
+      (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item DB (see debug)` : '')
+    )
+    if (opts.switchTab) setTab(opts.switchTab)
+    if (classes.length >= 1) {
+      try {
+        const sug = await upgradeSuggestions(suggestionBody(eq, wornUpg))
+        setSuggestions(sug)
+      } catch (_) {
+        /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
+      }
+      try {
+        await runSim(eq, wornUpg)
+      } catch (_) {
+        /* runSim sets its own error */
+      }
+    }
+    return true
+  }, [classes, suggestionBody, runSim])
+
   const onImportFile = async (file) => {
     if (!file) return
     const lower = (file.name || '').toLowerCase()
@@ -873,49 +942,64 @@ export default function App() {
     setImportMsg('Reading…')
     try {
       const text = await file.text()
-      const parsed = await importInventory(text)
-      if (parsed && parsed.ok === false) {
+      await applyInventoryText(text, file.name, { switchTab: 'sim' })
+    } catch (e) {
+      setImportMsg('')
+      setError(String(e.message || e))
+    }
+  }
+
+  const pickEqInstallFolder = async () => {
+    if (!window.eqDesktop?.pickEqInstallFolder) {
+      setError('EQ install folder setup requires the desktop app.')
+      return null
+    }
+    setError('')
+    const res = await window.eqDesktop.pickEqInstallFolder()
+    if (!res?.ok) {
+      if (!res?.canceled) setError(res?.message || 'Could not set EQ install folder.')
+      return null
+    }
+    setEqInstallFolder(res.path || res.eqInstallFolder || '')
+    setImportMsg(`EQ install folder set: ${res.path || res.eqInstallFolder}`)
+    return res.path || res.eqInstallFolder || ''
+  }
+
+  const updateInventoryFromEqFolder = async (opts = {}) => {
+    if (!window.eqDesktop?.findLatestInventory || !window.eqDesktop?.readInventoryFile) {
+      setError('Auto-update from EQ folder requires the desktop app. Use Import Inventory.txt instead.')
+      return
+    }
+    setError('')
+    setImportMsg('Looking for latest Inventory.txt…')
+    try {
+      let folder = (eqInstallFolder || '').trim()
+      if (!folder) {
+        folder = await pickEqInstallFolder()
+        if (!folder) {
+          setImportMsg('')
+          return
+        }
+      }
+      const found = await window.eqDesktop.findLatestInventory(folder)
+      if (!found?.ok) {
         setImportMsg('')
-        setError((parsed.warnings && parsed.warnings[0]) || parsed.note || 'Inventory import failed.')
+        setError(found?.message || 'No Inventory.txt found in the EQ install folder.')
         return
       }
-      const eq = parsed.equipment || {}
-      const wornUpg = upgradesFromImportHints(eq, parsed.upgrade_hints, parsed.worn)
-      setEquipment(eq)
-      setWornUpgrades(wornUpg)
-      setImportMeta({
-        unmatched_count: parsed.unmatched_count || 0,
-        unmatched: parsed.unmatched || [],
-        all_items: parsed.all_items || [],
-        worn: parsed.worn || [],
-        equipment: eq,
-        wornUpgrades: wornUpg,
-        upgrade_hints: parsed.upgrade_hints || {},
-        skipped_count: parsed.skipped_count || 0,
-      })
-      const wornN = Object.keys(eq).length
-      const hinted = Object.values(wornUpg).filter((n) => n > 0).length
-      setImportMsg(
-        `Imported ${wornN} worn slots` +
-        (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
-        (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
-        ` from ${file.name}` +
-        (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item DB (see debug)` : '')
-      )
-      setTab('sim')
-      if (classes.length >= 1) {
-        try {
-          const sug = await upgradeSuggestions(suggestionBody(eq, wornUpg))
-          setSuggestions(sug)
-        } catch (_) {
-          /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
-        }
-        try {
-          await runSim(eq, wornUpg)
-        } catch (_) {
-          /* runSim sets its own error */
-        }
+      const read = await window.eqDesktop.readInventoryFile(found.path)
+      if (!read?.ok) {
+        setImportMsg('')
+        setError(read?.message || 'Could not read Inventory.txt.')
+        return
       }
+      setEqInventoryInfo({
+        name: found.name,
+        path: found.path,
+        mtimeMs: found.mtimeMs,
+        count: found.count,
+      })
+      await applyInventoryText(read.text, found.name, { switchTab: opts.switchTab })
     } catch (e) {
       setImportMsg('')
       setError(String(e.message || e))
@@ -1696,10 +1780,67 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Search My Bags</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Search everything from your last Inventory.txt import (worn, bags, bank, nested slots).
-                Import from Simulator or Upgrade Priority first.
               </p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
+                {isDesktopApp && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={pickEqInstallFolder}
+                      title="Point once at your EverQuest Legends install folder"
+                    >
+                      {eqInstallFolder ? 'Change EQ folder' : 'Set EQ folder'}
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => updateInventoryFromEqFolder({ switchTab: 'bags' })}
+                      title="Find the newest *-Inventory.txt in your EQ install folder and import it"
+                    >
+                      Update from EQ folder
+                    </button>
+                  </>
+                )}
+                <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
+                  Import Inventory.txt
+                  <input
+                    type="file"
+                    accept=".txt,text/plain"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const f = e.target.files && e.target.files[0]
+                      e.target.value = ''
+                      if (!f) return
+                      const lower = (f.name || '').toLowerCase()
+                      if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.bin')) {
+                        setError('Pick Inventory.txt — not a binary.')
+                        return
+                      }
+                      setImportMsg('Reading…')
+                      try {
+                        const text = await f.text()
+                        await applyInventoryText(text, f.name, { switchTab: 'bags' })
+                      } catch (err) {
+                        setImportMsg('')
+                        setError(String(err.message || err))
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+              {isDesktopApp && (
+                <p className="muted" style={{ marginTop: 0, fontSize: '0.8rem' }}>
+                  {eqInstallFolder
+                    ? <>EQ folder: <code>{eqInstallFolder}</code>
+                      {eqInventoryInfo?.name ? <> · last dump <code>{eqInventoryInfo.name}</code></> : null}
+                      </>
+                    : 'Set EQ folder once, then Update pulls the newest *-Inventory.txt after /outputfile inventory.'}
+                </p>
+              )}
               {!allImportedItems.length ? (
-                <p className="muted">No inventory imported yet — use Import Inventory.txt on the Simulator tab.</p>
+                <p className="muted">
+                  No inventory imported yet — use Update from EQ folder or Import Inventory.txt.
+                </p>
               ) : (
                 <>
                   <div className="item-search-bar">
@@ -2032,6 +2173,25 @@ export default function App() {
                   <button type="button" onClick={loadFromBis} disabled={!bis?.slots?.length}>
                     Load from BiS
                   </button>
+                  {isDesktopApp && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={pickEqInstallFolder}
+                        title="Point once at your EverQuest Legends install folder"
+                      >
+                        {eqInstallFolder ? 'Change EQ folder' : 'Set EQ folder'}
+                      </button>
+                      <button
+                        type="button"
+                        className="primary"
+                        onClick={() => updateInventoryFromEqFolder({ switchTab: 'sim' })}
+                        title="Find the newest *-Inventory.txt in your EQ install folder and import it"
+                      >
+                        Update from EQ folder
+                      </button>
+                    </>
+                  )}
                   <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
                     Import Inventory.txt
                     <input
@@ -2047,6 +2207,15 @@ export default function App() {
                   </label>
                   <button type="button" onClick={openHelp}>Help</button>
                 </div>
+                {isDesktopApp && (
+                  <p className="muted" style={{ marginTop: '-0.35rem', marginBottom: '0.75rem', fontSize: '0.8rem' }}>
+                    {eqInstallFolder
+                      ? <>EQ folder: <code>{eqInstallFolder}</code>
+                        {eqInventoryInfo?.name ? <> · last dump <code>{eqInventoryInfo.name}</code></> : null}
+                        </>
+                      : 'Set EQ folder once, then Update pulls the newest *-Inventory.txt after /outputfile inventory.'}
+                  </p>
+                )}
 
                 {importMeta && (
                   <div className="import-unmatched">
