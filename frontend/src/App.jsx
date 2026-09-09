@@ -1565,11 +1565,13 @@ export default function App() {
     const tokens = q.split(/[^a-z0-9']+/i).filter((t) => t && !['of', 'the', 'a', 'an', 'and'].includes(t))
     const locFilter = (bagsLoc || '').trim().toLowerCase()
     return allImportedItems.filter((row) => {
-      const name = String(row?.base_name || row?.name || row || '').toLowerCase()
+      const name = String(row?.base_name || row?.name || row || '').trim()
+      const nameLc = name.toLowerCase()
+      if (!name || nameLc === 'empty') return false
       const loc = String(row?.location || '').toLowerCase()
       if (locFilter && !loc.includes(locFilter)) return false
       if (!tokens.length) return true
-      return tokens.every((t) => name.includes(t) || loc.includes(t))
+      return tokens.every((t) => nameLc.includes(t) || loc.includes(t))
     })
   }, [allImportedItems, bagsQ, bagsLoc])
 
@@ -1999,7 +2001,7 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Search My Bags</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Search everything from your last Inventory.txt import (worn, bags, bank, nested slots).
+                Search occupied slots from your last Inventory.txt import (worn, bags, bank, nested — empty slots hidden).
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                 {isDesktopApp && (
@@ -2079,7 +2081,13 @@ export default function App() {
                     />
                   </div>
                   <p className="muted" style={{ marginTop: '0.65rem' }}>
-                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'} · {allImportedItems.length} imported lines
+                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'}
+                    {' · '}
+                    {allImportedItems.filter((r) => {
+                      const n = String(r?.base_name || r?.name || '').trim().toLowerCase()
+                      return n && n !== 'empty'
+                    }).length}{' '}
+                    items with contents
                   </p>
                   <ul className="item-search-list">
                     {bagHits.slice(0, 500).map((row, i) => {

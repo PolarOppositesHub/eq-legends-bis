@@ -106,7 +106,7 @@ export const APP_HELP = {
       id: 'bags',
       title: 'Search My Bags',
       body: [
-        'Search every line from your last inventory import (worn, bags, bank, nested slots).',
+        'Search every occupied line from your last inventory import (worn, bags, bank, nested slots — empty slots hidden).',
         'Names match the tools catalog and eqlwiki item list. Wiki-only names may show without stats yet.',
       ],
     },

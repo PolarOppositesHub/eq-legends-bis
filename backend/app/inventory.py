@@ -100,8 +100,9 @@ def looks_like_binary_inventory(text: str) -> bool:
 def parse_inventory_tsv(text: str) -> dict[str, Any]:
     """Parse Inventory.txt body. Returns worn equipment mapped to planner slots.
 
-    Every non-empty inventory line is retained in `all_items` even when not in the
-    catalog or not mappable to a planner slot (flagged unmatched / skipped).
+    Every inventory line with an actual item is retained in `all_items` even when not in the
+    catalog or not mappable to a planner slot (flagged unmatched / skipped). Empty slots
+    (name ``Empty`` / blank) are omitted.
     Raises ValueError when the payload looks like a binary/.exe file.
     """
     if looks_like_binary_inventory(text or ""):
@@ -145,6 +146,9 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         slots_col = (cols[4] or "").strip() if len(cols) > 4 else ""
 
         base_name, upg = _strip_upgrade_suffix(name)
+        # Empty inventory lines are noise for Search My Bags — drop them entirely.
+        if not name or name.strip().lower() == "empty" or not base_name or base_name.lower() == "empty":
+            continue
         match = _catalog_match(base_name, item_id=item_id or None)
         in_catalog = bool(match.get("matched"))
         entry = {
@@ -158,7 +162,7 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             "in_catalog": in_catalog,
             "catalog_source": match.get("source"),
             "has_stats": bool(match.get("has_stats")),
-            "unmatched": not in_catalog and bool(base_name) and base_name.lower() != "empty",
+            "unmatched": not in_catalog and bool(base_name),
         }
 
         # Nested aug/bag slots: Head-Slot2, General 1-Slot1, Any Slot-Slot7
@@ -183,12 +187,6 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             all_items.append(entry)
             if entry["unmatched"]:
                 unmatched.append(entry)
-            continue
-        if not name or name.lower() == "empty":
-            entry["reason"] = "empty"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
             continue
 
         loc_key = location.upper().strip()
