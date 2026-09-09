@@ -440,6 +440,7 @@ export default function App() {
   const [questDetail, setQuestDetail] = useState(null)
   const [questDetailLoading, setQuestDetailLoading] = useState(false)
   const [selectedQuestName, setSelectedQuestName] = useState('')
+  const [questListCollapsed, setQuestListCollapsed] = useState(false)
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -1564,48 +1565,66 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Quest Hub</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Look up quests known from the item database (rewardFromQuests / quest_source). Open a quest for steps,
-                prerequisites, and whether imported inventory already has turn-in items.
+                Single-click a quest for a preview. Double-click (or use the side arrow) to maximize the walkthrough.
+                Steps come from eqlwiki when available.
               </p>
-              <div className="item-search-bar">
-                <input
-                  type="text"
-                  placeholder="Search quests…"
-                  value={questQ}
-                  onChange={(e) => setQuestQ(e.target.value)}
-                />
-              </div>
-              {questResults && (
-                <p className="muted" style={{ marginTop: '0.65rem' }}>
-                  {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
-                  {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
-                </p>
-              )}
-              {questResults?.note ? (
-                <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
-              ) : null}
-              <div className="item-search-layout">
-                <ul className="item-search-list">
-                  {(questResults?.quests || []).map((q) => (
-                    <li key={q.name}>
-                      <button
-                        type="button"
-                        className="item-search-result"
-                        onClick={() => setSelectedQuestName(q.name)}
-                        style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
-                      >
-                        <div>
-                          <div className="item-search-name">{q.name}</div>
-                          <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
-                            {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+              <div className={`quest-hub-layout${questListCollapsed ? ' list-collapsed' : ''}`}>
+                <div className="quest-hub-list-col">
+                  <div className="item-search-bar">
+                    <input
+                      type="text"
+                      placeholder="Search quests…"
+                      value={questQ}
+                      onChange={(e) => setQuestQ(e.target.value)}
+                    />
+                  </div>
+                  {questResults && (
+                    <p className="muted" style={{ marginTop: '0.65rem', marginBottom: '0.35rem' }}>
+                      {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
+                      {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
+                    </p>
+                  )}
+                  {questResults?.note ? (
+                    <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
+                  ) : null}
+                  <ul className="item-search-list quest-hub-list">
+                    {(questResults?.quests || []).map((q) => (
+                      <li key={q.name}>
+                        <button
+                          type="button"
+                          className="item-search-result"
+                          title="Click to preview · Double-click to maximize walkthrough"
+                          onClick={() => setSelectedQuestName(q.name)}
+                          onDoubleClick={() => {
+                            setSelectedQuestName(q.name)
+                            setQuestListCollapsed(true)
+                          }}
+                          style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
+                        >
+                          <div>
+                            <div className="item-search-name">{q.name}</div>
+                            <div className="muted" style={{ fontSize: '0.78rem' }}>
+                              {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
+                              {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="item-detail-panel">
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  className="quest-hub-rail"
+                  title={questListCollapsed ? 'Show quest list' : 'Maximize walkthrough (hide list)'}
+                  aria-label={questListCollapsed ? 'Expand quest list' : 'Collapse quest list'}
+                  onClick={() => setQuestListCollapsed((v) => !v)}
+                >
+                  <span className="quest-hub-rail-arrow" aria-hidden="true">
+                    {questListCollapsed ? '›' : '‹'}
+                  </span>
+                </button>
+                <div className="item-detail-panel quest-hub-detail">
                   {!selectedQuestName && (
                     <p className="muted">Select a quest to view steps, prerequisites, and inventory checks.</p>
                   )}
