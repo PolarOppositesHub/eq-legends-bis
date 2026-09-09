@@ -17,6 +17,14 @@ import {
   listQuests,
   getQuestDetail,
 } from './api.js'
+import LoadingOverlay from './LoadingOverlay.jsx'
+import {
+  APP_HELP,
+  THEME_OPTIONS,
+  applyThemeToDocument,
+  loadUiSettings,
+  saveUiSettings,
+} from './uiSettings.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -208,8 +216,9 @@ function ItemIcon({ name, className = 'item-icon' }) {
     setLoading(true)
     setSrc('')
 
-    const paint = () => {
-      setSrc(`${itemImageUrl(name)}&_=${Date.now()}`)
+    const paint = (bust = false) => {
+      const base = itemImageUrl(name)
+      setSrc(bust ? `${base}&_=${Date.now()}` : base)
       setFailed(false)
       setLoading(false)
     }
@@ -529,6 +538,11 @@ export default function App() {
   const [suggestions, setSuggestions] = useState(null)
   const [importMsg, setImportMsg] = useState('')
   const [importMeta, setImportMeta] = useState(null)
+  const [uiSettings, setUiSettings] = useState(() => loadUiSettings())
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [appHelpOpen, setAppHelpOpen] = useState(false)
+  const [loadJobs, setLoadJobs] = useState([])
+  const loadJobsRef = useRef([])
   const [eqInstallFolder, setEqInstallFolder] = useState('')
   const [eqInventoryInfo, setEqInventoryInfo] = useState(null)
   const [bagsQ, setBagsQ] = useState('')
@@ -586,7 +600,38 @@ export default function App() {
     hoverTipClearRef.current = setTimeout(() => setHoverTip(null), 80)
   }, [])
 
+  const beginLoad = useCallback((id, label) => {
+    const job = { id, label }
+    loadJobsRef.current = [...loadJobsRef.current.filter((j) => j.id !== id), job]
+    setLoadJobs(loadJobsRef.current)
+  }, [])
+
+  const endLoad = useCallback((id) => {
+    loadJobsRef.current = loadJobsRef.current.filter((j) => j.id !== id)
+    setLoadJobs(loadJobsRef.current)
+  }, [])
+
+  const patchUiSettings = useCallback((patch) => {
+    setUiSettings((prev) => {
+      const next = { ...prev, ...patch }
+      saveUiSettings(next)
+      if (patch.theme != null) applyThemeToDocument(next.theme)
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-reduce-motion', next.reduceMotion ? '1' : '0')
+      }
+      return next
+    })
+  }, [])
+
   useEffect(() => {
+    applyThemeToDocument(uiSettings.theme)
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-reduce-motion', uiSettings.reduceMotion ? '1' : '0')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    beginLoad('meta', 'Loading catalog metadata…')
     getMeta()
       .then((m) => {
         setMeta(m)
@@ -600,7 +645,8 @@ export default function App() {
         }
       })
       .catch((e) => setError(String(e.message || e)))
-  }, [])
+      .finally(() => endLoad('meta'))
+  }, [beginLoad, endLoad])
 
   useEffect(() => {
     if (skipPriorityDefaultsRef.current) {
@@ -665,6 +711,7 @@ export default function App() {
       return
     }
     setLoading(true)
+    beginLoad('bis', 'Calculating Best in Slot…')
     setError('')
     try {
       const data = await postBis(bisRequestBody())
@@ -679,17 +726,23 @@ export default function App() {
       }
       // Do not overwrite Simulator worn gear here — BiS mode/upgrades must leave
       // imported equipment alone. Use "Load from BiS" to copy BiS into worn slots.
+      beginLoad('images', 'Fetching item icons…')
+      const pending = []
       for (const name of names) {
         if (!name || ensuredImagesRef.current.has(name)) continue
         ensuredImagesRef.current.add(name)
-        ensureItemImage(name).catch(() => {})
+        pending.push(ensureItemImage(name).catch(() => {}))
       }
+      if (pending.length) await Promise.all(pending)
+      endLoad('images')
     } catch (e) {
       setError(String(e.message || e))
     } finally {
+      endLoad('bis')
+      endLoad('images')
       setLoading(false)
     }
-  }, [classes, bisRequestBody])
+  }, [classes, bisRequestBody, beginLoad, endLoad])
 
   useEffect(() => {
     if (meta && classes.length >= 1) runBis()
@@ -758,6 +811,7 @@ export default function App() {
       ? wornUpgradesOverride
       : wornUpgrades
     setLoading(true)
+    beginLoad('sim', 'Updating Simulator totals…')
     setError('')
     try {
       const data = await postSimulate({
@@ -773,20 +827,26 @@ export default function App() {
       setSim(data)
       // Also refresh upgrade priorities (replaces separate Suggest upgrades button).
       try {
+        beginLoad('upgrades', 'Refreshing upgrade priorities…')
         const sug = await upgradeSuggestions(suggestionBody(eq, slotUpg))
         setSuggestions(sug)
       } catch (_) {
         /* sim totals still useful if upgrade ranking fails */
+      } finally {
+        endLoad('upgrades')
       }
     } catch (e) {
       setError(String(e.message || e))
     } finally {
+      endLoad('sim')
       setLoading(false)
     }
-  }, [classes, race, upgrade, wornUpgrades, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody])
+  }, [classes, race, upgrade, wornUpgrades, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody, beginLoad, endLoad])
 
   useEffect(() => {
-    if (tab === 'sim' && Object.keys(equipment).length) runSim()
+    if (tab !== 'sim' || !Object.keys(equipment).length) return undefined
+    const t = setTimeout(() => { runSim() }, 220)
+    return () => clearTimeout(t)
   }, [tab, upgrade, wornUpgrades, race, characterLevel, castBuffsMode, assumeMaxAas]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyUpgradeToAllSlots = useCallback(() => {
@@ -882,52 +942,57 @@ export default function App() {
   }, [])
 
   const applyInventoryText = useCallback(async (text, sourceLabel, opts = {}) => {
-    const parsed = await importInventory(text)
-    if (parsed && parsed.ok === false) {
-      setImportMsg('')
-      setError((parsed.warnings && parsed.warnings[0]) || parsed.note || 'Inventory import failed.')
-      return false
-    }
-    const eq = parsed.equipment || {}
-    const wornUpg = upgradesFromImportHints(eq, parsed.upgrade_hints, parsed.worn)
-    setEquipment(eq)
-    setWornUpgrades(wornUpg)
-    setImportMeta({
-      unmatched_count: parsed.unmatched_count || 0,
-      unmatched: parsed.unmatched || [],
-      all_items: parsed.all_items || [],
-      worn: parsed.worn || [],
-      equipment: eq,
-      wornUpgrades: wornUpg,
-      upgrade_hints: parsed.upgrade_hints || {},
-      skipped_count: parsed.skipped_count || 0,
-      source: sourceLabel || '',
-    })
-    const wornN = Object.keys(eq).length
-    const hinted = Object.values(wornUpg).filter((n) => n > 0).length
-    setImportMsg(
-      `Imported ${wornN} worn slots` +
-      (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
-      (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
-      (sourceLabel ? ` from ${sourceLabel}` : '') +
-      (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item catalog (see debug)` : '')
-    )
-    if (opts.switchTab) setTab(opts.switchTab)
-    if (classes.length >= 1) {
-      try {
-        const sug = await upgradeSuggestions(suggestionBody(eq, wornUpg))
-        setSuggestions(sug)
-      } catch (_) {
-        /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
+    beginLoad('import', 'Importing Inventory.txt…')
+    try {
+      const parsed = await importInventory(text)
+      if (parsed && parsed.ok === false) {
+        setImportMsg('')
+        setError((parsed.warnings && parsed.warnings[0]) || parsed.note || 'Inventory import failed.')
+        return false
       }
-      try {
-        await runSim(eq, wornUpg)
-      } catch (_) {
-        /* runSim sets its own error */
+      const eq = parsed.equipment || {}
+      const wornUpg = upgradesFromImportHints(eq, parsed.upgrade_hints, parsed.worn)
+      setEquipment(eq)
+      setWornUpgrades(wornUpg)
+      setImportMeta({
+        unmatched_count: parsed.unmatched_count || 0,
+        unmatched: parsed.unmatched || [],
+        all_items: parsed.all_items || [],
+        worn: parsed.worn || [],
+        equipment: eq,
+        wornUpgrades: wornUpg,
+        upgrade_hints: parsed.upgrade_hints || {},
+        skipped_count: parsed.skipped_count || 0,
+        source: sourceLabel || '',
+      })
+      const wornN = Object.keys(eq).length
+      const hinted = Object.values(wornUpg).filter((n) => n > 0).length
+      setImportMsg(
+        `Imported ${wornN} worn slots` +
+        (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
+        (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
+        (sourceLabel ? ` from ${sourceLabel}` : '') +
+        (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item catalog (see debug)` : '')
+      )
+      if (opts.switchTab) setTab(opts.switchTab)
+      if (classes.length >= 1) {
+        try {
+          const sug = await upgradeSuggestions(suggestionBody(eq, wornUpg))
+          setSuggestions(sug)
+        } catch (_) {
+          /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
+        }
+        try {
+          await runSim(eq, wornUpg)
+        } catch (_) {
+          /* runSim sets its own error */
+        }
       }
+      return true
+    } finally {
+      endLoad('import')
     }
-    return true
-  }, [classes, suggestionBody, runSim])
+  }, [classes, suggestionBody, runSim, beginLoad, endLoad])
 
   const onImportFile = async (file) => {
     if (!file) return
@@ -1390,16 +1455,48 @@ export default function App() {
 
   return (
     <div className="app">
+      <LoadingOverlay
+        open={loadJobs.length > 0}
+        jobs={loadJobs}
+        funnyTips={uiSettings.funnyLoadingTips !== false}
+      />
       <header className="app-header">
         <div>
           <h1>EQ Legends — BiS + Build Simulator</h1>
           <p>
-            Local tool for Josh Monroe · data from <code>/workspace/eq-legends/decoded</code>
-            {meta ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
+            Local BiS planner & simulator
+            {meta?.catalog_weapons ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
             {meta?.version ? ` · v${meta.version}` : ' · v1.0.11'}
           </p>
         </div>
-        <span className="ui-build-badge" title="App version">Version 1.0.11</span>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="icon-btn"
+            title="Help"
+            aria-label="Open help"
+            onClick={() => setAppHelpOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.8-1.1 1.8" />
+              <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            title="Settings"
+            aria-label="Open settings"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M12 2.8v2.2M12 19v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.8 12h2.2M19 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+            </svg>
+          </button>
+          <span className="ui-build-badge" title="App version">Version 1.0.11</span>
+        </div>
       </header>
 
       <div className="app-shell">
@@ -1620,16 +1717,19 @@ export default function App() {
               )}
             </div>
             {(tab === 'bis' || tab === 'sim') && (
-              <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div
+                className={uiSettings.compactBadges !== false ? 'badge-row-compact' : undefined}
+                style={{ marginTop: '0.75rem', display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}
+              >
                 <span className="badge">Default +{upgrade}</span>
                 {tab === 'sim' && (
                   <span className="badge">
-                    Per-slot +N on Worn / BiS
+                    Per-slot +N
                   </span>
                 )}
-                <span className="badge warn">Haste: only highest % counts</span>
-                {preferRanged && <span className="badge">Prefer ranged damage</span>}
-                {maximizeHpRegen && <span className="badge">Maximize HP regen</span>}
+                <span className="badge warn">Haste: highest only</span>
+                {preferRanged && <span className="badge">Prefer ranged</span>}
+                {maximizeHpRegen && <span className="badge">Max HP regen</span>}
                 {bis?.dual_wield_enabled && (
                   <span className="badge">
                     DW vs 2H @L{bis.character_level ?? characterLevel}
@@ -2627,15 +2727,116 @@ export default function App() {
             </div>
           )}
 
-          <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.8rem' }}>
-            Item stats from decoded JSON only. Zone details from zone-research (never invented).
-            Quest steps from eqlwiki when available (cached; never invented).
-            Race attrs/resists: eqlegendstools (verified; matches eqlwiki).
-            HP/Mana/END pools: eqlegendstools char-sheet formulas (race+class+STA/INT/WIS). Cast Buffs from their spellBuffs catalog.
-            Excel export: <code>.venv/bin/python scripts/export_xlsx.py</code>
+          <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.78rem', lineHeight: 1.45 }}>
+            Stats from decoded catalog / eqlwiki only — never invented.
+            Use the <strong>?</strong> help and <strong>cog</strong> settings in the header anytime.
           </footer>
         </div>
       </div>
+
+      {settingsOpen && (
+        <div className="modal-backdrop" onClick={() => setSettingsOpen(false)} role="presentation">
+          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Settings">
+            <h2>Settings</h2>
+            <p className="muted" style={{ marginTop: 0 }}>
+              Options save on this device. Themes apply immediately.
+            </p>
+            <div className="settings-grid">
+              <div className="settings-row">
+                <div>
+                  <label>Color theme</label>
+                  <span className="muted">Pick a look that stays readable without clutter.</span>
+                </div>
+                <div className="theme-picks">
+                  {THEME_OPTIONS.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`theme-pick${uiSettings.theme === t.id ? ' on' : ''}`}
+                      onClick={() => patchUiSettings({ theme: t.id })}
+                    >
+                      <strong>{t.label}</strong>
+                      <span>{t.blurb}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <label htmlFor="set-funny-tips">Funny loading tips</label>
+                  <span className="muted">EQ-style quips under the load bar.</span>
+                </div>
+                <label className="check" style={{ marginTop: 0 }}>
+                  <input
+                    id="set-funny-tips"
+                    type="checkbox"
+                    checked={uiSettings.funnyLoadingTips !== false}
+                    onChange={(e) => patchUiSettings({ funnyLoadingTips: e.target.checked })}
+                  />
+                  Enabled
+                </label>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <label htmlFor="set-compact-badges">Compact status badges</label>
+                  <span className="muted">Tighter badge row under BiS / Simulator controls.</span>
+                </div>
+                <label className="check" style={{ marginTop: 0 }}>
+                  <input
+                    id="set-compact-badges"
+                    type="checkbox"
+                    checked={uiSettings.compactBadges !== false}
+                    onChange={(e) => patchUiSettings({ compactBadges: e.target.checked })}
+                  />
+                  Enabled
+                </label>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <label htmlFor="set-reduce-motion">Reduce motion</label>
+                  <span className="muted">Steady progress bar instead of a sliding animation.</span>
+                </div>
+                <label className="check" style={{ marginTop: 0 }}>
+                  <input
+                    id="set-reduce-motion"
+                    type="checkbox"
+                    checked={!!uiSettings.reduceMotion}
+                    onChange={(e) => patchUiSettings({ reduceMotion: e.target.checked })}
+                  />
+                  Enabled
+                </label>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button type="button" onClick={() => setSettingsOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {appHelpOpen && (
+        <div className="modal-backdrop" onClick={() => setAppHelpOpen(false)} role="presentation">
+          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Help">
+            <h2>{APP_HELP.title}</h2>
+            <p className="muted" style={{ marginTop: 0 }}>{APP_HELP.intro}</p>
+            <div className="help-sections">
+              {APP_HELP.sections.map((sec) => (
+                <section key={sec.id} className="help-section">
+                  <h3>{sec.title}</h3>
+                  <ul>
+                    {sec.body.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="primary" onClick={() => setAppHelpOpen(false)}>Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
