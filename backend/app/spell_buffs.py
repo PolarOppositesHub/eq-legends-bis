@@ -126,6 +126,22 @@ def _norm_class(name: str) -> str:
     return (name or "").strip().lower().replace(" ", "")
 
 
+def buff_caster_classes(buff: dict[str, Any]) -> list[str]:
+    """Classes that can cast this buff (catalog classes ∪ eqlwiki levels_by_class keys)."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for c in list(buff.get("classes") or []) + list((buff.get("levels_by_class") or {}).keys()):
+        name = str(c or "").strip()
+        if not name:
+            continue
+        key = _norm_class(name)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(name)
+    return out
+
+
 def _level_for_class(buff: dict[str, Any], class_name: str) -> int | None:
     """Cast level for one class from eqlwiki levels_by_class, else buff.level."""
     by = buff.get("levels_by_class") or {}
@@ -154,7 +170,7 @@ def buff_castable_at(
     if not selected:
         return False
     lv = max(1, min(50, int(character_level or 50)))
-    castable_classes = buff.get("classes") or []
+    castable_classes = buff_caster_classes(buff)
     matched = False
     for c in castable_classes:
         if _norm_class(c) not in selected:
@@ -184,21 +200,24 @@ def available_buffs(
     rows = load_spell_buffs().get("buffs") or []
     usable = [
         b for b in rows
-        if selected.intersection(set(b.get("classes") or []))
+        if selected.intersection(set(buff_caster_classes(b)))
         and buff_castable_at(b, list(selected), lv)
     ]
-    groups_present = {
-        (b.get("stacking") or {}).get("group")
-        for b in usable
-        if (b.get("stacking") or {}).get("group")
-    }
     out = []
     for b in usable:
         st = b.get("stacking") or {}
         red = st.get("redundantWhenAvailable")
-        if red and red in groups_present:
-            # Hide Endure X when a Resist line in that group is available at this level.
-            continue
+        if red:
+            # Hide Endure X only when a real Resist line (no redundantWhenAvailable)
+            # in the same stacking group is also available — not when the Endure
+            # line's own group membership would hide itself.
+            peers = [
+                u for u in usable
+                if u.get("id") != b.get("id")
+                and (u.get("stacking") or {}).get("group") == red
+            ]
+            if any(not (u.get("stacking") or {}).get("redundantWhenAvailable") for u in peers):
+                continue
         out.append(b)
     return out
 
@@ -263,14 +282,15 @@ def _public_buff(buff: dict[str, Any]) -> dict[str, Any]:
     st = buff.get("stacking") or {}
     group = st.get("group") or "other"
     icon = buff.get("icon") or ""
+    casters = buff_caster_classes(buff)
     return {
         "id": buff["id"],
         "name": buff["name"],
-        "classes": buff.get("classes") or [],
+        "classes": casters,
         "level": buff.get("level"),
         "effects": buff.get("effects") or {},
         "tooltip": buff.get("tooltip") or "",
-        "hover_text": buff_hover_text(buff),
+        "hover_text": buff_hover_text({**buff, "classes": casters}),
         "icon": icon,
         "icon_url": f"/api/spell-icon?name={icon}" if icon else "",
         "stacking_group": group,

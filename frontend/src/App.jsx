@@ -242,6 +242,24 @@ function itemTipStatsText(item, upgrade) {
   return tipParts.join('\n')
 }
 
+function tipCoordsRightOfCursor(e, tipW = 320, tipH = 220) {
+  /** Always prefer the tip to the right of the cursor (buff / item tips). */
+  const pad = 18
+  const cx = typeof e?.clientX === 'number' ? e.clientX : 0
+  const cy = typeof e?.clientY === 'number' ? e.clientY : 0
+  let x = cx + pad
+  let y = cy - 12
+  if (x + tipW > window.innerWidth - 8) {
+    x = Math.max(8, window.innerWidth - tipW - 8)
+  }
+  if (y + tipH > window.innerHeight - 8) {
+    y = Math.max(8, window.innerHeight - tipH - 8)
+  }
+  if (y < 8) y = 8
+  if (x < 8) x = 8
+  return { x, y }
+}
+
 function BuffIcon({ icon, name, className = 'buff-icon' }) {
   const [src, setSrc] = useState(icon ? spellIconUrl(icon) : '')
   const [failed, setFailed] = useState(false)
@@ -284,68 +302,50 @@ function buffTipText(buff) {
   return parts.join('\n\n') || 'No buff details in catalog.'
 }
 
-function CastBuffsPanel({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
+function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
   if (!castBuffs || castBuffs.mode === 'off') return null
-  const groups = castBuffs.groups?.length
-    ? castBuffs.groups
-    : [{
-      id: 'active',
-      label: 'Active Buffs',
-      buffs: castBuffs.active || [],
-    }]
-  const total = (castBuffs.active || []).length
-  return (
-    <div className="cast-buffs-panel">
-      <div className="cast-buffs-head">
-        <h3>Cast Buffs — {castBuffs.mode === 'quick' ? 'Quick Buff' : castBuffs.mode}</h3>
-        <span className="muted">
-          {total} active
-          {castBuffs.character_level != null ? ` · at L${castBuffs.character_level}` : ''}
+  const buffs = castBuffs.active || []
+  if (!buffs.length) {
+    return (
+      <div className="cast-buff-strip">
+        <span className="muted" style={{ fontSize: '0.8rem' }}>
+          Quick Buff: no spells castable for this trio at L{castBuffs.character_level ?? '—'}.
         </span>
       </div>
-      {total === 0 ? (
-        <p className="muted" style={{ margin: '0.35rem 0 0' }}>
-          No buffs castable for this trio at the current Character Level.
-        </p>
-      ) : (
-        <div className="cast-buff-groups">
-          {groups.map((g) => (
-            <div className="cast-buff-group" key={g.id || g.label}>
-              <div className="cast-buff-group-label">{g.label}</div>
-              <div className="cast-buff-row">
-                {(g.buffs || []).map((b) => {
-                  const show = (e) => {
-                    const { x, y } = tipCoordsFromPointer(e)
-                    onShowTip({
-                      name: b.name,
-                      statsText: buffTipText(b),
-                      x,
-                      y,
-                      image: b.icon_url || spellIconUrl(b.icon),
-                      kind: 'buff',
-                    })
-                  }
-                  return (
-                    <button
-                      type="button"
-                      className="cast-buff-chip"
-                      key={b.id}
-                      onMouseEnter={show}
-                      onMouseMove={onMoveTip}
-                      onFocus={show}
-                      onMouseLeave={onHideTip}
-                      onBlur={onHideTip}
-                    >
-                      <BuffIcon icon={b.icon} name={b.name} />
-                      <span className="cast-buff-name">{b.name}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    )
+  }
+  return (
+    <div className="cast-buff-strip" aria-label="Active cast buffs">
+      {buffs.map((b) => {
+        const show = (e) => {
+          const { x, y } = tipCoordsRightOfCursor(e)
+          onShowTip({
+            name: b.name,
+            statsText: buffTipText(b),
+            x,
+            y,
+            image: b.icon_url || spellIconUrl(b.icon),
+            icon: b.icon,
+            kind: 'buff',
+          })
+        }
+        return (
+          <button
+            type="button"
+            className="cast-buff-icon-btn"
+            key={b.id}
+            title={b.name}
+            aria-label={b.name}
+            onMouseEnter={show}
+            onMouseMove={show}
+            onFocus={show}
+            onMouseLeave={onHideTip}
+            onBlur={onHideTip}
+          >
+            <BuffIcon icon={b.icon} name={b.name} className="buff-icon buff-icon-lg" />
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -793,8 +793,10 @@ export default function App() {
   }, [classes, race, upgrade, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody])
 
   useEffect(() => {
-    if (tab === 'sim' && Object.keys(equipment).length) runSim()
-  }, [tab, upgrade, race, characterLevel, castBuffsMode, assumeMaxAas]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Recalc on Cast Buffs / level / race changes even with empty worn slots so
+    // Quick Buff totals and icon strip update immediately.
+    if (tab === 'sim' && classes.length >= 1) runSim()
+  }, [tab, upgrade, race, characterLevel, castBuffsMode, assumeMaxAas, classes]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearEquipment = () => {
     setEquipment({})
@@ -2100,14 +2102,6 @@ export default function App() {
                 <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Live Totals</h2>
                 {sim ? (
                   <>
-                    {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' ? (
-                      <CastBuffsPanel
-                        castBuffs={sim.cast_buffs}
-                        onShowTip={showHoverTip}
-                        onMoveTip={moveHoverTip}
-                        onHideTip={hideHoverTip}
-                      />
-                    ) : null}
                     <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span className="badge">Haste applied: +{sim.haste?.applied_pct || 0}%</span>
                       {sim.haste?.applied_slot && (
@@ -2117,15 +2111,15 @@ export default function App() {
                         <span className="badge warn">Extra haste ignored</span>
                       )}
                       <span className="badge">Pools: race+class+STA/INT/WIS (EQLT)</span>
-                      {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' && (
-                        <span className="badge">Cast Buffs: {sim.cast_buffs.active?.length || 0} active</span>
-                      )}
                       {sim.assume_max_aas && <span className="badge">Max AAs</span>}
                       {sim.character_level != null && (
                         <span className="badge">Level {sim.character_level}</span>
                       )}
                       {sim.haste?.buff_pct ? (
                         <span className="badge">Spell haste +{sim.haste.buff_pct}%</span>
+                      ) : null}
+                      {sim.cast_buffs?.mode === 'quick' ? (
+                        <span className="badge">Quick Buff</span>
                       ) : null}
                     </div>
                     <div className="totals">
@@ -2142,6 +2136,14 @@ export default function App() {
                         <div className="v">{sim.haste?.applied_pct || 0}%</div>
                       </div>
                     </div>
+                    {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' ? (
+                      <CastBuffsIconStrip
+                        castBuffs={sim.cast_buffs}
+                        onShowTip={showHoverTip}
+                        onMoveTip={moveHoverTip}
+                        onHideTip={hideHoverTip}
+                      />
+                    ) : null}
                     {sim.weapons?.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
                         <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios @ +{upgrade}</h3>

@@ -535,68 +535,30 @@ a { color: var(--gold); }
 }
 .import-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
 
-.cast-buffs-panel {
-  margin: 0 0 1rem;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #0c0c0c;
-}
-.cast-buffs-head {
+.cast-buff-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.55rem;
-}
-.cast-buffs-head h3 {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--gold);
-}
-.cast-buff-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-.cast-buff-group-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  margin-bottom: 0.25rem;
-}
-.cast-buff-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.cast-buff-chip {
-  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.28rem 0.55rem 0.28rem 0.3rem;
-  border-radius: 8px;
-  border: 1px solid #3a3a3a;
-  background: #161616;
-  color: var(--text);
-  cursor: help;
-  font: inherit;
-  font-size: 0.8rem;
+  margin: 0.85rem 0 0.35rem;
+  padding: 0.45rem 0.15rem;
+  border-top: 1px solid var(--border);
 }
-.cast-buff-chip:hover,
-.cast-buff-chip:focus {
+.cast-buff-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #0a0a0a;
+  cursor: help;
+}
+.cast-buff-icon-btn:hover,
+.cast-buff-icon-btn:focus {
   border-color: var(--gold);
   outline: none;
-}
-.cast-buff-name {
-  color: #eee;
-  font-weight: 600;
-  max-width: 11rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  background: #16140a;
 }
 .buff-icon {
   width: 28px;
@@ -604,8 +566,12 @@ a { color: var(--gold); }
   object-fit: contain;
   image-rendering: pixelated;
   flex: 0 0 auto;
-  border-radius: 4px;
+  border-radius: 3px;
   background: #000;
+}
+.buff-icon-lg {
+  width: 36px;
+  height: 36px;
 }
 .buff-icon-placeholder {
   display: inline-block;
@@ -614,6 +580,10 @@ a { color: var(--gold); }
   border-radius: 4px;
   background: #222;
   border: 1px solid var(--border);
+}
+.buff-icon-lg.buff-icon-placeholder {
+  width: 36px;
+  height: 36px;
 }
 
 .field label.check {
