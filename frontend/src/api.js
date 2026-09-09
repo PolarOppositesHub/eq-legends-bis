@@ -47,6 +47,10 @@ export const itemImageUrl = (name) => {
   if (!name) return ''
   return `/api/item-image?name=${encodeURIComponent(name)}`
 }
+export const spellIconUrl = (icon) => {
+  if (!icon) return ''
+  return `/api/spell-icon?name=${encodeURIComponent(icon)}`
+}
 export const postSimulate = (body) => req('/api/simulate', { method: 'POST', body: JSON.stringify(body) })
 export const exportXlsx = (classes) => req('/api/export/xlsx', { method: 'POST', body: JSON.stringify({ classes }) })
 export const getZones = () => req('/api/zones')

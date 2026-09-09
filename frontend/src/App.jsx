@@ -12,6 +12,7 @@ import {
   searchItems,
   getItemDetail,
   itemImageUrl,
+  spellIconUrl,
   ensureItemImage,
   getPriorityDefaults,
   listQuests,
@@ -51,6 +52,11 @@ function fmtStats(stats, keys) {
 const SHOW0 = ['AC','HP','MANA','END','STR','STA','AGI','DEX','WIS','INT','CHA','Haste','DMG','DLY','HP_REGEN','MANA_REGEN','END_REGEN']
 const SHOW10 = SHOW0
 const SHOW_UP = SHOW0
+const SHOW_REWARD = [
+  'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
+  'Haste', 'DMG', 'DLY', 'ATK', 'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
+  'SVF', 'SVC', 'SVM', 'SVP', 'SVD',
+]
 
 const SCALABLE_STAT_KEYS = new Set([
   'AC', 'HP', 'MANA', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA', 'END', 'ATK',
@@ -345,6 +351,114 @@ function itemTipStatsText(item, upgrade) {
   return tipParts.join('\n')
 }
 
+function tipCoordsRightOfCursor(e, tipW = 320, tipH = 220) {
+  /** Always prefer the tip to the right of the cursor (buff / item tips). */
+  const pad = 18
+  const cx = typeof e?.clientX === 'number' ? e.clientX : 0
+  const cy = typeof e?.clientY === 'number' ? e.clientY : 0
+  let x = cx + pad
+  let y = cy - 12
+  if (x + tipW > window.innerWidth - 8) {
+    x = Math.max(8, window.innerWidth - tipW - 8)
+  }
+  if (y + tipH > window.innerHeight - 8) {
+    y = Math.max(8, window.innerHeight - tipH - 8)
+  }
+  if (y < 8) y = 8
+  if (x < 8) x = 8
+  return { x, y }
+}
+
+function BuffIcon({ icon, name, className = 'buff-icon' }) {
+  const [src, setSrc] = useState(icon ? spellIconUrl(icon) : '')
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    setSrc(icon ? spellIconUrl(icon) : '')
+    setFailed(false)
+  }, [icon])
+  if (!icon || failed || !src) {
+    return <span className={`${className} buff-icon-placeholder`} title={name || ''} aria-hidden="true" />
+  }
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      width={32}
+      height={32}
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
+function buffTipText(buff) {
+  if (buff?.hover_text) return buff.hover_text
+  const parts = []
+  if (buff?.tooltip) parts.push(buff.tooltip)
+  const effects = buff?.effects || {}
+  const lines = Object.entries(effects)
+    .filter(([, v]) => Number(v) !== 0)
+    .map(([k, v]) => {
+      const n = Number(v)
+      if (k === 'HASTE') return `Haste +${n}%`
+      return `${k} ${n > 0 ? '+' : ''}${n}`
+    })
+  if (lines.length) parts.push(`Effects:\n${lines.map((l) => `  ${l}`).join('\n')}`)
+  const meta = []
+  if (buff?.classes?.length) meta.push(buff.classes.join(', '))
+  if (buff?.level != null) meta.push(`L${buff.level}`)
+  if (meta.length) parts.push(meta.join(' · '))
+  return parts.join('\n\n') || 'No buff details in catalog.'
+}
+
+function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
+  if (!castBuffs || castBuffs.mode === 'off') return null
+  const buffs = castBuffs.active || []
+  if (!buffs.length) {
+    return (
+      <div className="cast-buff-strip">
+        <span className="muted" style={{ fontSize: '0.8rem' }}>
+          Quick Buff: no spells castable for this trio at L{castBuffs.character_level ?? '—'}.
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="cast-buff-strip" aria-label="Active cast buffs">
+      {buffs.map((b) => {
+        const show = (e) => {
+          const { x, y } = tipCoordsRightOfCursor(e)
+          onShowTip({
+            name: b.name,
+            statsText: buffTipText(b),
+            x,
+            y,
+            image: b.icon_url || spellIconUrl(b.icon),
+            icon: b.icon,
+            kind: 'buff',
+          })
+        }
+        return (
+          <button
+            type="button"
+            className="cast-buff-icon-btn"
+            key={b.id}
+            title={b.name}
+            aria-label={b.name}
+            onMouseEnter={show}
+            onMouseMove={show}
+            onFocus={show}
+            onMouseLeave={onHideTip}
+            onBlur={onHideTip}
+          >
+            <BuffIcon icon={b.icon} name={b.name} className="buff-icon buff-icon-lg" />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
@@ -553,6 +667,8 @@ export default function App() {
   const [questDetail, setQuestDetail] = useState(null)
   const [questDetailLoading, setQuestDetailLoading] = useState(false)
   const [selectedQuestName, setSelectedQuestName] = useState('')
+  const [questListCollapsed, setQuestListCollapsed] = useState(false)
+  const [questRewardUpgrade, setQuestRewardUpgrade] = useState(0)
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -576,6 +692,8 @@ export default function App() {
       hoverTipClearRef.current = null
     }
     setHoverTip(tip)
+    // Item icons only — buff tips already carry icon_url / kind:'buff'.
+    if (tip?.kind === 'buff' || tip?.skipItemImage) return
     if (tip?.name && !ensuredImagesRef.current.has(tip.name)) {
       ensuredImagesRef.current.add(tip.name)
       ensureItemImage(tip.name)
@@ -844,10 +962,12 @@ export default function App() {
   }, [classes, race, upgrade, wornUpgrades, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody, beginLoad, endLoad])
 
   useEffect(() => {
-    if (tab !== 'sim' || !Object.keys(equipment).length) return undefined
+    // Recalc on Cast Buffs / level / race / per-slot upgrade changes even with
+    // empty worn slots so Quick Buff totals and icon strip update immediately.
+    if (tab !== 'sim' || classes.length < 1) return undefined
     const t = setTimeout(() => { runSim() }, 220)
     return () => clearTimeout(t)
-  }, [tab, upgrade, wornUpgrades, race, characterLevel, castBuffsMode, assumeMaxAas]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, upgrade, wornUpgrades, race, characterLevel, castBuffsMode, assumeMaxAas, classes]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyUpgradeToAllSlots = useCallback(() => {
     const slots = meta?.slots || Object.keys(equipment)
@@ -1466,7 +1586,7 @@ export default function App() {
           <p>
             Local BiS planner & simulator
             {meta?.catalog_weapons ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.11'}
+            {meta?.version ? ` · v${meta.version}` : ' · v1.0.12'}
           </p>
         </div>
         <div className="header-actions">
@@ -1495,7 +1615,7 @@ export default function App() {
               <path d="M12 2.8v2.2M12 19v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.8 12h2.2M19 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
             </svg>
           </button>
-          <span className="ui-build-badge" title="App version">Version 1.0.11</span>
+          <span className="ui-build-badge" title="App version">Version 1.0.12</span>
         </div>
       </header>
 
@@ -1995,48 +2115,66 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Quest Hub</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Look up quests known from the item database (rewardFromQuests / quest_source). Open a quest for steps,
-                prerequisites, and whether imported inventory already has turn-in items.
+                Single-click a quest for a preview. Double-click (or use the side arrow) to maximize the walkthrough.
+                Steps come from eqlwiki when available.
               </p>
-              <div className="item-search-bar">
-                <input
-                  type="text"
-                  placeholder="Search quests…"
-                  value={questQ}
-                  onChange={(e) => setQuestQ(e.target.value)}
-                />
-              </div>
-              {questResults && (
-                <p className="muted" style={{ marginTop: '0.65rem' }}>
-                  {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
-                  {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
-                </p>
-              )}
-              {questResults?.note ? (
-                <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
-              ) : null}
-              <div className="item-search-layout">
-                <ul className="item-search-list">
-                  {(questResults?.quests || []).map((q) => (
-                    <li key={q.name}>
-                      <button
-                        type="button"
-                        className="item-search-result"
-                        onClick={() => setSelectedQuestName(q.name)}
-                        style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
-                      >
-                        <div>
-                          <div className="item-search-name">{q.name}</div>
-                          <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
-                            {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+              <div className={`quest-hub-layout${questListCollapsed ? ' list-collapsed' : ''}`}>
+                <div className="quest-hub-list-col">
+                  <div className="item-search-bar">
+                    <input
+                      type="text"
+                      placeholder="Search quests…"
+                      value={questQ}
+                      onChange={(e) => setQuestQ(e.target.value)}
+                    />
+                  </div>
+                  {questResults && (
+                    <p className="muted" style={{ marginTop: '0.65rem', marginBottom: '0.35rem' }}>
+                      {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
+                      {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
+                    </p>
+                  )}
+                  {questResults?.note ? (
+                    <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
+                  ) : null}
+                  <ul className="item-search-list quest-hub-list">
+                    {(questResults?.quests || []).map((q) => (
+                      <li key={q.name}>
+                        <button
+                          type="button"
+                          className="item-search-result"
+                          title="Click to preview · Double-click to maximize walkthrough"
+                          onClick={() => setSelectedQuestName(q.name)}
+                          onDoubleClick={() => {
+                            setSelectedQuestName(q.name)
+                            setQuestListCollapsed(true)
+                          }}
+                          style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
+                        >
+                          <div>
+                            <div className="item-search-name">{q.name}</div>
+                            <div className="muted" style={{ fontSize: '0.78rem' }}>
+                              {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
+                              {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="item-detail-panel">
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  className="quest-hub-rail"
+                  title={questListCollapsed ? 'Show quest list' : 'Maximize walkthrough (hide list)'}
+                  aria-label={questListCollapsed ? 'Expand quest list' : 'Collapse quest list'}
+                  onClick={() => setQuestListCollapsed((v) => !v)}
+                >
+                  <span className="quest-hub-rail-arrow" aria-hidden="true">
+                    {questListCollapsed ? '›' : '‹'}
+                  </span>
+                </button>
+                <div className="item-detail-panel quest-hub-detail">
                   {!selectedQuestName && (
                     <p className="muted">Select a quest to view steps, prerequisites, and inventory checks.</p>
                   )}
@@ -2061,6 +2199,82 @@ export default function App() {
                       ) : (
                         <p className="muted" style={{ fontSize: '0.82rem' }}>
                           Import Inventory.txt to mark which turn-in items you already have.
+                        </p>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Rewards</h3>
+                      {(questDetail.rewards || []).length ? (
+                        <>
+                          {(questDetail.rewards || []).some((r) => r.in_catalog && (r.stats_plus0 || r.stats_by_upgrade)) ? (
+                            <div className="quest-reward-upgrade">
+                              <label htmlFor="quest-reward-upgrade">Upgrade +0…+10</label>
+                              <input
+                                id="quest-reward-upgrade"
+                                type="range"
+                                min={0}
+                                max={10}
+                                value={questRewardUpgrade}
+                                onChange={(e) => setQuestRewardUpgrade(Number(e.target.value))}
+                              />
+                              <span className="muted">+{questRewardUpgrade}</span>
+                            </div>
+                          ) : null}
+                          <ul className="quest-rewards">
+                            {(questDetail.rewards || []).map((r, i) => {
+                              const by = r.stats_by_upgrade || {}
+                              const stats = by[String(questRewardUpgrade)]
+                                || by[questRewardUpgrade]
+                                || r.stats_at_upgrade
+                                || r.stats_plus0
+                              const ratioBy = r.ratio_by_upgrade || {}
+                              const ratio = ratioBy[String(questRewardUpgrade)]
+                                ?? ratioBy[questRewardUpgrade]
+                                ?? r.ratio_at_upgrade
+                              return (
+                                <li key={`${r.name}-${i}`} className="quest-reward">
+                                  <div className="quest-reward-head">
+                                    {r.image_url || r.name ? (
+                                      <img
+                                        className="item-icon"
+                                        src={itemImageUrl(r.name)}
+                                        alt=""
+                                        onError={hideImg}
+                                      />
+                                    ) : null}
+                                    <div>
+                                      <div className="item-search-name">
+                                        {r.url ? (
+                                          <a href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
+                                        ) : (
+                                          r.name
+                                        )}
+                                      </div>
+                                      <div className="muted" style={{ fontSize: '0.78rem' }}>
+                                        {(r.slots || []).join(', ') || r.slot || 'item'}
+                                        {r.classes_str ? ` · ${r.classes_str}` : ''}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {r.in_catalog === false ? (
+                                    <p className="muted" style={{ fontSize: '0.78rem', margin: '0.25rem 0 0' }}>
+                                      {r.note || 'No catalog stats for this reward name.'}
+                                    </p>
+                                  ) : (
+                                    <div className="stats-line" style={{ marginTop: '0.35rem' }}>
+                                      +{questRewardUpgrade}{' '}
+                                      {fmtStats(stats, SHOW_REWARD) || '—'}
+                                      {ratio != null ? (
+                                        <span className="muted"> · Ratio {Number(ratio).toFixed(4)}</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          {questDetail.rewards_note || 'No item rewards linked in the decoded catalog for this quest.'}
                         </p>
                       )}
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
@@ -2459,15 +2673,15 @@ export default function App() {
                         <span className="badge warn">Extra haste ignored</span>
                       )}
                       <span className="badge">Pools: race+class+STA/INT/WIS (EQLT)</span>
-                      {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' && (
-                        <span className="badge">Cast Buffs: {sim.cast_buffs.active?.length || 0} active</span>
-                      )}
                       {sim.assume_max_aas && <span className="badge">Max AAs</span>}
                       {sim.character_level != null && (
                         <span className="badge">Level {sim.character_level}</span>
                       )}
                       {sim.haste?.buff_pct ? (
                         <span className="badge">Spell haste +{sim.haste.buff_pct}%</span>
+                      ) : null}
+                      {sim.cast_buffs?.mode === 'quick' ? (
+                        <span className="badge">Quick Buff</span>
                       ) : null}
                     </div>
                     <div className="totals">
@@ -2484,21 +2698,14 @@ export default function App() {
                         <div className="v">{sim.haste?.applied_pct || 0}%</div>
                       </div>
                     </div>
-                    {sim.cast_buffs?.active?.length > 0 && (
-                      <div style={{ marginTop: '1rem' }}>
-                        <h3 style={{ fontSize: '0.95rem' }}>Active Cast Buffs</h3>
-                        <ul className="muted" style={{ margin: '0.35rem 0 0', paddingLeft: '1.1rem' }}>
-                          {sim.cast_buffs.active.map((b) => (
-                            <li key={b.id}>
-                              <strong>{b.name}</strong>
-                              {b.level != null ? ` (L${b.level})` : ''}
-                              {b.classes?.length ? ` · ${(b.classes || []).join(', ')}` : ''}
-                              {b.tooltip ? ` — ${b.tooltip}` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {sim.cast_buffs?.mode && sim.cast_buffs.mode !== 'off' ? (
+                      <CastBuffsIconStrip
+                        castBuffs={sim.cast_buffs}
+                        onShowTip={showHoverTip}
+                        onMoveTip={moveHoverTip}
+                        onHideTip={hideHoverTip}
+                      />
+                    ) : null}
                     {sim.weapons?.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
                         <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios (per-slot +N)</h3>
@@ -2846,7 +3053,18 @@ export default function App() {
           style={{ left: hoverTip.x, top: hoverTip.y }}
           role="tooltip"
         >
-          <ItemIcon name={hoverTip.name} />
+          {hoverTip.kind === 'buff' ? (
+            <img
+              className="item-icon buff-icon"
+              src={hoverTip.image || spellIconUrl(hoverTip.icon)}
+              alt=""
+              width={40}
+              height={40}
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          ) : (
+            <ItemIcon name={hoverTip.name} />
+          )}
           <div className="hover-tip-body">
             <div className="hover-tip-name">{hoverTip.name}</div>
             {hoverTip.statsText ? (

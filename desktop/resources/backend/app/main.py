@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.11")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.12")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -160,7 +160,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.11",
+        "version": m.get("version") or "1.0.12",
         "scoring": m.get("scoring"),
     }
 
@@ -267,6 +267,17 @@ def api_item_image(name: str = Query(...), fetch: bool = Query(default=True)):
 @app.post("/api/item-image/ensure")
 def api_ensure_item_image(name: str = Query(...)):
     return item_catalog_mod.ensure_item_image(name, fetch=True)
+
+
+@app.get("/api/spell-icon")
+def api_spell_icon(name: str = Query(...)):
+    """Serve bundled Quick Buff / Cast Buff spell icons (eqlegendstools spellicons)."""
+    from . import spell_buffs as sb
+
+    path = sb.resolve_spell_icon(name)
+    if path and path.is_file():
+        return FileResponse(path)
+    raise HTTPException(404, f"No spell icon for {name}")
 
 
 @app.get("/api/items")
@@ -580,11 +591,13 @@ class QuestDetailRequest(BaseModel):
     fetch: bool = True
     # Imported inventory rows or names for ownership check against components.
     inventory_items: list[Any] = Field(default_factory=list)
+    # Enchant level for reward item stats (+0..+10). Full stats_by_upgrade is also returned.
+    upgrade: int = Field(default=0, ge=0, le=10)
 
 
 @app.post("/api/quest-detail")
 def api_quest_detail(body: QuestDetailRequest):
-    """Quest Hub detail: guide + prerequisites + inventory ownership for components."""
+    """Quest Hub detail: guide + rewards + prerequisites + inventory ownership."""
     from . import quest_hub as qh
     name = (body.name or "").strip()
     if not name:
@@ -594,6 +607,7 @@ def api_quest_detail(body: QuestDetailRequest):
             name,
             fetch=bool(body.fetch),
             inventory_items=list(body.inventory_items or []),
+            upgrade=int(body.upgrade),
         )
     except Exception as e:
         return {
@@ -601,6 +615,7 @@ def api_quest_detail(body: QuestDetailRequest):
             "steps": [],
             "components": [],
             "prerequisites": [],
+            "rewards": [],
             "error": f"quest detail unavailable: {e}",
             "note": "No invented steps.",
         }

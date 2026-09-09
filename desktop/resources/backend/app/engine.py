@@ -1067,7 +1067,7 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.11",
+        "version": "1.0.12",
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "
