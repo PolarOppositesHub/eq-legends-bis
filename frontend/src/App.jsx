@@ -910,7 +910,7 @@ export default function App() {
       (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
       (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
       (sourceLabel ? ` from ${sourceLabel}` : '') +
-      (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item DB (see debug)` : '')
+      (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item catalog (see debug)` : '')
     )
     if (opts.switchTab) setTab(opts.switchTab)
     if (classes.length >= 1) {
@@ -1862,7 +1862,7 @@ export default function App() {
                     {bagHits.length} match{bagHits.length === 1 ? '' : 'es'} · {allImportedItems.length} imported lines
                   </p>
                   <ul className="item-search-list">
-                    {bagHits.slice(0, 200).map((row, i) => {
+                    {bagHits.slice(0, 500).map((row, i) => {
                       const name = row?.base_name || row?.name || String(row)
                       const loc = row?.location || '—'
                       const count = row?.count || ''
@@ -1873,7 +1873,11 @@ export default function App() {
                               <div className="item-search-name">{name}</div>
                               <div className="muted" style={{ fontSize: '0.78rem' }}>
                                 {loc}{count ? ` · ×${count}` : ''}
-                                {row?.in_catalog === false ? ' · not in item DB' : ''}
+                                {row?.in_catalog === false
+                                  ? ' · not in item catalog'
+                                  : (row?.catalog_source === 'eqlwiki' && !row?.has_stats
+                                    ? ' · eqlwiki name (no stats yet)'
+                                    : '')}
                                 {row?.planner_slot ? ` · worn ${row.planner_slot}` : ''}
                               </div>
                             </div>
@@ -2224,11 +2228,13 @@ export default function App() {
                       {importMeta.skipped_count ? ` · ${importMeta.skipped_count} bag/nested lines kept for Search My Bags` : ''}
                     </p>
                     <p className="muted" style={{ marginTop: 0, fontSize: '0.8rem' }}>
-                      Bag/bank contents are searchable under <strong>Search My Bags</strong>. Names missing from the item DB do not block worn-slot import.
+                      Bag/bank contents are searchable under <strong>Search My Bags</strong>.
+                      Names are matched against eqlegendstools BiS data and eqlwiki item pages;
+                      wiki-only matches do not invent stats.
                     </p>
                     {(importMeta.unmatched_count > 0 || unmatchedNames.length > 0) && (
                       <details>
-                        <summary className="muted">Debug: {importMeta.unmatched_count ?? unmatchedNames.length} names not in item DB</summary>
+                        <summary className="muted">Debug: {importMeta.unmatched_count ?? unmatchedNames.length} names not in item catalog</summary>
                         <ul className="mob-list">
                           {unmatchedNames.map((n, i) => <li key={`${n}-${i}`}>{n}</li>)}
                         </ul>

@@ -487,6 +487,7 @@ def api_inventory_import(body: InventoryParseRequest):
         "unmatched_count": parsed.get("unmatched_count", 0),
         "skipped_count": parsed.get("skipped_count", 0),
         "skipped": parsed.get("skipped") or [],
+        "catalog_coverage": parsed.get("catalog_coverage") or {},
         "warnings": parsed.get("warnings") or [],
         "note": parsed.get("note") or "",
     }
