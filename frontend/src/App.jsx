@@ -2585,51 +2585,69 @@ export default function App() {
                     return (
                       <div className="equip-compare-row" key={slot}>
                         <label>{slotLabel(slot)}</label>
-                        <select
-                          className="slot-select"
-                          value={equipment[slot] || ''}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setEquipment((prev) => {
-                              const next = { ...prev }
-                              if (!v) delete next[slot]
-                              else next[slot] = v
-                              return next
-                            })
-                          }}
-                          onBlur={runSim}
-                        >
-                          <option value="">— empty —</option>
-                          {(slotItems[slot] || []).map((it) => (
-                            <option key={it.name} value={it.name}>
-                              {it.name}{it.haste ? ` (+${it.haste}% haste)` : ''}
-                              {(it.ratio_at_upgrade != null || it.ratio_plus10 != null)
-                                ? ` [r ${Number(it.ratio_at_upgrade ?? it.ratio_plus10).toFixed(2)}]`
-                                : ''}
-                            </option>
-                          ))}
-                          {equipment[slot] && !(slotItems[slot] || []).some((it) => it.name === equipment[slot]) && (
-                            <option value={equipment[slot]}>{equipment[slot]} (imported)</option>
-                          )}
-                        </select>
-                        <select
-                          className="slot-select"
-                          value={selectedBis}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setBisOverrides((prev) => {
-                              const next = { ...prev }
-                              if (!v) delete next[slot]
-                              else next[slot] = v
-                              return next
-                            })
-                          }}
-                        >
-                          <option value="">— BiS —</option>
-                          {bisOptions.map((opt) => (
-                            <option key={opt.name} value={opt.name}>{opt.name}</option>
-                          ))}
-                        </select>
+                        <div className="equip-slot-cell">
+                          <select
+                            className="slot-select"
+                            value={equipment[slot] || ''}
+                            onChange={(e) => {
+                              const v = e.target.value
+                              setEquipment((prev) => {
+                                const next = { ...prev }
+                                if (!v) delete next[slot]
+                                else next[slot] = v
+                                return next
+                              })
+                            }}
+                            onBlur={runSim}
+                          >
+                            <option value="">— empty —</option>
+                            {(slotItems[slot] || []).map((it) => (
+                              <option key={it.name} value={it.name}>
+                                {it.name}{it.haste ? ` (+${it.haste}% haste)` : ''}
+                                {(it.ratio_at_upgrade != null || it.ratio_plus10 != null)
+                                  ? ` [r ${Number(it.ratio_at_upgrade ?? it.ratio_plus10).toFixed(2)}]`
+                                  : ''}
+                              </option>
+                            ))}
+                            {equipment[slot] && !(slotItems[slot] || []).some((it) => it.name === equipment[slot]) && (
+                              <option value={equipment[slot]}>{equipment[slot]} (imported)</option>
+                            )}
+                          </select>
+                          <SlotUpgradeSelect
+                            value={wornUpgrades[slot] ?? upgrade}
+                            title={`${slotLabel(slot)} Worn +0…+10`}
+                            onChange={(n) => {
+                              setWornUpgrades((prev) => ({ ...prev, [slot]: n }))
+                            }}
+                          />
+                        </div>
+                        <div className="equip-slot-cell">
+                          <select
+                            className="slot-select"
+                            value={selectedBis}
+                            onChange={(e) => {
+                              const v = e.target.value
+                              setBisOverrides((prev) => {
+                                const next = { ...prev }
+                                if (!v) delete next[slot]
+                                else next[slot] = v
+                                return next
+                              })
+                            }}
+                          >
+                            <option value="">— BiS —</option>
+                            {bisOptions.map((opt) => (
+                              <option key={opt.name} value={opt.name}>{opt.name}</option>
+                            ))}
+                          </select>
+                          <SlotUpgradeSelect
+                            value={bisUpgrades[slot] ?? upgrade}
+                            title={`${slotLabel(slot)} BiS +0…+10`}
+                            onChange={(n) => {
+                              setBisUpgrades((prev) => ({ ...prev, [slot]: n }))
+                            }}
+                          />
+                        </div>
                         <div className="equip-deltas">
                           {deltas.length === 0 ? (
                             <span className="muted">

@@ -500,7 +500,7 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--gold);
-  background: #141414;
+  background: var(--input-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
 }
