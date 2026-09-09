@@ -266,6 +266,17 @@ def api_ensure_item_image(name: str = Query(...)):
     return item_catalog_mod.ensure_item_image(name, fetch=True)
 
 
+@app.get("/api/spell-icon")
+def api_spell_icon(name: str = Query(...)):
+    """Serve bundled Quick Buff / Cast Buff spell icons (eqlegendstools spellicons)."""
+    from . import spell_buffs as sb
+
+    path = sb.resolve_spell_icon(name)
+    if path and path.is_file():
+        return FileResponse(path)
+    raise HTTPException(404, f"No spell icon for {name}")
+
+
 @app.get("/api/items")
 def get_items(
     classes: Optional[list[str]] = Query(default=None),
