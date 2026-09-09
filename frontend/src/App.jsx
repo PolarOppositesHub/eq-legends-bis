@@ -1847,7 +1847,7 @@ export default function App() {
                     Per-slot +N
                   </span>
                 )}
-                <span className="badge warn">Haste: highest item (+ spell stacks)</span>
+                <span className="badge warn">Haste: highest item + spell (cap 175/185)</span>
                 {preferRanged && <span className="badge">Prefer ranged</span>}
                 {maximizeHpRegen && <span className="badge">Max HP regen</span>}
                 {bis?.dual_wield_enabled && (
@@ -2700,6 +2700,13 @@ export default function App() {
                       )}
                       {sim.haste?.buff_pct ? (
                         <span className="badge">Spell haste +{sim.haste.buff_pct}%</span>
+                      ) : null}
+                      {sim.haste?.capped ? (
+                        <span className="badge warn">
+                          Cap {sim.haste.cap_pct}% (was {sim.haste.raw_pct}%)
+                        </span>
+                      ) : sim.haste?.cap_pct ? (
+                        <span className="badge">Cap {sim.haste.cap_pct}%</span>
                       ) : null}
                       {sim.cast_buffs?.mode === 'quick' ? (
                         <span className="badge">Quick Buff</span>

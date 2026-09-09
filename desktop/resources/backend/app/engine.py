@@ -954,7 +954,15 @@ def simulate(
     worn_haste = int(applied_haste)
     # Highest worn haste item stacks with spell haste from Cast Buffs.
     # Multiple haste spells still take max among themselves (see spell_buffs).
-    total_haste = worn_haste + int(buff_haste)
+    # Soft cap: 175% for most classes, 185% if Monk is in the trio.
+    raw_haste = worn_haste + int(buff_haste)
+    haste_cap = 185 if "Monk" in cleaned else 175
+    total_haste = min(raw_haste, haste_cap)
+    if raw_haste > haste_cap:
+        warnings.append(
+            f"Haste capped at {haste_cap}% "
+            f"({'Monk' if haste_cap == 185 else 'non-Monk'}; combined was {raw_haste}%)."
+        )
     totals["Haste"] = total_haste
 
     weapon_ratios = []
@@ -998,7 +1006,15 @@ def simulate(
             "applied_slot": applied_slot,
             "worn_pct": worn_haste,
             "buff_pct": int(buff_haste),
-            "rule": "Worn haste: only ONE item (highest %). That item haste stacks with spell haste from Cast Buffs. Multiple haste spells use the highest spell haste.",
+            "raw_pct": raw_haste,
+            "cap_pct": haste_cap,
+            "capped": raw_haste > haste_cap,
+            "rule": (
+                "Worn haste: only ONE item (highest %). That item haste stacks with spell haste "
+                "from Cast Buffs. Multiple haste spells use the highest spell haste. "
+                f"Combined haste caps at {haste_cap}% "
+                f"({'Monk' if haste_cap == 185 else 'non-Monk classes'})."
+            ),
             "candidates": haste_items,
             "items": haste_items,
         },
@@ -1055,7 +1071,7 @@ def meta_payload() -> dict:
         ],
         "haste_rule": summary.get("haste_note") or (
             "Only ONE worn haste item counts (highest %). That stacks with spell haste from Cast Buffs. "
-            "Haste does not scale with upgrade."
+            "Combined haste caps at 175% (185% for Monk). Haste does not scale with upgrade."
         ),
         "weapon_rule": (
             "PRIMARY/SECONDARY: DW pair vs 2H expected-dmg when any DW class selected; "

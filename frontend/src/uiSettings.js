@@ -90,7 +90,7 @@ export const APP_HELP = {
       body: [
         'Compare Worn vs BiS per slot. Each side has its own +N enchant level.',
         'Import Inventory.txt (or Update from EQ folder on desktop) to fill worn gear and bag contents.',
-        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (highest worn haste stacks with spell haste).',
+        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (highest worn haste stacks with spell haste; caps at 175%, or 185% with Monk).',
         'Default upgrade + Apply to all slots sets every piece; otherwise edit +N under each slot.',
       ],
     },
