@@ -2375,10 +2375,14 @@ export default function App() {
           {tab === 'search' && (
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Full EQ Legends item list (gear, clickies, food, reagents, and other non-equipables).
+                Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
+              </p>
               <div className="item-search-bar">
                 <input
                   type="text"
-                  placeholder="Search items…"
+                  placeholder="Search any item…"
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') runSearch() }}
@@ -2397,6 +2401,8 @@ export default function App() {
                 <p className="muted" style={{ marginTop: '0.65rem' }}>
                   {searchResults.total} match{searchResults.total === 1 ? '' : 'es'}
                   {searchResults.catalog_size != null ? ` · catalog ${searchResults.catalog_size}` : ''}
+                  {searchResults.tools_items != null ? ` · tools ${searchResults.tools_items}` : ''}
+                  {searchResults.eqlwiki_names != null ? ` · eqlwiki ${searchResults.eqlwiki_names}` : ''}
                 </p>
               )}
               <div className="item-search-layout">
@@ -2417,13 +2423,16 @@ export default function App() {
                                 {it.name}
                               </a>
                             ) : it.name}
+                            {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
+                              <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
+                            ) : null}
                           </div>
                           <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {it.classes_str || (it.classes || []).join(', ') || '—'}
+                            {it.classes_str || (it.classes || []).join(', ') || (it.catalog_source === 'eqlwiki' ? 'Non-tools / open for wiki details' : '—')}
                             {it.zone ? ` · ${it.zone}` : ''}
                           </div>
                           <div className="stats-line">
-                            {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || '—'}
+                            {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
                           </div>
                         </div>
                       </button>
@@ -2444,8 +2453,9 @@ export default function App() {
                       ) : itemDetail.name}
                     </div>
                     <div className="meta">
-                      {(itemDetail.slots || []).join(', ') || itemDetail.slot || '—'}
+                      {(itemDetail.slots || []).join(', ') || itemDetail.slot || (itemDetail.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
                       {itemDetail.zone ? ` · ${itemDetail.zone}` : ''}
+                      {itemDetail.catalog_source ? ` · ${itemDetail.catalog_source}` : ''}
                     </div>
                     <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
                       {itemDetail.classes_str || (itemDetail.classes || []).join(', ')}
@@ -2456,10 +2466,20 @@ export default function App() {
                     <div className="stats-line">
                       +10 {fmtStats(itemDetail.stats_plus10, SHOW10) || '—'}
                     </div>
+                    {itemDetail.description ? (
+                      <p style={{ marginTop: '0.65rem', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
+                        {itemDetail.description}
+                      </p>
+                    ) : null}
                     {itemDetail.tooltipLines?.length > 0 && (
                       <pre className="help-md" style={{ marginTop: '0.65rem', fontSize: '0.75rem' }}>
                         {(itemDetail.tooltipLines || []).join('\n')}
                       </pre>
+                    )}
+                    {!itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
+                      <p className="muted" style={{ marginTop: '0.65rem', fontSize: '0.8rem' }}>
+                        No parsed wiki tooltip yet — open the eqlwiki link above for the full page.
+                      </p>
                     )}
                   </div>
                 )}

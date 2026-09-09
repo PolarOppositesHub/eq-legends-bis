@@ -123,7 +123,8 @@ export const APP_HELP = {
       id: 'search',
       title: 'Item Search',
       body: [
-        'Look up catalog items by name and slot. Open a result for +0 / +10 stats and tooltip lines.',
+        'Look up any EQ Legends item by name (gear and non-equipables). Open a result for stats and wiki description when available.',
+        'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list — stats are never invented.',
       ],
     },
     {

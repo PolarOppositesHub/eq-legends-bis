@@ -425,6 +425,48 @@ def _all_flat_items() -> list[dict[str, Any]]:
                         _merge_row(by_name, norm)
                 except Exception:
                     continue
+
+    # Full game coverage: every eqlwiki Category:Items name (equipable + non-equipable).
+    # Wiki-only rows start without stats; Item Detail may fill from the real wiki page.
+    try:
+        wiki = _wiki_name_index()
+    except Exception:
+        wiki = {}
+    for key, display in wiki.items():
+        if not display:
+            continue
+        title = display.replace(" ", "_")
+        wiki_url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
+        if key in by_name:
+            cur = by_name[key]
+            if not cur.get("catalog_source"):
+                cur["catalog_source"] = "tools"
+            if not (cur.get("url") or cur.get("sourceUrl")):
+                cur["url"] = wiki_url
+                cur["sourceUrl"] = wiki_url
+            continue
+        by_name[key] = {
+            "name": display,
+            "itemID": None,
+            "slots": [],
+            "classes": [],
+            "classes_str": "",
+            "stats_plus0": {},
+            "stats_plus10": {},
+            "tooltipLines": [],
+            "zone": "",
+            "url": wiki_url,
+            "sourceUrl": wiki_url,
+            "catalog_source": "eqlwiki",
+            "has_stats": False,
+        }
+
+    for row in by_name.values():
+        if not row.get("catalog_source"):
+            row["catalog_source"] = "tools"
+        stats = row.get("stats_plus0") or row.get("stats_plus10") or {}
+        row["has_stats"] = bool(stats) or bool(row.get("tooltipLines"))
+
     return list(by_name.values())
 
 
@@ -475,8 +517,15 @@ def search_items(
         "slot": slot_u,
         "items": page,
         "catalog_size": len(pool),
+        "tools_items": sum(1 for it in pool if (it.get("catalog_source") or "tools") == "tools"),
+        "eqlwiki_names": sum(1 for it in pool if it.get("catalog_source") == "eqlwiki"),
         "decoded_dir": decoded_s,
         "warning": None if pool else "Item catalog empty — decoded data missing or unreadable.",
+        "note": (
+            "Search covers eqlegendstools decoded items plus every eqlwiki Category:Items name "
+            "(including non-equipable). Stats/descriptions come only from decoded data or the "
+            "item's eqlwiki page — never invented."
+        ),
     }
 
 
@@ -574,20 +623,80 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
     }
 
 
-def get_item_by_name(name: str) -> dict[str, Any] | None:
+def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None:
+    """Return a public item row. Optionally enrich wiki-only rows from eqlwiki HTML."""
     key = _name_key(name)
     if not key:
         return None
     try:
         it = _flat_by_name().get(key)
     except Exception:
-        return None
+        it = None
     if not it:
-        return None
+        # Last chance: wiki name index alone (before pool rebuild)
+        try:
+            display = _wiki_name_index().get(key)
+        except Exception:
+            display = None
+        if not display:
+            return None
+        title = display.replace(" ", "_")
+        wiki_url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
+        it = {
+            "name": display,
+            "slots": [],
+            "classes": [],
+            "stats_plus0": {},
+            "stats_plus10": {},
+            "tooltipLines": [],
+            "url": wiki_url,
+            "sourceUrl": wiki_url,
+            "catalog_source": "eqlwiki",
+            "has_stats": False,
+        }
     try:
-        return _public_item(it)
+        pub = _public_item(it)
     except Exception:
         return None
+    if not enrich:
+        return pub
+    needs = (
+        pub.get("catalog_source") == "eqlwiki"
+        or not (pub.get("tooltipLines") or [])
+        or not (pub.get("stats_plus0") or pub.get("stats_plus10"))
+    )
+    if not needs:
+        return pub
+    try:
+        extra = _enrich_item_from_eqlwiki(pub.get("name") or name)
+    except Exception:
+        extra = None
+    if not extra:
+        return pub
+    # Fill gaps only — never overwrite real tools stats with empty wiki parses.
+    merged = dict(pub)
+    if extra.get("tooltipLines") and not merged.get("tooltipLines"):
+        merged["tooltipLines"] = extra["tooltipLines"]
+    elif extra.get("tooltipLines") and merged.get("catalog_source") == "eqlwiki":
+        merged["tooltipLines"] = extra["tooltipLines"]
+    if extra.get("description") and not merged.get("description"):
+        merged["description"] = extra["description"]
+    if extra.get("stats_plus0") and not (merged.get("stats_plus0") or {}):
+        merged["stats_plus0"] = extra["stats_plus0"]
+        merged["stats_plus10"] = extra.get("stats_plus10") or _scale_stats_plus10(extra["stats_plus0"])
+    if extra.get("slots") and not merged.get("slots"):
+        merged["slots"] = extra["slots"]
+    if extra.get("classes") and not merged.get("classes"):
+        merged["classes"] = extra["classes"]
+        merged["classes_str"] = ", ".join(extra["classes"])
+    if extra.get("zone") and not merged.get("zone"):
+        merged["zone"] = extra["zone"]
+    if extra.get("url") and not merged.get("url"):
+        merged["url"] = extra["url"]
+    merged["has_stats"] = bool(merged.get("stats_plus0") or merged.get("stats_plus10") or merged.get("tooltipLines"))
+    merged["catalog_source"] = merged.get("catalog_source") or extra.get("catalog_source") or "eqlwiki"
+    merged["wiki_enriched"] = True
+    return merged
 
 
 def name_in_catalog(name: str, item_id: str | int | None = None) -> bool:
@@ -601,21 +710,164 @@ def name_in_catalog(name: str, item_id: str | int | None = None) -> bool:
 def catalog_coverage() -> dict[str, Any]:
     """Sizes for UI notes — tools items vs eqlwiki name index."""
     try:
-        tools_n = len(_flat_by_name())
+        tools_n = sum(
+            1 for it in _all_flat_items()
+            if (it.get("catalog_source") or "tools") == "tools"
+        )
     except Exception:
         tools_n = 0
     try:
         wiki_n = len(_wiki_name_index())
     except Exception:
         wiki_n = 0
+    try:
+        total_n = len(_all_flat_items())
+    except Exception:
+        total_n = 0
     return {
         "tools_items": tools_n,
         "eqlwiki_names": wiki_n,
+        "search_catalog": total_n,
         "note": (
-            "Tools catalog carries BiS/eqlegendstools stats. "
-            "eqlwiki names expand inventory recognition without inventing stats."
+            "Item Search covers tools stats plus every eqlwiki item name "
+            "(equipable and non-equipable). Stats come from decoded data or the wiki page only."
         ),
     }
+
+
+def _wiki_item_cache_dir() -> Path:
+    return APP_ROOT / "data" / "eqlwiki-item-cache"
+
+
+def _wiki_item_cache_path(name: str) -> Path:
+    return _wiki_item_cache_dir() / f"{_slug(name)}.json"
+
+
+def _load_wiki_item_cache(name: str) -> dict[str, Any] | None:
+    path = _wiki_item_cache_path(name)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _write_wiki_item_cache(name: str, payload: dict[str, Any]) -> None:
+    try:
+        d = _wiki_item_cache_dir()
+        d.mkdir(parents=True, exist_ok=True)
+        _wiki_item_cache_path(name).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def _html_fragment_to_lines(fragment: str) -> list[str]:
+    t = fragment or ""
+    t = re.sub(r"<script[\s\S]*?</script>", " ", t, flags=re.I)
+    t = re.sub(r"<style[\s\S]*?</style>", " ", t, flags=re.I)
+    t = re.sub(r"<div class=\"itemicon\"[\s\S]*?</div>", " ", t, flags=re.I)
+    t = re.sub(r"<br\s*/?>", "\n", t, flags=re.I)
+    t = re.sub(r"</p\s*>", "\n", t, flags=re.I)
+    t = re.sub(r"</li\s*>", "\n", t, flags=re.I)
+    t = re.sub(r"<[^>]+>", " ", t)
+    try:
+        import html as _html
+        t = _html.unescape(t)
+    except Exception:
+        pass
+    lines: list[str] = []
+    for line in t.splitlines():
+        s = re.sub(r"\s+", " ", line).strip()
+        if s:
+            lines.append(s)
+    return lines
+
+
+def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
+    """Extract real tooltip/description lines from an eqlwiki item page — never invent."""
+    if not html or "does not exist" in html.lower() and "create the page" in html.lower():
+        return None
+    tip_lines: list[str] = []
+    m = re.search(
+        r'<div class="itemdata">(.*?)</div>\s*</div>\s*<div class="itembotbg"',
+        html,
+        re.I | re.S,
+    )
+    if m:
+        tip_lines.extend(_html_fragment_to_lines(m.group(1)))
+    # Short blurb after the item box (before Drops From / Sold by / next heading).
+    desc_lines: list[str] = []
+    m2 = re.search(
+        r'<div class="itembotbg"></div>\s*(.*?)(?:<div class="mw-heading"|<h2\b)',
+        html,
+        re.I | re.S,
+    )
+    if m2:
+        desc_lines.extend(_html_fragment_to_lines(m2.group(1)))
+    if not tip_lines and not desc_lines:
+        return None
+    stats0 = _parse_tip_stats(tip_lines)
+    slots, classes = _slots_classes_from_lines(tip_lines)
+    zone = ""
+    drops = re.search(
+        r'<h2[^>]*>\s*Drops From\s*</h2>\s*<p>(.*?)</p>',
+        html,
+        re.I | re.S,
+    )
+    if drops:
+        zlines = _html_fragment_to_lines(drops.group(1))
+        if zlines:
+            zone = zlines[0][:120]
+    title = (name or "").replace(" ", "_")
+    url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
+    all_lines = list(tip_lines)
+    for line in desc_lines:
+        if line not in all_lines:
+            all_lines.append(line)
+    return {
+        "name": name,
+        "tooltipLines": all_lines[:80],
+        "description": "\n".join(desc_lines[:20]),
+        "stats_plus0": stats0,
+        "stats_plus10": _scale_stats_plus10(stats0) if stats0 else {},
+        "slots": slots,
+        "classes": classes,
+        "zone": zone,
+        "url": url,
+        "sourceUrl": url,
+        "catalog_source": "eqlwiki",
+        "has_stats": bool(stats0) or bool(all_lines),
+    }
+
+
+def _enrich_item_from_eqlwiki(name: str) -> dict[str, Any] | None:
+    """Load cached eqlwiki item parse or fetch the page once."""
+    cached = _load_wiki_item_cache(name)
+    if cached and (cached.get("tooltipLines") or cached.get("description")):
+        return cached
+    stub = {"name": name, "url": "", "sourceUrl": ""}
+    title = (name or "").replace(" ", "_")
+    stub["url"] = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
+    for url in _wiki_urls_for_item(stub):
+        blob = _http_get(url, timeout=25.0)
+        if not blob:
+            continue
+        try:
+            html = blob.decode("utf-8", errors="ignore")
+        except Exception:
+            continue
+        parsed = _parse_eqlwiki_item_html(html, name)
+        if not parsed:
+            continue
+        parsed["source"] = url
+        _write_wiki_item_cache(name, parsed)
+        return parsed
+    return cached
 
 
 def _public_item(it: dict[str, Any]) -> dict[str, Any]:
@@ -650,8 +902,16 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "ratio_plus0": it.get("ratio_plus0"),
         "ratio_plus10": it.get("ratio_plus10"),
         "tooltipLines": it.get("tooltipLines") or [],
+        "description": it.get("description") or "",
         "image_url": image_url,
         "has_local_image": has_local,
+        "catalog_source": it.get("catalog_source") or "tools",
+        "has_stats": bool(
+            it.get("has_stats")
+            or it.get("stats_plus0")
+            or it.get("stats_plus10")
+            or it.get("tooltipLines")
+        ),
     }
 
 

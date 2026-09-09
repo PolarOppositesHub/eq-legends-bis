@@ -224,7 +224,7 @@ def api_item_search(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
-    """Search all catalog items (full game DB union of flat_* + aggregate)."""
+    """Search all game items: eqlegendstools decoded union + every eqlwiki item name."""
     try:
         return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
     except Exception as e:

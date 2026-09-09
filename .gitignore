@@ -39,3 +39,7 @@ data/log-research
 # Cached quest guides (keep directory)
 data/quest-guides/*
 !data/quest-guides/.gitkeep
+
+# Cached eqlwiki item detail parses (keep directory)
+data/eqlwiki-item-cache/*
+!data/eqlwiki-item-cache/.gitkeep
