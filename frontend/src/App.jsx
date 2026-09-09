@@ -2226,7 +2226,7 @@ export default function App() {
                     )}
                     {sim.weapons?.length > 0 && (
                       <div style={{ marginTop: '1rem' }}>
-                        <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios @ +{upgrade}</h3>
+                        <h3 style={{ fontSize: '0.95rem' }}>Weapon ratios (per-slot +N)</h3>
                         <ul className="muted">
                           {sim.weapons.map((w) => (
                             <li key={w.slot}>
