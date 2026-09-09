@@ -2482,8 +2482,19 @@ export default function App() {
                       {mobResults.catalog_size != null ? ` · index ${mobResults.catalog_size}` : ''}
                     </p>
                   )}
+                  {mobResults?.warning ? (
+                    <p className="muted" style={{ fontSize: '0.78rem', color: 'var(--warn, #c9a227)' }}>
+                      {mobResults.warning}
+                    </p>
+                  ) : null}
                   {mobResults?.note ? (
                     <p className="muted" style={{ fontSize: '0.78rem' }}>{mobResults.note}</p>
+                  ) : null}
+                  {!mobLoading && mobResults && mobResults.total === 0 ? (
+                    <p className="muted" style={{ fontSize: '0.85rem' }}>
+                      No mobs matched. If the index is 0, the mob database file is missing from this install —
+                      rebuild/update the app so <code>eqlwiki_mob_names.json</code> is included.
+                    </p>
                   ) : null}
                   <ul className="item-search-list quest-hub-list">
                     {(mobResults?.mobs || []).map((m) => (

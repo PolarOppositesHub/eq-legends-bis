@@ -52,18 +52,59 @@ def _load_json(path: Path) -> Any:
 
 @lru_cache(maxsize=1)
 def _mob_index_payload() -> dict[str, Any]:
+    """Load eqlwiki_mob_names.json from any known decoded / resources location."""
+    candidates: list[Path] = []
     try:
-        path = decoded_dir() / "eqlwiki_mob_names.json"
+        decoded = decoded_dir()
+        candidates.append(decoded / "eqlwiki_mob_names.json")
     except Exception:
-        return {"mobs": [], "counts": {}, "note": "decoded dir unavailable"}
-    raw = _load_json(path)
-    if not isinstance(raw, dict):
-        return {
-            "mobs": [],
-            "counts": {},
-            "note": "eqlwiki_mob_names.json missing — run scripts/refresh_eqlwiki_mob_names.py",
-        }
-    return raw
+        decoded = None
+    root = APP_ROOT
+    candidates.extend(
+        [
+            root / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+            root / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+            root / "data" / "decoded" / "eqlwiki_mob_names.json",
+            Path(__file__).resolve().parents[2] / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+            Path(__file__).resolve().parents[2] / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+            Path(__file__).resolve().parents[1] / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+        ]
+    )
+    # Also walk sibling decoded dirs when EQ_DATA_ROOT points at a thin tree.
+    if decoded and decoded.is_dir():
+        for sibling in (
+            decoded.parent / "decoded" / "eqlwiki_mob_names.json",
+            decoded.parent.parent / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+            decoded.parent.parent / "resources" / "data" / "decoded" / "eqlwiki_mob_names.json",
+        ):
+            candidates.append(sibling)
+
+    seen: set[str] = set()
+    for path in candidates:
+        try:
+            key = str(path.resolve())
+        except Exception:
+            key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not path.is_file():
+            continue
+        raw = _load_json(path)
+        if isinstance(raw, dict) and isinstance(raw.get("mobs"), list) and raw.get("mobs"):
+            out = dict(raw)
+            out["_index_path"] = str(path)
+            return out
+
+    return {
+        "mobs": [],
+        "counts": {},
+        "note": (
+            "eqlwiki_mob_names.json missing from decoded data — "
+            "run scripts/refresh_eqlwiki_mob_names.py and ensure the file ships in resources/data/decoded."
+        ),
+        "warning": "mob index file not found",
+    }
 
 
 @lru_cache(maxsize=1)
@@ -154,6 +195,8 @@ def search_mobs(
             "Mob names from eqlwiki NPC categories. Mini bosses from Plane of Hate Map Locations."
         ),
         "source": payload.get("source") or "eqlwiki",
+        "index_path": payload.get("_index_path") or "",
+        "warning": payload.get("warning"),
     }
 
 
