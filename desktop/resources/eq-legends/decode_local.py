@@ -579,7 +579,7 @@ def main():
         "haste_note": (
             "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). "
             "Spell/focus/effect haste text is NOT treated as worn haste. "
-            "Only ONE worn haste item counts in a loadout."
+            "Only ONE worn haste item counts in a loadout; that item haste stacks with Cast Buffs spell haste."
         ),
         "haste_top": haste_items[:20],
         "upgrade_scaling": {

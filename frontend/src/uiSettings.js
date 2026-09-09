@@ -52,7 +52,7 @@ export const LOADING_SAYINGS = [
   'Teaching a gnome not to click every orb…',
   'Bribing a froglok for directions…',
   'Untangling Plane of Sky key rings…',
-  'Calibrating haste so only the highest counts…',
+  'Calibrating haste: highest item + spell stacks…',
   'Asking Lucan if he has a minute…',
   'Warming up the forge in Sol A…',
   'Checking if that skullcap is +2 or +10…',
@@ -90,7 +90,7 @@ export const APP_HELP = {
       body: [
         'Compare Worn vs BiS per slot. Each side has its own +N enchant level.',
         'Import Inventory.txt (or Update from EQ folder on desktop) to fill worn gear and bag contents.',
-        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (only highest worn haste counts).',
+        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (highest worn haste stacks with spell haste).',
         'Default upgrade + Apply to all slots sets every piece; otherwise edit +N under each slot.',
       ],
     },

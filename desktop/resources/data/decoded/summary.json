@@ -49,7 +49,7 @@
     "bis_Warrior": 276,
     "bis_Wizard": 239
   },
-  "haste_note": "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). Spell/focus/effect haste text is NOT treated as worn haste. Only ONE worn haste item counts in a loadout.",
+  "haste_note": "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). Spell/focus/effect haste text is NOT treated as worn haste. Only ONE worn haste item counts in a loadout; that item haste stacks with Cast Buffs spell haste.",
   "haste_top": [
     {
       "name": "Belt of the Four Winds",

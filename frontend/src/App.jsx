@@ -340,7 +340,7 @@ function itemTipStatsText(item, upgrade) {
   const stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0
   const whyLine = displayWhy(item)
   const tipParts = [
-    item.haste ? `Haste +${item.haste}% (not stacked)` : null,
+    item.haste ? `Haste +${item.haste}% (highest item only; stacks with spell haste)` : null,
     (item.ratio_at_upgrade != null || item.ratio_plus10 != null)
       ? `Ratio@+${upgrade} ${Number(item.ratio_at_upgrade ?? item.ratio_plus10).toFixed(4)}`
       : null,
@@ -1847,7 +1847,7 @@ export default function App() {
                     Per-slot +N
                   </span>
                 )}
-                <span className="badge warn">Haste: highest only</span>
+                <span className="badge warn">Haste: highest item (+ spell stacks)</span>
                 {preferRanged && <span className="badge">Prefer ranged</span>}
                 {maximizeHpRegen && <span className="badge">Max HP regen</span>}
                 {bis?.dual_wield_enabled && (
@@ -2684,11 +2684,14 @@ export default function App() {
                   <>
                     <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span className="badge">Haste applied: +{sim.haste?.applied_pct || 0}%</span>
+                      {(sim.haste?.worn_pct || 0) > 0 && (
+                        <span className="badge">Item haste +{sim.haste.worn_pct}%</span>
+                      )}
                       {sim.haste?.applied_slot && (
                         <span className="badge">{sim.haste.applied_slot}: {sim.haste.candidates?.find(c => c.slot === sim.haste.applied_slot)?.name}</span>
                       )}
                       {(sim.haste?.candidates?.length || 0) > 1 && (
-                        <span className="badge warn">Extra haste ignored</span>
+                        <span className="badge warn">Extra item haste ignored</span>
                       )}
                       <span className="badge">Pools: race+class+STA/INT/WIS (EQLT)</span>
                       {sim.assume_max_aas && <span className="badge">Max AAs</span>}

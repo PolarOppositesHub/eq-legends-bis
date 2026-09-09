@@ -952,7 +952,9 @@ def simulate(
     totals = dict(pooled["totals"])
 
     worn_haste = int(applied_haste)
-    total_haste = max(worn_haste, int(buff_haste))
+    # Highest worn haste item stacks with spell haste from Cast Buffs.
+    # Multiple haste spells still take max among themselves (see spell_buffs).
+    total_haste = worn_haste + int(buff_haste)
     totals["Haste"] = total_haste
 
     weapon_ratios = []
@@ -996,7 +998,7 @@ def simulate(
             "applied_slot": applied_slot,
             "worn_pct": worn_haste,
             "buff_pct": int(buff_haste),
-            "rule": "Worn haste: only ONE item (highest %). Spell haste from Cast Buffs takes max with worn.",
+            "rule": "Worn haste: only ONE item (highest %). That item haste stacks with spell haste from Cast Buffs. Multiple haste spells use the highest spell haste.",
             "candidates": haste_items,
             "items": haste_items,
         },
@@ -1052,7 +1054,8 @@ def meta_payload() -> dict:
             {"id": "ai", "label": "AI Choice"},
         ],
         "haste_rule": summary.get("haste_note") or (
-            "Only ONE worn haste item counts (highest %). Haste does not scale with upgrade."
+            "Only ONE worn haste item counts (highest %). That stacks with spell haste from Cast Buffs. "
+            "Haste does not scale with upgrade."
         ),
         "weapon_rule": (
             "PRIMARY/SECONDARY: DW pair vs 2H expected-dmg when any DW class selected; "
