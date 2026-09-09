@@ -120,6 +120,14 @@ export const APP_HELP = {
       ],
     },
     {
+      id: 'mobs',
+      title: 'Mobs',
+      body: [
+        'Browse eqlwiki NPCs filtered by Raid, Mini Boss, Named, or Standard. Same expand/collapse layout as Quest Hub.',
+        'Detail shows wiki fields when available and known drops reverse-linked from the item catalog.',
+      ],
+    },
+    {
       id: 'search',
       title: 'Item Search',
       body: [

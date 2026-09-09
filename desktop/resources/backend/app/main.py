@@ -564,6 +564,50 @@ def api_quest_guide(name: str = Query(...), fetch: bool = Query(default=True)):
     return qg.ensure_quest_guide(name, fetch=fetch)
 
 
+@app.get("/api/mobs")
+def api_mobs(
+    q: str = Query(default=""),
+    kind: Optional[str] = Query(default=None),
+    limit: int = Query(default=120, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """Mobs hub index — eqlwiki NPC categories (raid / mini boss / named / standard)."""
+    from . import mob_hub as mh
+    try:
+        return mh.search_mobs(q, kind=kind, limit=limit, offset=offset)
+    except Exception as e:
+        return {
+            "total": 0,
+            "offset": offset,
+            "limit": limit,
+            "query": q or "",
+            "kind": kind or "all",
+            "mobs": [],
+            "catalog_size": 0,
+            "counts": {},
+            "kinds": [],
+            "warning": f"mob list unavailable: {e}",
+        }
+
+
+class MobDetailRequest(BaseModel):
+    name: str
+    fetch: bool = True
+
+
+@app.post("/api/mob-detail")
+def api_mob_detail(body: MobDetailRequest):
+    """Mobs hub detail: eqlwiki page fields + catalog drop reverse-index."""
+    from . import mob_hub as mh
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(400, "Provide a mob name")
+    try:
+        return mh.mob_detail(name, fetch=bool(body.fetch))
+    except Exception as e:
+        raise HTTPException(500, f"mob detail failed: {e}") from e
+
+
 @app.get("/api/quests")
 def api_quests(
     q: str = Query(default=""),

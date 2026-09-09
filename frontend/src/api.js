@@ -81,3 +81,9 @@ export const getQuestGuide = (name, fetch = true) => {
 }
 export const getQuestDetail = (body) =>
   req('/api/quest-detail', { method: 'POST', body: JSON.stringify(body) })
+export const listMobs = (params = {}) => {
+  const q = new URLSearchParams(params)
+  return req(`/api/mobs?${q}`)
+}
+export const getMobDetail = (body) =>
+  req('/api/mob-detail', { method: 'POST', body: JSON.stringify(body) })
