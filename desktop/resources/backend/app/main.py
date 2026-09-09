@@ -23,7 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.11")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.12")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,6 +52,8 @@ class SimulateRequest(BaseModel):
     classes: list[str] = Field(default_factory=list)
     race: str | None = "Human"
     upgrade: int = 10
+    # Per-slot enchant overrides (0..10). Missing slots use ``upgrade``.
+    slot_upgrades: dict[str, int] = Field(default_factory=dict)
     character_level: int | None = 50
     equipment: dict[str, Any] = Field(default_factory=dict)
     slots: dict[str, Any] | None = None
@@ -74,6 +76,7 @@ class UpgradeSuggestRequest(BaseModel):
     classes: list[str] = Field(default_factory=list)
     equipment: dict[str, Any] = Field(default_factory=dict)
     upgrade: int = 10
+    slot_upgrades: dict[str, int] = Field(default_factory=dict)
     character_level: int = 50
     prefer_ranged_damage: bool = True
     inventory_text: str | None = None
@@ -157,7 +160,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.11",
+        "version": m.get("version") or "1.0.12",
         "scoring": m.get("scoring"),
     }
 
@@ -391,6 +394,7 @@ def post_simulate(body: SimulateRequest):
             cast_buffs=body.cast_buffs or "off",
             active_buff_ids=list(body.active_buff_ids or []),
             assume_max_aas=bool(body.assume_max_aas),
+            slot_upgrades=dict(body.slot_upgrades or {}),
         )
     except Exception as e:
         raise HTTPException(500, f"Simulate failed: {e}") from e
@@ -494,6 +498,7 @@ def api_inventory_import(body: InventoryParseRequest):
         "unmatched_count": parsed.get("unmatched_count", 0),
         "skipped_count": parsed.get("skipped_count", 0),
         "skipped": parsed.get("skipped") or [],
+        "catalog_coverage": parsed.get("catalog_coverage") or {},
         "warnings": parsed.get("warnings") or [],
         "note": parsed.get("note") or "",
     }
@@ -518,6 +523,7 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
             classes,
             equipment,
             upgrade=max(0, min(10, int(body.upgrade))),
+            slot_upgrades=dict(body.slot_upgrades or {}),
             character_level=level,
             prefer_ranged_damage=bool(body.prefer_ranged_damage),
             mode=body.mode or "ai",

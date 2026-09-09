@@ -234,6 +234,178 @@ ipcMain.handle('eq:app-info', async () => ({
   data: decodedDataPath(),
 }));
 
+function settingsPath() {
+  return path.join(app.getPath('userData'), 'settings.json');
+}
+
+function readSettings() {
+  try {
+    const p = settingsPath();
+    if (!fs.existsSync(p)) return {};
+    const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+    return raw && typeof raw === 'object' ? raw : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writeSettings(patch) {
+  const cur = readSettings();
+  const next = { ...cur, ...(patch || {}) };
+  const p = settingsPath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(next, null, 2), 'utf8');
+  return next;
+}
+
+function defaultEqInstallCandidates() {
+  if (process.platform !== 'win32') return [];
+  const pub = process.env.PUBLIC || 'C:\\Users\\Public';
+  return [
+    path.join(pub, 'Daybreak Game Company', 'Installed Games', 'EverQuest Legends'),
+    path.join(pub, 'Daybreak Game Company', 'Installed Games', 'EverQuest'),
+  ];
+}
+
+function isInventoryFileName(name) {
+  const n = String(name || '');
+  if (!/\.txt$/i.test(n)) return false;
+  if (/inventory\.exe$/i.test(n)) return false;
+  return /inventory\.txt$/i.test(n) || /-inventory\.txt$/i.test(n);
+}
+
+function listInventoryCandidates(folder) {
+  const root = path.resolve(folder || '');
+  if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
+  const out = [];
+  let entries = [];
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch (_) {
+    return [];
+  }
+  for (const ent of entries) {
+    if (!ent.isFile() || !isInventoryFileName(ent.name)) continue;
+    const full = path.join(root, ent.name);
+    try {
+      const st = fs.statSync(full);
+      if (st.size < 32 || st.size > 25 * 1024 * 1024) continue;
+      out.push({ path: full, name: ent.name, mtimeMs: st.mtimeMs, size: st.size });
+    } catch (_) { /* skip */ }
+  }
+  out.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  return out;
+}
+
+function pathIsInside(parent, child) {
+  const p = path.resolve(parent);
+  const c = path.resolve(child);
+  const rel = path.relative(p, c);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+}
+
+ipcMain.handle('eq:settings-get', async () => {
+  const s = readSettings();
+  return {
+    ok: true,
+    eqInstallFolder: s.eqInstallFolder || '',
+    lastInventoryPath: s.lastInventoryPath || '',
+    lastInventoryName: s.lastInventoryName || '',
+    lastInventoryMtimeMs: s.lastInventoryMtimeMs || null,
+  };
+});
+
+ipcMain.handle('eq:settings-set', async (_evt, patch) => {
+  const next = writeSettings(patch || {});
+  return {
+    ok: true,
+    eqInstallFolder: next.eqInstallFolder || '',
+    lastInventoryPath: next.lastInventoryPath || '',
+    lastInventoryName: next.lastInventoryName || '',
+    lastInventoryMtimeMs: next.lastInventoryMtimeMs || null,
+  };
+});
+
+ipcMain.handle('eq:pick-eq-install-folder', async () => {
+  const settings = readSettings();
+  const candidates = defaultEqInstallCandidates().filter((p) => {
+    try { return fs.existsSync(p); } catch (_) { return false; }
+  });
+  const defaultPath = settings.eqInstallFolder || candidates[0] || undefined;
+  const result = await dialog.showOpenDialog(mainWindow || undefined, {
+    title: 'Select EverQuest Legends install folder',
+    properties: ['openDirectory'],
+    defaultPath,
+  });
+  if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+    return { ok: false, canceled: true, message: 'Folder selection canceled.' };
+  }
+  const folder = result.filePaths[0];
+  writeSettings({ eqInstallFolder: folder });
+  return { ok: true, path: folder, eqInstallFolder: folder };
+});
+
+ipcMain.handle('eq:find-latest-inventory', async (_evt, folderArg) => {
+  const settings = readSettings();
+  const folder = (folderArg || settings.eqInstallFolder || '').trim();
+  if (!folder) return { ok: false, message: 'Set the EQ install folder first.' };
+  if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
+    return { ok: false, message: `EQ install folder not found:\n${folder}` };
+  }
+  const hits = listInventoryCandidates(folder);
+  if (!hits.length) {
+    return {
+      ok: false,
+      folder,
+      message: `No *-Inventory.txt found in:\n${folder}\n\nIn game, type /outputfile inventory.`,
+    };
+  }
+  const best = hits[0];
+  writeSettings({
+    eqInstallFolder: folder,
+    lastInventoryPath: best.path,
+    lastInventoryName: best.name,
+    lastInventoryMtimeMs: best.mtimeMs,
+  });
+  return {
+    ok: true,
+    folder,
+    path: best.path,
+    name: best.name,
+    mtimeMs: best.mtimeMs,
+    size: best.size,
+    count: hits.length,
+  };
+});
+
+ipcMain.handle('eq:read-inventory-file', async (_evt, filePath) => {
+  const settings = readSettings();
+  const folder = (settings.eqInstallFolder || '').trim();
+  const target = path.resolve(String(filePath || ''));
+  if (!target || !fs.existsSync(target) || !fs.statSync(target).isFile()) {
+    return { ok: false, message: 'Inventory file not found.' };
+  }
+  if (!isInventoryFileName(path.basename(target))) {
+    return { ok: false, message: 'That file does not look like an Inventory.txt dump.' };
+  }
+  if (folder && !pathIsInside(folder, target)) {
+    return { ok: false, message: 'Refusing to read a file outside the configured EQ install folder.' };
+  }
+  if (!folder && settings.lastInventoryPath && path.resolve(settings.lastInventoryPath) !== target) {
+    return { ok: false, message: 'Set the EQ install folder before reading inventory files.' };
+  }
+  try {
+    const buf = fs.readFileSync(target);
+    if (buf.length >= 2 && buf[0] === 0x4d && buf[1] === 0x5a) {
+      return { ok: false, message: 'That looks like a binary (.exe), not Inventory.txt.' };
+    }
+    const text = buf.toString('utf8');
+    return { ok: true, path: target, name: path.basename(target), text };
+  } catch (e) {
+    return { ok: false, message: String(e && e.message ? e.message : e) };
+  }
+});
+
 app.whenReady().then(async () => {
   try {
     startApi();

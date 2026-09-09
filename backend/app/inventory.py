@@ -40,22 +40,32 @@ LOCATION_TO_SLOTS: dict[str, list[str]] = {
 
 
 def _strip_upgrade_suffix(name: str) -> tuple[str, int | None]:
-    """'Raw-Hide Skullcap +2' → ('Raw-Hide Skullcap', 2). Trailing * (attuned) stripped."""
+    """'Raw-Hide Skullcap +2' / 'Cap+2' / 'Cap + 2' → base name + level. Trailing * stripped."""
     n = (name or "").strip()
     if n.endswith("*"):
         n = n[:-1].strip()
-    m = re.search(r"\s\+(\d+)\s*$", n)
+    m = re.search(r"(?:\s*\+\s*(\d+))\s*$", n)
     if not m:
         return n, None
     return n[: m.start()].strip(), int(m.group(1))
 
 
-def _catalog_has_name(name: str) -> bool:
-    # Never let catalog/image I/O break Inventory.txt import (worked as TSV-only in 1.0.3).
+def _catalog_match(name: str, item_id: str | None = None) -> dict[str, Any]:
+    # Never let catalog/image I/O break Inventory.txt import.
     try:
-        return item_catalog_mod.name_in_catalog(name)
+        return item_catalog_mod.catalog_match(name, item_id=item_id)
     except Exception:
-        return False
+        return {
+            "matched": False,
+            "source": None,
+            "has_stats": False,
+            "name": (name or "").strip() or None,
+            "itemID": None,
+        }
+
+
+def _catalog_has_name(name: str, item_id: str | None = None) -> bool:
+    return bool(_catalog_match(name, item_id=item_id).get("matched"))
 
 
 _BINARY_HINT = re.compile(
@@ -135,7 +145,8 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         slots_col = (cols[4] or "").strip() if len(cols) > 4 else ""
 
         base_name, upg = _strip_upgrade_suffix(name)
-        in_catalog = bool(base_name) and _catalog_has_name(base_name)
+        match = _catalog_match(base_name, item_id=item_id or None)
+        in_catalog = bool(match.get("matched"))
         entry = {
             "location": location,
             "name": name,
@@ -145,6 +156,8 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
             "count": count,
             "slots": slots_col,
             "in_catalog": in_catalog,
+            "catalog_source": match.get("source"),
+            "has_stats": bool(match.get("has_stats")),
             "unmatched": not in_catalog and bool(base_name) and base_name.lower() != "empty",
         }
 
@@ -206,7 +219,7 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         slot_counts[loc_key] = slot_counts.get(loc_key, 0) + 1
 
         entry["planner_slot"] = planner_slot
-        entry["reason"] = None if in_catalog else "not in item DB (shown anyway)"
+        entry["reason"] = None if in_catalog else "not in item catalog (shown anyway)"
         worn.append(entry)
         all_items.append(entry)
         equipment[planner_slot] = base_name  # catalog/pool match without +N
@@ -215,20 +228,26 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         if entry["unmatched"]:
             unmatched.append(entry)
 
+    try:
+        coverage = item_catalog_mod.catalog_coverage()
+    except Exception:
+        coverage = {}
+
     return {
         "equipment": equipment,
         "upgrade_hints": upgrade_hints,
         "worn": worn,
-        "all_items": all_items[:500],
-        "unmatched": unmatched[:200],
+        "all_items": all_items[:5000],
+        "unmatched": unmatched[:500],
         "unmatched_count": len(unmatched),
-        "skipped": skipped[:200],
+        "skipped": skipped[:500],
         "skipped_count": len(skipped),
+        "catalog_coverage": coverage,
         "warnings": [],
         "note": (
             "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). "
-            "Every line is retained in all_items. Unmatched (not in item DB) still listed "
-            "with names from the file — no invented stats. "
+            "Every line is retained in all_items. Names match eqlegendstools BiS data "
+            "and/or eqlwiki Category:Items (wiki matches do not invent stats). "
             "Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items."
         ),
     }
@@ -321,6 +340,7 @@ def suggest_upgrades(
     equipment: dict[str, str],
     *,
     upgrade: int = 10,
+    slot_upgrades: dict[str, Any] | None = None,
     character_level: int = 50,
     prefer_ranged_damage: bool = True,
     alts: int = 3,
@@ -335,6 +355,14 @@ def suggest_upgrades(
     """Compare current equipment vs BiS list for the trio; prioritize closing BiS gaps."""
     if not classes:
         return {"suggestions": [], "bis": None, "error": "Select at least one class"}
+
+    upgrade = max(0, min(10, int(upgrade)))
+    slot_upg: dict[str, int] = {}
+    for k, v in (slot_upgrades or {}).items():
+        try:
+            slot_upg[str(k).upper()] = max(0, min(10, int(v)))
+        except (TypeError, ValueError):
+            continue
 
     bis = engine.recommend_bis(
         classes,
@@ -357,6 +385,7 @@ def suggest_upgrades(
         slot = row["slot"]
         bis_name = (row.get("name") or "").strip()
         current = (eq_norm.get(slot) or "").strip()
+        worn_level = slot_upg.get(slot, upgrade)
         bis_stats = row.get("stats_at_upgrade") or row.get("stats_plus10") or {}
         bis_alts = [{"name": bis_name, "why": row.get("why"), "url": row.get("url") or ""}]
         for a in row.get("alts") or []:
@@ -373,7 +402,7 @@ def suggest_upgrades(
         if current:
             try:
                 pool_items = engine.items_for_slot(
-                    classes, slot=slot, upgrade=upgrade, prefer_ranged_damage=prefer_ranged_damage
+                    classes, slot=slot, upgrade=worn_level, prefer_ranged_damage=prefer_ranged_damage
                 )
             except Exception:
                 pool_items = []
@@ -387,7 +416,11 @@ def suggest_upgrades(
                 # Unmatched worn item — name only, no invented stats
                 cat = item_catalog_mod.get_item_by_name(current)
                 if cat:
-                    cur_stats = cat.get("stats_plus10") or cat.get("stats_plus0") or {}
+                    s0 = cat.get("stats_plus0") or {}
+                    if s0:
+                        cur_stats = engine.scale_stats_to_level(s0, worn_level)
+                    else:
+                        cur_stats = cat.get("stats_plus10") or {}
 
         deltas = _stat_delta(cur_stats, bis_stats) if bis_name else []
         equipment_compare.append({
@@ -396,6 +429,7 @@ def suggest_upgrades(
                 "name": current or None,
                 "in_catalog": bool(cur_item) or (bool(current) and _catalog_has_name(current)),
                 "stats": cur_stats,
+                "upgrade": worn_level,
                 "url": (cur_item or {}).get("url") or "",
                 "image_url": f"/api/item-image?name={current}" if current else "",
             },

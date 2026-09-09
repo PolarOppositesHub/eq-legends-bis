@@ -835,6 +835,7 @@ def simulate(
     cast_buffs: str = "off",
     active_buff_ids: list[str] | None = None,
     assume_max_aas: bool = True,
+    slot_upgrades: dict[str, Any] | None = None,
 ) -> dict:
     """Live totals for equipped gear with race/class pools + optional Cast Buffs.
 
@@ -842,8 +843,16 @@ def simulate(
     STA/INT/WIS formulas). Item stats still come only from decoded JSON.
     Cast Buffs use their verified spellBuffs catalog (Quick Buff = max line
     per stacking group for the selected trio).
+
+    ``slot_upgrades`` optionally overrides ``upgrade`` per planner slot (0..10).
     """
     upgrade = max(0, min(10, int(upgrade)))
+    slot_upg: dict[str, int] = {}
+    for k, v in (slot_upgrades or {}).items():
+        try:
+            slot_upg[str(k).upper()] = max(0, min(10, int(v)))
+        except (TypeError, ValueError):
+            continue
     cleaned = [c for c in classes if c in ALL_CLASSES]
     pool = build_pool_for_classes(cleaned, mode="any")
     by_name = {(it.get("name") or "").strip().lower(): it for it in pool}
@@ -855,16 +864,32 @@ def simulate(
 
     for slot in PLANNER_SLOTS:
         raw_name = (equipment or {}).get(slot) or (equipment or {}).get(slot.lower()) or ""
+        slot_level = slot_upg.get(slot, upgrade)
         if not raw_name or str(raw_name).strip().lower() in ("", "none", "-"):
-            equipped.append({"slot": slot, "name": "", "included_stats": {}, "haste": 0, "haste_applied": False})
+            equipped.append({
+                "slot": slot,
+                "name": "",
+                "included_stats": {},
+                "haste": 0,
+                "haste_applied": False,
+                "upgrade": slot_level,
+            })
             continue
         item = by_name.get(str(raw_name).strip().lower())
         if not item:
             warnings.append(f"{slot}: item not in trio pool: {raw_name}")
-            equipped.append({"slot": slot, "name": str(raw_name), "missing": True, "included_stats": {}, "haste": 0, "haste_applied": False})
+            equipped.append({
+                "slot": slot,
+                "name": str(raw_name),
+                "missing": True,
+                "included_stats": {},
+                "haste": 0,
+                "haste_applied": False,
+                "upgrade": slot_level,
+            })
             continue
-        stats = scale_stats_to_level(item.get("stats_plus0") or {}, upgrade)
-        if upgrade == 10 and item.get("stats_plus10"):
+        stats = scale_stats_to_level(item.get("stats_plus0") or {}, slot_level)
+        if slot_level == 10 and item.get("stats_plus10"):
             stats = dict(item["stats_plus10"])
         h = bp.item_haste(item)
         entry = {
@@ -874,9 +899,10 @@ def simulate(
             "included_stats": stats,
             "haste": h if h > 0 else 0,
             "haste_applied": False,
-            "ratio": ratio_at_level(item, upgrade),
+            "ratio": ratio_at_level(item, slot_level),
             "url": item.get("url") or "",
             "zone": item.get("zone") or "",
+            "upgrade": slot_level,
         }
         equipped.append(entry)
         if h > 0:
@@ -958,6 +984,11 @@ def simulate(
         "class_stats": class_rows,
         "race_note": pools.SOURCE_NOTE,
         "upgrade": upgrade,
+        "slot_upgrades": {
+            e["slot"]: int(e.get("upgrade", upgrade))
+            for e in equipped
+            if e.get("name")
+        },
         "hp_label": "pool HP (race+class+STA+gear+buffs)",
         "haste": {
             "applied": total_haste,
@@ -981,6 +1012,7 @@ def simulate(
             {
                 "slot": e["slot"],
                 "name": e.get("name") or "",
+                "upgrade": int(e.get("upgrade", upgrade)),
                 "haste": e.get("haste") or 0,
                 "haste_applied": e.get("haste_applied", False),
                 "ratio": e.get("ratio"),
@@ -1035,7 +1067,7 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.11",
+        "version": "1.0.12",
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "

@@ -37,7 +37,7 @@ Copy-ready steps for a Help control. Steps cite Legends wiki or Legends communit
    `[Thu Aug 20 18:47:36 2026] Outputfile Complete: Dranak_freeport-Inventory.txt`  
    Source: EQBuddy test constant (verbatim player log). Your timestamp and filename will differ.
 
-8. **Import that `.txt` into the Sim tool** (file picker or paste). The file is tab-separated gear/inventory rows — **not** the whole eqlog.
+8. **Import that `.txt` into the Sim tool** — desktop app: **Set EQ folder** once (game install root), then press **Update from EQ folder** on Simulator or Search My Bags. You can still use the file picker. The file is tab-separated gear/inventory rows — **not** the whole eqlog.
 
 ---
 

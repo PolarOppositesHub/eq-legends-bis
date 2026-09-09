@@ -180,10 +180,14 @@ def _tooltip_row(tip: dict[str, Any], *, kind: str) -> dict[str, Any] | None:
 
 
 def _name_key(name: str) -> str:
-    """Casefold + normalize curly/backtick apostrophes for dedupe."""
-    s = (name or "").strip().lower()
-    for ch in ("’", "‘", "`", "ʼ"):
+    """Casefold + normalize apostrophes/whitespace for catalog matching."""
+    import unicodedata
+
+    s = unicodedata.normalize("NFKC", name or "")
+    s = s.replace("\xa0", " ").replace("\u200b", "").strip().lower()
+    for ch in ("’", "‘", "`", "ʼ", "´"):
         s = s.replace(ch, "'")
+    s = re.sub(r"\s+", " ", s)
     return s
 
 
@@ -476,36 +480,142 @@ def search_items(
     }
 
 
+@lru_cache(maxsize=1)
+def _flat_by_name() -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    try:
+        for it in _all_flat_items():
+            key = _name_key(it.get("name") or "")
+            if key and key not in out:
+                out[key] = it
+    except Exception:
+        return {}
+    return out
+
+
+@lru_cache(maxsize=1)
+def _flat_by_id() -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    try:
+        for it in _all_flat_items():
+            iid = it.get("itemID")
+            if iid is None or str(iid).strip() == "":
+                continue
+            out[str(iid).strip()] = it
+    except Exception:
+        return {}
+    return out
+
+
+@lru_cache(maxsize=1)
+def _wiki_name_index() -> dict[str, str]:
+    """eqlwiki Category:Items names (name recognition only — no invented stats)."""
+    out: dict[str, str] = {}
+    try:
+        path = decoded_dir() / "eqlwiki_item_names.json"
+        raw = _load_json(path)
+    except Exception:
+        return {}
+    names = (raw or {}).get("names") if isinstance(raw, dict) else None
+    if not isinstance(names, list):
+        return {}
+    for name in names:
+        if not isinstance(name, str):
+            continue
+        display = name.strip()
+        key = _name_key(display)
+        if key and key not in out:
+            out[key] = display
+    return out
+
+
+def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, Any]:
+    """Resolve an inventory name/id against tools catalog + eqlwiki name index.
+
+    Never invents stats. ``source`` is ``tools`` (has decoded stats when present),
+    ``eqlwiki`` (name known from wiki category dump), or None.
+    """
+    key = _name_key(name)
+    iid = str(item_id).strip() if item_id is not None and str(item_id).strip() else ""
+    try:
+        by_name = _flat_by_name()
+        by_id = _flat_by_id()
+        wiki = _wiki_name_index()
+    except Exception:
+        by_name, by_id, wiki = {}, {}, {}
+
+    it = by_name.get(key) if key else None
+    if it is None and iid:
+        it = by_id.get(iid)
+    if it is not None:
+        s0 = it.get("stats_plus0") or {}
+        s10 = it.get("stats_plus10") or {}
+        return {
+            "matched": True,
+            "source": "tools",
+            "has_stats": bool(s0 or s10),
+            "name": it.get("name") or name,
+            "itemID": it.get("itemID"),
+        }
+    if key and key in wiki:
+        return {
+            "matched": True,
+            "source": "eqlwiki",
+            "has_stats": False,
+            "name": wiki[key],
+            "itemID": None,
+        }
+    return {
+        "matched": False,
+        "source": None,
+        "has_stats": False,
+        "name": (name or "").strip() or None,
+        "itemID": None,
+    }
+
+
 def get_item_by_name(name: str) -> dict[str, Any] | None:
     key = _name_key(name)
     if not key:
         return None
     try:
-        pool = _all_flat_items()
+        it = _flat_by_name().get(key)
     except Exception:
         return None
-    for it in pool:
-        if _name_key(it.get("name") or "") == key:
-            try:
-                return _public_item(it)
-            except Exception:
-                return None
-    return None
-
-
-def name_in_catalog(name: str) -> bool:
-    """True if name exists in catalog — does not touch image cache."""
-    key = _name_key(name)
-    if not key:
-        return False
+    if not it:
+        return None
     try:
-        pool = _all_flat_items()
+        return _public_item(it)
+    except Exception:
+        return None
+
+
+def name_in_catalog(name: str, item_id: str | int | None = None) -> bool:
+    """True if name/id is known from tools catalog or eqlwiki item names."""
+    try:
+        return bool(catalog_match(name, item_id=item_id).get("matched"))
     except Exception:
         return False
-    for it in pool:
-        if _name_key(it.get("name") or "") == key:
-            return True
-    return False
+
+
+def catalog_coverage() -> dict[str, Any]:
+    """Sizes for UI notes — tools items vs eqlwiki name index."""
+    try:
+        tools_n = len(_flat_by_name())
+    except Exception:
+        tools_n = 0
+    try:
+        wiki_n = len(_wiki_name_index())
+    except Exception:
+        wiki_n = 0
+    return {
+        "tools_items": tools_n,
+        "eqlwiki_names": wiki_n,
+        "note": (
+            "Tools catalog carries BiS/eqlegendstools stats. "
+            "eqlwiki names expand inventory recognition without inventing stats."
+        ),
+    }
 
 
 def _public_item(it: dict[str, Any]) -> dict[str, Any]:
