@@ -350,33 +350,13 @@ def enrich_guide(
     *,
     wiki_html: str | None = None,
 ) -> dict[str, Any]:
-    """Attach prerequisites (wiki + sky access). Does not invent quest names."""
-    g = dict(guide or {})
-    quest = (g.get("quest") or "").strip()
-    prereqs: list[dict[str, Any]] = []
-    if wiki_html:
-        prereqs.extend(_prereqs_from_wiki_html(wiki_html, quest))
-    island = _sky_island_from_guide(g)
-    # Sky class tests: always surface island-access chain from documented legend.
-    if island is not None or "plane of sky" in " ".join(
-        str(x) for x in ((g.get("url") or ""), (g.get("source") or ""), *(g.get("steps") or [])[:2])
-    ).lower():
-        if island is None:
-            island = 1
-        # Prefer wiki-named quests first; then access notes
-        access = _sky_access_prereqs(island)
-        existing = {_name_key(p.get("name") or "") for p in prereqs}
-        for a in access:
-            if _name_key(a.get("name") or "") not in existing:
-                prereqs.append(a)
-    g["prerequisites"] = prereqs
-    if not prereqs:
-        g["prerequisites_note"] = (
-            "No prerequisite quests listed in available eqlwiki/source text for this quest."
-        )
-    else:
-        g["prerequisites_note"] = ""
-    return g
+    """Attach prerequisites (wiki labels + walkthrough mentions + sky access).
+
+    Does not invent quest names — only names that appear in eqlwiki/source text,
+    resolved to Quest Hub titles when possible.
+    """
+    # Prefer the shared walkthrough-aware attacher in quest_guides.
+    return qg._attach_prerequisites(guide, html=wiki_html)
 
 
 def inventory_ownership(

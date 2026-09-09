@@ -115,7 +115,8 @@ export const APP_HELP = {
       title: 'Quest Hub',
       body: [
         'Search quests linked from item reward data. Single-click to preview; double-click (or the side rail) to maximize the walkthrough.',
-        'Steps come from eqlwiki when available. Rewards list catalog items with a +0…+10 slider for stats.',
+        'Steps come from eqlwiki when available. Prerequisites include walkthrough mentions of other quests — click hub-listed ones to open them.',
+        'Rewards list catalog items with a +0…+10 slider for stats.',
       ],
     },
     {

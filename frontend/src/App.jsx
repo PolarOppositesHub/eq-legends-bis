@@ -2288,18 +2288,35 @@ export default function App() {
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
                       {(questDetail.prerequisites || []).length ? (
                         <ul className="mob-list">
-                          {(questDetail.prerequisites || []).map((p, i) => (
-                            <li key={`${p.name}-${i}`}>
-                              {p.kind === 'quest' ? (
-                                <button type="button" className="zone-link" onClick={() => setSelectedQuestName(p.name)}>
-                                  {p.name}
-                                </button>
-                              ) : (
-                                <span>{p.name}</span>
-                              )}
-                              {p.source ? <span className="muted"> · {p.source}</span> : null}
-                            </li>
-                          ))}
+                          {(questDetail.prerequisites || []).map((p, i) => {
+                            const openable = p.kind === 'quest' && p.in_hub !== false
+                            return (
+                              <li key={`${p.name}-${i}`}>
+                                {openable ? (
+                                  <button
+                                    type="button"
+                                    className="zone-link"
+                                    onClick={() => {
+                                      setSelectedQuestName(p.name)
+                                      setQuestQ(p.name)
+                                      setQuestListCollapsed(true)
+                                    }}
+                                  >
+                                    {p.name}
+                                  </button>
+                                ) : (
+                                  <span>{p.name}</span>
+                                )}
+                                {p.mentioned_as && String(p.mentioned_as).toLowerCase() !== String(p.name || '').toLowerCase() ? (
+                                  <span className="muted"> (as {p.mentioned_as})</span>
+                                ) : null}
+                                {p.kind === 'quest' && p.in_hub === false ? (
+                                  <span className="muted"> · not in Quest Hub index</span>
+                                ) : null}
+                                {p.source ? <span className="muted"> · {p.source}</span> : null}
+                              </li>
+                            )
+                          })}
                         </ul>
                       ) : (
                         <p className="muted" style={{ fontSize: '0.8rem' }}>
