@@ -17,6 +17,8 @@ import {
   getPriorityDefaults,
   listQuests,
   getQuestDetail,
+  listMobs,
+  getMobDetail,
 } from './api.js'
 import LoadingOverlay from './LoadingOverlay.jsx'
 import {
@@ -340,7 +342,7 @@ function itemTipStatsText(item, upgrade) {
   const stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0
   const whyLine = displayWhy(item)
   const tipParts = [
-    item.haste ? `Haste +${item.haste}% (not stacked)` : null,
+    item.haste ? `Haste +${item.haste}% (highest item only; stacks with spell haste)` : null,
     (item.ratio_at_upgrade != null || item.ratio_plus10 != null)
       ? `Ratio@+${upgrade} ${Number(item.ratio_at_upgrade ?? item.ratio_plus10).toFixed(4)}`
       : null,
@@ -669,6 +671,14 @@ export default function App() {
   const [selectedQuestName, setSelectedQuestName] = useState('')
   const [questListCollapsed, setQuestListCollapsed] = useState(false)
   const [questRewardUpgrade, setQuestRewardUpgrade] = useState(0)
+  const [mobQ, setMobQ] = useState('')
+  const [mobKind, setMobKind] = useState('all')
+  const [mobResults, setMobResults] = useState(null)
+  const [mobLoading, setMobLoading] = useState(false)
+  const [mobDetail, setMobDetail] = useState(null)
+  const [mobDetailLoading, setMobDetailLoading] = useState(false)
+  const [selectedMobName, setSelectedMobName] = useState('')
+  const [mobListCollapsed, setMobListCollapsed] = useState(false)
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -1545,12 +1555,62 @@ export default function App() {
     loadQuestDetail(selectedQuestName)
   }, [tab, selectedQuestName, loadQuestDetail])
 
+  const loadMobDetail = useCallback(async (mobName) => {
+    const n = (mobName || '').trim()
+    if (!n) return
+    setMobDetailLoading(true)
+    setSelectedMobName(n)
+    setError('')
+    try {
+      const d = await getMobDetail({ name: n, fetch: true })
+      setMobDetail(d)
+    } catch (e) {
+      setMobDetail(null)
+      setError(String(e.message || e))
+    } finally {
+      setMobDetailLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (tab !== 'mobs') return undefined
+    let cancelled = false
+    const t = setTimeout(async () => {
+      setMobLoading(true)
+      try {
+        const res = await listMobs({
+          q: mobQ || '',
+          kind: mobKind && mobKind !== 'all' ? mobKind : '',
+          limit: 120,
+        })
+        if (!cancelled) setMobResults(res)
+      } catch (e) {
+        if (!cancelled) {
+          setMobResults(null)
+          setError(String(e.message || e))
+        }
+      } finally {
+        if (!cancelled) setMobLoading(false)
+      }
+    }, 220)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [tab, mobQ, mobKind])
+
+  useEffect(() => {
+    if (tab !== 'mobs' || !selectedMobName) return
+    loadMobDetail(selectedMobName)
+  }, [tab, selectedMobName, loadMobDetail])
+
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
     { id: 'bags', label: 'Search My Bags' },
     { id: 'quests', label: 'Quest Hub' },
+    { id: 'mobs', label: 'Mobs' },
     { id: 'search', label: 'Item Search' },
   ]
 
@@ -1565,11 +1625,13 @@ export default function App() {
     const tokens = q.split(/[^a-z0-9']+/i).filter((t) => t && !['of', 'the', 'a', 'an', 'and'].includes(t))
     const locFilter = (bagsLoc || '').trim().toLowerCase()
     return allImportedItems.filter((row) => {
-      const name = String(row?.base_name || row?.name || row || '').toLowerCase()
+      const name = String(row?.base_name || row?.name || row || '').trim()
+      const nameLc = name.toLowerCase()
+      if (!name || nameLc === 'empty') return false
       const loc = String(row?.location || '').toLowerCase()
       if (locFilter && !loc.includes(locFilter)) return false
       if (!tokens.length) return true
-      return tokens.every((t) => name.includes(t) || loc.includes(t))
+      return tokens.every((t) => nameLc.includes(t) || loc.includes(t))
     })
   }, [allImportedItems, bagsQ, bagsLoc])
 
@@ -1847,7 +1909,7 @@ export default function App() {
                     Per-slot +N
                   </span>
                 )}
-                <span className="badge warn">Haste: highest only</span>
+                <span className="badge warn">Haste: highest item + spell (cap 175/185)</span>
                 {preferRanged && <span className="badge">Prefer ranged</span>}
                 {maximizeHpRegen && <span className="badge">Max HP regen</span>}
                 {bis?.dual_wield_enabled && (
@@ -1999,7 +2061,7 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Search My Bags</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Search everything from your last Inventory.txt import (worn, bags, bank, nested slots).
+                Search occupied slots from your last Inventory.txt import (worn, bags, bank, nested — empty slots hidden).
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                 {isDesktopApp && (
@@ -2079,7 +2141,13 @@ export default function App() {
                     />
                   </div>
                   <p className="muted" style={{ marginTop: '0.65rem' }}>
-                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'} · {allImportedItems.length} imported lines
+                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'}
+                    {' · '}
+                    {allImportedItems.filter((r) => {
+                      const n = String(r?.base_name || r?.name || '').trim().toLowerCase()
+                      return n && n !== 'empty'
+                    }).length}{' '}
+                    items with contents
                   </p>
                   <ul className="item-search-list">
                     {bagHits.slice(0, 500).map((row, i) => {
@@ -2280,18 +2348,35 @@ export default function App() {
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
                       {(questDetail.prerequisites || []).length ? (
                         <ul className="mob-list">
-                          {(questDetail.prerequisites || []).map((p, i) => (
-                            <li key={`${p.name}-${i}`}>
-                              {p.kind === 'quest' ? (
-                                <button type="button" className="zone-link" onClick={() => setSelectedQuestName(p.name)}>
-                                  {p.name}
-                                </button>
-                              ) : (
-                                <span>{p.name}</span>
-                              )}
-                              {p.source ? <span className="muted"> · {p.source}</span> : null}
-                            </li>
-                          ))}
+                          {(questDetail.prerequisites || []).map((p, i) => {
+                            const openable = p.kind === 'quest' && p.in_hub !== false
+                            return (
+                              <li key={`${p.name}-${i}`}>
+                                {openable ? (
+                                  <button
+                                    type="button"
+                                    className="zone-link"
+                                    onClick={() => {
+                                      setSelectedQuestName(p.name)
+                                      setQuestQ(p.name)
+                                      setQuestListCollapsed(true)
+                                    }}
+                                  >
+                                    {p.name}
+                                  </button>
+                                ) : (
+                                  <span>{p.name}</span>
+                                )}
+                                {p.mentioned_as && String(p.mentioned_as).toLowerCase() !== String(p.name || '').toLowerCase() ? (
+                                  <span className="muted"> (as {p.mentioned_as})</span>
+                                ) : null}
+                                {p.kind === 'quest' && p.in_hub === false ? (
+                                  <span className="muted"> · not in Quest Hub index</span>
+                                ) : null}
+                                {p.source ? <span className="muted"> · {p.source}</span> : null}
+                              </li>
+                            )
+                          })}
                         </ul>
                       ) : (
                         <p className="muted" style={{ fontSize: '0.8rem' }}>
@@ -2347,13 +2432,192 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'mobs' && (
+            <div className="panel item-search">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Mobs</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Single-click a mob for a preview. Double-click (or use the side arrow) to maximize the detail panel.
+                Names and kinds come from eqlwiki (raid / mini boss / named / standard).
+              </p>
+              <div className={`quest-hub-layout${mobListCollapsed ? ' list-collapsed' : ''}`}>
+                <div className="quest-hub-list-col">
+                  <div className="item-search-bar" style={{ flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      placeholder="Search mobs…"
+                      value={mobQ}
+                      onChange={(e) => setMobQ(e.target.value)}
+                    />
+                    <select
+                      value={mobKind}
+                      onChange={(e) => setMobKind(e.target.value)}
+                      style={{ maxWidth: 180 }}
+                      title="Filter by mob kind"
+                    >
+                      <option value="all">All combat mobs</option>
+                      <option value="raid">Raid</option>
+                      <option value="mini_boss">Mini Boss</option>
+                      <option value="named">Named</option>
+                      <option value="standard">Standard</option>
+                    </select>
+                  </div>
+                  {(mobResults?.kinds || []).length ? (
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                      {(mobResults.kinds || []).map((k) => (
+                        <button
+                          key={k.id}
+                          type="button"
+                          className={mobKind === k.id ? 'primary' : ''}
+                          style={{ padding: '0.25rem 0.55rem', fontSize: '0.78rem' }}
+                          onClick={() => setMobKind(mobKind === k.id ? 'all' : k.id)}
+                        >
+                          {k.label}{k.count != null ? ` (${k.count})` : ''}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {mobResults && (
+                    <p className="muted" style={{ marginTop: '0.65rem', marginBottom: '0.35rem' }}>
+                      {mobLoading ? 'Searching…' : `${mobResults.total} mob${mobResults.total === 1 ? '' : 's'}`}
+                      {mobResults.catalog_size != null ? ` · index ${mobResults.catalog_size}` : ''}
+                    </p>
+                  )}
+                  {mobResults?.note ? (
+                    <p className="muted" style={{ fontSize: '0.78rem' }}>{mobResults.note}</p>
+                  ) : null}
+                  <ul className="item-search-list quest-hub-list">
+                    {(mobResults?.mobs || []).map((m) => (
+                      <li key={m.name}>
+                        <button
+                          type="button"
+                          className="item-search-result"
+                          title="Click to preview · Double-click to maximize"
+                          onClick={() => setSelectedMobName(m.name)}
+                          onDoubleClick={() => {
+                            setSelectedMobName(m.name)
+                            setMobListCollapsed(true)
+                          }}
+                          style={selectedMobName === m.name ? { outline: '1px solid var(--accent)' } : undefined}
+                        >
+                          <div>
+                            <div className="item-search-name">{m.name}</div>
+                            <div className="muted" style={{ fontSize: '0.78rem' }}>
+                              {(m.kind_labels || []).filter(Boolean).join(' · ') || m.primary_kind || '—'}
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  className="quest-hub-rail"
+                  title={mobListCollapsed ? 'Show mob list' : 'Maximize detail (hide list)'}
+                  aria-label={mobListCollapsed ? 'Expand mob list' : 'Collapse mob list'}
+                  onClick={() => setMobListCollapsed((v) => !v)}
+                >
+                  <span className="quest-hub-rail-arrow" aria-hidden="true">
+                    {mobListCollapsed ? '›' : '‹'}
+                  </span>
+                </button>
+                <div className="item-detail-panel quest-hub-detail">
+                  {!selectedMobName && (
+                    <p className="muted">Select a mob to view zone, level, and known drops.</p>
+                  )}
+                  {mobDetailLoading && <p className="muted">Loading mob…</p>}
+                  {mobDetail && !mobDetailLoading && (
+                    <>
+                      <div className="item-name">
+                        <strong>{mobDetail.name || selectedMobName}</strong>
+                        {mobDetail.url ? (
+                          <>
+                            {' · '}
+                            <a href={mobDetail.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                          </>
+                        ) : null}
+                      </div>
+                      <div className="meta" style={{ marginTop: '0.35rem' }}>
+                        {(mobDetail.kind_labels || []).join(' · ') || '—'}
+                        {mobDetail.level ? ` · Level ${mobDetail.level}` : ''}
+                        {mobDetail.zone ? ` · ${mobDetail.zone}` : ''}
+                      </div>
+                      {mobDetail.location ? (
+                        <p className="muted" style={{ fontSize: '0.82rem' }}>Location: {mobDetail.location}</p>
+                      ) : null}
+                      {mobDetail.description ? (
+                        <p style={{ marginTop: '0.65rem', fontSize: '0.85rem' }}>{mobDetail.description}</p>
+                      ) : null}
+                      {Object.keys(mobDetail.fields || {}).length > 0 && (
+                        <>
+                          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Wiki fields</h3>
+                          <ul className="mob-list">
+                            {Object.entries(mobDetail.fields || {}).map(([k, v]) => (
+                              <li key={k}>
+                                <strong>{k.replace(/_/g, ' ')}</strong>: {String(v)}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Known drops</h3>
+                      {(mobDetail.drop_items || []).length ? (
+                        <ul className="quest-rewards">
+                          {(mobDetail.drops || []).slice(0, 60).map((d, i) => (
+                            <li key={`${d.item}-${i}`}>
+                              <button
+                                type="button"
+                                className="zone-link"
+                                onClick={async () => {
+                                  const itemName = d.item
+                                  setTab('search')
+                                  setSearchQ(itemName)
+                                  setSearchLoading(true)
+                                  try {
+                                    const res = await searchItems({ q: itemName, limit: 80 })
+                                    setSearchResults(res)
+                                    const hit = (res.items || []).find((it) => String(it.name || '').toLowerCase() === String(itemName).toLowerCase())
+                                      || (res.items || [])[0]
+                                    if (hit?.name) await openItemDetail(hit.name)
+                                  } catch (err) {
+                                    setError(String(err.message || err))
+                                  } finally {
+                                    setSearchLoading(false)
+                                  }
+                                }}
+                              >
+                                {d.item}
+                              </button>
+                              {d.zone ? <span className="muted"> · {d.zone}</span> : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          No decoded catalog drops linked to this name yet.
+                        </p>
+                      )}
+                      {mobDetail.note ? (
+                        <p className="muted" style={{ fontSize: '0.75rem', marginTop: '0.75rem' }}>{mobDetail.note}</p>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {tab === 'search' && (
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Full EQ Legends item list (gear, clickies, food, reagents, and other non-equipables).
+                Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
+              </p>
               <div className="item-search-bar">
                 <input
                   type="text"
-                  placeholder="Search items…"
+                  placeholder="Search any item…"
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') runSearch() }}
@@ -2372,6 +2636,8 @@ export default function App() {
                 <p className="muted" style={{ marginTop: '0.65rem' }}>
                   {searchResults.total} match{searchResults.total === 1 ? '' : 'es'}
                   {searchResults.catalog_size != null ? ` · catalog ${searchResults.catalog_size}` : ''}
+                  {searchResults.tools_items != null ? ` · tools ${searchResults.tools_items}` : ''}
+                  {searchResults.eqlwiki_names != null ? ` · eqlwiki ${searchResults.eqlwiki_names}` : ''}
                 </p>
               )}
               <div className="item-search-layout">
@@ -2392,13 +2658,16 @@ export default function App() {
                                 {it.name}
                               </a>
                             ) : it.name}
+                            {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
+                              <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
+                            ) : null}
                           </div>
                           <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {it.classes_str || (it.classes || []).join(', ') || '—'}
+                            {it.classes_str || (it.classes || []).join(', ') || (it.catalog_source === 'eqlwiki' ? 'Non-tools / open for wiki details' : '—')}
                             {it.zone ? ` · ${it.zone}` : ''}
                           </div>
                           <div className="stats-line">
-                            {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || '—'}
+                            {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
                           </div>
                         </div>
                       </button>
@@ -2419,8 +2688,9 @@ export default function App() {
                       ) : itemDetail.name}
                     </div>
                     <div className="meta">
-                      {(itemDetail.slots || []).join(', ') || itemDetail.slot || '—'}
+                      {(itemDetail.slots || []).join(', ') || itemDetail.slot || (itemDetail.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
                       {itemDetail.zone ? ` · ${itemDetail.zone}` : ''}
+                      {itemDetail.catalog_source ? ` · ${itemDetail.catalog_source}` : ''}
                     </div>
                     <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
                       {itemDetail.classes_str || (itemDetail.classes || []).join(', ')}
@@ -2431,10 +2701,20 @@ export default function App() {
                     <div className="stats-line">
                       +10 {fmtStats(itemDetail.stats_plus10, SHOW10) || '—'}
                     </div>
+                    {itemDetail.description ? (
+                      <p style={{ marginTop: '0.65rem', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
+                        {itemDetail.description}
+                      </p>
+                    ) : null}
                     {itemDetail.tooltipLines?.length > 0 && (
                       <pre className="help-md" style={{ marginTop: '0.65rem', fontSize: '0.75rem' }}>
                         {(itemDetail.tooltipLines || []).join('\n')}
                       </pre>
+                    )}
+                    {!itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
+                      <p className="muted" style={{ marginTop: '0.65rem', fontSize: '0.8rem' }}>
+                        No parsed wiki tooltip yet — open the eqlwiki link above for the full page.
+                      </p>
                     )}
                   </div>
                 )}
@@ -2684,11 +2964,14 @@ export default function App() {
                   <>
                     <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span className="badge">Haste applied: +{sim.haste?.applied_pct || 0}%</span>
+                      {(sim.haste?.worn_pct || 0) > 0 && (
+                        <span className="badge">Item haste +{sim.haste.worn_pct}%</span>
+                      )}
                       {sim.haste?.applied_slot && (
                         <span className="badge">{sim.haste.applied_slot}: {sim.haste.candidates?.find(c => c.slot === sim.haste.applied_slot)?.name}</span>
                       )}
                       {(sim.haste?.candidates?.length || 0) > 1 && (
-                        <span className="badge warn">Extra haste ignored</span>
+                        <span className="badge warn">Extra item haste ignored</span>
                       )}
                       <span className="badge">Pools: race+class+STA/INT/WIS (EQLT)</span>
                       {sim.assume_max_aas && <span className="badge">Max AAs</span>}
@@ -2697,6 +2980,13 @@ export default function App() {
                       )}
                       {sim.haste?.buff_pct ? (
                         <span className="badge">Spell haste +{sim.haste.buff_pct}%</span>
+                      ) : null}
+                      {sim.haste?.capped ? (
+                        <span className="badge warn">
+                          Cap {sim.haste.cap_pct}% (was {sim.haste.raw_pct}%)
+                        </span>
+                      ) : sim.haste?.cap_pct ? (
+                        <span className="badge">Cap {sim.haste.cap_pct}%</span>
                       ) : null}
                       {sim.cast_buffs?.mode === 'quick' ? (
                         <span className="badge">Quick Buff</span>

@@ -30,7 +30,7 @@ USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
 # Bump when step/component wording schema changes so stale caches refresh.
-GUIDE_FORMAT_VERSION = 5
+GUIDE_FORMAT_VERSION = 6
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
 # Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
@@ -48,6 +48,45 @@ _PREREQ_LINE = re.compile(
     r"(?:prerequisite|prerequisites|previous\s+quest|requires?\s+quest|"
     r"must\s+(?:first\s+)?complete)\s*:?\s*(.+)",
     re.I,
+)
+# Steps that clearly require finishing another quest (not mere item mentions).
+_QUEST_COMPLETE_LINE = re.compile(
+    r"(?:complete(?:s|d)?|finish(?:es|ed)?|do|does|doing|includes?)\b.{0,80}\bquest\b|"
+    r"\bquest(?:ing)?\b.{0,40}\b(?:for|to)\b|"
+    r"\bdo\s+the\b.{0,80}\bquest\b|"
+    r"\bquesting\b",
+    re.I,
+)
+_QUEST_FOR_PATTERNS = (
+    re.compile(
+        r"complete(?:s|d)?\s+(?:the\s+)?quest\s+for\s+(.+?)(?=\s*,\s*which|\s+which|\s*,\s*and\s+|"
+        r"\s+and\s+camping|\s+and\s+quest|\s*\(|\s*\.|$)",
+        re.I,
+    ),
+    re.compile(
+        r"includes?\s+the\s+quest\s+for\s+([A-Za-z][\w'’ \-]{1,70}?)(?=\s+and\b|\s*,|\s*\(|\s*\.|$)",
+        re.I,
+    ),
+    re.compile(
+        r"do\s+the\s+([A-Za-z][\w'’ \-]{1,70}?)\s+quests?\b",
+        re.I,
+    ),
+    re.compile(
+        r"(?:finish|complete)\s+(?:the\s+)?([A-Za-z][\w'’ \-]{1,70}?)\s+quests?\b",
+        re.I,
+    ),
+    re.compile(
+        r"questing\)?\s+([A-Za-z][\w'’ \-]{1,60}?)(?=\s+and\b|\s*,|\s*\)|\s*\.|$)",
+        re.I,
+    ),
+    re.compile(
+        r"\(or\s+questing\)\s+([A-Za-z][\w'’ \-]{1,60}?)(?=\s+and\b|\s*,|\s*\)|\s*\.|$)",
+        re.I,
+    ),
+    re.compile(
+        r"quest\s+for\s+([A-Za-z][\w'’ \-]{1,70}?)(?=\s+and\b|\s*,|\s*which|\s*\(|\s*\.|$)",
+        re.I,
+    ),
 )
 
 # Documented eqlwiki Plane of Sky island bosses (same abbreviations used in class-test tables).
@@ -1075,6 +1114,165 @@ def _enrich_component_rows(
     return out
 
 
+def _hub_quest_names() -> list[str]:
+    """Canonical Quest Hub names from the decoded catalog (lazy import)."""
+    try:
+        from . import quest_hub
+        return [str(q.get("name") or "").strip() for q in quest_hub.list_quests() if q.get("name")]
+    except Exception:
+        return []
+
+
+def _normalize_quest_mention(raw: str) -> str:
+    s = (raw or "").strip()
+    for ch in ("\u2019", "\u2018", "`", "\u02bc"):
+        s = s.replace(ch, "'")
+    s = re.sub(r"\s+", " ", s).strip(" .,;:\"'")
+    # Drop trailing "quest" when matching hub titles like "The Fiery Avenger"
+    s = re.sub(r"\s+quests?$", "", s, flags=re.I).strip()
+    return s
+
+
+def resolve_quest_mention(mention: str, hub_names: list[str] | None = None) -> str | None:
+    """Map free-text / wiki link title to a Quest Hub quest name when possible."""
+    m = _normalize_quest_mention(mention)
+    if len(m) < 3:
+        return None
+    names = hub_names if hub_names is not None else _hub_quest_names()
+    mk = m.lower()
+    for n in names:
+        if n.lower() == mk:
+            return n
+    # Parenthetical aliases: SoulFire → Zimel's Blades (SoulFire)
+    for n in names:
+        for p in re.findall(r"\(([^)]+)\)", n):
+            pl = p.strip().lower()
+            if pl == mk or (len(mk) >= 4 and (mk in pl or pl in mk)):
+                return n
+    # Longest substring match either direction (avoid tiny false hits)
+    candidates: list[tuple[int, str]] = []
+    for n in names:
+        nl = n.lower()
+        if len(mk) >= 6 and mk in nl:
+            candidates.append((len(mk) + 50, n))
+        elif len(nl) >= 8 and nl in mk:
+            candidates.append((len(nl), n))
+        else:
+            # token overlap for titles like "Pure Crystal Quest"
+            n_tokens = {t for t in re.split(r"[^a-z0-9]+", nl) if len(t) > 2}
+            m_tokens = {t for t in re.split(r"[^a-z0-9]+", mk) if len(t) > 2}
+            if n_tokens and m_tokens and n_tokens <= m_tokens:
+                candidates.append((len(n_tokens) * 10 + len(nl), n))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: (-x[0], -len(x[1])))
+    return candidates[0][1]
+
+
+def _mentions_from_step_text(line: str) -> list[str]:
+    """Extract quest-name phrases from a walkthrough step that requires other quests."""
+    if not line or not _QUEST_COMPLETE_LINE.search(line):
+        return []
+    found: list[str] = []
+    seen: set[str] = set()
+    for pat in _QUEST_FOR_PATTERNS:
+        for m in pat.finditer(line):
+            raw = _normalize_quest_mention(m.group(1))
+            if len(raw) < 3 or len(raw) > 90:
+                continue
+            key = raw.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            found.append(raw)
+    return found
+
+
+def _prerequisites_from_walkthrough(
+    steps: list[str] | None,
+    html: str | None,
+    quest_name: str,
+) -> list[dict[str, Any]]:
+    """Pull prerequisite quests named in walkthrough/checklist steps (never invented).
+
+    Only phrases that appear in source step/HTML text are kept. When a mention
+    matches the Quest Hub index (including aliases like SoulFire), the canonical
+    hub name is used and ``in_hub`` is true for clickable navigation.
+    """
+    hub = _hub_quest_names()
+    hub_sorted = sorted(hub, key=lambda n: len(n), reverse=True)
+    qkey = _normalize_quest_mention(quest_name).lower()
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def _add(raw: str, *, source: str) -> None:
+        mention = _normalize_quest_mention(raw)
+        if len(mention) < 3:
+            return
+        resolved = resolve_quest_mention(mention, hub)
+        name = resolved or mention
+        key = name.lower()
+        if key in seen or key == qkey:
+            return
+        # Skip the current quest's own reward name looping back awkwardly
+        if resolved and resolved.lower() == qkey:
+            return
+        seen.add(key)
+        out.append({
+            "name": name,
+            "kind": "quest",
+            "source": source,
+            "in_hub": bool(resolved),
+            "mentioned_as": mention if (not resolved or mention.lower() != resolved.lower()) else None,
+        })
+
+    # 1) Explicit phrases in step text
+    for step in steps or []:
+        line = str(step or "").strip()
+        for mention in _mentions_from_step_text(line):
+            _add(mention, source="eqlwiki walkthrough")
+        # 2) Whole hub titles appearing in completion-language steps
+        if line and _QUEST_COMPLETE_LINE.search(line):
+            low = line.lower()
+            for n in hub_sorted:
+                nl = n.lower()
+                if len(nl) < 6 or nl == qkey:
+                    continue
+                if nl in low:
+                    _add(n, source="eqlwiki walkthrough")
+
+    # 3) Wiki checklist links inside completion-language <li> rows
+    if html:
+        section = _extract_mw_section(html, "Checklist") or html
+        for m in re.finditer(r"<li\b[^>]*>([\s\S]*?)</li>", section or "", re.I):
+            li = m.group(1)
+            text = _clean_step_line(_html_to_text(li))
+            if not text or not _QUEST_COMPLETE_LINE.search(text):
+                continue
+            for am in re.finditer(
+                r"<a\b[^>]*\btitle=\"([^\"]+)\"[^>]*>",
+                li,
+                re.I,
+            ):
+                title = _normalize_quest_mention(am.group(1))
+                if not title:
+                    continue
+                low = text.lower()
+                tlow = title.lower()
+                idx = low.find(tlow)
+                window = text[max(0, idx - 48): idx + len(title)] if idx >= 0 else text
+                if resolve_quest_mention(title, hub) or re.search(
+                    r"quest(?:ing)?",
+                    window,
+                    re.I,
+                ):
+                    _add(title, source="eqlwiki walkthrough link")
+            for mention in _mentions_from_step_text(text):
+                _add(mention, source="eqlwiki walkthrough")
+
+    return out
+
+
 def _prerequisites_from_html(html: str, quest_name: str) -> list[dict[str, Any]]:
     """Named prerequisite quests explicitly listed on eqlwiki (never invented)."""
     if not html:
@@ -1084,6 +1282,7 @@ def _prerequisites_from_html(html: str, quest_name: str) -> list[dict[str, Any]]
     scan = _WS_RE.sub(" ", scan)
     out: list[dict[str, Any]] = []
     seen: set[str] = set()
+    hub = _hub_quest_names()
     qkey = (quest_name or "").strip().lower()
     for m in _PREREQ_LINE.finditer(scan):
         rest = m.group(1).strip()
@@ -1095,11 +1294,18 @@ def _prerequisites_from_html(html: str, quest_name: str) -> list[dict[str, Any]]
                 continue
             if name.lower().startswith("http"):
                 continue
-            key = name.lower()
+            resolved = resolve_quest_mention(name, hub)
+            canonical = resolved or name
+            key = canonical.lower()
             if key in seen or key == qkey:
                 continue
             seen.add(key)
-            out.append({"name": name, "kind": "quest", "source": "eqlwiki"})
+            out.append({
+                "name": canonical,
+                "kind": "quest",
+                "source": "eqlwiki",
+                "in_hub": bool(resolved),
+            })
     return out
 
 
@@ -1156,11 +1362,33 @@ def _attach_prerequisites(
 ) -> dict[str, Any]:
     g = dict(guide or {})
     quest = (g.get("quest") or "").strip()
-    prereqs = list(g.get("prerequisites") or [])
+    prereqs: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def _merge(rows: list[dict[str, Any]]) -> None:
+        for p in rows or []:
+            name = (p.get("name") or "").strip()
+            if not name:
+                continue
+            key = name.lower()
+            if key in seen:
+                # Prefer hub-resolved / richer rows when replacing stubs
+                if p.get("in_hub") and not any(
+                    (x.get("name") or "").lower() == key and x.get("in_hub") for x in prereqs
+                ):
+                    prereqs[:] = [x for x in prereqs if (x.get("name") or "").lower() != key]
+                    prereqs.append(p)
+                    seen.add(key)
+                continue
+            seen.add(key)
+            prereqs.append(p)
+
+    # Keep any previously attached rows, then add labeled + walkthrough mentions.
+    _merge(list(g.get("prerequisites") or []))
     if html:
-        for p in _prerequisites_from_html(html, quest):
-            if not any((x.get("name") or "").lower() == (p.get("name") or "").lower() for x in prereqs):
-                prereqs.append(p)
+        _merge(_prerequisites_from_html(html, quest))
+    _merge(_prerequisites_from_walkthrough(g.get("steps") or [], html, quest))
+
     island = _sky_island_from_payload(g.get("components") or [], g.get("steps") or [])
     blob = " ".join(
         str(x) for x in (
@@ -1173,9 +1401,7 @@ def _attach_prerequisites(
     if island is not None or "plane of sky" in blob or "sky" in (quest or "").lower():
         if island is None:
             island = 1
-        for a in _sky_access_prerequisites(island):
-            if not any((x.get("name") or "").lower() == (a.get("name") or "").lower() for x in prereqs):
-                prereqs.append(a)
+        _merge(_sky_access_prerequisites(island))
     g["prerequisites"] = prereqs
     g["prerequisites_note"] = (
         ""
@@ -1299,9 +1525,8 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
         cached = load_cached_guide(name)
         # Ignore stub caches that only stored the quest title line
         if cached and not _is_stub_guide(cached):
-            if "prerequisites" not in cached:
-                return _attach_prerequisites(cached, html=None)
-            return cached
+            # Re-derive prerequisites from steps (walkthrough mentions) even on cache hit.
+            return _attach_prerequisites(cached, html=None)
 
         urls = wiki_urls_for_quest(name)
         if not fetch:

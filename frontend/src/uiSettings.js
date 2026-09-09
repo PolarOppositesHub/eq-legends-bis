@@ -52,7 +52,7 @@ export const LOADING_SAYINGS = [
   'Teaching a gnome not to click every orb…',
   'Bribing a froglok for directions…',
   'Untangling Plane of Sky key rings…',
-  'Calibrating haste so only the highest counts…',
+  'Calibrating haste: highest item + spell stacks…',
   'Asking Lucan if he has a minute…',
   'Warming up the forge in Sol A…',
   'Checking if that skullcap is +2 or +10…',
@@ -90,7 +90,7 @@ export const APP_HELP = {
       body: [
         'Compare Worn vs BiS per slot. Each side has its own +N enchant level.',
         'Import Inventory.txt (or Update from EQ folder on desktop) to fill worn gear and bag contents.',
-        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (only highest worn haste counts).',
+        'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (highest worn haste stacks with spell haste; caps at 175%, or 185% with Monk).',
         'Default upgrade + Apply to all slots sets every piece; otherwise edit +N under each slot.',
       ],
     },
@@ -106,7 +106,7 @@ export const APP_HELP = {
       id: 'bags',
       title: 'Search My Bags',
       body: [
-        'Search every line from your last inventory import (worn, bags, bank, nested slots).',
+        'Search every occupied line from your last inventory import (worn, bags, bank, nested slots — empty slots hidden).',
         'Names match the tools catalog and eqlwiki item list. Wiki-only names may show without stats yet.',
       ],
     },
@@ -115,14 +115,24 @@ export const APP_HELP = {
       title: 'Quest Hub',
       body: [
         'Search quests linked from item reward data. Single-click to preview; double-click (or the side rail) to maximize the walkthrough.',
-        'Steps come from eqlwiki when available. Rewards list catalog items with a +0…+10 slider for stats.',
+        'Steps come from eqlwiki when available. Prerequisites include walkthrough mentions of other quests — click hub-listed ones to open them.',
+        'Rewards list catalog items with a +0…+10 slider for stats.',
+      ],
+    },
+    {
+      id: 'mobs',
+      title: 'Mobs',
+      body: [
+        'Browse eqlwiki NPCs filtered by Raid, Mini Boss, Named, or Standard. Same expand/collapse layout as Quest Hub.',
+        'Detail shows wiki fields when available and known drops reverse-linked from the item catalog.',
       ],
     },
     {
       id: 'search',
       title: 'Item Search',
       body: [
-        'Look up catalog items by name and slot. Open a result for +0 / +10 stats and tooltip lines.',
+        'Look up any EQ Legends item by name (gear and non-equipables). Open a result for stats and wiki description when available.',
+        'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list — stats are never invented.',
       ],
     },
     {
