@@ -52,6 +52,8 @@ class SimulateRequest(BaseModel):
     classes: list[str] = Field(default_factory=list)
     race: str | None = "Human"
     upgrade: int = 10
+    # Per-slot enchant overrides (0..10). Missing slots use ``upgrade``.
+    slot_upgrades: dict[str, int] = Field(default_factory=dict)
     character_level: int | None = 50
     equipment: dict[str, Any] = Field(default_factory=dict)
     slots: dict[str, Any] | None = None
@@ -74,6 +76,7 @@ class UpgradeSuggestRequest(BaseModel):
     classes: list[str] = Field(default_factory=list)
     equipment: dict[str, Any] = Field(default_factory=dict)
     upgrade: int = 10
+    slot_upgrades: dict[str, int] = Field(default_factory=dict)
     character_level: int = 50
     prefer_ranged_damage: bool = True
     inventory_text: str | None = None
@@ -380,6 +383,7 @@ def post_simulate(body: SimulateRequest):
             cast_buffs=body.cast_buffs or "off",
             active_buff_ids=list(body.active_buff_ids or []),
             assume_max_aas=bool(body.assume_max_aas),
+            slot_upgrades=dict(body.slot_upgrades or {}),
         )
     except Exception as e:
         raise HTTPException(500, f"Simulate failed: {e}") from e
@@ -507,6 +511,7 @@ def api_upgrade_suggestions(body: UpgradeSuggestRequest):
             classes,
             equipment,
             upgrade=max(0, min(10, int(body.upgrade))),
+            slot_upgrades=dict(body.slot_upgrades or {}),
             character_level=level,
             prefer_ranged_damage=bool(body.prefer_ranged_damage),
             mode=body.mode or "ai",

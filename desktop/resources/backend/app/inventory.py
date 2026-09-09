@@ -321,6 +321,7 @@ def suggest_upgrades(
     equipment: dict[str, str],
     *,
     upgrade: int = 10,
+    slot_upgrades: dict[str, Any] | None = None,
     character_level: int = 50,
     prefer_ranged_damage: bool = True,
     alts: int = 3,
@@ -335,6 +336,14 @@ def suggest_upgrades(
     """Compare current equipment vs BiS list for the trio; prioritize closing BiS gaps."""
     if not classes:
         return {"suggestions": [], "bis": None, "error": "Select at least one class"}
+
+    upgrade = max(0, min(10, int(upgrade)))
+    slot_upg: dict[str, int] = {}
+    for k, v in (slot_upgrades or {}).items():
+        try:
+            slot_upg[str(k).upper()] = max(0, min(10, int(v)))
+        except (TypeError, ValueError):
+            continue
 
     bis = engine.recommend_bis(
         classes,
@@ -357,6 +366,7 @@ def suggest_upgrades(
         slot = row["slot"]
         bis_name = (row.get("name") or "").strip()
         current = (eq_norm.get(slot) or "").strip()
+        worn_level = slot_upg.get(slot, upgrade)
         bis_stats = row.get("stats_at_upgrade") or row.get("stats_plus10") or {}
         bis_alts = [{"name": bis_name, "why": row.get("why"), "url": row.get("url") or ""}]
         for a in row.get("alts") or []:
@@ -373,7 +383,7 @@ def suggest_upgrades(
         if current:
             try:
                 pool_items = engine.items_for_slot(
-                    classes, slot=slot, upgrade=upgrade, prefer_ranged_damage=prefer_ranged_damage
+                    classes, slot=slot, upgrade=worn_level, prefer_ranged_damage=prefer_ranged_damage
                 )
             except Exception:
                 pool_items = []
@@ -387,7 +397,11 @@ def suggest_upgrades(
                 # Unmatched worn item — name only, no invented stats
                 cat = item_catalog_mod.get_item_by_name(current)
                 if cat:
-                    cur_stats = cat.get("stats_plus10") or cat.get("stats_plus0") or {}
+                    s0 = cat.get("stats_plus0") or {}
+                    if s0:
+                        cur_stats = engine.scale_stats_to_level(s0, worn_level)
+                    else:
+                        cur_stats = cat.get("stats_plus10") or {}
 
         deltas = _stat_delta(cur_stats, bis_stats) if bis_name else []
         equipment_compare.append({
@@ -396,6 +410,7 @@ def suggest_upgrades(
                 "name": current or None,
                 "in_catalog": bool(cur_item) or (bool(current) and _catalog_has_name(current)),
                 "stats": cur_stats,
+                "upgrade": worn_level,
                 "url": (cur_item or {}).get("url") or "",
                 "image_url": f"/api/item-image?name={current}" if current else "",
             },

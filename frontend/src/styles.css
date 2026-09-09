@@ -373,6 +373,25 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   }
 }
 .slot-select { width: 100%; min-width: 0; }
+.equip-slot-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+.slot-upgrade-select {
+  width: auto;
+  align-self: flex-start;
+  min-width: 3.4rem;
+  max-width: 4.2rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold);
+  background: #141414;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
 .item-search-bar {
   display: flex;
   flex-wrap: wrap;
