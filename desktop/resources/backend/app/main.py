@@ -585,11 +585,13 @@ class QuestDetailRequest(BaseModel):
     fetch: bool = True
     # Imported inventory rows or names for ownership check against components.
     inventory_items: list[Any] = Field(default_factory=list)
+    # Enchant level for reward item stats (+0..+10). Full stats_by_upgrade is also returned.
+    upgrade: int = Field(default=0, ge=0, le=10)
 
 
 @app.post("/api/quest-detail")
 def api_quest_detail(body: QuestDetailRequest):
-    """Quest Hub detail: guide + prerequisites + inventory ownership for components."""
+    """Quest Hub detail: guide + rewards + prerequisites + inventory ownership."""
     from . import quest_hub as qh
     name = (body.name or "").strip()
     if not name:
@@ -599,6 +601,7 @@ def api_quest_detail(body: QuestDetailRequest):
             name,
             fetch=bool(body.fetch),
             inventory_items=list(body.inventory_items or []),
+            upgrade=int(body.upgrade),
         )
     except Exception as e:
         return {
@@ -606,6 +609,7 @@ def api_quest_detail(body: QuestDetailRequest):
             "steps": [],
             "components": [],
             "prerequisites": [],
+            "rewards": [],
             "error": f"quest detail unavailable: {e}",
             "note": "No invented steps.",
         }

@@ -30,7 +30,7 @@ USER_AGENT = "EQ-Legends-BiS/1.0.5 (local; Josh Monroe)"
 # Keep cache filenames well under common OS PATH_MAX / NAME_MAX limits.
 _MAX_SLUG_LEN = 120
 # Bump when step/component wording schema changes so stale caches refresh.
-GUIDE_FORMAT_VERSION = 4
+GUIDE_FORMAT_VERSION = 5
 
 _DROP_PREFIX = re.compile(r"^\s*drops?\s+from\s*:", re.I)
 # Catalog sometimes stores "Zone: mob; Zone: mob2; ..." as source (not a quest).
@@ -236,16 +236,207 @@ def _extract_quest_section(html: str, quest_name: str) -> str:
     return html
 
 
+def _extract_mw_section(html: str, section_id: str) -> str:
+    """Extract MediaWiki body after <h2 id="Section"> / mw-heading until the next h2/h3."""
+    if not html or not section_id:
+        return ""
+    m = re.search(rf'\bid=["\']{re.escape(section_id)}["\']', html, re.I)
+    if not m:
+        # Title text fallback (e.g. Walkthrough without id)
+        m = re.search(
+            rf'<h([23])\b[^>]*>\s*(?:<span[^>]*>)?\s*{re.escape(section_id)}\s*(?:</span>)?\s*</h\1>',
+            html,
+            re.I,
+        )
+        if not m:
+            return ""
+        start = m.start()
+    else:
+        start = m.start()
+    hm = re.search(r"</h[23]>", html[start : start + 800], re.I)
+    body_start = start + (hm.end() if hm else 0)
+    rest = html[body_start:]
+    # Skip closing </div> of mw-heading wrapper when present.
+    stripped = rest.lstrip()
+    lead_ws = len(rest) - len(stripped)
+    if stripped.lower().startswith("</div>"):
+        body_start += lead_ws + len("</div>")
+        rest = html[body_start:]
+    nm = re.search(r'<div[^>]*class="[^"]*mw-heading|<h[23]\b', rest, re.I)
+    body_end = body_start + (nm.start() if nm else min(len(rest), 16000))
+    return html[body_start:body_end]
+
+
+def _clean_step_line(text: str) -> str:
+    line = _WS_RE.sub(" ", (text or "").strip())
+    line = re.sub(r"\s*\[edit(?:\s+source)?\]\s*", " ", line, flags=re.I)
+    return _WS_RE.sub(" ", line).strip(" .-")
+
+
+def _looks_like_item_tooltip_blob(text: str) -> bool:
+    low = (text or "").lower()
+    return (
+        "lore item" in low
+        or "magic item" in low
+        or "slot: head" in low
+        or "slot: " in low and "ac:" in low
+        or ("class: all" in low and "wt:" in low)
+    )
+
+
+def _list_items_from_html(section_html: str) -> list[str]:
+    out: list[str] = []
+    for m in re.finditer(r"<li\b[^>]*>([\s\S]*?)</li>", section_html or "", re.I):
+        line = _clean_step_line(_html_to_text(m.group(1)))
+        if not line or len(line) < 6 or len(line) > 600:
+            continue
+        if _looks_like_item_tooltip_blob(line) and not re.match(
+            r"^(requires|obtain|turn in|go to|kill|hail|find|collect)\b", line, re.I
+        ):
+            continue
+        if line not in out:
+            out.append(line)
+    return out
+
+
+def _paragraph_steps_from_html(section_html: str) -> list[str]:
+    out: list[str] = []
+    for m in re.finditer(r"<p\b[^>]*>([\s\S]*?)</p>", section_html or "", re.I):
+        line = _clean_step_line(_html_to_text(m.group(1)))
+        if not line or len(line) < 20 or len(line) > 500:
+            continue
+        if _looks_like_item_tooltip_blob(line):
+            continue
+        low = line.lower()
+        if any(
+            k in low
+            for k in (
+                "note:",
+                "may be found",
+                "to obtain",
+                "go to",
+                "turn in",
+                "kill ",
+                "hail ",
+                "talk to",
+                "requires ",
+                "start zone",
+                "quest giver",
+                "bring ",
+                "return ",
+                "hand ",
+            )
+        ):
+            if line not in out:
+                out.append(line)
+    # Definition / indented walkthrough lines
+    for m in re.finditer(r"<dd\b[^>]*>([\s\S]*?)</dd>", section_html or "", re.I):
+        line = _clean_step_line(_html_to_text(m.group(1)))
+        if not line or len(line) < 20 or len(line) > 500:
+            continue
+        if _looks_like_item_tooltip_blob(line):
+            continue
+        if line not in out:
+            out.append(line)
+    return out
+
+
+def _quest_header_facts(html: str) -> list[str]:
+    """Start zone / quest giver from eqlwiki questTopTable when present."""
+    facts: list[str] = []
+    table_m = re.search(
+        r'class="[^"]*questTopTable[^"]*"[\s\S]*?</table>',
+        html or "",
+        re.I,
+    )
+    if not table_m:
+        return facts
+    table = table_m.group(0)
+    for label, prefix in (
+        ("Start Zone", "Start in"),
+        ("Quest Giver", "Talk to"),
+        ("Minimum Level", "Minimum level"),
+    ):
+        m = re.search(
+            rf"<th>\s*<b>\s*{re.escape(label)}\s*:\s*</b>\s*</th>\s*<td>([\s\S]*?)</td>",
+            table,
+            re.I,
+        )
+        if not m:
+            continue
+        val = _clean_step_line(_html_to_text(m.group(1)))
+        if val:
+            facts.append(f"{prefix} {val}.")
+    return facts
+
+
+def _steps_from_wiki_sections(html: str, quest_name: str) -> list[str]:
+    """Build walkthrough steps from Checklist + Walkthrough (+ header facts).
+
+    Prefer structured eqlwiki sections over thin dialogue heuristics.
+    """
+    steps: list[str] = []
+    for fact in _quest_header_facts(html):
+        if fact not in steps:
+            steps.append(fact)
+
+    checklist = _extract_mw_section(html, "Checklist")
+    for line in _list_items_from_html(checklist):
+        if line not in steps:
+            steps.append(line)
+
+    walkthrough = _extract_mw_section(html, "Walkthrough")
+    # Prefer concrete how-to paragraphs / list items from Walkthrough.
+    for line in _paragraph_steps_from_html(walkthrough) + _list_items_from_html(walkthrough):
+        # Avoid duplicating short checklist lines already present.
+        if any(line.lower() == s.lower() or line.lower() in s.lower() for s in steps):
+            continue
+        if line not in steps:
+            steps.append(line)
+
+    # If still thin, fold in instructional dialogue lines.
+    if len(steps) < 4:
+        dialogue = _extract_mw_section(html, "Dialogue")
+        for line in _steps_from_text(_html_to_text(dialogue), quest_name):
+            if line.lower().startswith("quest:"):
+                continue
+            if line not in steps:
+                steps.append(line)
+
+    # Drop lone title stub if we somehow only have it.
+    steps = [s for s in steps if not (s.lower().startswith("quest:") and len(steps) == 1)]
+    return steps[:40]
+
+
+def _is_stub_guide(guide: dict[str, Any] | None) -> bool:
+    if not guide:
+        return True
+    steps = [str(s).strip() for s in (guide.get("steps") or []) if str(s).strip()]
+    if guide.get("components"):
+        return False
+    if not steps:
+        return True
+    if len(steps) == 1 and (
+        steps[0].lower().startswith("quest:")
+        or steps[0].lower().startswith("see walkthrough")
+    ):
+        return True
+    return False
+
+
 def _steps_from_text(text: str, quest_name: str) -> list[str]:
     """Heuristic step list from wiki prose — only keeps lines that look instructional."""
     steps: list[str] = []
     if not text:
         return steps
     # Split on say / hand / bring / return cues
-    chunks = re.split(r"(?<=[.!?])\s+|(?=You say,)|(?=Hand )|(?=Bring )|(?=Return )|(?=Travel )", text)
+    chunks = re.split(
+        r"(?<=[.!?])\s+|(?=You say,)|(?=Hand )|(?=Bring )|(?=Return )|(?=Travel )|(?=Go to )|(?=Obtain )|(?=Turn in )",
+        text,
+    )
     for chunk in chunks:
         line = _WS_RE.sub(" ", (chunk or "").strip())
-        if len(line) < 25 or len(line) > 400:
+        if len(line) < 20 or len(line) > 400:
             continue
         low = line.lower()
         if any(
@@ -263,15 +454,17 @@ def _steps_from_text(text: str, quest_name: str) -> list[str]:
                 "hail ",
                 "collect",
                 "turn in",
+                "obtain",
+                "go to",
+                "kill ",
+                "talk to",
+                "find ",
             )
         ):
             if line not in steps:
                 steps.append(line)
-        if len(steps) >= 12:
+        if len(steps) >= 20:
             break
-    # Item table lines: "Iron Disc an azarack Island 2"
-    if quest_name and quest_name.lower() not in " ".join(steps).lower():
-        steps.insert(0, f"Quest: {quest_name}")
     return steps
 
 
@@ -475,6 +668,7 @@ def _prefer_clear_steps(
 
     # Keep quest title / hail / hand-in cues; drop long dialogue walls.
     kept: list[str] = []
+    turn_ins: list[str] = []
     for s in steps or []:
         low = s.lower()
         if s.startswith("Quest:") or s.startswith("Collect ") or s.startswith("See walkthrough"):
@@ -482,6 +676,23 @@ def _prefer_clear_steps(
             if s.startswith("Collect "):
                 continue
             kept.append(s)
+            continue
+        if re.match(r"^(start in|talk to|minimum level|requires)\b", low):
+            if s not in kept:
+                kept.append(s)
+            continue
+        if "may be found" in low or "can be found" in low:
+            if s not in kept:
+                kept.append(s)
+            continue
+        if low.startswith("turn in") or (low.startswith("hand ") and "marshal" in low):
+            if s not in turn_ins:
+                turn_ins.append(s)
+            continue
+        # Keep the short "Go to Rivervale bank… give skins…" handoff summary when present.
+        if "give" in low and ("skullcap" in low or "dirk" in low) and len(s) < 280:
+            if s not in turn_ins:
+                turn_ins.append(s)
             continue
         if any(k in low for k in ("hail", "hand the required", "efreeti", "teleport pad", "key master")):
             if not low.startswith("you say"):
@@ -496,9 +707,12 @@ def _prefer_clear_steps(
     for cs in collect_steps:
         if cs not in kept:
             kept.append(cs)
-    if not any("hand" in s.lower() and "reward" in s.lower() for s in kept):
+    for t in turn_ins:
+        if t not in kept:
+            kept.append(t)
+    if not any("hand" in s.lower() and "reward" in s.lower() for s in kept) and not turn_ins:
         kept.append("Hand the required items to the quest NPC for the reward.")
-    return kept[:16]
+    return kept[:24]
 
 def _parse_component_rows(html: str) -> list[dict[str, str]]:
     """Best-effort parse simple wiki tables of Item | Who | Where."""
@@ -1084,7 +1298,7 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
     try:
         cached = load_cached_guide(name)
         # Ignore stub caches that only stored the quest title line
-        if cached and (cached.get("components") or len(cached.get("steps") or []) > 1):
+        if cached and not _is_stub_guide(cached):
             if "prerequisites" not in cached:
                 return _attach_prerequisites(cached, html=None)
             return cached
@@ -1137,18 +1351,33 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 _write_cached_guide(name, guide)
                 return guide
 
+            # Prefer Checklist + Walkthrough sections (real quest pages).
+            steps = _steps_from_wiki_sections(html, name)
             section = _extract_quest_section(html, name)
-            text = _html_to_text(section)
-            steps = _steps_from_text(text, name)
             components = _enrich_component_rows(
-                _parse_component_rows(section),
+                _parse_component_rows(section) or _parse_component_rows(html),
                 fetch=fetch,
             )
+            # Also pull Obtain … links from checklist as components when table missing.
+            checklist = _extract_mw_section(html, "Checklist")
+            if checklist:
+                for m in re.finditer(
+                    r"Obtain\s+(?:a|an|the)?\s*<a[^>]+title=\"([^\"]+)\"",
+                    checklist,
+                    re.I,
+                ):
+                    item = (m.group(1) or "").strip()
+                    if not item:
+                        continue
+                    if not any((c.get("item") or "").lower() == item.lower() for c in components):
+                        components.append({"item": item, "who": "", "where": ""})
+                components = _enrich_component_rows(components, fetch=fetch)
+
             # Dialogue often says "bring me X and Y" without zone/mobs — expand those.
             steps, dialogue_comps = _append_collect_steps_from_dialogue(
                 steps,
                 fetch=fetch,
-                default_zone="Plane of Sky" if "sky" in (name + text).lower() else "",
+                default_zone="Plane of Sky" if "sky" in (name + _html_to_text(html)).lower() else "",
             )
             if dialogue_comps:
                 have = {(c.get("item") or "").strip().lower() for c in components}
@@ -1159,13 +1388,22 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                         have.add(key)
             if components:
                 steps = _prefer_clear_steps(steps, components)
-            if not steps and not components:
+
+            # Last-resort prose scrape if structured sections were empty.
+            if _is_stub_guide({"steps": steps, "components": components}):
+                text = _html_to_text(section if section else html)
+                prose = _steps_from_text(text, name)
+                for line in prose:
+                    if line not in steps:
+                        steps.append(line)
+
+            if _is_stub_guide({"steps": steps, "components": components}):
                 last_err = f"no steps parsed from {url}"
                 if name.lower().replace(" ", "_") in url.lower():
                     guide = {
                         "quest": name,
-                        "steps": [f"See walkthrough: {url}"],
-                        "components": [],
+                        "steps": [f"See walkthrough on eqlwiki (steps could not be parsed automatically): {url}"],
+                        "components": components,
                         "url": url,
                         "cached": True,
                         "fetched": True,
@@ -1185,9 +1423,9 @@ def ensure_quest_guide(quest_name: str, *, fetch: bool = True) -> dict[str, Any]
                 "fetched": True,
                 "source": url,
                 "note": (
-                    "Steps extracted from eqlwiki; collect lines include zone/mobs "
-                    "when known from catalog, item wiki drops, or documented sky tags. "
-                    "Never invented."
+                    "Steps from eqlwiki Checklist/Walkthrough when present "
+                    "(plus dialogue collect hints). Zone/mobs from catalog or "
+                    "item wiki drops only — never invented."
                 ),
                 "format_version": GUIDE_FORMAT_VERSION,
             }

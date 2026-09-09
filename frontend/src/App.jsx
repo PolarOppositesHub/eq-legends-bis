@@ -44,6 +44,11 @@ function fmtStats(stats, keys) {
 const SHOW0 = ['AC','HP','MANA','END','STR','STA','AGI','DEX','WIS','INT','CHA','Haste','DMG','DLY','HP_REGEN','MANA_REGEN','END_REGEN']
 const SHOW10 = SHOW0
 const SHOW_UP = SHOW0
+const SHOW_REWARD = [
+  'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
+  'Haste', 'DMG', 'DLY', 'ATK', 'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
+  'SVF', 'SVC', 'SVM', 'SVP', 'SVD',
+]
 
 const DELTA_KEYS = [
   'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
@@ -549,6 +554,8 @@ export default function App() {
   const [questDetail, setQuestDetail] = useState(null)
   const [questDetailLoading, setQuestDetailLoading] = useState(false)
   const [selectedQuestName, setSelectedQuestName] = useState('')
+  const [questListCollapsed, setQuestListCollapsed] = useState(false)
+  const [questRewardUpgrade, setQuestRewardUpgrade] = useState(0)
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -1677,48 +1684,66 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Quest Hub</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Look up quests known from the item database (rewardFromQuests / quest_source). Open a quest for steps,
-                prerequisites, and whether imported inventory already has turn-in items.
+                Single-click a quest for a preview. Double-click (or use the side arrow) to maximize the walkthrough.
+                Steps come from eqlwiki when available.
               </p>
-              <div className="item-search-bar">
-                <input
-                  type="text"
-                  placeholder="Search quests…"
-                  value={questQ}
-                  onChange={(e) => setQuestQ(e.target.value)}
-                />
-              </div>
-              {questResults && (
-                <p className="muted" style={{ marginTop: '0.65rem' }}>
-                  {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
-                  {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
-                </p>
-              )}
-              {questResults?.note ? (
-                <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
-              ) : null}
-              <div className="item-search-layout">
-                <ul className="item-search-list">
-                  {(questResults?.quests || []).map((q) => (
-                    <li key={q.name}>
-                      <button
-                        type="button"
-                        className="item-search-result"
-                        onClick={() => setSelectedQuestName(q.name)}
-                        style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
-                      >
-                        <div>
-                          <div className="item-search-name">{q.name}</div>
-                          <div className="muted" style={{ fontSize: '0.78rem' }}>
-                            {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
-                            {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+              <div className={`quest-hub-layout${questListCollapsed ? ' list-collapsed' : ''}`}>
+                <div className="quest-hub-list-col">
+                  <div className="item-search-bar">
+                    <input
+                      type="text"
+                      placeholder="Search quests…"
+                      value={questQ}
+                      onChange={(e) => setQuestQ(e.target.value)}
+                    />
+                  </div>
+                  {questResults && (
+                    <p className="muted" style={{ marginTop: '0.65rem', marginBottom: '0.35rem' }}>
+                      {questLoading ? 'Searching…' : `${questResults.total} quest${questResults.total === 1 ? '' : 's'}`}
+                      {questResults.catalog_size != null ? ` · index ${questResults.catalog_size}` : ''}
+                    </p>
+                  )}
+                  {questResults?.note ? (
+                    <p className="muted" style={{ fontSize: '0.78rem' }}>{questResults.note}</p>
+                  ) : null}
+                  <ul className="item-search-list quest-hub-list">
+                    {(questResults?.quests || []).map((q) => (
+                      <li key={q.name}>
+                        <button
+                          type="button"
+                          className="item-search-result"
+                          title="Click to preview · Double-click to maximize walkthrough"
+                          onClick={() => setSelectedQuestName(q.name)}
+                          onDoubleClick={() => {
+                            setSelectedQuestName(q.name)
+                            setQuestListCollapsed(true)
+                          }}
+                          style={selectedQuestName === q.name ? { outline: '1px solid var(--accent)' } : undefined}
+                        >
+                          <div>
+                            <div className="item-search-name">{q.name}</div>
+                            <div className="muted" style={{ fontSize: '0.78rem' }}>
+                              {q.item_count ? `${q.item_count} linked item${q.item_count === 1 ? '' : 's'}` : '—'}
+                              {(q.sample_items || [])[0] ? ` · e.g. ${q.sample_items[0]}` : ''}
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="item-detail-panel">
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  className="quest-hub-rail"
+                  title={questListCollapsed ? 'Show quest list' : 'Maximize walkthrough (hide list)'}
+                  aria-label={questListCollapsed ? 'Expand quest list' : 'Collapse quest list'}
+                  onClick={() => setQuestListCollapsed((v) => !v)}
+                >
+                  <span className="quest-hub-rail-arrow" aria-hidden="true">
+                    {questListCollapsed ? '›' : '‹'}
+                  </span>
+                </button>
+                <div className="item-detail-panel quest-hub-detail">
                   {!selectedQuestName && (
                     <p className="muted">Select a quest to view steps, prerequisites, and inventory checks.</p>
                   )}
@@ -1743,6 +1768,82 @@ export default function App() {
                       ) : (
                         <p className="muted" style={{ fontSize: '0.82rem' }}>
                           Import Inventory.txt to mark which turn-in items you already have.
+                        </p>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Rewards</h3>
+                      {(questDetail.rewards || []).length ? (
+                        <>
+                          {(questDetail.rewards || []).some((r) => r.in_catalog && (r.stats_plus0 || r.stats_by_upgrade)) ? (
+                            <div className="quest-reward-upgrade">
+                              <label htmlFor="quest-reward-upgrade">Upgrade +0…+10</label>
+                              <input
+                                id="quest-reward-upgrade"
+                                type="range"
+                                min={0}
+                                max={10}
+                                value={questRewardUpgrade}
+                                onChange={(e) => setQuestRewardUpgrade(Number(e.target.value))}
+                              />
+                              <span className="muted">+{questRewardUpgrade}</span>
+                            </div>
+                          ) : null}
+                          <ul className="quest-rewards">
+                            {(questDetail.rewards || []).map((r, i) => {
+                              const by = r.stats_by_upgrade || {}
+                              const stats = by[String(questRewardUpgrade)]
+                                || by[questRewardUpgrade]
+                                || r.stats_at_upgrade
+                                || r.stats_plus0
+                              const ratioBy = r.ratio_by_upgrade || {}
+                              const ratio = ratioBy[String(questRewardUpgrade)]
+                                ?? ratioBy[questRewardUpgrade]
+                                ?? r.ratio_at_upgrade
+                              return (
+                                <li key={`${r.name}-${i}`} className="quest-reward">
+                                  <div className="quest-reward-head">
+                                    {r.image_url || r.name ? (
+                                      <img
+                                        className="item-icon"
+                                        src={itemImageUrl(r.name)}
+                                        alt=""
+                                        onError={hideImg}
+                                      />
+                                    ) : null}
+                                    <div>
+                                      <div className="item-search-name">
+                                        {r.url ? (
+                                          <a href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
+                                        ) : (
+                                          r.name
+                                        )}
+                                      </div>
+                                      <div className="muted" style={{ fontSize: '0.78rem' }}>
+                                        {(r.slots || []).join(', ') || r.slot || 'item'}
+                                        {r.classes_str ? ` · ${r.classes_str}` : ''}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {r.in_catalog === false ? (
+                                    <p className="muted" style={{ fontSize: '0.78rem', margin: '0.25rem 0 0' }}>
+                                      {r.note || 'No catalog stats for this reward name.'}
+                                    </p>
+                                  ) : (
+                                    <div className="stats-line" style={{ marginTop: '0.35rem' }}>
+                                      +{questRewardUpgrade}{' '}
+                                      {fmtStats(stats, SHOW_REWARD) || '—'}
+                                      {ratio != null ? (
+                                        <span className="muted"> · Ratio {Number(ratio).toFixed(4)}</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          {questDetail.rewards_note || 'No item rewards linked in the decoded catalog for this quest.'}
                         </p>
                       )}
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
