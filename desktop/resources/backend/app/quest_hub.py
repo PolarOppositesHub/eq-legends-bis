@@ -58,10 +58,14 @@ def _add_quest(by_key: dict[str, dict[str, Any]], name: str, *, item: str | None
             "name": cleaned,
             "item_count": 0,
             "sample_items": [],
+            "reward_items": [],
         }
         row = by_key[key]
     if item:
-        row["item_count"] = int(row.get("item_count") or 0) + 1
+        rewards = row.setdefault("reward_items", [])
+        if item not in rewards:
+            rewards.append(item)
+        row["item_count"] = len(rewards)
         samples = row.setdefault("sample_items", [])
         if item not in samples and len(samples) < 8:
             samples.append(item)
@@ -128,6 +132,16 @@ def list_quests() -> list[dict[str, Any]]:
     return sorted(by_key.values(), key=lambda r: (r.get("name") or "").lower())
 
 
+def _quest_index_public(row: dict[str, Any]) -> dict[str, Any]:
+    """Slim index row for /api/quests (omit full reward_items list)."""
+    rewards = row.get("reward_items") or row.get("sample_items") or []
+    return {
+        "name": row.get("name") or "",
+        "item_count": len(rewards) if rewards else int(row.get("item_count") or 0),
+        "sample_items": list(row.get("sample_items") or [])[:8],
+    }
+
+
 def search_quests(q: str = "", *, limit: int = 200, offset: int = 0) -> dict[str, Any]:
     qn = (q or "").strip().lower()
     tokens = [t for t in re.split(r"[^a-z0-9']+", qn) if t and t not in _STOP]
@@ -135,14 +149,15 @@ def search_quests(q: str = "", *, limit: int = 200, offset: int = 0) -> dict[str
     hits: list[dict[str, Any]] = []
     for row in pool:
         name = (row.get("name") or "").lower()
+        reward_blob = " ".join(row.get("reward_items") or row.get("sample_items") or []).lower()
         if tokens:
             if not all(t in name for t in tokens):
-                blob = f"{name} {' '.join(row.get('sample_items') or [])}".lower()
+                blob = f"{name} {reward_blob}"
                 if not all(t in blob for t in tokens):
                     continue
-        elif qn and qn not in name:
+        elif qn and qn not in name and qn not in reward_blob:
             continue
-        hits.append(row)
+        hits.append(_quest_index_public(row))
     total = len(hits)
     page = hits[offset: offset + max(1, min(500, limit))]
     return {
@@ -157,6 +172,90 @@ def search_quests(q: str = "", *, limit: int = 200, offset: int = 0) -> dict[str
             "fields — not a full EQ encyclopedia. Guides fetch from eqlwiki when opened."
         ),
     }
+
+
+def reward_item_names_for_quest(name: str) -> list[str]:
+    """Unique catalog item names linked to this quest (rewardFromQuests / quest_source)."""
+    key = _name_key(name)
+    if not key:
+        return []
+    for row in list_quests():
+        if _name_key(row.get("name") or "") == key:
+            items = row.get("reward_items") or row.get("sample_items") or []
+            out: list[str] = []
+            seen: set[str] = set()
+            for raw in items:
+                n = (raw or "").strip()
+                if not n:
+                    continue
+                nk = _name_key(n)
+                if nk in seen:
+                    continue
+                seen.add(nk)
+                out.append(n)
+            return out
+    return []
+
+
+def rewards_for_quest(name: str, *, upgrade: int = 0) -> list[dict[str, Any]]:
+    """Resolve quest reward items with +0..+10 scaled stats (never invent stats)."""
+    from . import item_catalog as ic
+    from .engine import ratio_at_level, scale_stats_to_level
+
+    upgrade = max(0, min(10, int(upgrade)))
+    out: list[dict[str, Any]] = []
+    for iname in reward_item_names_for_quest(name):
+        it = ic.get_item_by_name(iname)
+        if not it:
+            out.append({
+                "kind": "item",
+                "name": iname,
+                "in_catalog": False,
+                "note": "Linked as a quest reward in decoded data, but no catalog item row was found.",
+            })
+            continue
+        s0 = dict(it.get("stats_plus0") or {})
+        s10 = dict(it.get("stats_plus10") or scale_stats_to_level(s0, 10))
+        stats_by: dict[str, dict[str, Any]] = {}
+        ratio_by: dict[str, float] = {}
+        raw_for_ratio = {
+            "stats_plus0": s0,
+            "ratio_plus0": it.get("ratio_plus0"),
+            "ratio_plus10": it.get("ratio_plus10"),
+        }
+        for lvl in range(0, 11):
+            stats_by[str(lvl)] = scale_stats_to_level(s0, lvl) if lvl else dict(s0)
+            if lvl == 0:
+                # Keep +0 keys numeric like scale_stats_to_level
+                stats_by["0"] = {
+                    k: (float(v) if isinstance(v, (int, float)) else v)
+                    for k, v in s0.items()
+                }
+            r = ratio_at_level(raw_for_ratio, lvl)
+            if r is not None:
+                ratio_by[str(lvl)] = float(r)
+        out.append({
+            "kind": "item",
+            "name": it.get("name") or iname,
+            "in_catalog": True,
+            "slots": it.get("slots") or [],
+            "slot": it.get("slot") or "",
+            "classes": it.get("classes") or [],
+            "classes_str": it.get("classes_str") or "",
+            "zone": it.get("zone") or "",
+            "url": it.get("url") or "",
+            "image_url": it.get("image_url") or "",
+            "stats_plus0": s0,
+            "stats_plus10": s10,
+            "stats_at_upgrade": stats_by.get(str(upgrade), s0),
+            "stats_by_upgrade": stats_by,
+            "ratio_plus0": it.get("ratio_plus0"),
+            "ratio_plus10": it.get("ratio_plus10"),
+            "ratio_at_upgrade": ratio_by.get(str(upgrade)),
+            "ratio_by_upgrade": ratio_by,
+            "upgrade": upgrade,
+        })
+    return out
 
 
 def _sky_island_from_guide(guide: dict[str, Any]) -> int | None:
@@ -331,6 +430,7 @@ def quest_detail(
     *,
     fetch: bool = True,
     inventory_items: list[Any] | None = None,
+    upgrade: int = 0,
 ) -> dict[str, Any]:
     guide = qg.ensure_quest_guide(name, fetch=fetch)
     enriched = enrich_guide(guide, wiki_html=None)
@@ -364,4 +464,17 @@ def quest_detail(
         "need_count": max(0, len(components) - have_n),
         "imported": bool(inventory_items),
     }
+
+    upgrade_n = max(0, min(10, int(upgrade)))
+    rewards = rewards_for_quest(name, upgrade=upgrade_n)
+    enriched["rewards"] = rewards
+    enriched["reward_upgrade"] = upgrade_n
+    enriched["rewards_note"] = (
+        ""
+        if rewards
+        else (
+            "No item rewards linked in the decoded catalog for this quest "
+            "(rewardFromQuests / quest_source)."
+        )
+    )
     return enriched

@@ -548,6 +548,34 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   line-height: 1.4;
 }
 .quest-steps li { margin-bottom: 0.3rem; }
+.quest-reward-upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+}
+.quest-reward-upgrade input[type="range"] {
+  flex: 1 1 140px;
+  max-width: 220px;
+}
+.quest-rewards {
+  list-style: none;
+  margin: 0 0 0.85rem;
+  padding: 0;
+}
+.quest-reward {
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.quest-reward:last-child { border-bottom: none; }
+.quest-reward-head {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
 .quest-components {
   width: 100%;
   border-collapse: collapse;

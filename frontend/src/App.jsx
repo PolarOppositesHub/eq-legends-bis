@@ -43,6 +43,11 @@ function fmtStats(stats, keys) {
 const SHOW0 = ['AC','HP','MANA','END','STR','STA','AGI','DEX','WIS','INT','CHA','Haste','DMG','DLY','HP_REGEN','MANA_REGEN','END_REGEN']
 const SHOW10 = SHOW0
 const SHOW_UP = SHOW0
+const SHOW_REWARD = [
+  'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
+  'Haste', 'DMG', 'DLY', 'ATK', 'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
+  'SVF', 'SVC', 'SVM', 'SVP', 'SVD',
+]
 
 const DELTA_KEYS = [
   'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
@@ -441,6 +446,7 @@ export default function App() {
   const [questDetailLoading, setQuestDetailLoading] = useState(false)
   const [selectedQuestName, setSelectedQuestName] = useState('')
   const [questListCollapsed, setQuestListCollapsed] = useState(false)
+  const [questRewardUpgrade, setQuestRewardUpgrade] = useState(0)
 
   const [builds, setBuilds] = useState(() => loadBuilds())
   const [buildName, setBuildName] = useState('')
@@ -1649,6 +1655,82 @@ export default function App() {
                       ) : (
                         <p className="muted" style={{ fontSize: '0.82rem' }}>
                           Import Inventory.txt to mark which turn-in items you already have.
+                        </p>
+                      )}
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Rewards</h3>
+                      {(questDetail.rewards || []).length ? (
+                        <>
+                          {(questDetail.rewards || []).some((r) => r.in_catalog && (r.stats_plus0 || r.stats_by_upgrade)) ? (
+                            <div className="quest-reward-upgrade">
+                              <label htmlFor="quest-reward-upgrade">Upgrade +0…+10</label>
+                              <input
+                                id="quest-reward-upgrade"
+                                type="range"
+                                min={0}
+                                max={10}
+                                value={questRewardUpgrade}
+                                onChange={(e) => setQuestRewardUpgrade(Number(e.target.value))}
+                              />
+                              <span className="muted">+{questRewardUpgrade}</span>
+                            </div>
+                          ) : null}
+                          <ul className="quest-rewards">
+                            {(questDetail.rewards || []).map((r, i) => {
+                              const by = r.stats_by_upgrade || {}
+                              const stats = by[String(questRewardUpgrade)]
+                                || by[questRewardUpgrade]
+                                || r.stats_at_upgrade
+                                || r.stats_plus0
+                              const ratioBy = r.ratio_by_upgrade || {}
+                              const ratio = ratioBy[String(questRewardUpgrade)]
+                                ?? ratioBy[questRewardUpgrade]
+                                ?? r.ratio_at_upgrade
+                              return (
+                                <li key={`${r.name}-${i}`} className="quest-reward">
+                                  <div className="quest-reward-head">
+                                    {r.image_url || r.name ? (
+                                      <img
+                                        className="item-icon"
+                                        src={itemImageUrl(r.name)}
+                                        alt=""
+                                        onError={hideImg}
+                                      />
+                                    ) : null}
+                                    <div>
+                                      <div className="item-search-name">
+                                        {r.url ? (
+                                          <a href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
+                                        ) : (
+                                          r.name
+                                        )}
+                                      </div>
+                                      <div className="muted" style={{ fontSize: '0.78rem' }}>
+                                        {(r.slots || []).join(', ') || r.slot || 'item'}
+                                        {r.classes_str ? ` · ${r.classes_str}` : ''}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {r.in_catalog === false ? (
+                                    <p className="muted" style={{ fontSize: '0.78rem', margin: '0.25rem 0 0' }}>
+                                      {r.note || 'No catalog stats for this reward name.'}
+                                    </p>
+                                  ) : (
+                                    <div className="stats-line" style={{ marginTop: '0.35rem' }}>
+                                      +{questRewardUpgrade}{' '}
+                                      {fmtStats(stats, SHOW_REWARD) || '—'}
+                                      {ratio != null ? (
+                                        <span className="muted"> · Ratio {Number(ratio).toFixed(4)}</span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="muted" style={{ fontSize: '0.8rem' }}>
+                          {questDetail.rewards_note || 'No item rewards linked in the decoded catalog for this quest.'}
                         </p>
                       )}
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Prerequisites</h3>
