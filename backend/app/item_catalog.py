@@ -429,11 +429,11 @@ def _all_flat_items() -> list[dict[str, Any]]:
     # Full game coverage: every eqlwiki Category:Items name (equipable + non-equipable).
     # Wiki-only rows start without stats; Item Detail may fill from the real wiki page.
     try:
-        wiki = _wiki_name_index()
+        wiki = _wiki_display_names()
     except Exception:
         wiki = {}
     for key, display in wiki.items():
-        if not display:
+        if not display or str(key).startswith("__"):
             continue
         title = display.replace(" ", "_")
         wiki_url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
@@ -444,6 +444,10 @@ def _all_flat_items() -> list[dict[str, Any]]:
             if not (cur.get("url") or cur.get("sourceUrl")):
                 cur["url"] = wiki_url
                 cur["sourceUrl"] = wiki_url
+            # Attach catalog reward quests when known.
+            quests = _quests_payload_for_item(display)
+            if quests and not cur.get("quests"):
+                cur["quests"] = quests
             continue
         by_name[key] = {
             "name": display,
@@ -459,6 +463,7 @@ def _all_flat_items() -> list[dict[str, Any]]:
             "sourceUrl": wiki_url,
             "catalog_source": "eqlwiki",
             "has_stats": False,
+            "quests": _quests_payload_for_item(display),
         }
 
     for row in by_name.values():
@@ -466,6 +471,8 @@ def _all_flat_items() -> list[dict[str, Any]]:
             row["catalog_source"] = "tools"
         stats = row.get("stats_plus0") or row.get("stats_plus10") or {}
         row["has_stats"] = bool(stats) or bool(row.get("tooltipLines"))
+        if not row.get("quests"):
+            row["quests"] = _quests_payload_for_item(row.get("name") or "")
 
     return list(by_name.values())
 
@@ -520,6 +527,7 @@ def search_items(
         "tools_items": sum(1 for it in pool if (it.get("catalog_source") or "tools") == "tools"),
         "eqlwiki_names": sum(1 for it in pool if it.get("catalog_source") == "eqlwiki"),
         "decoded_dir": decoded_s,
+        "index_path": (_wiki_name_index().get("__index_path__") if _wiki_name_index() else "") or "",
         "warning": None if pool else "Item catalog empty — decoded data missing or unreadable.",
         "note": (
             "Search covers eqlegendstools decoded items plus every eqlwiki Category:Items name "
@@ -558,16 +566,55 @@ def _flat_by_id() -> dict[str, dict[str, Any]]:
 
 @lru_cache(maxsize=1)
 def _wiki_name_index() -> dict[str, str]:
-    """eqlwiki Category:Items names (name recognition only — no invented stats)."""
+    """eqlwiki Category:Items names from any known decoded / resources location."""
     out: dict[str, str] = {}
+    candidates: list[Path] = []
+    decoded = None
     try:
-        path = decoded_dir() / "eqlwiki_item_names.json"
-        raw = _load_json(path)
+        decoded = decoded_dir()
+        candidates.append(decoded / "eqlwiki_item_names.json")
     except Exception:
-        return {}
+        decoded = None
+    root = APP_ROOT
+    candidates.extend(
+        [
+            root / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+            root / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+            root / "data" / "decoded" / "eqlwiki_item_names.json",
+            Path(__file__).resolve().parents[2] / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+            Path(__file__).resolve().parents[2] / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+            Path(__file__).resolve().parents[1] / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+        ]
+    )
+    # Also walk sibling decoded dirs when EQ_DATA_ROOT points at a thin tree.
+    if decoded and decoded.is_dir():
+        for sibling in (
+            decoded.parent / "decoded" / "eqlwiki_item_names.json",
+            decoded.parent.parent / "desktop" / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+            decoded.parent.parent / "resources" / "data" / "decoded" / "eqlwiki_item_names.json",
+        ):
+            candidates.append(sibling)
+    seen: set[str] = set()
+    raw = None
+    used = None
+    for path in candidates:
+        try:
+            key = str(path.resolve())
+        except Exception:
+            key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not path.is_file():
+            continue
+        loaded = _load_json(path)
+        if isinstance(loaded, dict) and isinstance(loaded.get("names"), list) and loaded.get("names"):
+            raw = loaded
+            used = path
+            break
     names = (raw or {}).get("names") if isinstance(raw, dict) else None
     if not isinstance(names, list):
-        return {}
+        return out
     for name in names:
         if not isinstance(name, str):
             continue
@@ -575,7 +622,121 @@ def _wiki_name_index() -> dict[str, str]:
         key = _name_key(display)
         if key and key not in out:
             out[key] = display
+    if used:
+        out["__index_path__"] = str(used)  # type: ignore[assignment]
     return out
+
+
+def _wiki_display_names() -> dict[str, str]:
+    """Wiki name index without internal meta keys."""
+    return {k: v for k, v in _wiki_name_index().items() if not str(k).startswith("__")}
+
+
+@lru_cache(maxsize=1)
+def _hub_quest_names() -> dict[str, str]:
+    """Canonical Quest Hub names keyed for matching wiki/catalog quest labels."""
+    try:
+        from . import quest_hub as qh
+        rows = qh.list_quests()
+    except Exception:
+        return {}
+    out: dict[str, str] = {}
+    for row in rows or []:
+        name = (row.get("name") if isinstance(row, dict) else "") or ""
+        name = str(name).strip()
+        if not name:
+            continue
+        key = _name_key(name)
+        if key and key not in out:
+            out[key] = name
+    return out
+
+
+@lru_cache(maxsize=1)
+def _catalog_reward_quests_by_item() -> dict[str, list[str]]:
+    """item_key → quest names that list this item as a decoded catalog reward."""
+    out: dict[str, list[str]] = {}
+    try:
+        decoded = decoded_dir()
+        catalog = _load_json(decoded / "catalog.json")
+    except Exception:
+        return out
+    if not isinstance(catalog, dict):
+        return out
+
+    def add(item_name: str, quest_name: str) -> None:
+        ik = _name_key(item_name)
+        qn = (quest_name or "").strip()
+        if not ik or not qn:
+            return
+        bucket = out.setdefault(ik, [])
+        if qn not in bucket:
+            bucket.append(qn)
+
+    for kind in (
+        "tooltips",
+        "focusItemTooltips",
+        "clickyItemTooltips",
+        "wornItemTooltips",
+        "procItemTooltips",
+    ):
+        tip_map = catalog.get(kind) or {}
+        if not isinstance(tip_map, dict):
+            continue
+        for tip in tip_map.values():
+            if not isinstance(tip, dict):
+                continue
+            item = (tip.get("name") or "").strip()
+            for q in tip.get("rewardFromQuests") or []:
+                if isinstance(q, str):
+                    add(item, q)
+    return out
+
+
+def _quests_payload_for_item(
+    item_name: str,
+    *,
+    extra_names: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Deduped quest rows for an item, marked when present in Quest Hub."""
+    hub = _hub_quest_names()
+    catalog_names = list(_catalog_reward_quests_by_item().get(_name_key(item_name), []) or [])
+    seen: set[str] = set()
+    rows: list[dict[str, Any]] = []
+
+    def add_row(raw: str, *, source: str) -> None:
+        name = (raw or "").strip()
+        if not name:
+            return
+        key = _name_key(name)
+        if not key or key in seen:
+            return
+        hub_name = hub.get(key)
+        # Soft match: "Foo Quests" wiki category → hub quest named "Foo" when present.
+        if not hub_name and key.endswith(" quests"):
+            base = name
+            for suffix in (" Quests", " Quest", " quests", " quest"):
+                if name.endswith(suffix):
+                    base = name[: -len(suffix)].strip()
+                    break
+            hub_name = hub.get(_name_key(base))
+        in_hub = bool(hub_name)
+        seen.add(key)
+        if hub_name:
+            seen.add(_name_key(hub_name))
+        rows.append({
+            "name": hub_name or name,
+            "mentioned_as": name if hub_name and _name_key(hub_name) != key else None,
+            "in_hub": in_hub,
+            "source": source,
+        })
+
+    for q in catalog_names:
+        add_row(q, source="catalog")
+    for q in extra_names or []:
+        if q:
+            add_row(str(q).strip(), source="eqlwiki")
+    return rows
 
 
 def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, Any]:
@@ -589,7 +750,7 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
     try:
         by_name = _flat_by_name()
         by_id = _flat_by_id()
-        wiki = _wiki_name_index()
+        wiki = _wiki_display_names()
     except Exception:
         by_name, by_id, wiki = {}, {}, {}
 
@@ -606,7 +767,7 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
             "name": it.get("name") or name,
             "itemID": it.get("itemID"),
         }
-    if key and key in wiki:
+    if key and key in wiki and not str(key).startswith("__"):
         return {
             "matched": True,
             "source": "eqlwiki",
@@ -659,19 +820,27 @@ def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None
     except Exception:
         return None
     if not enrich:
+        # Still attach catalog quest rewards even without wiki fetch.
+        if not pub.get("quests"):
+            pub["quests"] = _quests_payload_for_item(pub.get("name") or name)
         return pub
     needs = (
         pub.get("catalog_source") == "eqlwiki"
         or not (pub.get("tooltipLines") or [])
         or not (pub.get("stats_plus0") or pub.get("stats_plus10"))
+        or not (pub.get("quests") or [])
     )
     if not needs:
+        if not pub.get("quests"):
+            pub["quests"] = _quests_payload_for_item(pub.get("name") or name)
         return pub
     try:
         extra = _enrich_item_from_eqlwiki(pub.get("name") or name)
     except Exception:
         extra = None
     if not extra:
+        if not pub.get("quests"):
+            pub["quests"] = _quests_payload_for_item(pub.get("name") or name)
         return pub
     # Fill gaps only — never overwrite real tools stats with empty wiki parses.
     merged = dict(pub)
@@ -693,6 +862,10 @@ def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None
         merged["zone"] = extra["zone"]
     if extra.get("url") and not merged.get("url"):
         merged["url"] = extra["url"]
+    merged["quests"] = _quests_payload_for_item(
+        merged.get("name") or name,
+        extra_names=list(extra.get("related_quests") or []),
+    )
     merged["has_stats"] = bool(merged.get("stats_plus0") or merged.get("stats_plus10") or merged.get("tooltipLines"))
     merged["catalog_source"] = merged.get("catalog_source") or extra.get("catalog_source") or "eqlwiki"
     merged["wiki_enriched"] = True
@@ -717,7 +890,7 @@ def catalog_coverage() -> dict[str, Any]:
     except Exception:
         tools_n = 0
     try:
-        wiki_n = len(_wiki_name_index())
+        wiki_n = len(_wiki_display_names())
     except Exception:
         wiki_n = 0
     try:
@@ -728,6 +901,7 @@ def catalog_coverage() -> dict[str, Any]:
         "tools_items": tools_n,
         "eqlwiki_names": wiki_n,
         "search_catalog": total_n,
+        "index_path": (_wiki_name_index().get("__index_path__") if isinstance(_wiki_name_index(), dict) else "") or "",
         "note": (
             "Item Search covers tools stats plus every eqlwiki item name "
             "(equipable and non-equipable). Stats come from decoded data or the wiki page only."
@@ -823,6 +997,30 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
         zlines = _html_fragment_to_lines(drops.group(1))
         if zlines:
             zone = zlines[0][:120]
+
+    related_quests: list[str] = []
+    m_q = re.search(
+        r'id="Related_quests"[^>]*>[\s\S]*?</h2>\s*</div>\s*(<ul[\s\S]*?</ul>)',
+        html,
+        re.I,
+    )
+    if not m_q:
+        m_q = re.search(
+            r'(?:Related quests|Related Quests)</(?:span|h2)>[\s\S]*?(<ul[\s\S]*?</ul>)',
+            html,
+            re.I,
+        )
+    if m_q:
+        for title in re.findall(r'title="([^"]+)"', m_q.group(1)):
+            try:
+                import html as _html
+                title = _html.unescape(title)
+            except Exception:
+                pass
+            title = title.strip()
+            if title and title not in related_quests:
+                related_quests.append(title)
+
     title = (name or "").replace(" ", "_")
     url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
     all_lines = list(tip_lines)
@@ -838,6 +1036,7 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
         "slots": slots,
         "classes": classes,
         "zone": zone,
+        "related_quests": related_quests,
         "url": url,
         "sourceUrl": url,
         "catalog_source": "eqlwiki",
@@ -848,7 +1047,10 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
 def _enrich_item_from_eqlwiki(name: str) -> dict[str, Any] | None:
     """Load cached eqlwiki item parse or fetch the page once."""
     cached = _load_wiki_item_cache(name)
-    if cached and (cached.get("tooltipLines") or cached.get("description")):
+    # Older caches lack related_quests — re-fetch so Item Search can list quests.
+    if cached and "related_quests" in cached and (
+        cached.get("tooltipLines") or cached.get("description") or cached.get("related_quests") is not None
+    ):
         return cached
     stub = {"name": name, "url": "", "sourceUrl": ""}
     title = (name or "").replace(" ", "_")
@@ -903,6 +1105,7 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "ratio_plus10": it.get("ratio_plus10"),
         "tooltipLines": it.get("tooltipLines") or [],
         "description": it.get("description") or "",
+        "quests": it.get("quests") or [],
         "image_url": image_url,
         "has_local_image": has_local,
         "catalog_source": it.get("catalog_source") or "tools",

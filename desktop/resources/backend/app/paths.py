@@ -160,22 +160,44 @@ def legends_root() -> Path:
 
 def decoded_dir() -> Path:
     override = _env_path("EQ_DATA_ROOT") or _env_path("EQ_LEGENDS_DATA")
-    # Only honor env override when the directory actually exists (bad packages
-    # used to pin an empty/missing resources path and zero the catalog).
-    if override and override.is_dir() and any(override.glob("*.json")):
-        return override
     root = app_root()
-    for cand in (
+    candidates = [
         root / "data" / "decoded",
         root / "resources" / "data" / "decoded",
         root / "desktop" / "resources" / "data" / "decoded",
         root / "decoded",
         legends_root() / "decoded",
-        # Fall back to a non-empty override last (may still be empty).
         override if override and override.is_dir() else None,
-    ):
-        if cand and cand.exists():
-            return cand.resolve()
+    ]
+
+    def _score(cand: Path | None) -> int:
+        if not cand:
+            return -1
+        try:
+            if not cand.exists():
+                return -1
+            files = list(cand.glob("*.json"))
+            if not files:
+                return -1
+            score = len(files)
+            names = {p.name for p in files}
+            if "eqlwiki_mob_names.json" in names:
+                score += 10000
+            if "eqlwiki_item_names.json" in names:
+                score += 1000
+            if "catalog.json" in names:
+                score += 100
+            # Explicit env override gets a modest boost, but not enough to beat a
+            # richer tree that includes the mob/item wiki indexes.
+            if override and cand.resolve() == override.resolve():
+                score += 50
+            return score
+        except OSError:
+            return -1
+
+    ranked = sorted(((c, _score(c)) for c in candidates), key=lambda x: -x[1])
+    if ranked and ranked[0][1] >= 0 and ranked[0][0] is not None:
+        return ranked[0][0].resolve()
     return (root / "data" / "decoded").resolve()
 
 

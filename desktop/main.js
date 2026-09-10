@@ -70,13 +70,26 @@ function envForApi() {
     path.join(appRoot, 'desktop', 'resources', 'data', 'decoded'),
     path.join(root, 'desktop', 'resources', 'data', 'decoded'),
   ];
-  const dataRoot = decodedCandidates.find((p) => {
+  // Prefer a decoded tree that includes the full mob index when present.
+  const scoreDecoded = (p) => {
     try {
-      return fs.existsSync(p) && fs.readdirSync(p).some((f) => f.endsWith('.json'));
+      if (!fs.existsSync(p)) return -1;
+      const files = fs.readdirSync(p);
+      if (!files.some((f) => f.endsWith('.json'))) return -1;
+      let score = files.length;
+      if (files.includes('eqlwiki_mob_names.json')) score += 10000;
+      if (files.includes('eqlwiki_item_names.json')) score += 1000;
+      if (files.includes('catalog.json')) score += 100;
+      return score;
     } catch (_) {
-      return false;
+      return -1;
     }
-  }) || decodedCandidates[0];
+  };
+  const ranked = decodedCandidates
+    .map((p) => ({ p, score: scoreDecoded(p) }))
+    .filter((x) => x.score >= 0)
+    .sort((a, b) => b.score - a.score);
+  const dataRoot = (ranked[0] && ranked[0].p) || decodedCandidates[0];
   const frontendDist = path.join(root, 'frontend', 'dist');
   const frontendDistDev = path.join(appRoot, 'frontend', 'dist');
   const ui = fs.existsSync(frontendDist) ? frontendDist : frontendDistDev;
