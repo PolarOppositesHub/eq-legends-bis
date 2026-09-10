@@ -1,8 +1,12 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.15** — version sync for Windows ship (UI/API match Electron)
-Canonical: backend/app/{main,engine,scoring,inventory,spell_buffs,quest_hub,...}.py + frontend App.jsx
-Branch: `cursor/sim-per-slot-upgrades-d4a5` (PR #13) rebased onto `main` (PRs #11 + #12)
+Version: **1.0.16** — free-port sidecar + ship eqlwiki item/mob catalogs in Windows packs
+Canonical: backend/app + frontend App.jsx + desktop/main.js
+
+## 1.0.16
+- Electron picks a free localhost port (no fixed 8765); health requires our EQ_INSTANCE_NONCE
+- packaging/required-decoded ships eqlwiki_item_names.json + eqlwiki_mob_names.json; bundle fails if missing from resources
+
 
 **Agent cannot** build Windows `.exe` or create GitHub Releases.
 

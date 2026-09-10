@@ -11,6 +11,8 @@ LEGENDS = Path(os.environ.get('EQ_LEGENDS_ROOT') or (ROOT.parent / 'eq-legends')
 DECODED = ROOT / 'data' / 'decoded'
 if not (DECODED / 'catalog.json').exists():
     DECODED = LEGENDS / 'decoded'
+REQUIRED_SEED = ROOT / 'packaging' / 'required-decoded'
+REQUIRED_DECODED = ('eqlwiki_item_names.json', 'eqlwiki_mob_names.json', 'catalog.json')
 
 def main():
     print('==> Bundling into', RES)
@@ -27,6 +29,22 @@ def main():
         except OSError:
             pass
         shutil.copy2(src, dst)
+
+    # Ensure Item Search / mob index catalogs exist (Windows packs previously missed these).
+    for req in REQUIRED_DECODED:
+        dst_req = RES / 'data' / 'decoded' / req
+        src_req = DECODED / req
+        if not src_req.exists() and (REQUIRED_SEED / req).exists():
+            src_req = REQUIRED_SEED / req
+        if not src_req.exists() and req != 'catalog.json':
+            # catalog comes from DECODED only; item/mob catalogs must ship
+            print('ERROR: required decoded file missing:', req)
+            print('  looked in', DECODED, 'and', REQUIRED_SEED)
+            return 1
+        if src_req.exists():
+            shutil.copy2(src_req, dst_req)
+            print('  required', req, '->', dst_req, f'({dst_req.stat().st_size} bytes)')
+
     races = ROOT / 'data' / 'races.json'
     if races.exists():
         shutil.copy2(races, RES / 'data' / 'races.json')
@@ -106,6 +124,12 @@ def main():
     shutil.copytree(ROOT / 'backend', backend_dst, ignore=_ignore)
     (RES / 'eq-api' / 'README.txt').write_text(
         'Place eq-api.exe here (from build-windows.ps1)\n', encoding='utf-8')
+
+    missing = [n for n in ('eqlwiki_item_names.json', 'eqlwiki_mob_names.json')
+               if not (RES / 'data' / 'decoded' / n).exists()]
+    if missing:
+        print('ERROR: pack resources missing after bundle:', missing)
+        return 1
     print('Done.')
     return 0
 

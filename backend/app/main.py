@@ -1,6 +1,7 @@
 """EQ Legends BiS + build-sim FastAPI - engine-backed, UI-compatible."""
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -120,12 +121,11 @@ def _equipment_map(body: SimulateRequest) -> dict[str, str]:
 
 @app.get("/api/health")
 def health():
+    """Liveness for Electron. Includes instance nonce so the shell can reject foreign APIs."""
     return {
         "ok": True,
-        "classes": engine.ALL_CLASSES,
-        "default_trio": engine.DEFAULT_TRIO,
-        "data": str(decoded_dir()),
-        "packaged": packaged_mode(),
+        "version": __version__,
+        "instance": os.environ.get("EQ_INSTANCE_NONCE") or "",
     }
 
 

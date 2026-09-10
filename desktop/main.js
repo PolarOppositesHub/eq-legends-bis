@@ -10,11 +10,14 @@ const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
+const net = require('net');
+const crypto = require('crypto');
 const fs = require('fs');
 
 let mainWindow = null;
 let apiProc = null;
-let apiPort = 8765;
+let apiPort = 0;
+let instanceNonce = '';
 const isDev = !app.isPackaged;
 
 function resourcesRoot() {
@@ -126,8 +129,27 @@ function envForApi() {
     EQ_XLSX_DIR: app.getPath('userData'),
     EQ_IMAGES_DIR: imagesDir,
     EQ_API_PORT: String(apiPort),
+    EQ_INSTANCE_NONCE: instanceNonce,
     PYTHONPATH: pyPath,
   };
+}
+
+function findFreePort() {
+  // Always ask the OS for a free 127.0.0.1 port. Never assume 8765 is ours —
+  // Cursor (or anything else) may already be answering on 8765/8000/5173.
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.unref();
+    srv.on('error', reject);
+    srv.listen(0, '127.0.0.1', () => {
+      const addr = srv.address();
+      const port = addr && addr.port;
+      srv.close((err) => {
+        if (err) reject(err);
+        else resolve(port);
+      });
+    });
+  });
 }
 
 function startApi() {
@@ -154,14 +176,27 @@ function startApi() {
 
 function waitForHealth(timeoutMs = 60000) {
   const started = Date.now();
+  const want = String(instanceNonce || '');
   return new Promise((resolve, reject) => {
     const tick = () => {
       const req = http.get(`http://127.0.0.1:${apiPort}/api/health`, (res) => {
         let body = '';
         res.on('data', (c) => (body += c));
         res.on('end', () => {
-          if (res.statusCode === 200) return resolve(body);
-          retry();
+          if (res.statusCode !== 200) return retry();
+          try {
+            const j = JSON.parse(body || '{}');
+            // Reject foreign listeners (e.g. Cursor port-forward of an old box API on 8765).
+            if (want && j.instance !== want) {
+              console.warn('[eq] health ok but instance mismatch — not our sidecar', j.instance);
+              return retry();
+            }
+            if (!j.ok && j.ok !== undefined) return retry();
+            return resolve(body);
+          } catch (_) {
+            // Non-JSON health from a foreign process — ignore
+            return retry();
+          }
         });
       });
       req.on('error', retry);
@@ -172,7 +207,7 @@ function waitForHealth(timeoutMs = 60000) {
     };
     const retry = () => {
       if (Date.now() - started > timeoutMs) {
-        return reject(new Error('API health check timed out'));
+        return reject(new Error('API health check timed out (our sidecar did not answer with matching instance nonce)'));
       }
       setTimeout(tick, 400);
     };
@@ -530,17 +565,27 @@ ipcMain.handle('eq:check-updates', async () => {
 });
 
 app.whenReady().then(async () => {
-  // Pick a free-ish port: default 8765; allow override
+  instanceNonce = crypto.randomBytes(16).toString('hex');
   if (process.env.EQ_API_PORT) {
-    apiPort = Number(process.env.EQ_API_PORT) || apiPort;
+    apiPort = Number(process.env.EQ_API_PORT) || 0;
   }
+  if (!apiPort) {
+    try {
+      apiPort = await findFreePort();
+    } catch (e) {
+      dialog.showErrorBox('EQ Legends BiS', `Could not reserve a local API port.\n\n${e.message || e}`);
+      app.quit();
+      return;
+    }
+  }
+  console.log('[eq] API port', apiPort, 'instance', instanceNonce.slice(0, 8) + '…');
   startApi();
   try {
     await waitForHealth();
   } catch (e) {
     dialog.showErrorBox(
       'EQ Legends BiS',
-      `Could not start the local API.\n\n${e.message}\n\nIf this is a Windows build, ensure eq-api.exe was produced by scripts/build-windows.ps1.`
+      `Could not start the local API on port ${apiPort}.\n\n${e.message}\n\nIf this is a Windows build, ensure eq-api.exe was produced by scripts/build-windows.ps1.`
     );
     app.quit();
     return;
