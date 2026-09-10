@@ -1677,7 +1677,7 @@ export default function App() {
           <p>
             Local BiS planner & simulator
             {meta?.catalog_weapons ? ` · ${meta.catalog_weapons} catalog weapons` : ''}
-            {meta?.version ? ` · v${meta.version}` : ' · v1.0.12'}
+            {meta?.version ? ` · v${meta.version}` : ''}
           </p>
         </div>
         <div className="header-actions">
@@ -1706,7 +1706,7 @@ export default function App() {
               <path d="M12 2.8v2.2M12 19v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.8 12h2.2M19 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
             </svg>
           </button>
-          <span className="ui-build-badge" title="App version">Version 1.0.12</span>
+          <span className="ui-build-badge" title="App version">{meta?.version ? `Version ${meta.version}` : "Version …"}</span>
         </div>
       </header>
 

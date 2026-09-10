@@ -1,6 +1,6 @@
 # STATUS
 App: /workspace (eq-legends-bis source)
-Version: **1.0.12** — READY TO SHIP after PR #13 merges
+Version: **1.0.15** — version sync for Windows ship (UI/API match Electron)
 Canonical: backend/app/{main,engine,scoring,inventory,spell_buffs,quest_hub,...}.py + frontend App.jsx
 Branch: `cursor/sim-per-slot-upgrades-d4a5` (PR #13) rebased onto `main` (PRs #11 + #12)
 

@@ -25,7 +25,8 @@ from decode_local import SCALABLE_STATS, scale_item_stat  # noqa: E402
 _paths.apply_legends_roots()
 
 from .races import RACES, get_races_payload, race_bases, class_stat_rows  # noqa: E402
-from . import weapon_dps as wdps  # noqa: E402
+from . import weapon_dps as wdps
+from .version import __version__  # noqa: E402
 from . import scoring as sc  # noqa: E402
 from . import class_roles as class_roles  # noqa: E402
 from . import ac_softcap as ac_softcap  # noqa: E402
@@ -1086,7 +1087,7 @@ def meta_payload() -> dict:
         "upgrade_levels": list(range(0, 11)),
         "character_levels": list(range(1, MAX_CHARACTER_LEVEL + 1)),
         "prefer_ranged_damage_default": True,
-        "version": "1.0.12",
+        "version": __version__,
         "scoring": {
             "priority_armor": (
                 "primary×100 + secondary×25 + tertiary×6 + 0.15×other + Haste×2 "

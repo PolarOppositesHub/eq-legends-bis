@@ -19,11 +19,12 @@ from . import item_catalog as item_catalog_mod
 from .races import get_races_payload
 
 from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_mode, xlsx_dir
+from .version import __version__
 
 LEGENDS = legends_root()
 FRONTEND_DIST = frontend_dist()
 
-app = FastAPI(title="EQ Legends BiS + Build Sim", version="1.0.12")
+app = FastAPI(title="EQ Legends BiS + Build Sim", version=__version__)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -160,7 +161,7 @@ def get_classes():
         "character_levels": m.get("character_levels") or list(range(1, 51)),
         "prefer_ranged_damage_default": m.get("prefer_ranged_damage_default", True),
         "catalog_weapons": m["catalog_weapons"],
-        "version": m.get("version") or "1.0.12",
+        "version": m.get("version") or __version__,
         "scoring": m.get("scoring"),
     }
 
