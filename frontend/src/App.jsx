@@ -34,6 +34,19 @@ const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
 const MAX_LEVEL = 50
 const EMPTY_TIERS = ['', '', '']
 
+function quitDesktopApp() {
+  const desktop = typeof window !== 'undefined' ? window.eqDesktop : null
+  if (desktop && typeof desktop.quit === 'function') {
+    desktop.quit()
+    return
+  }
+  try {
+    window.close()
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 function slotLabel(slot) {
   if (slot === 'ANY1') return 'ANY1 (Any Slot)'
   if (slot === 'ANY2') return 'ANY2 (Any Slot)'
@@ -1928,6 +1941,13 @@ export default function App() {
               {n.label}
             </button>
           ))}
+          {isDesktopApp && (
+            <div className="side-nav-quit">
+              <button type="button" className="quit-app-btn" onClick={quitDesktopApp}>
+                Quit
+              </button>
+            </div>
+          )}
         </nav>
 
         <div className="main-pane">
@@ -3572,6 +3592,13 @@ export default function App() {
           <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.78rem', lineHeight: 1.45 }}>
             Stats from decoded catalog / eqlwiki only — never invented.
             Use the <strong>?</strong> help and <strong>cog</strong> settings in the header anytime.
+            {isDesktopApp && (
+              <>
+                {' '}Desktop: window <strong>X</strong>, <strong>Alt+F4</strong>, or{' '}
+                <button type="button" className="zone-link" onClick={quitDesktopApp}>Quit</button>
+                {' '}in Settings / the side menu.
+              </>
+            )}
           </footer>
         </div>
       </div>
@@ -3648,8 +3675,26 @@ export default function App() {
                   Enabled
                 </label>
               </div>
+              {isDesktopApp && (
+                <div className="settings-row">
+                  <div>
+                    <label>Quit application</label>
+                    <span className="muted">
+                      Closes the planner (same as the window X or Alt+F4). The stock File menu is hidden.
+                    </span>
+                  </div>
+                  <button type="button" className="quit-app-btn" onClick={quitDesktopApp}>
+                    Quit
+                  </button>
+                </div>
+              )}
             </div>
             <div className="modal-actions">
+              {isDesktopApp && (
+                <button type="button" className="quit-app-btn" onClick={quitDesktopApp}>
+                  Quit
+                </button>
+              )}
               <button type="button" onClick={() => setSettingsOpen(false)}>Close</button>
             </div>
           </div>
@@ -3674,6 +3719,11 @@ export default function App() {
               ))}
             </div>
             <div className="modal-actions">
+              {isDesktopApp && (
+                <button type="button" className="quit-app-btn" onClick={quitDesktopApp}>
+                  Quit
+                </button>
+              )}
               <button type="button" className="primary" onClick={() => setAppHelpOpen(false)}>Got it</button>
             </div>
           </div>
