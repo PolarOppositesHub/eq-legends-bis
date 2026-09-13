@@ -1,6 +1,10 @@
 # EQ Legends BiS app status
 
-Version: **1.0.19** — merge #20–#25 plus Polar Opposites startup intro splash (no version bump). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.0.20** — Polar Opposites splash intro (PR #26); updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.0.20
+- Merged PR #26: startup splash video with any-key/click skip; MP4 in `resources/splash/` via extraResources.
+- Version bump across package.json + version.py sources.
 
 ## 1.0.19
 - #20 Known Loot hover hint removed
