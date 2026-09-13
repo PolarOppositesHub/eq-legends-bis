@@ -31,7 +31,7 @@ class InterchangeHelperTests(unittest.TestCase):
     def test_swaps_any_when_non_weapon_already_on_real_slot(self):
         slots = [
             _row("CHEST", "Better Chestplate", url="chest-url"),
-            _row("ANY2", "Valorium Chestplate", url="val-url"),
+            _row("ANY2", "Valorium Chestplate", url="val-url", planner_slots=["CHEST"]),
         ]
         inv.interchange_any_real_slot_recommendations(
             slots, {"CHEST": "Valorium Chestplate"}
@@ -46,8 +46,8 @@ class InterchangeHelperTests(unittest.TestCase):
 
     def test_clears_any_when_same_item_is_already_real_slot_bis(self):
         slots = [
-            _row("CHEST", "Valorium Chestplate"),
-            _row("ANY2", "Valorium Chestplate"),
+            _row("CHEST", "Valorium Chestplate", planner_slots=["CHEST"]),
+            _row("ANY2", "Valorium Chestplate", planner_slots=["CHEST"]),
         ]
         inv.interchange_any_real_slot_recommendations(
             slots, {"CHEST": "Valorium Chestplate"}
@@ -98,7 +98,7 @@ class InterchangeHelperTests(unittest.TestCase):
     def test_name_match_is_case_insensitive(self):
         slots = [
             _row("LEGS", "Better Leggings"),
-            _row("ANY1", "valorium greaves"),
+            _row("ANY1", "valorium greaves", planner_slots=["LEGS"]),
         ]
         inv.interchange_any_real_slot_recommendations(
             slots, {"LEGS": "Valorium Greaves"}
@@ -107,12 +107,24 @@ class InterchangeHelperTests(unittest.TestCase):
         self.assertEqual(by_slot["ANY1"]["name"], "Better Leggings")
         self.assertEqual(by_slot["LEGS"]["name"], "valorium greaves")
 
+    def test_requires_items_real_slot_not_an_unrelated_slot(self):
+        slots = [
+            _row("CHEST", "Better Chestplate"),
+            _row("ANY2", "Stalwart Shield", planner_slots=["SECONDARY"]),
+        ]
+        inv.interchange_any_real_slot_recommendations(
+            slots, {"CHEST": "Stalwart Shield"}
+        )
+        by_slot = {r["slot"]: r for r in slots}
+        self.assertEqual(by_slot["ANY2"]["name"], "Stalwart Shield")
+        self.assertEqual(by_slot["CHEST"]["name"], "Better Chestplate")
+
     def test_two_any_slots_swap_independently(self):
         slots = [
             _row("CHEST", "Better Chestplate"),
             _row("HEAD", "Better Helm"),
-            _row("ANY1", "Worn Helm"),
-            _row("ANY2", "Worn Chest"),
+            _row("ANY1", "Worn Helm", planner_slots=["HEAD"]),
+            _row("ANY2", "Worn Chest", planner_slots=["CHEST"]),
         ]
         inv.interchange_any_real_slot_recommendations(
             slots, {"CHEST": "Worn Chest", "HEAD": "Worn Helm"}
@@ -129,7 +141,7 @@ class SuggestUpgradesInterchangeTests(unittest.TestCase):
         bis = {
             "slots": [
                 _row("CHEST", "Better Chestplate", why="chest bis"),
-                _row("ANY2", "Valorium Chestplate", why="any leftover"),
+                _row("ANY2", "Valorium Chestplate", why="any leftover", planner_slots=["CHEST"]),
                 _row("PRIMARY", "Best Sword", is_weapon=True, why="weapon"),
             ],
             "classes": ["Warrior"],

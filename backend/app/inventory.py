@@ -285,17 +285,59 @@ def _norm_item_name(name: str | None) -> str:
     return (name or "").strip().lower()
 
 
-def _equipped_real_slot(equipment: dict[str, str], item_name: str) -> str | None:
-    """Dedicated (non-Any) planner slot where this item is already worn."""
+def _dedicated_slots_for_recommendation(row: dict[str, Any]) -> set[str]:
+    """Item's real planner slots (never Any). Empty if unknown — do not invent."""
+    planner: set[str] = set()
+    item = row.get("item") or {}
+    for src in (row.get("planner_slots"), item.get("planner_slots")):
+        planner |= {str(s).upper() for s in (src or []) if s}
+    # row["slot"] is the recommendation target (e.g. ANY2), not the item type.
+    for field in (item.get("slots"), item.get("slot"), row.get("slots")):
+        if field:
+            planner |= set(sc.expand_slots(field))
+    planner -= sc.ANY_SLOTS
+    planner.discard("")
+    if planner:
+        return planner
+    name = (row.get("name") or "").strip()
+    if not name:
+        return set()
+    try:
+        cat = item_catalog_mod.get_item_by_name(name)
+    except Exception:
+        cat = None
+    if not cat:
+        return set()
+    found = set(sc.expand_slots(cat.get("slots") or cat.get("slot") or []))
+    found |= {str(s).upper() for s in (cat.get("planner_slots") or [])}
+    return found - sc.ANY_SLOTS
+
+
+def _equipped_real_slot(
+    equipment: dict[str, str],
+    item_name: str,
+    *,
+    dedicated: set[str] | None = None,
+) -> str | None:
+    """Dedicated (non-Any) planner slot where this item is already worn.
+
+    When *dedicated* is known (e.g. CHEST for Valorium Chestplate), only that
+    real slot counts — wearing the piece somewhere invalid is not this rule.
+    """
     want = _norm_item_name(item_name)
     if not want:
         return None
     eq = {str(k).upper(): (v or "").strip() for k, v in (equipment or {}).items() if v}
+    allowed = set(dedicated) if dedicated else None
     for slot in sc.PLANNER_SLOTS:
         if slot in sc.ANY_SLOTS:
             continue
+        if allowed is not None and slot not in allowed:
+            continue
         if _norm_item_name(eq.get(slot)) == want:
             return slot
+    if allowed:
+        return None
     for slot, worn in eq.items():
         if slot in sc.ANY_SLOTS or slot in sc.PLANNER_SLOTS:
             continue
@@ -384,7 +426,8 @@ def interchange_any_real_slot_recommendations(
         rec_name = (any_row.get("name") or "").strip()
         if not rec_name:
             continue
-        real_slot = _equipped_real_slot(equipment, rec_name)
+        dedicated = _dedicated_slots_for_recommendation(any_row)
+        real_slot = _equipped_real_slot(equipment, rec_name, dedicated=dedicated or None)
         if not real_slot or real_slot in swapped_real:
             continue
         if _recommendation_is_weapon(any_row, real_slot):
