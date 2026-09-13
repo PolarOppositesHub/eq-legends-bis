@@ -11,7 +11,11 @@ build/
 dist/
 dist-desktop/
 frontend/dist/
-desktop/build/
+# electron-builder default icon names must be committed (desktop/build is otherwise ignored)
+!desktop/build/
+desktop/build/*
+!desktop/build/icon.ico
+!desktop/build/icon.png
 desktop/dist/
 *.exe
 *.blockmap
