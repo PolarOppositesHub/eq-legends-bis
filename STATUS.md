@@ -1,6 +1,11 @@
 # EQ Legends BiS app status
 
-Version: **1.0.17** — merge #17 mob-drop hover/menu + #18 era/expansion filter; updater publish unchanged (PolarOppositesHub/eq-legends-bis).
+Version: **1.0.18** — Known Loot wiki∪catalog union (PR #19); updater PolarOppositesHub/eq-legends-bis unchanged.
+
+## 1.0.18
+- Merged PR #19: parse eqlwiki Known Loot, union catalog reverse-index, God/bare name merge, raised drop caps.
+- Innoruuk (God): 4 → ~19 (15 wiki ∪ 4 catalog-only BiS).
+- Version bump across package.json + version.py sources.
 
 ## 1.0.17
 - Merged PR #17 (mob drop hover stats + Item Search/eqlwiki menu) and PR #18 (Mobs hub era/expansion filter).
