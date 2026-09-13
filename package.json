@@ -1,7 +1,7 @@
 {
   "name": "eq-legends-bis-workspace",
   "private": true,
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Workspace scripts; Windows packaging lives in desktop/",
   "scripts": {
     "prepare:resources": "python3 scripts/bundle_desktop_resources.py",

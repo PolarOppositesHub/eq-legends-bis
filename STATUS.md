@@ -1,7 +1,12 @@
-# STATUS
-App: /workspace (eq-legends-bis source)
-Version: **1.0.16** — free-port sidecar + ship eqlwiki item/mob catalogs in Windows packs
-Canonical: backend/app + frontend App.jsx + desktop/main.js
+# EQ Legends BiS app status
+
+Version: **1.0.17** — merge #17 mob-drop hover/menu + #18 era/expansion filter; updater publish unchanged (PolarOppositesHub/eq-legends-bis).
+
+## 1.0.17
+- Merged PR #17 (mob drop hover stats + Item Search/eqlwiki menu) and PR #18 (Mobs hub era/expansion filter).
+- Conflict resolve: `uiSettings.js` kept BOTH help lines; `App.jsx` auto-merged with both features.
+- Version bump across root/frontend/desktop package.json + backend version.py (+ desktop/resources copy).
+- Packaging: required-decoded eqlwiki item + mob catalogs still present (1.0.16 fix preserved).
 
 ## 1.0.16
 - Electron picks a free localhost port (no fixed 8765); health requires our EQ_INSTANCE_NONCE
