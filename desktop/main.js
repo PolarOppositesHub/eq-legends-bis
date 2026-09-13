@@ -6,7 +6,7 @@
  * Updater: electron-updater → GitHub Releases
  * PolarOppositesHub/eq-legends-bis (see PACKAGING.md).
  */
-const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
@@ -230,18 +230,32 @@ function stopApi() {
 }
 
 async function createWindow() {
+  // Dark title-bar / widget chrome so Windows matches the planner UI.
+  // Keep a normal framed window so the caption X, minimize, maximize, and Alt+F4 still work.
+  try {
+    nativeTheme.themeSource = 'dark';
+  } catch (_) {
+    /* older Electron */
+  }
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
     minWidth: 960,
     minHeight: 640,
     title: 'EQ Legends BiS',
+    backgroundColor: '#0a0a0a',
+    autoHideMenuBar: true,
+    frame: true,
+    closable: true,
+    minimizable: true,
+    maximizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+  mainWindow.setMenuBarVisibility(false);
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -339,6 +353,11 @@ ipcMain.handle('eq:app-info', async () => ({
   packaged: app.isPackaged,
   apiPort,
 }));
+
+ipcMain.handle('eq:quit', async () => {
+  app.quit();
+  return { ok: true };
+});
 
 function settingsPath() {
   return path.join(app.getPath('userData'), 'settings.json');
@@ -565,6 +584,8 @@ ipcMain.handle('eq:check-updates', async () => {
 });
 
 app.whenReady().then(async () => {
+  // Drop the stock File/Edit/View menu — in-app Quit + window chrome still exit.
+  Menu.setApplicationMenu(null);
   instanceNonce = crypto.randomBytes(16).toString('hex');
   if (process.env.EQ_API_PORT) {
     apiPort = Number(process.env.EQ_API_PORT) || 0;

@@ -24,6 +24,10 @@ html[data-theme="classic"] {
   --nav-active-bg: #1f1a0a;
   --input-bg: #0d0d0d;
   --tot-value: #fff;
+  --scrollbar-track: #0a0a0a;
+  --scrollbar-thumb: #8a7020;
+  --scrollbar-thumb-hover: #d4af37;
+  color-scheme: dark;
 }
 
 html[data-theme="light"] {
@@ -49,6 +53,10 @@ html[data-theme="light"] {
   --nav-active-bg: #f3ead0;
   --input-bg: #ffffff;
   --tot-value: #101820;
+  --scrollbar-track: #e4e8ee;
+  --scrollbar-thumb: #8a6a1f;
+  --scrollbar-thumb-hover: #6e5418;
+  color-scheme: light;
 }
 
 html[data-theme="dusk"] {
@@ -74,6 +82,10 @@ html[data-theme="dusk"] {
   --nav-active-bg: #243044;
   --input-bg: #0f1620;
   --tot-value: #f4f8fc;
+  --scrollbar-track: #101820;
+  --scrollbar-thumb: #8a7020;
+  --scrollbar-thumb-hover: #c9a227;
+  color-scheme: dark;
 }
 
 html[data-theme="forge"] {
@@ -99,6 +111,10 @@ html[data-theme="forge"] {
   --nav-active-bg: #2e2018;
   --input-bg: #120d0a;
   --tot-value: #fff6ee;
+  --scrollbar-track: #1a1310;
+  --scrollbar-thumb: #a8662e;
+  --scrollbar-thumb-hover: #d08a45;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -109,6 +125,36 @@ body {
     radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%),
     linear-gradient(180deg, var(--bg-accent), var(--bg) 40%);
   background-attachment: fixed;
+}
+
+/* Themed scrollbars (Electron / Chromium + Firefox) — replace Windows default sliders. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-left: 1px solid var(--border);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track);
+  min-height: 32px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 .app { max-width: 1600px; margin: 0 auto; padding: 1.2rem 1.4rem 3rem; }
 .app-header { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
@@ -201,6 +247,26 @@ body {
 .side-nav button:not(.active):hover {
   border-color: var(--gold);
   color: #fff;
+}
+.side-nav-quit {
+  margin-top: 0.35rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+}
+.quit-app-btn {
+  background: var(--panel2);
+  color: var(--gold);
+  border: 1px solid var(--gold-dark);
+  font-weight: 800;
+}
+.quit-app-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: var(--nav-active-bg);
+  color: var(--heading);
+}
+.modal-actions:has(.quit-app-btn) {
+  justify-content: space-between;
+  width: 100%;
 }
 .main-pane { min-width: 0; }
 .tabs { display: flex; gap: 0.4rem; }

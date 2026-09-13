@@ -143,6 +143,7 @@ export const APP_HELP = {
       body: [
         'Change color theme, compact badges, reduced motion, and funny loading tips.',
         'Settings save in this browser / desktop profile (localStorage).',
+        'Desktop: Quit is in Settings and the side menu (window X and Alt+F4 still work; the File menu is hidden).',
       ],
     },
     {
