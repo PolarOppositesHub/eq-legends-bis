@@ -101,6 +101,7 @@ export const APP_HELP = {
         'Ranks what to chase next versus your BiS list after an inventory import.',
         'Each entry can show zone, drop mobs, and quest steps when known from the catalog / eqlwiki.',
         'If a non-weapon recommended for Any is already worn in its real slot (e.g. Valorium Chestplate on Chest while listed for Any2), those recommendations swap so the same piece is not double-listed. Weapons stay on Primary/Secondary/Range — damage does not apply from Any.',
+        'Hover a worn or recommended item for catalog stats; click for Item Search or eqlwiki (same as Mobs Known Loot).',
       ],
     },
     {

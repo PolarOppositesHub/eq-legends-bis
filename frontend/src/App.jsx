@@ -212,6 +212,42 @@ function tipCoordsFromPointer(e, tipW = 320, tipH = 220) {
   return { x, y }
 }
 
+/**
+ * Catalog item name: hover stats card + click Item Search / eqlwiki menu.
+ * Shared by Mobs Known Loot and Upgrade Priority. No native title / hint chip.
+ */
+function CatalogItemName({
+  name,
+  className = 'zone-link',
+  preview,
+  openMenu,
+  moveTip,
+  hideTip,
+  menuOpen,
+  hoverTimerRef,
+}) {
+  const item = (name || '').trim()
+  if (!item) return null
+  return (
+    <button
+      type="button"
+      className={className}
+      onMouseEnter={(e) => preview(item, e)}
+      onMouseMove={(e) => {
+        if (menuOpen) return
+        moveTip(e)
+      }}
+      onMouseLeave={() => {
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+        hideTip()
+      }}
+      onClick={(e) => openMenu(item, e)}
+    >
+      {item}
+    </button>
+  )
+}
+
 /** User-facing BiS reason — hide DW/ratio formulas from UI (API still has full why). */
 function displayWhy(itemOrWhy) {
   if (itemOrWhy && typeof itemOrWhy === 'object') {
@@ -790,6 +826,7 @@ export default function App() {
     }
   }, [hideHoverTip])
 
+  // Shared Known Loot helpers — also used by Upgrade Priority worn/suggested names.
   const previewMobDrop = useCallback((itemName, e) => {
     const name = (itemName || '').trim()
     if (!name || dropItemMenu) return
@@ -864,6 +901,15 @@ export default function App() {
       }).catch(() => {})
     }
   }, [])
+
+  const catalogItemNameProps = {
+    preview: previewMobDrop,
+    openMenu: openMobDropMenu,
+    moveTip: moveHoverTip,
+    hideTip: hideHoverTip,
+    menuOpen: !!dropItemMenu,
+    hoverTimerRef: dropHoverTimerRef,
+  }
 
   const beginLoad = useCallback((id, label) => {
     const job = { id, label }
@@ -2804,22 +2850,11 @@ export default function App() {
                               : (d.source ? [d.source] : [])
                             return (
                             <li key={`${d.item}-${i}`}>
-                              <button
-                                type="button"
+                              <CatalogItemName
+                                name={d.item}
                                 className="zone-link mob-drop-item"
-                                onMouseEnter={(e) => previewMobDrop(d.item, e)}
-                                onMouseMove={(e) => {
-                                  if (dropItemMenu) return
-                                  moveHoverTip(e)
-                                }}
-                                onMouseLeave={() => {
-                                  if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
-                                  hideHoverTip()
-                                }}
-                                onClick={(e) => openMobDropMenu(d.item, e)}
-                              >
-                                {d.item}
-                              </button>
+                                {...catalogItemNameProps}
+                              />
                               {d.zone ? <span className="muted"> · {d.zone}</span> : null}
                               {sources.length ? (
                                 <span className="muted mob-drop-source"> · {sources.join(' · ')}</span>
@@ -3400,15 +3435,23 @@ export default function App() {
                         ) : null}
                         <div className="upgrade-priority-title">
                           {s.current ? (
-                            <span>Have <strong>{s.current}</strong> → </span>
+                            <span>
+                              Have{' '}
+                              <CatalogItemName
+                                name={s.current}
+                                className="zone-link upgrade-item-name"
+                                {...catalogItemNameProps}
+                              />
+                              {' → '}
+                            </span>
                           ) : (
                             <span>Empty → </span>
                           )}
-                          {s.suggested_url ? (
-                            <a href={s.suggested_url} target="_blank" rel="noreferrer">{s.suggested}</a>
-                          ) : (
-                            <strong>{s.suggested}</strong>
-                          )}
+                          <CatalogItemName
+                            name={s.suggested}
+                            className="zone-link upgrade-item-name"
+                            {...catalogItemNameProps}
+                          />
                         </div>
                       </div>
                       <p className="why" style={{ marginTop: '0.35rem' }}>{s.reason}</p>

@@ -707,6 +707,7 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
   gap: 0.55rem;
 }
 .upgrade-priority-title { font-size: 0.98rem; }
+.upgrade-item-name { font-weight: 700; }
 .obtain-block {
   margin-top: 0.65rem;
   padding-top: 0.55rem;
