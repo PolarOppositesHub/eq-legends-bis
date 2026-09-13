@@ -11,4 +11,10 @@ contextBridge.exposeInMainWorld('eqDesktop', {
   pickEqInstallFolder: () => ipcRenderer.invoke('eq:pick-eq-install-folder'),
   findLatestInventory: (folder) => ipcRenderer.invoke('eq:find-latest-inventory', folder),
   readInventoryFile: (filePath) => ipcRenderer.invoke('eq:read-inventory-file', filePath),
+  splashFinished: () => ipcRenderer.send('eq:splash-finished'),
+  onSplashStop: (cb) => {
+    ipcRenderer.on('eq:splash-stop', () => {
+      try { cb(); } catch (_) { /* ignore */ }
+    });
+  },
 });

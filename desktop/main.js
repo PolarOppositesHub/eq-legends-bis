@@ -19,6 +19,11 @@ let apiProc = null;
 let apiPort = 0;
 let instanceNonce = '';
 const isDev = !app.isPackaged;
+const SPLASH_FILE = 'polar-opposites-intro.mp4';
+let splashDone = true;
+let apiReady = false;
+let appUiShown = false;
+let updaterStarted = false;
 
 function resourcesRoot() {
   if (isDev) {
@@ -229,6 +234,43 @@ function stopApi() {
   apiProc = null;
 }
 
+function resolveSplashVideo() {
+  // Packaged: extraResources → process.resourcesPath/splash/
+  // Unpackaged: packaging/splash source, or a copy under desktop/resources/splash/
+  const candidates = [
+    path.join(resourcesRoot(), 'splash', SPLASH_FILE),
+    path.join(__dirname, 'resources', 'splash', SPLASH_FILE),
+    path.join(__dirname, '..', 'packaging', 'splash', SPLASH_FILE),
+  ];
+  return candidates.find((p) => fs.existsSync(p)) || null;
+}
+
+function showMainUi() {
+  if (appUiShown || !splashDone || !apiReady) return;
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  appUiShown = true;
+  mainWindow.loadURL(`http://127.0.0.1:${apiPort}/`).catch((e) => {
+    console.error('[eq] load UI', e);
+  });
+  setupUpdater();
+}
+
+function finishSplash() {
+  if (splashDone) {
+    showMainUi();
+    return;
+  }
+  splashDone = true;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      mainWindow.webContents.send('eq:splash-stop');
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  showMainUi();
+}
+
 function resolveAppIcon() {
   // Dragon-eye seal (Josh D). Packaged builds also embed this ICO in the exe;
   // BrowserWindow uses the file so the window/taskbar match in unpackaged/dev.
@@ -241,7 +283,7 @@ function resolveAppIcon() {
   return candidates.find((p) => fs.existsSync(p));
 }
 
-async function createWindow() {
+async function createWindow({ playIntro = false } = {}) {
   // Dark title-bar / widget chrome so Windows matches the planner UI.
   // Keep a normal framed window so the caption X, minimize, maximize, and Alt+F4 still work.
   try {
@@ -267,6 +309,7 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
   mainWindow.setMenuBarVisibility(false);
@@ -274,7 +317,32 @@ async function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
-  await mainWindow.loadURL(`http://127.0.0.1:${apiPort}/`);
+  const splashHtml = path.join(__dirname, 'splash.html');
+  const videoPath = playIntro ? resolveSplashVideo() : null;
+  if (videoPath) {
+    splashDone = false;
+    appUiShown = false;
+    console.log('[eq] startup splash', videoPath);
+    // Load HTML from the same directory as the MP4 so file:// can play it.
+    const splashBesideVideo = path.join(path.dirname(videoPath), 'splash.html');
+    const htmlPath = fs.existsSync(splashBesideVideo) ? splashBesideVideo : splashHtml;
+    await mainWindow.loadFile(htmlPath);
+    // Hard requirement: any key skips, even if the <video> element has focus.
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (splashDone) return;
+      if (input.type === 'keyDown') {
+        event.preventDefault();
+        finishSplash();
+      }
+    });
+  } else if (apiReady && apiPort) {
+    splashDone = true;
+    await mainWindow.loadURL(`http://127.0.0.1:${apiPort}/`);
+    appUiShown = true;
+  } else {
+    splashDone = true;
+    await mainWindow.loadFile(splashHtml, { query: { src: 'skip' } });
+  }
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -292,6 +360,8 @@ function isPortableBuild() {
 }
 
 function setupUpdater() {
+  if (updaterStarted) return;
+  updaterStarted = true;
   try {
     const { autoUpdater } = require('electron-updater');
     const owner = process.env.EQ_UPDATE_OWNER || process.env.GH_OWNER || 'PolarOppositesHub';
@@ -361,6 +431,10 @@ function setupUpdater() {
   }
 }
 
+
+ipcMain.on('eq:splash-finished', () => {
+  finishSplash();
+});
 
 ipcMain.handle('eq:app-info', async () => ({
   version: app.getVersion(),
@@ -615,8 +689,18 @@ app.whenReady().then(async () => {
   }
   console.log('[eq] API port', apiPort, 'instance', instanceNonce.slice(0, 8) + '…');
   startApi();
+  // Show the intro immediately so skip/end can overlap sidecar startup.
+  try {
+    await createWindow({ playIntro: true });
+  } catch (e) {
+    dialog.showErrorBox('EQ Legends BiS', `Could not open the app window.\n\n${e.message || e}`);
+    app.quit();
+    return;
+  }
   try {
     await waitForHealth();
+    apiReady = true;
+    showMainUi();
   } catch (e) {
     dialog.showErrorBox(
       'EQ Legends BiS',
@@ -625,8 +709,6 @@ app.whenReady().then(async () => {
     app.quit();
     return;
   }
-  await createWindow();
-  setupUpdater();
 });
 
 app.on('window-all-closed', () => {
@@ -639,5 +721,5 @@ app.on('before-quit', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) createWindow({ playIntro: false });
 });

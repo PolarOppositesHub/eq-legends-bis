@@ -122,6 +122,22 @@ def main():
                 skip.add(n)
         return skip
     shutil.copytree(ROOT / 'backend', backend_dst, ignore=_ignore)
+    splash_src_dir = ROOT / 'packaging' / 'splash'
+    splash_dst_dir = RES / 'splash'
+    splash_dst_dir.mkdir(parents=True, exist_ok=True)
+    splash_mp4 = splash_src_dir / 'polar-opposites-intro.mp4'
+    if splash_mp4.exists():
+        shutil.copy2(splash_mp4, splash_dst_dir / splash_mp4.name)
+        print('  splash', splash_mp4.name, '->', splash_dst_dir / splash_mp4.name, f'({splash_mp4.stat().st_size} bytes)')
+    else:
+        print('WARNING: startup splash MP4 missing:', splash_mp4)
+    splash_html_src = splash_src_dir / 'splash.html'
+    if not splash_html_src.exists():
+        splash_html_src = ROOT / 'desktop' / 'splash.html'
+    if splash_html_src.exists():
+        shutil.copy2(splash_html_src, splash_dst_dir / 'splash.html')
+        print('  splash splash.html ->', splash_dst_dir / 'splash.html')
+
     (RES / 'eq-api' / 'README.txt').write_text(
         'Place eq-api.exe here (from build-windows.ps1)\n', encoding='utf-8')
 
