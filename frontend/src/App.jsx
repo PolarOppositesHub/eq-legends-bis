@@ -3355,6 +3355,7 @@ export default function App() {
               <p className="muted" style={{ marginTop: 0 }}>
                 Ordered list of what to upgrade next for your selected trio — driven by the BiS list.
                 Each entry shows how to get the piece: zone + drop mobs and/or quest steps (from item DB + eqlwiki; never invented).
+                Non-weapons recommended for Any that you already wear in their real slot (e.g. Valorium Chestplate on Chest listed for Any2) swap with that real-slot pick so the same piece is not double-listed. Weapons are never swapped — damage does not apply from Any.
               </p>
               <div className="row" style={{ marginBottom: '0.85rem' }}>
                 <button type="button" className="primary" onClick={runUpgradeSuggestions} disabled={loading || classes.length < 1}>

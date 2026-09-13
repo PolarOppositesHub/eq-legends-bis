@@ -281,6 +281,133 @@ def _slot_importance(slot: str) -> int:
         return 0
 
 
+def _norm_item_name(name: str | None) -> str:
+    return (name or "").strip().lower()
+
+
+def _equipped_real_slot(equipment: dict[str, str], item_name: str) -> str | None:
+    """Dedicated (non-Any) planner slot where this item is already worn."""
+    want = _norm_item_name(item_name)
+    if not want:
+        return None
+    eq = {str(k).upper(): (v or "").strip() for k, v in (equipment or {}).items() if v}
+    for slot in sc.PLANNER_SLOTS:
+        if slot in sc.ANY_SLOTS:
+            continue
+        if _norm_item_name(eq.get(slot)) == want:
+            return slot
+    for slot, worn in eq.items():
+        if slot in sc.ANY_SLOTS or slot in sc.PLANNER_SLOTS:
+            continue
+        if _norm_item_name(worn) == want:
+            return slot
+    return None
+
+
+def _recommendation_is_weapon(row: dict[str, Any], real_slot: str | None = None) -> bool:
+    """True when the Any pick is a weapon — those must not interchange with real slots.
+
+    Damage does not apply from Any (effective damage ≈ 0), so PRIMARY/SECONDARY/RANGE
+    recommendations stay separate. Uses row flags and equipped location only — never
+    invents stats.
+    """
+    if real_slot and real_slot in sc.WEAPON_SLOTS:
+        return True
+    if row.get("is_weapon"):
+        return True
+    item = row.get("item") or {}
+    if item.get("is_weapon"):
+        return True
+    planner = {
+        str(s).upper()
+        for s in (row.get("planner_slots") or item.get("planner_slots") or [])
+    }
+    if planner & sc.WEAPON_SLOTS:
+        return True
+    if "is_weapon" in row or "is_weapon" in item:
+        return False
+    name = (row.get("name") or "").strip()
+    if not name:
+        return False
+    try:
+        cat = item_catalog_mod.get_item_by_name(name)
+    except Exception:
+        cat = None
+    if cat and sc.is_weapon_item(cat):
+        return True
+    return False
+
+
+def _clear_slot_recommendation(row: dict[str, Any]) -> None:
+    slot = row.get("slot")
+    row.clear()
+    row["slot"] = slot
+    row["name"] = ""
+    row["alts"] = []
+    row["why"] = ""
+
+
+def _swap_recommendation_payload(a: dict[str, Any], b: dict[str, Any]) -> None:
+    """Swap BiS recommendation fields; keep each row's slot id."""
+    a_keep = {k: v for k, v in a.items() if k != "slot"}
+    b_keep = {k: v for k, v in b.items() if k != "slot"}
+    for key in list(a.keys()):
+        if key != "slot":
+            del a[key]
+    for key in list(b.keys()):
+        if key != "slot":
+            del b[key]
+    a.update(b_keep)
+    b.update(a_keep)
+
+
+def interchange_any_real_slot_recommendations(
+    slots: list[dict[str, Any]],
+    equipment: dict[str, str],
+) -> list[dict[str, Any]]:
+    """Non-weapons: if Any recommends an item already worn in its real slot, swap.
+
+    Example: Valorium Chestplate recommended for ANY2 but equipped on CHEST → the
+    CHEST recommendation moves into ANY2, and the equipped chestpiece covers CHEST.
+
+    Weapons are never interchanged this way. Stats may score in Any, but damage
+    does not (effective damage ≈ 0).
+    """
+    if not slots:
+        return slots
+    by_slot = {row.get("slot"): row for row in slots if row.get("slot")}
+    swapped_real: set[str] = set()
+    for any_slot in ("ANY1", "ANY2"):
+        any_row = by_slot.get(any_slot)
+        if not any_row:
+            continue
+        rec_name = (any_row.get("name") or "").strip()
+        if not rec_name:
+            continue
+        real_slot = _equipped_real_slot(equipment, rec_name)
+        if not real_slot or real_slot in swapped_real:
+            continue
+        if _recommendation_is_weapon(any_row, real_slot):
+            continue
+        real_row = by_slot.get(real_slot)
+        if not real_row:
+            # Equipped real-slot piece covers this leftover Any pick.
+            _clear_slot_recommendation(any_row)
+            continue
+        real_name = (real_row.get("name") or "").strip()
+        if _norm_item_name(real_name) == _norm_item_name(rec_name):
+            # Same piece on both recommendations; equipped covers the Any copy.
+            _clear_slot_recommendation(any_row)
+            continue
+        _swap_recommendation_payload(any_row, real_row)
+        any_row["_interchange"] = {
+            "from_slot": real_slot,
+            "equipped": rec_name,
+        }
+        swapped_real.add(real_slot)
+    return slots
+
+
 def _enrich_obtain(row: dict[str, Any], *, fetch_quest: bool = True) -> dict[str, Any]:
     """Attach zone/mob/quest obtain path for a BiS suggestion target.
 
@@ -378,6 +505,9 @@ def suggest_upgrades(
     suggestions: list[dict[str, Any]] = []
     equipment_compare: list[dict[str, Any]] = []
     eq_norm = {str(k).upper(): v for k, v in (equipment or {}).items() if v}
+    # Non-weapon Any↔real-slot interchange so Upgrade Priority does not
+    # double-recommend a piece already worn in its dedicated slot.
+    interchange_any_real_slot_recommendations(bis.get("slots") or [], eq_norm)
 
     for row in bis.get("slots") or []:
         slot = row["slot"]
@@ -477,6 +607,12 @@ def suggest_upgrades(
             how_bits.append(f"Zone: {obtain['zone']}")
         if how_bits:
             reason = f"{reason} · {' · '.join(how_bits)}"
+        interchange = row.get("_interchange") or {}
+        if interchange.get("from_slot") and interchange.get("equipped"):
+            reason = (
+                f"{reason} · Any↔{interchange['from_slot']} interchange "
+                f"({interchange['equipped']} already equipped on {interchange['from_slot']})"
+            )
 
         suggestions.append({
             "slot": slot,
@@ -485,6 +621,7 @@ def suggest_upgrades(
             "reason": reason,
             "current": current or None,
             "suggested": bis_name,
+            "interchange": interchange or None,
             "suggested_url": row.get("url") or obtain.get("item_url") or "",
             "suggested_zone": obtain.get("zone") or row.get("zone") or "",
             "suggested_drops_mobs": obtain.get("drops_mobs") or "",
@@ -516,6 +653,10 @@ def suggest_upgrades(
         "note": (
             "Upgrade Priority list is ordered by importance (empty slots first, then largest "
             "BiS gaps). Each entry includes how to get the item: zone + drop mobs and/or quest "
-            "name with steps from eqlwiki when available — never invented."
+            "name with steps from eqlwiki when available — never invented. "
+            "If a non-weapon recommended for Any is already worn in its real slot "
+            "(e.g. Valorium Chestplate on Chest while listed for Any2), those recommendations "
+            "swap so the same piece is not double-listed. Weapons are never swapped this way "
+            "(damage does not apply from Any)."
         ),
     }
