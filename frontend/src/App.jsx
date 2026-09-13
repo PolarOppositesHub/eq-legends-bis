@@ -53,7 +53,35 @@ function fmtStats(stats, keys) {
 
 const SHOW0 = ['AC','HP','MANA','END','STR','STA','AGI','DEX','WIS','INT','CHA','Haste','DMG','DLY','HP_REGEN','MANA_REGEN','END_REGEN']
 const SHOW10 = SHOW0
+
 const SHOW_UP = SHOW0
+
+
+function eqlwikiItemUrl(name, detail) {
+  const fromDetail = (detail?.url || detail?.sourceUrl || '').trim()
+  if (fromDetail.startsWith('http')) return fromDetail
+  const n = (name || '').trim()
+  if (!n) return 'https://eqlwiki.com/'
+  return `https://eqlwiki.com/${encodeURIComponent(n.replace(/ /g, '_'))}`
+}
+
+/** Hover preview text from item-detail payload — never invents stats. */
+function itemDetailTipText(detail) {
+  if (!detail) return 'Loading…'
+  const lines = detail.tooltipLines || []
+  if (Array.isArray(lines) && lines.length) return lines.slice(0, 24).join('\n')
+  const parts = []
+  const s0 = fmtStats(detail.stats_plus0, SHOW0)
+  const s10 = fmtStats(detail.stats_plus10, SHOW_UP)
+  if (s0) parts.push(`+0  ${s0}`)
+  if (s10 && s10 !== s0) parts.push(`+10 ${s10}`)
+  if (detail.classes_str) parts.push(detail.classes_str)
+  const slots = (detail.slots || []).join(', ') || detail.slot || ''
+  if (slots) parts.push(slots)
+  if (detail.description) parts.push(String(detail.description).slice(0, 280))
+  if (detail.zone) parts.push(`Zone: ${detail.zone}`)
+  return parts.join('\n') || 'No parsed stats yet — open Item Search or eqlwiki for details.'
+}
 const SHOW_REWARD = [
   'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
   'Haste', 'DMG', 'DLY', 'ATK', 'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
@@ -691,6 +719,10 @@ export default function App() {
   const [itemDetail, setItemDetail] = useState(null)
   const [hoverTip, setHoverTip] = useState(null)
   const hoverTipClearRef = useRef(null)
+  const [dropItemMenu, setDropItemMenu] = useState(null)
+  const dropItemCacheRef = useRef(new Map())
+  const dropHoverTimerRef = useRef(null)
+  const dropHoverSeqRef = useRef(0)
   const skipPriorityDefaultsRef = useRef(false)
   const ensuredImagesRef = useRef(new Set())
 
@@ -726,6 +758,110 @@ export default function App() {
   const hideHoverTip = useCallback(() => {
     if (hoverTipClearRef.current) clearTimeout(hoverTipClearRef.current)
     hoverTipClearRef.current = setTimeout(() => setHoverTip(null), 80)
+  }, [])
+
+  const openItemInSearch = useCallback(async (itemName) => {
+    const name = (itemName || '').trim()
+    if (!name) return
+    setDropItemMenu(null)
+    hideHoverTip()
+    setTab('search')
+    setSearchQ(name)
+    setSearchLoading(true)
+    setItemDetail(null)
+    try {
+      const res = await searchItems({ q: name, limit: 80 })
+      setSearchResults(res)
+      const hit = (res.items || []).find((it) => String(it.name || '').toLowerCase() === name.toLowerCase())
+        || (res.items || [])[0]
+      const detailName = hit?.name || name
+      try {
+        const d = await getItemDetail(detailName)
+        setItemDetail(d)
+      } catch (detailErr) {
+        setError(String(detailErr.message || detailErr))
+      }
+    } catch (err) {
+      setSearchResults(null)
+      setError(String(err.message || err))
+    } finally {
+      setSearchLoading(false)
+    }
+  }, [hideHoverTip])
+
+  const previewMobDrop = useCallback((itemName, e) => {
+    const name = (itemName || '').trim()
+    if (!name || dropItemMenu) return
+    const { x, y } = tipCoordsFromPointer(e)
+    if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
+    const seq = ++dropHoverSeqRef.current
+    const cached = dropItemCacheRef.current.get(name.toLowerCase())
+    if (cached) {
+      showHoverTip({
+        name: cached.name || name,
+        statsText: itemDetailTipText(cached),
+        x,
+        y,
+      })
+      return
+    }
+    showHoverTip({ name, statsText: 'Loading…', x, y })
+    dropHoverTimerRef.current = setTimeout(async () => {
+      try {
+        const d = await getItemDetail(name)
+        if (!d) return
+        dropItemCacheRef.current.set(name.toLowerCase(), d)
+        if (dropHoverSeqRef.current !== seq) return
+        const { x: x2, y: y2 } = tipCoordsFromPointer(e)
+        showHoverTip({
+          name: d.name || name,
+          statsText: itemDetailTipText(d),
+          x: x2,
+          y: y2,
+        })
+      } catch (_) {
+        if (dropHoverSeqRef.current !== seq) return
+        showHoverTip({
+          name,
+          statsText: 'No catalog stats yet — click for Item Search or eqlwiki.',
+          x,
+          y,
+        })
+      }
+    }, 90)
+  }, [dropItemMenu, showHoverTip])
+
+  const openMobDropMenu = useCallback((itemName, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const name = (itemName || '').trim()
+    if (!name) return
+    if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
+    if (hoverTipClearRef.current) {
+      clearTimeout(hoverTipClearRef.current)
+      hoverTipClearRef.current = null
+    }
+    setHoverTip(null)
+    const cached = dropItemCacheRef.current.get(name.toLowerCase())
+    const pad = 8
+    let x = e.clientX + pad
+    let y = e.clientY + pad
+    if (x + 220 > window.innerWidth - 8) x = Math.max(8, e.clientX - 220 - pad)
+    if (y + 96 > window.innerHeight - 8) y = Math.max(8, window.innerHeight - 96 - 8)
+    setDropItemMenu({
+      name,
+      url: eqlwikiItemUrl(name, cached),
+      x,
+      y,
+    })
+    // Refresh wiki URL from detail when needed (non-blocking).
+    if (!cached) {
+      getItemDetail(name).then((d) => {
+        if (!d) return
+        dropItemCacheRef.current.set(name.toLowerCase(), d)
+        setDropItemMenu((m) => (m && m.name === name ? { ...m, url: eqlwikiItemUrl(name, d) } : m))
+      }).catch(() => {})
+    }
   }, [])
 
   const beginLoad = useCallback((id, label) => {
@@ -1334,6 +1470,27 @@ export default function App() {
       setError(String(e.message || e))
     }
   }
+
+
+  useEffect(() => {
+    if (!dropItemMenu) return undefined
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') setDropItemMenu(null)
+    }
+    const onPtr = (ev) => {
+      const t = ev.target
+      if (t && typeof t.closest === 'function' && t.closest('.mob-drop-menu')) return
+      setDropItemMenu(null)
+    }
+    window.addEventListener('keydown', onKey)
+    // next tick so the opening click does not immediately close
+    const t = window.setTimeout(() => window.addEventListener('mousedown', onPtr), 0)
+    return () => {
+      window.clearTimeout(t)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onPtr)
+    }
+  }, [dropItemMenu])
 
   // Load full catalog size (and empty-query page) when opening Item Search.
   useEffect(() => {
@@ -2601,30 +2758,27 @@ export default function App() {
                         </>
                       )}
                       <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Known drops</h3>
+                      <p className="muted" style={{ fontSize: '0.75rem', marginTop: 0 }}>
+                        Hover for stats · click for Item Search or eqlwiki
+                      </p>
                       {(mobDetail.drop_items || []).length ? (
-                        <ul className="quest-rewards">
+                        <ul className="quest-rewards mob-drop-list">
                           {(mobDetail.drops || []).slice(0, 60).map((d, i) => (
                             <li key={`${d.item}-${i}`}>
                               <button
                                 type="button"
-                                className="zone-link"
-                                onClick={async () => {
-                                  const itemName = d.item
-                                  setTab('search')
-                                  setSearchQ(itemName)
-                                  setSearchLoading(true)
-                                  try {
-                                    const res = await searchItems({ q: itemName, limit: 80 })
-                                    setSearchResults(res)
-                                    const hit = (res.items || []).find((it) => String(it.name || '').toLowerCase() === String(itemName).toLowerCase())
-                                      || (res.items || [])[0]
-                                    if (hit?.name) await openItemDetail(hit.name)
-                                  } catch (err) {
-                                    setError(String(err.message || err))
-                                  } finally {
-                                    setSearchLoading(false)
-                                  }
+                                className="zone-link mob-drop-item"
+                                title="Hover for stats · click for options"
+                                onMouseEnter={(e) => previewMobDrop(d.item, e)}
+                                onMouseMove={(e) => {
+                                  if (dropItemMenu) return
+                                  moveHoverTip(e)
                                 }}
+                                onMouseLeave={() => {
+                                  if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
+                                  hideHoverTip()
+                                }}
+                                onClick={(e) => openMobDropMenu(d.item, e)}
                               >
                                 {d.item}
                               </button>
@@ -3437,6 +3591,36 @@ export default function App() {
 
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
+
+      {dropItemMenu ? (
+        <div
+          className="mob-drop-menu"
+          style={{ left: dropItemMenu.x, top: dropItemMenu.y }}
+          role="menu"
+          aria-label={`Open ${dropItemMenu.name}`}
+        >
+          <div className="mob-drop-menu-title">{dropItemMenu.name}</div>
+          <button
+            type="button"
+            role="menuitem"
+            className="mob-drop-menu-item"
+            onClick={() => openItemInSearch(dropItemMenu.name)}
+          >
+            Open in Item Search
+          </button>
+          <a
+            role="menuitem"
+            className="mob-drop-menu-item"
+            href={dropItemMenu.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setDropItemMenu(null)}
+          >
+            Open on eqlwiki ↗
+          </a>
+        </div>
+      ) : null}
+
       {hoverTip ? (
         <div
           className="hover-tip"
