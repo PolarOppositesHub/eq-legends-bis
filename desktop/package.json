@@ -32,6 +32,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "splash.html",
       "package.json",
       "build/icon.ico",
       "build/icon.png"
@@ -42,6 +43,14 @@
         "to": ".",
         "filter": [
           "**/*"
+        ]
+      },
+      {
+        "from": "../packaging/splash/",
+        "to": "splash",
+        "filter": [
+          "*.mp4",
+          "*.html"
         ]
       }
     ],

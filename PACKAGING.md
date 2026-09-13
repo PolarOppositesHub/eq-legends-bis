@@ -39,6 +39,15 @@ Josh-chosen **D — dragon-eye seal**. Source PNG only — do not invent art.
 
 See `packaging/icons/README.md`.
 
+## Startup intro splash
+Josh-chosen Polar Opposites intro — source MP4 only; do not invent or replace art.
+
+- Source: `packaging/splash/polar-opposites-intro.mp4`
+- Electron plays `splash.html` (`<video>`) from the same folder as the MP4, then loads the planner UI
+- **Any key skips** (main-process `before-input-event` + renderer keydown). Click also skips. Natural end proceeds.
+- Packaged via electron-builder `extraResources` → `resources/splash/polar-opposites-intro.mp4` + `splash.html` (outside asar, so portable/offline works). `scripts/bundle_desktop_resources.py` also copies them into `desktop/resources/splash/`
+- Version / updater (`PolarOppositesHub/eq-legends-bis`) untouched
+
 ## Sharing
 Zip EQ-Legends-BiS-*-portable.exe and send. Brother double-clicks.
 

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EQ Legends BiS</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0a0a;
+      color: #c8c8c8;
+      overflow: hidden;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      cursor: pointer;
+      user-select: none;
+    }
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050505;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    #hint, #wait {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 28px;
+      text-align: center;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(220, 220, 220, 0.55);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 400ms ease;
+    }
+    #hint.visible, #wait.visible { opacity: 1; }
+    #wait { color: rgba(200, 180, 140, 0.72); }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <video id="intro" playsinline disablepictureinpicture></video>
+  </div>
+  <div id="hint">Press any key to skip</div>
+  <div id="wait">Starting…</div>
+  <script>
+    (function () {
+      const video = document.getElementById('intro');
+      const hint = document.getElementById('hint');
+      const wait = document.getElementById('wait');
+      let done = false;
+
+      function finish() {
+        if (done) return;
+        done = true;
+        try { video.pause(); } catch (_) { /* ignore */ }
+        try {
+          video.removeAttribute('src');
+          video.load();
+        } catch (_) { /* ignore */ }
+        hint.classList.remove('visible');
+        wait.classList.add('visible');
+        if (window.eqDesktop && typeof window.eqDesktop.splashFinished === 'function') {
+          window.eqDesktop.splashFinished();
+        }
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get('src') || 'polar-opposites-intro.mp4';
+      if (!src || src === 'skip') {
+        finish();
+        return;
+      }
+
+      video.src = src;
+      const play = video.play();
+      if (play && typeof play.catch === 'function') {
+        play.catch(function () { /* any key / click still skips */ });
+      }
+
+      video.addEventListener('ended', finish);
+      video.addEventListener('error', finish);
+      document.addEventListener('keydown', function (e) {
+        e.preventDefault();
+        finish();
+      }, true);
+      document.addEventListener('pointerdown', finish, true);
+      setTimeout(function () { if (!done) hint.classList.add('visible'); }, 900);
+      setTimeout(finish, 90000);
+
+      if (window.eqDesktop && typeof window.eqDesktop.onSplashStop === 'function') {
+        window.eqDesktop.onSplashStop(finish);
+      }
+    })();
+  </script>
+</body>
+</html>
