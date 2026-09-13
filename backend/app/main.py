@@ -569,13 +569,14 @@ def api_quest_guide(name: str = Query(...), fetch: bool = Query(default=True)):
 def api_mobs(
     q: str = Query(default=""),
     kind: Optional[str] = Query(default=None),
+    era: Optional[str] = Query(default=None),
     limit: int = Query(default=120, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
 ):
-    """Mobs hub index — eqlwiki NPC categories (raid / mini boss / named / standard)."""
+    """Mobs hub index — eqlwiki NPC categories (raid / mini boss / named / standard) + era tags."""
     from . import mob_hub as mh
     try:
-        return mh.search_mobs(q, kind=kind, limit=limit, offset=offset)
+        return mh.search_mobs(q, kind=kind, era=era, limit=limit, offset=offset)
     except Exception as e:
         return {
             "total": 0,
@@ -583,10 +584,12 @@ def api_mobs(
             "limit": limit,
             "query": q or "",
             "kind": kind or "all",
+            "era": era or "all",
             "mobs": [],
             "catalog_size": 0,
             "counts": {},
             "kinds": [],
+            "eras": [],
             "warning": f"mob list unavailable: {e}",
         }
 

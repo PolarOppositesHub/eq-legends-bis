@@ -126,6 +126,7 @@ export const APP_HELP = {
         'Browse eqlwiki NPCs filtered by Raid, Mini Boss, Named, or Standard. Same expand/collapse layout as Quest Hub.',
         'Detail shows wiki fields when available and known drops reverse-linked from the item catalog.',
         'Hover a known drop for an item-stats preview; click it for a small menu — Item Search or eqlwiki.',
+        'Filter by EverQuest era / expansion (Classic, Kunark, Velious, Planes) using eqlwiki era categories — never invented.',
       ],
     },
     {

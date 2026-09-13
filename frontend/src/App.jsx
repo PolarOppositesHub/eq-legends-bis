@@ -701,6 +701,7 @@ export default function App() {
   const [questRewardUpgrade, setQuestRewardUpgrade] = useState(0)
   const [mobQ, setMobQ] = useState('')
   const [mobKind, setMobKind] = useState('all')
+  const [mobEra, setMobEra] = useState('all')
   const [mobResults, setMobResults] = useState(null)
   const [mobLoading, setMobLoading] = useState(false)
   const [mobDetail, setMobDetail] = useState(null)
@@ -1767,6 +1768,7 @@ export default function App() {
         const res = await listMobs({
           q: mobQ || '',
           kind: mobKind && mobKind !== 'all' ? mobKind : '',
+          era: mobEra && mobEra !== 'all' ? mobEra : '',
           limit: 120,
         })
         if (!cancelled) setMobResults(res)
@@ -1783,7 +1785,7 @@ export default function App() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [tab, mobQ, mobKind])
+  }, [tab, mobQ, mobKind, mobEra])
 
   useEffect(() => {
     if (tab !== 'mobs' || !selectedMobName) return
@@ -2623,7 +2625,7 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Mobs</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Single-click a mob for a preview. Double-click (or use the side arrow) to maximize the detail panel.
-                Names and kinds come from eqlwiki (raid / mini boss / named / standard).
+                Names and kinds come from eqlwiki (raid / mini boss / named / standard). Filter by Classic / Kunark / Velious era (eqlwiki era categories).
               </p>
               <div className={`quest-hub-layout${mobListCollapsed ? ' list-collapsed' : ''}`}>
                 <div className="quest-hub-list-col">
@@ -2637,7 +2639,7 @@ export default function App() {
                     <select
                       value={mobKind}
                       onChange={(e) => setMobKind(e.target.value)}
-                      style={{ maxWidth: 180 }}
+                      style={{ maxWidth: 160 }}
                       title="Filter by mob kind"
                     >
                       <option value="all">All combat mobs</option>
@@ -2645,6 +2647,19 @@ export default function App() {
                       <option value="mini_boss">Mini Boss</option>
                       <option value="named">Named</option>
                       <option value="standard">Standard</option>
+                    </select>
+                    <select
+                      value={mobEra}
+                      onChange={(e) => setMobEra(e.target.value)}
+                      style={{ maxWidth: 200 }}
+                      title="Filter by EverQuest era / expansion"
+                    >
+                      <option value="all">All eras</option>
+                      <option value="classic">Classic</option>
+                      <option value="kunark">Kunark</option>
+                      <option value="velious">Velious</option>
+                      <option value="planes">Planes (Fear / Hate / Sky)</option>
+                      <option value="untagged">No era tag</option>
                     </select>
                   </div>
                   {(mobResults?.kinds || []).length ? (
@@ -2658,6 +2673,22 @@ export default function App() {
                           onClick={() => setMobKind(mobKind === k.id ? 'all' : k.id)}
                         >
                           {k.label}{k.count != null ? ` (${k.count})` : ''}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {(mobResults?.eras || []).length ? (
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+                      {(mobResults.eras || []).map((e) => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          className={mobEra === e.id ? 'primary' : ''}
+                          style={{ padding: '0.25rem 0.55rem', fontSize: '0.78rem' }}
+                          title="Filter by EverQuest era / expansion (eqlwiki era categories)"
+                          onClick={() => setMobEra(mobEra === e.id ? 'all' : e.id)}
+                        >
+                          {e.label}{e.count != null ? ` (${e.count})` : ''}
                         </button>
                       ))}
                     </div>
@@ -2700,6 +2731,7 @@ export default function App() {
                             <div className="item-search-name">{m.name}</div>
                             <div className="muted" style={{ fontSize: '0.78rem' }}>
                               {(m.kind_labels || []).filter(Boolean).join(' · ') || m.primary_kind || '—'}
+                              {(m.era_labels || []).length ? ` · ${(m.era_labels || []).join(', ')}` : ''}
                             </div>
                           </div>
                         </button>
