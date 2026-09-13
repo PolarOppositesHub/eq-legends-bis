@@ -24,6 +24,17 @@ KIND_LABELS = {
     "standard": "Standard",
     "merchant": "Merchant",
 }
+# Filter buckets shown in the UI. Raw index may also store fear/hate/sky.
+ERA_FILTERS = ("classic", "kunark", "velious", "planes", "untagged")
+ERA_LABELS = {
+    "classic": "Classic",
+    "kunark": "Kunark",
+    "velious": "Velious",
+    "planes": "Planes (Fear / Hate / Sky)",
+    "untagged": "No era tag",
+}
+_PLANE_ERAS = frozenset({"fear", "hate", "sky"})
+
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
@@ -119,10 +130,12 @@ def list_mobs() -> list[dict[str, Any]]:
         if not name:
             continue
         kinds = [k for k in (row.get("kinds") or []) if k in KINDS]
+        eras = [e for e in (row.get("eras") or []) if isinstance(e, str) and e.strip()]
         out.append({
             "name": name,
             "kinds": kinds,
             "primary_kind": kinds[0] if kinds else "named",
+            "eras": eras,
             "wiki_categories": list(row.get("wiki_categories") or []),
             "url": row.get("url") or _wiki_url(name),
         })
@@ -134,10 +147,22 @@ def _wiki_url(name: str) -> str:
     return f"https://eqlwiki.com/{urllib.parse.quote((name or '').replace(' ', '_'))}"
 
 
+def _era_match(eras: list[str], era_f: str | None) -> bool:
+    """True if row passes the era filter bucket."""
+    if not era_f:
+        return True
+    if era_f == "untagged":
+        return not eras
+    if era_f == "planes":
+        return any(e in _PLANE_ERAS for e in eras)
+    return era_f in eras
+
+
 def search_mobs(
     q: str = "",
     *,
     kind: str | None = None,
+    era: str | None = None,
     limit: int = 120,
     offset: int = 0,
 ) -> dict[str, Any]:
@@ -150,10 +175,17 @@ def search_mobs(
     if kind_f and kind_f not in KINDS:
         kind_f = None
 
+    era_f = (era or "").strip().lower() or None
+    if era_f in ("", "all", "any"):
+        era_f = None
+    if era_f and era_f not in ERA_FILTERS:
+        era_f = None
+
     pool = list_mobs()
     hits: list[dict[str, Any]] = []
     for row in pool:
         kinds = row.get("kinds") or []
+        eras = list(row.get("eras") or [])
         # Default list hides merchants unless explicitly filtered or searched.
         if kind_f:
             if kind_f not in kinds:
@@ -161,19 +193,35 @@ def search_mobs(
         elif "merchant" in kinds and not any(k in kinds for k in ("raid", "mini_boss", "named", "standard")):
             if not qn:
                 continue
+        if not _era_match(eras, era_f):
+            continue
         if qn:
-            blob = f"{row.get('name') or ''} {' '.join(kinds)}".lower()
+            era_blob = " ".join(eras)
+            if any(e in _PLANE_ERAS for e in eras):
+                era_blob = f"{era_blob} planes"
+            blob = f"{row.get('name') or ''} {' '.join(kinds)} {era_blob}".lower()
             if qn not in blob and not all(t in blob for t in qn.split() if t):
                 # token AND match
                 tokens = [t for t in re.split(r"[^a-z0-9']+", qn) if t]
                 name_l = (row.get("name") or "").lower()
                 if not tokens or not all(t in name_l for t in tokens):
                     continue
+        era_labels = []
+        for e in eras:
+            if e in _PLANE_ERAS:
+                if ERA_LABELS["planes"] not in era_labels:
+                    era_labels.append("Planes")
+            elif e in ERA_LABELS:
+                era_labels.append(ERA_LABELS[e])
+            else:
+                era_labels.append(e.capitalize())
         hits.append({
             "name": row["name"],
             "kinds": kinds,
             "primary_kind": row.get("primary_kind"),
             "kind_labels": [KIND_LABELS.get(k, k) for k in kinds if k != "merchant" or kind_f == "merchant"],
+            "eras": eras,
+            "era_labels": era_labels,
             "url": row.get("url"),
         })
 
@@ -181,18 +229,30 @@ def search_mobs(
     page = hits[offset: offset + max(1, min(500, int(limit)))]
     payload = _mob_index_payload()
     counts = payload.get("counts") or {}
+    era_counts = counts.get("era") if isinstance(counts.get("era"), dict) else {}
+    eras_meta = payload.get("eras")
+    if not isinstance(eras_meta, list) or not eras_meta:
+        eras_meta = [
+            {"id": eid, "label": ERA_LABELS[eid], "count": int(era_counts.get(eid, 0) or 0)}
+            for eid in ERA_FILTERS
+        ]
     return {
         "total": total,
         "offset": offset,
         "limit": limit,
         "query": q,
         "kind": kind_f or "all",
+        "era": era_f or "all",
         "mobs": page,
         "catalog_size": len(pool),
         "counts": counts,
         "kinds": [{"id": k, "label": KIND_LABELS[k], "count": counts.get(k, 0)} for k in ("raid", "mini_boss", "named", "standard")],
+        "eras": eras_meta,
         "note": payload.get("note") or (
             "Mob names from eqlwiki NPC categories. Mini bosses from Plane of Hate Map Locations."
+        ),
+        "era_note": payload.get("era_note") or (
+            "Era filter uses eqlwiki Classic / Kunark / Velious (+ Fear/Hate/Sky) era categories."
         ),
         "source": payload.get("source") or "eqlwiki",
         "index_path": payload.get("_index_path") or "",

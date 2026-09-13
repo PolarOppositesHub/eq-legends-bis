@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Refresh decoded/eqlwiki_mob_names.json from eqlwiki NPC categories.
 
-Never invents mobs or kinds. Classification:
+Never invents mobs, kinds, or eras. Classification:
   - raid: Category:Raid Encounters
   - named: Category:Named Mobs without leading A/An (and not raid)
   - standard: Category:Named Mobs with leading A/An (and not raid)
   - mini_boss: names linked from Plane of Hate "Map Locations" (documented wiki list)
   - merchant: Category:Merchants (kept for search; not a combat kind filter)
+  - eras: Category:Classic/Kunark/Velious Era + Fear/Hate/Sky Era (eqlwiki only)
 
 Writes both desktop bundle and data/decoded when present.
 """
@@ -97,6 +98,50 @@ def wiki_url(name: str) -> str:
     return f"https://eqlwiki.com/{urllib.parse.quote(name.replace(' ', '_'))}"
 
 
+ERA_CATEGORIES = [
+    ("classic", "Category:Classic Era"),
+    ("kunark", "Category:Kunark Era"),
+    ("velious", "Category:Velious Era"),
+    ("fear", "Category:Fear Era"),
+    ("hate", "Category:Hate Era"),
+    ("sky", "Category:Sky Era"),
+]
+ERA_ORDER = ("classic", "kunark", "velious", "fear", "hate", "sky")
+
+
+def apply_eras(by_name: dict[str, dict]) -> dict[str, int]:
+    """Attach eqlwiki era category membership onto each mob row."""
+    for row in by_name.values():
+        row["eras"] = []
+    for era_id, cat in ERA_CATEGORIES:
+        print(f"Fetching {cat}…")
+        pages = category_pages(cat)
+        print(f"  {len(pages)}")
+        for name in pages:
+            row = by_name.get(name)
+            if not row:
+                continue
+            if era_id not in row["eras"]:
+                row["eras"].append(era_id)
+    for row in by_name.values():
+        row["eras"] = [e for e in ERA_ORDER if e in (row.get("eras") or [])]
+
+    era_counts = {e: 0 for e in ERA_ORDER}
+    tagged = 0
+    for row in by_name.values():
+        eras = row.get("eras") or []
+        if eras:
+            tagged += 1
+        for e in eras:
+            era_counts[e] += 1
+    era_counts["untagged"] = len(by_name) - tagged
+    era_counts["planes"] = sum(
+        1 for row in by_name.values()
+        if any(e in (row.get("eras") or []) for e in ("fear", "hate", "sky"))
+    )
+    return era_counts
+
+
 def main() -> None:
     print("Fetching Category:Raid Encounters…")
     raid = category_pages("Category:Raid Encounters")
@@ -120,6 +165,7 @@ def main() -> None:
                 "name": name,
                 "kinds": [],
                 "wiki_categories": [],
+                "eras": [],
                 "url": wiki_url(name),
             }
             by_name[name] = row
@@ -158,6 +204,8 @@ def main() -> None:
         if "merchant" not in row["kinds"]:
             row["kinds"].append("merchant")
 
+    era_counts = apply_eras(by_name)
+
     mobs = sorted(by_name.values(), key=lambda r: (r["name"] or "").lower())
     counts = {
         "all": len(mobs),
@@ -166,14 +214,27 @@ def main() -> None:
         "named": sum(1 for m in mobs if "named" in m["kinds"]),
         "standard": sum(1 for m in mobs if "standard" in m["kinds"]),
         "merchant": sum(1 for m in mobs if "merchant" in m["kinds"]),
+        "era": era_counts,
     }
     payload = {
         "source": "eqlwiki",
         "fetched": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "note": (
             "Kinds from eqlwiki only: Raid Encounters; Named Mobs split by leading A/An "
-            "(standard vs named); Plane of Hate Map Locations as mini_boss; Merchants tagged."
+            "(standard vs named); Plane of Hate Map Locations as mini_boss; Merchants tagged. "
+            "Eras from eqlwiki Classic/Kunark/Velious (+ Fear/Hate/Sky) era categories."
         ),
+        "era_note": (
+            "Eras from eqlwiki Category:Classic Era / Kunark Era / Velious Era "
+            "and Fear/Hate/Sky Era categories. Not invented."
+        ),
+        "eras": [
+            {"id": "classic", "label": "Classic", "count": era_counts.get("classic", 0)},
+            {"id": "kunark", "label": "Kunark", "count": era_counts.get("kunark", 0)},
+            {"id": "velious", "label": "Velious", "count": era_counts.get("velious", 0)},
+            {"id": "planes", "label": "Planes (Fear / Hate / Sky)", "count": era_counts.get("planes", 0)},
+            {"id": "untagged", "label": "No era tag", "count": era_counts.get("untagged", 0)},
+        ],
         "counts": counts,
         "mobs": mobs,
     }
