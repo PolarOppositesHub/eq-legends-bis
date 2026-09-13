@@ -124,7 +124,7 @@ export const APP_HELP = {
       title: 'Mobs',
       body: [
         'Browse eqlwiki NPCs filtered by Raid, Mini Boss, Named, or Standard. Same expand/collapse layout as Quest Hub.',
-        'Detail shows wiki fields when available and known drops reverse-linked from the item catalog.',
+        'Detail shows wiki fields when available and known drops from eqlwiki Known Loot unioned with catalog reverse-index (never invented).',
         'Hover a known drop for an item-stats preview; click it for a small menu — Item Search or eqlwiki.',
         'Filter by EverQuest era / expansion (Classic, Kunark, Velious, Planes) using eqlwiki era categories — never invented.',
       ],

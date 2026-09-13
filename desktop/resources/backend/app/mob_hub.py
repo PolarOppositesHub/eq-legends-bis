@@ -1,17 +1,19 @@
 """Mobs hub: eqlwiki NPC index + on-demand page detail + catalog drop reverse-index.
 
 Mob names and kinds come from decoded/eqlwiki_mob_names.json (eqlwiki categories).
-Detail fields are parsed from the real eqlwiki page when available — never invented.
+Detail fields and Known Loot are parsed from the real eqlwiki page when available —
+never invented. Catalog reverse-index drops are unioned with wiki loot (deduped by name).
 """
 from __future__ import annotations
 
+import html as html_lib
 import json
 import re
 import urllib.parse
 import urllib.request
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from .paths import APP_ROOT, decoded_dir
 
@@ -45,6 +47,39 @@ _PLACEHOLDER_MOBS = frozenset({
     "trash",
     "unknown",
 })
+# Title/kind disambiguators only — do not merge zone/race/gender parentheticals.
+_TITLE_PAREN_LABELS = frozenset({
+    "god",
+    "npc",
+    "mob",
+    "raid",
+    "raid boss",
+    "named",
+    "mini",
+    "mini boss",
+    "mini-boss",
+    "rare",
+    "rare drop",
+})
+_SKIP_LOOT_LINK_NAMES = frozenset({
+    "edit",
+    "edit section",
+    "known loot",
+    "unique loot",
+    "common loot",
+})
+_SKIP_LOOT_TITLE_PREFIXES = (
+    "category:",
+    "file:",
+    "image:",
+    "special:",
+    "talk:",
+    "template:",
+    "user:",
+    "help:",
+)
+# High safety cap — god/raid lists are tens of items, not hundreds.
+DROP_LIST_CAP = 400
 
 
 def _name_key(name: str) -> str:
@@ -52,6 +87,48 @@ def _name_key(name: str) -> str:
     for ch in ("\u2019", "\u2018", "`", "\u02bc"):
         s = s.replace(ch, "'")
     return s
+
+
+def _clean_wiki_text(val: str) -> str:
+    return _WS_RE.sub(" ", html_lib.unescape(_TAG_RE.sub(" ", val or ""))).strip()
+
+
+def _strip_title_parens(name: str) -> str:
+    """Strip trailing (God)/(NPC)/… kind labels; leave zone/race/gender parens."""
+    s = (name or "").strip()
+    while True:
+        m = re.search(r"\s*\(([^)]*)\)\s*$", s)
+        if not m:
+            return s
+        inner = _WS_RE.sub(" ", m.group(1)).strip().lower()
+        if inner not in _TITLE_PAREN_LABELS:
+            return s
+        s = s[: m.start()].strip()
+
+
+def _catalog_lookup_keys(name: str, index_keys: Iterable[str] | None = None) -> list[str]:
+    """Exact catalog key plus title-parenthetical variants (Innoruuk (God) ↔ Innoruuk)."""
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def add(key: str) -> None:
+        k = (key or "").strip()
+        if k and k not in seen:
+            seen.add(k)
+            out.append(k)
+
+    add(_name_key(name))
+    stripped = _name_key(_strip_title_parens(name))
+    add(stripped)
+    if index_keys is not None and stripped:
+        prefix = f"{stripped} ("
+        for k in index_keys:
+            if not k.startswith(prefix) or not k.endswith(")"):
+                continue
+            inner = k[len(prefix) : -1].strip()
+            if inner in _TITLE_PAREN_LABELS:
+                add(k)
+    return out
 
 
 def _load_json(path: Path) -> Any:
@@ -452,32 +529,126 @@ def _parse_namedmobpage(html: str) -> dict[str, Any]:
     if m3:
         desc = _WS_RE.sub(" ", _TAG_RE.sub(" ", m3.group(1))).strip()
 
-    return {"fields": fields, "description": desc}
+    return {
+        "fields": fields,
+        "description": desc,
+        "known_loot": _parse_known_loot(html),
+    }
 
 
-def _enrich_from_wiki(name: str) -> dict[str, Any] | None:
+def _skip_loot_name(name: str) -> bool:
+    key = _name_key(name)
+    if not key or key in _SKIP_LOOT_LINK_NAMES or key in _PLACEHOLDER_MOBS:
+        return True
+    return any(key.startswith(p) for p in _SKIP_LOOT_TITLE_PREFIXES)
+
+
+def _first_item_link(fragment: str) -> str:
+    """Visible item name from the first wiki link in a loot-list row — never invented."""
+    if not fragment:
+        return ""
+    m = re.search(r"<a\b([^>]*)>(.*?)</a>", fragment, re.I | re.S)
+    if not m:
+        return ""
+    attrs, inner = m.group(1), m.group(2)
+    href_m = re.search(r'\bhref="([^"]*)"', attrs, re.I)
+    href = (href_m.group(1) if href_m else "").strip()
+    if href.startswith("#"):
+        return ""
+    title_m = re.search(r'\btitle="([^"]*)"', attrs, re.I)
+    title = html_lib.unescape(title_m.group(1)).strip() if title_m else ""
+    visible = _clean_wiki_text(inner)
+    name = visible or title
+    if _skip_loot_name(name):
+        return ""
+    return name
+
+
+def _loot_section_chunks(html: str) -> list[str]:
+    """eqlwiki Known / Unique / Common Loot bodies (stop at the next heading)."""
+    chunks: list[str] = []
+    for m in re.finditer(
+        r'<h2\b[^>]*id="((?:Known|Unique|Common)_Loot)"[^>]*>[\s\S]*?</h2>'
+        r'([\s\S]*?)(?=<h2\b|<div class="eql-mobpage-section(?![^"]*loot)|</body>|\Z)',
+        html,
+        re.I,
+    ):
+        chunks.append(m.group(2))
+    if chunks:
+        return chunks
+    box = re.search(
+        r'<div class="[^"]*eql-mobpage-loot[^"]*"[^>]*>([\s\S]*?)'
+        r'(?=<div class="eql-mobpage-section(?![^"]*loot)|<h2[^>]*id="Description")',
+        html,
+        re.I,
+    )
+    if box:
+        chunks.append(box.group(1))
+    return chunks
+
+
+def _parse_known_loot(html: str) -> list[dict[str, str]]:
+    """Item links from eqlwiki Known Loot (and Unique/Common Loot) — sourced only."""
+    if not html:
+        return []
+    items: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def add(name: str) -> None:
+        name = (name or "").strip()
+        if not name or _skip_loot_name(name):
+            return
+        key = _name_key(name)
+        if key in seen:
+            return
+        seen.add(key)
+        items.append({"item": name})
+
+    for chunk in _loot_section_chunks(html):
+        lists = re.findall(r"<(ul|ol)\b[^>]*>([\s\S]*?)</\1>", chunk, re.I)
+        rows: list[str] = []
+        for _tag, body in lists:
+            rows.extend(re.findall(r"<li\b[^>]*>([\s\S]*?)</li>", body, re.I))
+        if not rows:
+            rows = re.findall(
+                r'<div class="hbdiv">\s*(<a\b[\s\S]*?</a>)',
+                chunk,
+                re.I,
+            )
+        for row in rows:
+            add(_first_item_link(row))
+    return items
+
+
+def _enrich_from_wiki(name: str, url: str | None = None) -> dict[str, Any] | None:
     cached = _load_mob_cache(name)
-    if cached and (cached.get("fields") or cached.get("description")):
+    # Older caches lack known_loot — refetch so Known Loot is parsed.
+    if cached and "known_loot" in cached:
         return cached
-    url = _wiki_url(name)
-    blob = _http_get(url)
+    page_url = (url or "").strip() or _wiki_url(name)
+    blob = _http_get(page_url)
+    if not blob and page_url != _wiki_url(name):
+        blob = _http_get(_wiki_url(name))
+        if blob:
+            page_url = _wiki_url(name)
     if not blob:
         return cached
     try:
-        html = blob.decode("utf-8", errors="ignore")
+        page_html = blob.decode("utf-8", errors="ignore")
     except Exception:
         return cached
-    if "does not exist" in html.lower() and "create the page" in html.lower():
+    if "does not exist" in page_html.lower() and "create the page" in page_html.lower():
         return cached
-    parsed = _parse_namedmobpage(html)
+    parsed = _parse_namedmobpage(page_html)
     if not parsed:
         return cached
     payload = {
         "name": name,
-        "url": url,
+        "url": page_url,
         "fields": parsed.get("fields") or {},
         "description": parsed.get("description") or "",
-        "source": url,
+        "known_loot": parsed.get("known_loot") or [],
+        "source": page_url,
     }
     _write_mob_cache(name, payload)
     return payload
@@ -496,42 +667,124 @@ def mob_detail(name: str, *, fetch: bool = True) -> dict[str, Any]:
 
     kinds = list((index_row or {}).get("kinds") or [])
     url = (index_row or {}).get("url") or _wiki_url(n)
-    drops_raw = _drops_by_mob().get(_name_key(n), [])
-    # Fuzzy: also try without zone parenthetical
-    if not drops_raw and "(" in n:
-        bare = re.sub(r"\s*\([^)]*\)\s*$", "", n).strip()
-        drops_raw = _drops_by_mob().get(_name_key(bare), [])
-
-    zones = sorted({d.get("zone") for d in drops_raw if d.get("zone")})
-    items = sorted({d.get("item") for d in drops_raw if d.get("item")})
 
     wiki = None
     if fetch:
         try:
-            wiki = _enrich_from_wiki(n)
+            wiki = _enrich_from_wiki(n, url=url)
         except Exception:
             wiki = None
+    else:
+        cached = _load_mob_cache(n)
+        if cached and "known_loot" in cached:
+            wiki = cached
 
     fields = (wiki or {}).get("fields") or {}
+    wiki_loot = list((wiki or {}).get("known_loot") or [])
+    catalog_drops = _catalog_drops_for_name(n)
+    wiki_zone = (fields.get("zone") or "").strip()
+    drops_raw = _union_drops(wiki_loot, catalog_drops, default_zone=wiki_zone)
+
+    zones = sorted({d.get("zone") for d in drops_raw if d.get("zone")})
+    items = [d.get("item") for d in drops_raw if d.get("item")]
+    cap = DROP_LIST_CAP
+
     return {
         "name": (index_row or {}).get("name") or n,
         "kinds": kinds,
         "kind_labels": [KIND_LABELS.get(k, k) for k in kinds],
         "wiki_categories": (index_row or {}).get("wiki_categories") or [],
-        "url": url,
+        "url": (wiki or {}).get("url") or url,
         "fields": fields,
         "level": fields.get("level") or "",
         "zone": fields.get("zone") or (zones[0] if len(zones) == 1 else ""),
         "location": fields.get("location") or "",
         "description": (wiki or {}).get("description") or "",
-        "drops": drops_raw[:80],
-        "drop_items": items[:80],
+        "drops": drops_raw[:cap],
+        "drop_items": items[:cap],
         "drop_zones": zones[:40],
         "drop_count": len(drops_raw),
+        "wiki_loot_count": len(wiki_loot),
+        "catalog_drop_count": len({_name_key(d.get("item") or "") for d in catalog_drops if d.get("item")}),
         "in_index": bool(index_row),
         "note": (
-            "Detail from eqlwiki page when available; drops reverse-indexed from decoded catalog "
-            "(never invented)."
+            "Detail from eqlwiki page when available. Known drops union eqlwiki Known Loot "
+            "and decoded catalog reverse-index (never invented)."
         ),
         "cached": bool(wiki),
     }
+
+
+def _catalog_drops_for_name(name: str) -> list[dict[str, Any]]:
+    """Reverse-index hits for this mob name and title-parenthetical variants."""
+    index = _drops_by_mob()
+    keys = _catalog_lookup_keys(name, index.keys())
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for key in keys:
+        for e in index.get(key) or []:
+            if not isinstance(e, dict):
+                continue
+            item = (e.get("item") or "").strip()
+            if not item:
+                continue
+            zone = (e.get("zone") or "").strip()
+            sig = (_name_key(item), _name_key(zone))
+            if sig in seen:
+                continue
+            seen.add(sig)
+            row = dict(e)
+            row["source"] = ["catalog"]
+            out.append(row)
+    return out
+
+
+def _union_drops(
+    wiki_loot: list[Any],
+    catalog_drops: list[dict[str, Any]],
+    *,
+    default_zone: str = "",
+) -> list[dict[str, Any]]:
+    """Dedupe by item name. Prefer wiki display name; tag eqlwiki / catalog / both."""
+    by_item: dict[str, dict[str, Any]] = {}
+
+    for raw in wiki_loot:
+        if isinstance(raw, dict):
+            item = (raw.get("item") or "").strip()
+        else:
+            item = str(raw or "").strip()
+        if not item or _skip_loot_name(item):
+            continue
+        key = _name_key(item)
+        if not key or key in by_item:
+            continue
+        by_item[key] = {
+            "item": item,
+            "zone": default_zone,
+            "source": ["eqlwiki"],
+        }
+
+    for e in catalog_drops:
+        item = (e.get("item") or "").strip()
+        if not item:
+            continue
+        key = _name_key(item)
+        zone = (e.get("zone") or "").strip()
+        if key in by_item:
+            existing = by_item[key]
+            if zone and not existing.get("zone"):
+                existing["zone"] = zone
+            src = existing.setdefault("source", [])
+            if "catalog" not in src:
+                src.append("catalog")
+            if e.get("mob") and not existing.get("mob"):
+                existing["mob"] = e.get("mob")
+        else:
+            by_item[key] = {
+                "item": item,
+                "zone": zone or default_zone,
+                "mob": e.get("mob") or "",
+                "source": ["catalog"],
+            }
+
+    return sorted(by_item.values(), key=lambda r: (r.get("item") or "").lower())

@@ -601,7 +601,7 @@ class MobDetailRequest(BaseModel):
 
 @app.post("/api/mob-detail")
 def api_mob_detail(body: MobDetailRequest):
-    """Mobs hub detail: eqlwiki page fields + catalog drop reverse-index."""
+    """Mobs hub detail: eqlwiki Known Loot union catalog drop reverse-index."""
     from . import mob_hub as mh
     name = (body.name or "").strip()
     if not name:

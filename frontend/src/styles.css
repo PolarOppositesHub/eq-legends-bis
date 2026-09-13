@@ -417,6 +417,9 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
 .mob-drop-item {
   text-align: left;
 }
+.mob-drop-source {
+  font-size: 0.72rem;
+}
 .mob-drop-menu {
   position: fixed;
   z-index: 10000;
