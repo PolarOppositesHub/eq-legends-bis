@@ -1224,13 +1224,200 @@ def _wiki_urls_for_item(it: dict[str, Any]) -> list[str]:
     return out
 
 
+_TRAILING_PAREN_RE = re.compile(r"\s*\(([^()]*)\)\s*$")
+# Craft-bow string materials on eqlwiki. Order is preference when several exist.
+_CRAFT_MATERIALS = ("Silk", "Linen", "Hemp")
+
+
+def _strip_trailing_paren(name: str) -> str:
+    return _TRAILING_PAREN_RE.sub("", (name or "").strip()).strip()
+
+
+def _eqlegendstools_item_url(name: str) -> str:
+    """Bare item slug. Material-suffix slugs 404 on eqlegendstools."""
+    return f"https://eqlegendstools.com/items/{_slug(name)}/"
+
+
+def _catalog_row_for_name(name: str) -> dict[str, Any] | None:
+    key = _name_key(name)
+    if not key:
+        return None
+    try:
+        row = _flat_by_name().get(key)
+    except Exception:
+        row = None
+    return row if isinstance(row, dict) else None
+
+
+def image_name_candidates(name: str) -> list[str]:
+    """Titles to try for an icon: exact name, then wiki-index parentheticals.
+
+    Catalog often stores bare craft names (e.g. ``Shaped Darkwood Compound Bow``)
+    while eqlwiki pages are material-suffixed (``… (Silk)``). Only wiki-index
+    titles are added as extras — never invented names.
+    """
+    requested = (name or "").strip()
+    if not requested:
+        return []
+    seen: set[str] = set()
+    out: list[str] = []
+
+    def add(raw: str | None) -> None:
+        n = (raw or "").strip()
+        if not n:
+            return
+        key = _name_key(n)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        out.append(n)
+
+    add(requested)
+    wiki: dict[str, str] = {}
+    try:
+        wiki = _wiki_display_names()
+    except Exception:
+        wiki = {}
+
+    key = _name_key(requested)
+    if key in wiki:
+        add(wiki[key])
+
+    base = _strip_trailing_paren(requested)
+    base_key = _name_key(base)
+    if base != requested:
+        add(base)
+        if base_key in wiki:
+            add(wiki[base_key])
+
+    prefix = f"{base_key} ("
+    variants = [display for k, display in wiki.items() if k.startswith(prefix)]
+
+    def _mat_rank(display: str) -> tuple[int, str]:
+        low = display.lower()
+        for i, mat in enumerate(_CRAFT_MATERIALS):
+            if low.endswith(f"({mat.lower()})"):
+                return (i, display.lower())
+        return (len(_CRAFT_MATERIALS), display.lower())
+
+    for display in sorted(variants, key=_mat_rank):
+        add(display)
+
+    if base:
+        for mat in _CRAFT_MATERIALS:
+            cand = f"{base} ({mat})"
+            ck = _name_key(cand)
+            if ck in wiki:
+                add(wiki[ck])
+
+    return out
+
+
+def _wiki_image_page_urls(name: str, it: dict[str, Any] | None = None) -> list[str]:
+    """Pages that may host a real Item_### icon for ``name``.
+
+    Exact wiki title first, then catalog urls, then index-backed fallbacks,
+    then eqlegendstools bare slugs (wiki interstitial / 404 escape hatch).
+    """
+    urls: list[str] = []
+
+    def add_url(u: str | None) -> None:
+        u = (u or "").strip()
+        if u and u not in urls:
+            urls.append(u)
+
+    it = it if isinstance(it, dict) else {}
+    for key in ("sourceUrl", "url"):
+        u = (it.get(key) or "").strip()
+        if u.startswith("http") and ("eqlwiki" in u or "eqlegendstools" in u):
+            add_url(u)
+
+    candidates = image_name_candidates(name)
+    # Prefer .com underscore titles; keep URL count modest.
+    for cand in candidates:
+        title = cand.replace(" ", "_")
+        add_url(f"https://eqlwiki.com/{urllib.parse.quote(title)}")
+
+    # Bare eqlegendstools slugs last (material-suffix slugs 404).
+    bare = _strip_trailing_paren(name) or name
+    add_url(_eqlegendstools_item_url(bare))
+    if _slug(name) != _slug(bare):
+        add_url(_eqlegendstools_item_url(name))
+    return urls
+
+
+def _page_html_usable_for_image(html: str) -> bool:
+    """Reject bot interstitials / missing wiki shells so we keep looking."""
+    if not html or len(html) < 200:
+        return False
+    low = html.lower()
+    if "one moment, please" in low:
+        return False
+    if "<title>one moment" in low:
+        return False
+    if "just a moment" in low and "cloudflare" in low:
+        return False
+    if "does not exist" in low and "create the page" in low:
+        return False
+    return True
+
+
+def _display_name_from_page_url(url: str) -> str | None:
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except Exception:
+        return None
+    host = (parsed.netloc or "").lower()
+    path = urllib.parse.unquote((parsed.path or "").strip("/"))
+    if not path:
+        return None
+    if "eqlwiki." in host:
+        title = path.split("/")[-1].replace("_", " ").strip()
+        return title or None
+    if "eqlegendstools" in host and path.lower().startswith("items/"):
+        slug = path.split("/")[-1] if not path.endswith("/") else path.split("/")[-2]
+        return slug.replace("-", " ").strip() or None
+    return None
+
+
+def _write_icon_aliases(img_dir: Path, names: list[str], blob: bytes, ext: str) -> Path | None:
+    """Write the same icon under each requested/resolved slug. First name is required."""
+    primary: Path | None = None
+    seen: set[str] = set()
+    for i, raw in enumerate(names):
+        n = (raw or "").strip()
+        if not n:
+            continue
+        slug = _slug(n)
+        if not slug or slug in seen:
+            continue
+        seen.add(slug)
+        dest = img_dir / f"{slug}{ext}"
+        try:
+            dest.write_bytes(blob)
+        except Exception:
+            if i == 0:
+                return None
+            continue
+        if dest.is_file() and dest.stat().st_size > 0:
+            if i == 0:
+                primary = dest
+            elif primary is None:
+                primary = dest
+    return primary
+
+
 # eqlwiki icons live under hashed dirs, e.g. /images/6/61/Item_641.png
 _IMG_RE = re.compile(
     r"(?:src|content)=[\"']((?:https?://[^\"']+)?/images/[^\"']+\.(?:png|jpg|jpeg|webp|gif))[\"']",
     re.I,
 )
 _ITEM_IMG_RE = re.compile(
-    r"(?:https?://eqlwiki\.(?:com|org))?(/images/(?:[A-Za-z0-9._~-]+/)+Item_\d+\.(?:png|gif|jpe?g|webp))",
+    r"(?:https?://(?:eqlwiki\.(?:com|org)|eqlegendstools\.com))?(/images/(?:[A-Za-z0-9._~-]+/)+Item_\d+\.(?:png|gif|jpe?g|webp))",
+    re.I,
+)
+_ITEM_IMG_ABS_RE = re.compile(
+    r"(https?://[^\"'\s>]+/Item_\d+\.(?:png|gif|jpe?g|webp))",
     re.I,
 )
 
@@ -1240,6 +1427,9 @@ def _pick_wiki_image(html: str) -> str | None:
     for m in _ITEM_IMG_RE.findall(html or ""):
         path = m if m.startswith("http") else f"https://eqlwiki.com{m if m.startswith('/') else '/' + m}"
         return path
+    for m in _ITEM_IMG_ABS_RE.findall(html or ""):
+        if m:
+            return m
     for m in _IMG_RE.findall(html or ""):
         url = m
         if url.startswith("//"):
@@ -1325,6 +1515,22 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
             return str(p)
 
     existing = _copy_seed_into_cache(name) or local_image_path(name)
+    if not existing:
+        # Alias a cached fallback slug (e.g. …-bow-silk.png) onto the requested name.
+        for alt in image_name_candidates(name)[1:]:
+            hit = _copy_seed_into_cache(alt) or local_image_path(alt)
+            if not hit:
+                continue
+            try:
+                dest = img_dir / f"{_slug(name)}{hit.suffix}"
+                if not dest.exists() or dest.stat().st_size == 0:
+                    dest.write_bytes(hit.read_bytes())
+                if dest.is_file() and dest.stat().st_size > 0:
+                    existing = dest
+                    break
+            except Exception:
+                existing = hit
+                break
     if existing:
         # Re-encode legacy 16-bit wiki PNGs already on disk (Chromium blank otherwise).
         try:
@@ -1358,20 +1564,30 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
             "images_dir": str(img_dir),
         }
 
-    it = None
-    key = (name or "").strip().lower()
-    for row in _all_flat_items():
-        if (row.get("name") or "").strip().lower() == key:
-            it = row
-            break
+    it = _catalog_row_for_name(name)
     if not it:
         # Still try a bare wiki title lookup so BiS names outside flats can resolve.
         it = {"name": name}
+    elif not (it.get("sourceUrl") or it.get("url")):
+        # Prefer a known wiki/catalog URL from a parenthetical variant.
+        for alt in image_name_candidates(name):
+            if _name_key(alt) == _name_key(name):
+                continue
+            row = _catalog_row_for_name(alt)
+            if row and (row.get("sourceUrl") or row.get("url")):
+                it = {
+                    **it,
+                    "sourceUrl": row.get("sourceUrl") or "",
+                    "url": row.get("url") or "",
+                }
+                break
 
     img_url = None
+    resolved_name = None
+    resolved_page = None
     wiki_tried = 0
     last_http_err = None
-    for wiki in _wiki_urls_for_item(it):
+    for wiki in _wiki_image_page_urls(name, it):
         wiki_tried += 1
         html_b = _http_get(wiki)
         if not html_b:
@@ -1381,8 +1597,13 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
             html = html_b.decode("utf-8", errors="ignore")
         except Exception:
             continue
+        if not _page_html_usable_for_image(html):
+            last_http_err = f"unusable page: {wiki}"
+            continue
         img_url = _pick_wiki_image(html)
         if img_url:
+            resolved_page = wiki
+            resolved_name = _display_name_from_page_url(wiki) or name
             break
     if not img_url:
         return {
@@ -1419,16 +1640,18 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
         blob = _normalize_image_blob(blob, ".png")
     elif ext in (".jpg", ".jpeg"):
         blob = _normalize_image_blob(blob, ".jpg")
-    dest = img_dir / f"{_slug(name)}{ext}"
-    try:
-        dest.write_bytes(blob)
-    except Exception as e:
+    alias_names = [name]
+    if resolved_name:
+        alias_names.append(resolved_name)
+    dest = _write_icon_aliases(img_dir, alias_names, blob, ext)
+    if not dest:
+        dest = img_dir / f"{_slug(name)}{ext}"
         return {
             "name": name,
             "cached": False,
             "path": None,
             "url": None,
-            "error": f"failed write {dest}: {e}",
+            "error": f"failed write {dest}",
             "images_dir": str(img_dir),
         }
     return {
@@ -1436,6 +1659,8 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
         "cached": True,
         "fetched": True,
         "source": img_url,
+        "resolved_name": resolved_name or name,
+        "resolved_page": resolved_page,
         "path": _path_out(dest),
         "url": f"/api/item-image?name={urllib.parse.quote(name)}",
         "images_dir": str(img_dir),
