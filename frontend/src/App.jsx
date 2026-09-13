@@ -2794,7 +2794,7 @@ export default function App() {
                         {mobDetail.drop_count ? ` (${mobDetail.drop_count})` : ''}
                       </h3>
                       <p className="muted" style={{ fontSize: '0.75rem', marginTop: 0 }}>
-                        eqlwiki Known Loot ∪ catalog · hover for stats · click for Item Search or eqlwiki
+                        eqlwiki Known Loot ∪ catalog
                       </p>
                       {(mobDetail.drops || []).length ? (
                         <ul className="quest-rewards mob-drop-list">
@@ -2807,7 +2807,6 @@ export default function App() {
                               <button
                                 type="button"
                                 className="zone-link mob-drop-item"
-                                title="Hover for stats · click for options"
                                 onMouseEnter={(e) => previewMobDrop(d.item, e)}
                                 onMouseMove={(e) => {
                                   if (dropItemMenu) return
