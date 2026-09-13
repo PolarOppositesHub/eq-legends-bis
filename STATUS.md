@@ -1,6 +1,15 @@
 # EQ Legends BiS app status
 
-Version: **1.0.18** — Known Loot wiki∪catalog union (PR #19); updater PolarOppositesHub/eq-legends-bis unchanged.
+Version: **1.0.19** — merge #20–#25 (hover hint, Any-slot interchange, Upgrade Priority UX, item-image fallbacks, desktop chrome, dragon-eye icon). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.0.19
+- #20 Known Loot hover hint removed
+- #21 Any-slot non-weapon upgrade interchange
+- #22 Upgrade Priority hover/click parity with Known Loot
+- #23 bare craft item-image parenthetical/eqlegendstools fallbacks
+- #24 desktop chrome: themed scrollbars, no File menu, in-app Quit
+- #25 dragon-eye seal app icon (`desktop/build/icon.ico`)
+- Conflict notes: App.jsx/uiSettings (#22), desktop/main.js (#24+#25 icon+chrome)
 
 ## 1.0.18
 - Hotfix: do not cache eqlwiki bot interstitials / empty shells (was poisoning Known Loot to []).
