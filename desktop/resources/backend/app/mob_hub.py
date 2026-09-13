@@ -620,10 +620,43 @@ def _parse_known_loot(html: str) -> list[dict[str, str]]:
     return items
 
 
+def _wiki_html_usable(page_html: str) -> bool:
+    """Reject bot interstitials / empty shells so we never poison mob cache."""
+    if not page_html or len(page_html) < 200:
+        return False
+    low = page_html.lower()
+    if "one moment, please" in low:
+        return False
+    if "<title>one moment" in low:
+        return False
+    if "just a moment" in low and "cloudflare" in low:
+        return False
+    if "does not exist" in low and "create the page" in low:
+        return False
+    return True
+
+
+def _mob_cache_has_loot_payload(cached: dict[str, Any] | None) -> bool:
+    """True when cache is worth keeping (has known_loot key and real page content)."""
+    if not cached or "known_loot" not in cached:
+        return False
+    loot = cached.get("known_loot") or []
+    if loot:
+        return True
+    # Empty loot is OK only if the page payload looks real (not a challenge poison).
+    if (cached.get("description") or "").strip():
+        return True
+    fields = cached.get("fields") or {}
+    if isinstance(fields, dict) and any(str(v).strip() for v in fields.values()):
+        return True
+    return False
+
+
 def _enrich_from_wiki(name: str, url: str | None = None) -> dict[str, Any] | None:
     cached = _load_mob_cache(name)
     # Older caches lack known_loot — refetch so Known Loot is parsed.
-    if cached and "known_loot" in cached:
+    # Also refetch empty challenge-poisoned caches (no loot + no description/fields).
+    if _mob_cache_has_loot_payload(cached):
         return cached
     page_url = (url or "").strip() or _wiki_url(name)
     blob = _http_get(page_url)
@@ -632,16 +665,17 @@ def _enrich_from_wiki(name: str, url: str | None = None) -> dict[str, Any] | Non
         if blob:
             page_url = _wiki_url(name)
     if not blob:
-        return cached
+        return cached if _mob_cache_has_loot_payload(cached) else None
     try:
         page_html = blob.decode("utf-8", errors="ignore")
     except Exception:
-        return cached
-    if "does not exist" in page_html.lower() and "create the page" in page_html.lower():
-        return cached
+        return cached if _mob_cache_has_loot_payload(cached) else None
+    if not _wiki_html_usable(page_html):
+        # Do not write interstitial HTML into cache.
+        return cached if _mob_cache_has_loot_payload(cached) else None
     parsed = _parse_namedmobpage(page_html)
     if not parsed:
-        return cached
+        return cached if _mob_cache_has_loot_payload(cached) else None
     payload = {
         "name": name,
         "url": page_url,
@@ -650,6 +684,11 @@ def _enrich_from_wiki(name: str, url: str | None = None) -> dict[str, Any] | Non
         "known_loot": parsed.get("known_loot") or [],
         "source": page_url,
     }
+    # Avoid poisoning: if parse found nothing and page has no Known Loot marker, skip write
+    # when we also got no description/fields (likely a soft block / wrong shell).
+    if not payload["known_loot"] and not payload["description"] and not payload["fields"]:
+        if "known loot" not in page_html.lower():
+            return cached if _mob_cache_has_loot_payload(cached) else None
     _write_mob_cache(name, payload)
     return payload
 

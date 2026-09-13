@@ -3,6 +3,7 @@
 Version: **1.0.18** — Known Loot wiki∪catalog union (PR #19); updater PolarOppositesHub/eq-legends-bis unchanged.
 
 ## 1.0.18
+- Hotfix: do not cache eqlwiki bot interstitials / empty shells (was poisoning Known Loot to []).
 - Merged PR #19: parse eqlwiki Known Loot, union catalog reverse-index, God/bare name merge, raised drop caps.
 - Innoruuk (God): 4 → ~19 (15 wiki ∪ 4 catalog-only BiS).
 - Version bump across package.json + version.py sources.
