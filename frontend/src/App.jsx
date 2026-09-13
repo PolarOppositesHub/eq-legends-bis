@@ -2789,13 +2789,20 @@ export default function App() {
                           </ul>
                         </>
                       )}
-                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>Known drops</h3>
+                      <h3 style={{ fontSize: '0.95rem', marginBottom: '0.35rem' }}>
+                        Known drops
+                        {mobDetail.drop_count ? ` (${mobDetail.drop_count})` : ''}
+                      </h3>
                       <p className="muted" style={{ fontSize: '0.75rem', marginTop: 0 }}>
-                        Hover for stats · click for Item Search or eqlwiki
+                        eqlwiki Known Loot ∪ catalog · hover for stats · click for Item Search or eqlwiki
                       </p>
-                      {(mobDetail.drop_items || []).length ? (
+                      {(mobDetail.drops || []).length ? (
                         <ul className="quest-rewards mob-drop-list">
-                          {(mobDetail.drops || []).slice(0, 60).map((d, i) => (
+                          {(mobDetail.drops || []).map((d, i) => {
+                            const sources = Array.isArray(d.source)
+                              ? d.source
+                              : (d.source ? [d.source] : [])
+                            return (
                             <li key={`${d.item}-${i}`}>
                               <button
                                 type="button"
@@ -2815,14 +2822,23 @@ export default function App() {
                                 {d.item}
                               </button>
                               {d.zone ? <span className="muted"> · {d.zone}</span> : null}
+                              {sources.length ? (
+                                <span className="muted mob-drop-source"> · {sources.join(' · ')}</span>
+                              ) : null}
                             </li>
-                          ))}
+                            )
+                          })}
                         </ul>
                       ) : (
                         <p className="muted" style={{ fontSize: '0.8rem' }}>
-                          No decoded catalog drops linked to this name yet.
+                          No eqlwiki Known Loot or catalog drops linked to this name yet.
                         </p>
                       )}
+                      {mobDetail.drop_count > (mobDetail.drops || []).length ? (
+                        <p className="muted" style={{ fontSize: '0.75rem' }}>
+                          Showing {(mobDetail.drops || []).length} of {mobDetail.drop_count}.
+                        </p>
+                      ) : null}
                       {mobDetail.note ? (
                         <p className="muted" style={{ fontSize: '0.75rem', marginTop: '0.75rem' }}>{mobDetail.note}</p>
                       ) : null}
