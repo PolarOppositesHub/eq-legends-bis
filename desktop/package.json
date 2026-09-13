@@ -32,7 +32,9 @@
     "files": [
       "main.js",
       "preload.js",
-      "package.json"
+      "package.json",
+      "build/icon.ico",
+      "build/icon.png"
     ],
     "extraResources": [
       {
@@ -43,7 +45,9 @@
         ]
       }
     ],
+    "icon": "build/icon.ico",
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -66,12 +70,16 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "EQ Legends BiS"
+      "shortcutName": "EQ Legends BiS",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico"
     },
     "portable": {
       "artifactName": "EQ-Legends-BiS-${version}-portable.exe"
     },
     "linux": {
+      "icon": "build/icon.png",
       "target": [
         "AppImage"
       ],

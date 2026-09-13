@@ -28,6 +28,17 @@ What the script does:
 - npm run build in frontend; python3 scripts/bundle_desktop_resources.py
 - Full Windows exe needs the notebook (PyInstaller win)
 
+## App icon (Windows NSIS + portable + shortcuts)
+Josh-chosen **D — dragon-eye seal**. Source PNG only — do not invent art.
+
+- Source: `packaging/icons/eq-legends-bis-icon-chosen.png`
+- ICO: `packaging/icons/eq-legends-bis.ico` and `desktop/build/icon.ico`
+- electron-builder: `desktop/package.json` `build.icon` + `build.win.icon` → `build/icon.ico`
+- NSIS installer/uninstaller/header + desktop/start-menu shortcuts use that ICO
+- Regenerate sizes: `python3 scripts/make_app_icon.py` (Pillow)
+
+See `packaging/icons/README.md`.
+
 ## Sharing
 Zip EQ-Legends-BiS-*-portable.exe and send. Brother double-clicks.
 

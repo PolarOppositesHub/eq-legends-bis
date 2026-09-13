@@ -229,13 +229,27 @@ function stopApi() {
   apiProc = null;
 }
 
+function resolveAppIcon() {
+  // Dragon-eye seal (Josh D). Packaged builds also embed this ICO in the exe;
+  // BrowserWindow uses the file so the window/taskbar match in unpackaged/dev.
+  const candidates = [
+    path.join(__dirname, 'build', 'icon.ico'),
+    path.join(__dirname, 'build', 'icon.png'),
+    path.join(__dirname, '..', 'packaging', 'icons', 'eq-legends-bis.ico'),
+    path.join(__dirname, '..', 'packaging', 'icons', 'eq-legends-bis.png'),
+  ];
+  return candidates.find((p) => fs.existsSync(p));
+}
+
 async function createWindow() {
+  const icon = resolveAppIcon();
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
     minWidth: 960,
     minHeight: 640,
     title: 'EQ Legends BiS',
+    ...(icon ? { icon } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
