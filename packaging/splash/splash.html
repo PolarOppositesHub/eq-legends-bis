@@ -101,11 +101,18 @@
         }
         if (fading) return;
         fading = true;
-        try { video.pause(); } catch (_) { /* ignore */ }
         hint.classList.remove('visible');
-        stage.classList.add('fade-out');
         hint.style.opacity = '0';
-        setTimeout(finishImmediate, FADE_MS);
+        // Force a reflow so opacity 1 → 0 actually animates (pause-first can skip the transition).
+        stage.style.transition = 'opacity 500ms ease';
+        video.style.transition = 'opacity 500ms ease';
+        void stage.offsetWidth;
+        stage.style.opacity = '0';
+        video.style.opacity = '0';
+        setTimeout(function () {
+          try { video.pause(); } catch (_) { /* ignore */ }
+          finishImmediate();
+        }, FADE_MS);
       }
 
       if (!src || src === 'skip') {
