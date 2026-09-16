@@ -30,6 +30,17 @@
       object-fit: contain;
       background: #000;
     }
+    /* Black veil on its own layer — Chromium often skips opacity on <video> itself. */
+    #veil {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 4;
+      transition: opacity 500ms ease;
+    }
+    #veil.on { opacity: 1; }
     #hint, #wait {
       position: fixed;
       left: 0;
@@ -42,7 +53,8 @@
       color: rgba(220, 220, 220, 0.55);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 400ms ease;
+      z-index: 5;
+      transition: opacity 500ms ease;
     }
     #hint.visible, #wait.visible { opacity: 1; }
     #wait { color: rgba(200, 180, 140, 0.72); }
@@ -52,16 +64,29 @@
   <div id="stage">
     <video id="intro" playsinline disablepictureinpicture></video>
   </div>
+  <div id="veil"></div>
   <div id="hint">Press any key to skip</div>
   <div id="wait">Starting…</div>
   <script>
     (function () {
+      const FADE_MS = 500;
       const video = document.getElementById('intro');
       const hint = document.getElementById('hint');
       const wait = document.getElementById('wait');
+      const veil = document.getElementById('veil');
       let done = false;
+      let fading = false;
 
-      function finish() {
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get('src') || 'polar-opposites-intro.mp4';
+
+      function notifyHost() {
+        if (window.eqDesktop && typeof window.eqDesktop.splashFinished === 'function') {
+          window.eqDesktop.splashFinished();
+        }
+      }
+
+      function finishImmediate() {
         if (done) return;
         done = true;
         try { video.pause(); } catch (_) { /* ignore */ }
@@ -71,15 +96,29 @@
         } catch (_) { /* ignore */ }
         hint.classList.remove('visible');
         wait.classList.add('visible');
-        if (window.eqDesktop && typeof window.eqDesktop.splashFinished === 'function') {
-          window.eqDesktop.splashFinished();
-        }
+        notifyHost();
       }
 
-      const params = new URLSearchParams(window.location.search);
-      const src = params.get('src') || 'polar-opposites-intro.mp4';
+      function finish() {
+        if (done) return;
+        if (!src || src === 'skip') {
+          finishImmediate();
+          return;
+        }
+        if (fading) return;
+        fading = true;
+        hint.classList.remove('visible');
+        hint.style.opacity = '0';
+        void veil.offsetWidth;
+        veil.classList.add('on');
+        setTimeout(function () {
+          try { video.pause(); } catch (_) { /* ignore */ }
+          finishImmediate();
+        }, FADE_MS);
+      }
+
       if (!src || src === 'skip') {
-        finish();
+        finishImmediate();
         return;
       }
 
@@ -96,7 +135,7 @@
         finish();
       }, true);
       document.addEventListener('pointerdown', finish, true);
-      setTimeout(function () { if (!done) hint.classList.add('visible'); }, 900);
+      setTimeout(function () { if (!done && !fading) hint.classList.add('visible'); }, 900);
       setTimeout(finish, 90000);
 
       if (window.eqDesktop && typeof window.eqDesktop.onSplashStop === 'function') {
