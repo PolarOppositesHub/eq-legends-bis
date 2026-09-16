@@ -114,6 +114,65 @@ function clampUpgrade(n) {
   return Math.max(0, Math.min(10, Math.trunc(v)))
 }
 
+function enchantTag(level) {
+  if (level == null || level === '') return ''
+  return ` +${clampUpgrade(level)}`
+}
+
+/** Worn enchant vs BiS/suggested upgrade from suggestions payload (equipment_compare fallback). */
+function suggestionEnchantPair(s, payload) {
+  const cmp = (payload?.equipment_compare || []).find((r) => r.slot === s.slot)
+  let current = s?.current_upgrade
+  if (current == null) current = cmp?.worn?.upgrade
+  let suggested = s?.suggested_upgrade
+  if (suggested == null) suggested = cmp?.suggested_upgrade
+  if (suggested == null) suggested = payload?.bis_summary?.upgrade
+  if (suggested == null) suggested = 10
+  return {
+    current: current == null || current === '' ? null : clampUpgrade(current),
+    suggested: clampUpgrade(suggested),
+  }
+}
+
+function itemIsEquipable(detail) {
+  if (!detail) return false
+  const slots = Array.isArray(detail.slots) ? detail.slots.filter(Boolean) : []
+  const slot = String(detail.slot || '').trim()
+  if (slots.length) return true
+  if (slot && !/non-?equip/i.test(slot)) return true
+  return false
+}
+
+function itemHasUpgradeableStats(detail) {
+  if (!detail) return false
+  const s0 = detail.stats_plus0 || {}
+  if (!s0 || typeof s0 !== 'object' || !Object.keys(s0).length) return false
+  const hasScalable = Object.keys(s0).some((k) => SCALABLE_STAT_KEYS.has(k) || k === 'DMG')
+  if (hasScalable) return true
+  const s10 = detail.stats_plus10 || {}
+  try {
+    return JSON.stringify(s0) !== JSON.stringify(s10)
+  } catch (_) {
+    return false
+  }
+}
+
+function itemShowsUpgradeSlider(detail) {
+  return itemIsEquipable(detail) && itemHasUpgradeableStats(detail)
+}
+
+function itemRatioAtLevel(item, level) {
+  if (!item) return null
+  const stats = itemStatsAtLevel(item, level)
+  const dmg = Number(stats?.DMG)
+  const dly = Number(stats?.DLY)
+  if (Number.isFinite(dmg) && Number.isFinite(dly) && dly) return dmg / dly
+  const lvl = clampUpgrade(level)
+  if (lvl >= 10 && item.ratio_plus10 != null) return Number(item.ratio_plus10)
+  if (lvl === 0 && item.ratio_plus0 != null) return Number(item.ratio_plus0)
+  return null
+}
+
 /** Match backend decode_local.scale_item_stat / engine.scale_stats_to_level. */
 function scaleItemStat(base, level) {
   const o = Number(base)
@@ -227,7 +286,7 @@ function tipCoordsFromPointer(e, tipW = 320, tipH = 220) {
 
 /**
  * Catalog item name: hover stats card + click Item Search / eqlwiki menu.
- * Shared by Mobs Known Loot and Upgrade Priority. No native title / hint chip.
+ * Shared by Mobs Known Loot, Upgrade Priority, and Quest Hub rewards. No native title / hint chip.
  */
 function CatalogItemName({
   name,
@@ -767,6 +826,7 @@ export default function App() {
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [itemDetail, setItemDetail] = useState(null)
+  const [searchItemUpgrade, setSearchItemUpgrade] = useState(0)
   const [hoverTip, setHoverTip] = useState(null)
   const hoverTipClearRef = useRef(null)
   const [dropItemMenu, setDropItemMenu] = useState(null)
@@ -1580,6 +1640,10 @@ export default function App() {
       clearTimeout(t)
     }
   }, [tab, searchQ, searchSlot])
+
+  useEffect(() => {
+    setSearchItemUpgrade(0)
+  }, [itemDetail?.name])
 
   const races = meta?.races?.races || []
   const priorityOptions = meta?.priority_stats || []
@@ -2564,11 +2628,13 @@ export default function App() {
                                     ) : null}
                                     <div>
                                       <div className="item-search-name">
-                                        {r.url ? (
-                                          <a href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
-                                        ) : (
-                                          r.name
-                                        )}
+                                        {r.name ? (
+                                          <CatalogItemName
+                                            name={r.name}
+                                            className="zone-link"
+                                            {...catalogItemNameProps}
+                                          />
+                                        ) : null}
                                       </div>
                                       <div className="muted" style={{ fontSize: '0.78rem' }}>
                                         {(r.slots || []).join(', ') || r.slot || 'item'}
@@ -2909,6 +2975,7 @@ export default function App() {
               <p className="muted" style={{ marginTop: 0 }}>
                 Full EQ Legends catalog (~11k+ names from eqlwiki Category:Items, plus tools stats when known).
                 Open an item for description, tooltip, and quests (Quest Hub links when the quest is indexed).
+                Equipable items with an upgrade path use a +0…+10 slider (catalog +0 scaled like Quest Hub — never invented).
                 Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
               </p>
               <div className="item-search-bar">
@@ -2992,12 +3059,41 @@ export default function App() {
                     <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
                       {itemDetail.classes_str || (itemDetail.classes || []).join(', ')}
                     </div>
-                    <div className="stats-line" style={{ marginTop: '0.5rem' }}>
-                      +0 {fmtStats(itemDetail.stats_plus0, SHOW0) || '—'}
-                    </div>
-                    <div className="stats-line">
-                      +10 {fmtStats(itemDetail.stats_plus10, SHOW10) || '—'}
-                    </div>
+                    {itemShowsUpgradeSlider(itemDetail) ? (
+                      <>
+                        <div className="quest-reward-upgrade" style={{ marginTop: '0.5rem' }}>
+                          <label htmlFor="item-detail-upgrade">Upgrade +0…+10</label>
+                          <input
+                            id="item-detail-upgrade"
+                            type="range"
+                            min={0}
+                            max={10}
+                            value={searchItemUpgrade}
+                            onChange={(e) => setSearchItemUpgrade(Number(e.target.value))}
+                          />
+                          <span className="muted">+{searchItemUpgrade}</span>
+                        </div>
+                        <div className="stats-line">
+                          +{searchItemUpgrade}{' '}
+                          {fmtStats(itemStatsAtLevel(itemDetail, searchItemUpgrade), SHOW_REWARD) || '—'}
+                          {(() => {
+                            const ratio = itemRatioAtLevel(itemDetail, searchItemUpgrade)
+                            return ratio != null ? (
+                              <span className="muted"> · Ratio {Number(ratio).toFixed(4)}</span>
+                            ) : null
+                          })()}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="stats-line" style={{ marginTop: '0.5rem' }}>
+                          +0 {fmtStats(itemDetail.stats_plus0, SHOW0) || '—'}
+                        </div>
+                        <div className="stats-line">
+                          +10 {fmtStats(itemDetail.stats_plus10, SHOW10) || '—'}
+                        </div>
+                      </>
+                    )}
                     {itemDetail.description ? (
                       <p style={{ marginTop: '0.65rem', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
                         {itemDetail.description}
@@ -3387,15 +3483,22 @@ export default function App() {
                       menu for the full rundown (zone, mobs, quest steps).
                     </p>
                     <ul className="upgrade-list">
-                      {suggestions.suggestions.slice(0, 5).map((s) => (
+                      {suggestions.suggestions.slice(0, 5).map((s) => {
+                        const { current: wornN, suggested: sugN } = suggestionEnchantPair(s, suggestions)
+                        return (
                         <li key={`${s.slot}-${s.suggested}`}>
                           <div className="pri">#{s.rank || s.priority} · {s.slot}</div>
                           <div>
-                            {s.current ? <>Have <strong>{s.current}</strong> → </> : <>Empty → </>}
-                            <strong>{s.suggested}</strong>
+                            {s.current ? (
+                              <>Worn/Have <strong>{s.current}</strong>{enchantTag(wornN)} → </>
+                            ) : (
+                              <>Worn/Have Empty → </>
+                            )}
+                            Suggested <strong>{s.suggested}</strong>{enchantTag(sugN)}
                           </div>
                         </li>
-                      ))}
+                        )
+                      })}
                     </ul>
                   </div>
                 )}
@@ -3408,6 +3511,9 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Upgrade Priority</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Ordered list of what to upgrade next for your selected trio — driven by the BiS list.
+                Worn/Have uses the piece you have at its actual enchant (+N from inventory/sim);
+                Suggested is the BiS pick at the planner upgrade (usually +10). Deltas are
+                Δ worn +N → suggested +10.
                 Each entry shows how to get the piece: zone + drop mobs and/or quest steps (from item DB + eqlwiki; never invented).
                 Non-weapons recommended for Any that you already wear in their real slot (e.g. Valorium Chestplate on Chest listed for Any2) swap with that real-slot pick so the same piece is not double-listed. Weapons are never swapped — damage does not apply from Any.
               </p>
@@ -3446,6 +3552,7 @@ export default function App() {
                   const steps = guide.steps || []
                   const components = guide.components || []
                   const dropMobs = (obtain.zone_detail && obtain.zone_detail.drop_mobs) || []
+                  const { current: wornN, suggested: sugN } = suggestionEnchantPair(s, suggestions)
                   return (
                     <li key={`${s.rank}-${s.slot}-${s.suggested}`} className="upgrade-priority-card">
                       <div className="upgrade-priority-head">
@@ -3456,27 +3563,33 @@ export default function App() {
                         <div className="upgrade-priority-title">
                           {s.current ? (
                             <span>
-                              Have{' '}
+                              <span className="muted">Worn/Have:</span>{' '}
                               <CatalogItemName
                                 name={s.current}
                                 className="zone-link upgrade-item-name"
                                 {...catalogItemNameProps}
                               />
+                              <span className="upgrade-enchant">{enchantTag(wornN)}</span>
                               {' → '}
                             </span>
                           ) : (
-                            <span>Empty → </span>
+                            <span><span className="muted">Worn/Have:</span> Empty → </span>
                           )}
+                          <span className="muted">Suggested:</span>{' '}
                           <CatalogItemName
                             name={s.suggested}
                             className="zone-link upgrade-item-name"
                             {...catalogItemNameProps}
                           />
+                          <span className="upgrade-enchant">{enchantTag(sugN)}</span>
                         </div>
                       </div>
                       <p className="why" style={{ marginTop: '0.35rem' }}>{s.reason}</p>
                       {(s.deltas || []).length > 0 && (
                         <div className="equip-deltas" style={{ marginTop: '0.35rem' }}>
+                          <div className="upgrade-delta-caption muted">
+                            Δ worn {s.current ? `+${wornN ?? 0}` : 'empty'} → suggested +{sugN}
+                          </div>
                           {s.deltas.slice(0, 10).map((d) => (
                             <span key={d.stat} className={d.delta > 0 ? 'delta-pos' : 'delta-neg'}>
                               {formatSignedDelta(d)}

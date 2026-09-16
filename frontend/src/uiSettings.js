@@ -99,6 +99,7 @@ export const APP_HELP = {
       title: 'Upgrade Priority',
       body: [
         'Ranks what to chase next versus your BiS list after an inventory import.',
+        'Worn/Have is the piece you have at its actual enchant (+N); Suggested is the BiS pick at the planner upgrade (usually +10). Deltas are labeled Δ worn +N → suggested +10.',
         'Each entry can show zone, drop mobs, and quest steps when known from the catalog / eqlwiki.',
         'If a non-weapon recommended for Any is already worn in its real slot (e.g. Valorium Chestplate on Chest while listed for Any2), those recommendations swap so the same piece is not double-listed. Weapons stay on Primary/Secondary/Range — damage does not apply from Any.',
         'Hover a worn or recommended item for catalog stats; click for Item Search or eqlwiki (same as Mobs Known Loot).',
@@ -118,7 +119,7 @@ export const APP_HELP = {
       body: [
         'Search quests linked from item reward data. Single-click to preview; double-click (or the side rail) to maximize the walkthrough.',
         'Steps come from eqlwiki when available. Prerequisites include walkthrough mentions of other quests — click hub-listed ones to open them.',
-        'Rewards list catalog items with a +0…+10 slider for stats.',
+        'Rewards list catalog items with a +0…+10 slider for stats. Hover a reward name for catalog stats; click for Item Search or eqlwiki (same as Mobs Known Loot).',
       ],
     },
     {
@@ -136,6 +137,7 @@ export const APP_HELP = {
       title: 'Item Search',
       body: [
         'Look up any EQ Legends item by name (gear and non-equipables). Open a result for stats and wiki description when available.',
+        'Equipable items with an upgrade path use a +0…+10 slider on the detail pane (same scaling as Quest Hub rewards). Non-equipables keep static stats.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list — stats are never invented.',
       ],
     },

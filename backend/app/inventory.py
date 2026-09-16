@@ -251,6 +251,20 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
     }
 
 
+def _stats_at_level(item: dict[str, Any] | None, level: int) -> dict[str, Any]:
+    """Catalog stats at an enchant level. Never invent; never use +10 for a lower worn level."""
+    if not item:
+        return {}
+    level = max(0, min(10, int(level)))
+    s0 = item.get("stats_plus0") or {}
+    if s0:
+        return engine.scale_stats_to_level(s0, level)
+    if level >= 10:
+        return dict(item.get("stats_plus10") or item.get("stats_at_upgrade") or {})
+    # items_for_slot already filled stats_at_upgrade at this worn level
+    return dict(item.get("stats_at_upgrade") or {})
+
+
 def _stat_delta(worn_stats: dict, bis_stats: dict) -> list[dict[str, Any]]:
     keys = [
         "AC", "HP", "MANA", "END", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA",
@@ -556,8 +570,9 @@ def suggest_upgrades(
         slot = row["slot"]
         bis_name = (row.get("name") or "").strip()
         current = (eq_norm.get(slot) or "").strip()
+        # Worn stats at the piece's actual enchant; BiS stats at planner ``upgrade`` (often +10).
         worn_level = slot_upg.get(slot, upgrade)
-        bis_stats = row.get("stats_at_upgrade") or row.get("stats_plus10") or {}
+        bis_stats = _stats_at_level(row, upgrade)
         bis_alts = [{"name": bis_name, "why": row.get("why"), "url": row.get("url") or ""}]
         for a in row.get("alts") or []:
             if a.get("name"):
@@ -565,7 +580,7 @@ def suggest_upgrades(
                     "name": a["name"],
                     "why": a.get("why"),
                     "url": a.get("url") or "",
-                    "stats_at_upgrade": a.get("stats_at_upgrade") or a.get("stats_plus10") or {},
+                    "stats_at_upgrade": _stats_at_level(a, upgrade),
                 })
 
         cur_item = None
@@ -582,16 +597,12 @@ def suggest_upgrades(
                 None,
             )
             if cur_item:
-                cur_stats = cur_item.get("stats_at_upgrade") or cur_item.get("stats_plus10") or {}
+                cur_stats = _stats_at_level(cur_item, worn_level)
             else:
-                # Unmatched worn item — name only, no invented stats
+                # Unmatched worn item — scale catalog +0 to worn_level; never invent stats
                 cat = item_catalog_mod.get_item_by_name(current)
                 if cat:
-                    s0 = cat.get("stats_plus0") or {}
-                    if s0:
-                        cur_stats = engine.scale_stats_to_level(s0, worn_level)
-                    else:
-                        cur_stats = cat.get("stats_plus10") or {}
+                    cur_stats = _stats_at_level(cat, worn_level)
 
         deltas = _stat_delta(cur_stats, bis_stats) if bis_name else []
         equipment_compare.append({
@@ -604,6 +615,7 @@ def suggest_upgrades(
                 "url": (cur_item or {}).get("url") or "",
                 "image_url": f"/api/item-image?name={current}" if current else "",
             },
+            "suggested_upgrade": upgrade,
             "bis_options": bis_alts,
             "selected_bis": bis_name or None,
             "deltas": deltas,
@@ -663,7 +675,9 @@ def suggest_upgrades(
             "rank_score": pri * 1000 + _slot_importance(slot) * 10 + max(0, int(net_gap)),
             "reason": reason,
             "current": current or None,
+            "current_upgrade": worn_level if current else None,
             "suggested": bis_name,
+            "suggested_upgrade": upgrade,
             "interchange": interchange or None,
             "suggested_url": row.get("url") or obtain.get("item_url") or "",
             "suggested_zone": obtain.get("zone") or row.get("zone") or "",

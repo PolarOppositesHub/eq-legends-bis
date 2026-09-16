@@ -21,6 +21,7 @@ let instanceNonce = '';
 const isDev = !app.isPackaged;
 const SPLASH_FILE = 'polar-opposites-intro.mp4';
 let splashDone = true;
+let splashFadeTimer = null;
 let apiReady = false;
 let appUiShown = false;
 let updaterStarted = false;
@@ -255,12 +256,8 @@ function showMainUi() {
   setupUpdater();
 }
 
-function finishSplash() {
-  if (splashDone) {
-    showMainUi();
-    return;
-  }
-  splashDone = true;
+function requestSplashFade() {
+  if (splashDone || splashFadeTimer) return;
   if (mainWindow && !mainWindow.isDestroyed()) {
     try {
       mainWindow.webContents.send('eq:splash-stop');
@@ -268,6 +265,23 @@ function finishSplash() {
       /* ignore */
     }
   }
+  // HTML fades ~500ms then splashFinished; keep a fallback if the page never answers.
+  splashFadeTimer = setTimeout(() => {
+    splashFadeTimer = null;
+    if (!splashDone) finishSplash();
+  }, 900);
+}
+
+function finishSplash() {
+  if (splashFadeTimer) {
+    clearTimeout(splashFadeTimer);
+    splashFadeTimer = null;
+  }
+  if (splashDone) {
+    showMainUi();
+    return;
+  }
+  splashDone = true;
   showMainUi();
 }
 
@@ -328,11 +342,12 @@ async function createWindow({ playIntro = false } = {}) {
     const htmlPath = fs.existsSync(splashBesideVideo) ? splashBesideVideo : splashHtml;
     await mainWindow.loadFile(htmlPath);
     // Hard requirement: any key skips, even if the <video> element has focus.
+    // Ask splash.html to fade out; do not load the planner until splashFinished.
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (splashDone) return;
       if (input.type === 'keyDown') {
         event.preventDefault();
-        finishSplash();
+        requestSplashFade();
       }
     });
   } else if (apiReady && apiPort) {
