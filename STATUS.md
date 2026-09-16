@@ -1,6 +1,10 @@
 # EQ Legends BiS app status
 
-Version: **1.0.20** — Polar Opposites splash intro (PR #26); updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.0.21** — UX batch PR #27 (Upgrade Priority +N labels, Item Search slider, Quest Hub CatalogItemName, splash fade). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.0.21
+- Merged PR #27 UX batch.
+- Version bump across package.json + version.py sources.
 
 ## 1.0.20
 - Merged PR #26: startup splash video with any-key/click skip; MP4 in `resources/splash/` via extraResources.
