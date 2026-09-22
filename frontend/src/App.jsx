@@ -70,12 +70,202 @@ const SHOW10 = SHOW0
 const SHOW_UP = SHOW0
 
 
+function isEqlwikiUrl(url) {
+  const raw = String(url || '').trim()
+  if (!/^https?:\/\//i.test(raw)) return false
+  try {
+    const host = new URL(raw).hostname.toLowerCase()
+    return host === 'eqlwiki.com' || host === 'eqlwiki.org'
+      || host.endsWith('.eqlwiki.com') || host.endsWith('.eqlwiki.org')
+  } catch (_) {
+    return false
+  }
+}
+
 function eqlwikiItemUrl(name, detail) {
-  const fromDetail = (detail?.url || detail?.sourceUrl || '').trim()
-  if (fromDetail.startsWith('http')) return fromDetail
+  const candidates = [detail?.url, detail?.sourceUrl, detail?.source]
+  for (const c of candidates) {
+    const s = String(c || '').trim()
+    if (isEqlwikiUrl(s)) return s
+  }
   const n = (name || '').trim()
   if (!n) return 'https://eqlwiki.com/'
   return `https://eqlwiki.com/${encodeURIComponent(n.replace(/ /g, '_'))}`
+}
+
+/** Already-confirmed menu choices (Known Loot, rewards) call this — no second prompt. */
+function openEqlwikiNow(url) {
+  const href = String(url || '').trim()
+  if (!href) return
+  window.open(href, '_blank', 'noopener,noreferrer')
+}
+
+function sameItemName(a, b) {
+  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+}
+
+function menuCoords(e, w = 220, h = 128) {
+  const pad = 8
+  const cx = typeof e?.clientX === 'number' ? e.clientX : 80
+  const cy = typeof e?.clientY === 'number' ? e.clientY : 80
+  let x = cx + pad
+  let y = cy + pad
+  if (typeof window !== 'undefined') {
+    if (x + w > window.innerWidth - 8) x = Math.max(8, cx - w - pad)
+    if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8)
+  }
+  if (x < 8) x = 8
+  if (y < 8) y = 8
+  return { x, y }
+}
+
+const STAT_DISPLAY_ORDER = [
+  'AC', 'HP', 'MANA', 'END', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA',
+  'Haste', 'DMG', 'DLY', 'ATK', 'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
+  'SVF', 'SVC', 'SVM', 'SVP', 'SVD', 'SVV', 'FIRE_DMG', 'COLD_DMG',
+]
+
+/** Every key actually present on the item — never fills in missing stats. */
+function statEntries(stats) {
+  if (!stats || typeof stats !== 'object') return []
+  const keys = Object.keys(stats).filter((k) => {
+    const v = stats[k]
+    return v !== undefined && v !== null && v !== ''
+  })
+  const rank = new Map(STAT_DISPLAY_ORDER.map((k, i) => [k, i]))
+  keys.sort((a, b) => {
+    const ra = rank.has(a) ? rank.get(a) : 1000
+    const rb = rank.has(b) ? rank.get(b) : 1000
+    if (ra !== rb) return ra - rb
+    return a.localeCompare(b)
+  })
+  return keys.map((key) => ({ key, value: stats[key] }))
+}
+
+function formatStatValue(v) {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return String(v)
+  return Number.isInteger(n) ? String(n) : String(Math.round(n * 1000) / 1000)
+}
+
+function StatChipGrid({ entries, ratio }) {
+  if (!entries.length && ratio == null) return null
+  return (
+    <div className="item-stat-grid">
+      {entries.map((e) => (
+        <span key={e.key} className="item-stat-chip">{e.key} {formatStatValue(e.value)}</span>
+      ))}
+      {ratio != null ? (
+        <span className="item-stat-chip">Ratio {Number(ratio).toFixed(4)}</span>
+      ) : null}
+    </div>
+  )
+}
+
+function ItemStatsDetail({ item, upgrade, onUpgrade, sliderId }) {
+  if (!item || item._loading) return null
+  const showSlider = itemShowsUpgradeSlider(item)
+  if (showSlider) {
+    const stats = itemStatsAtLevel(item, upgrade)
+    const entries = statEntries(stats)
+    const ratio = itemRatioAtLevel(item, upgrade)
+    return (
+      <div className="item-stats-detail">
+        <div className="quest-reward-upgrade">
+          <label htmlFor={sliderId}>Upgrade +0…+10</label>
+          <input
+            id={sliderId}
+            type="range"
+            min={0}
+            max={10}
+            value={clampUpgrade(upgrade)}
+            onChange={(e) => onUpgrade(clampUpgrade(e.target.value))}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span className="muted">+{clampUpgrade(upgrade)}</span>
+        </div>
+        <div className="muted item-stats-caption">All catalog stats at +{clampUpgrade(upgrade)}</div>
+        {entries.length || ratio != null ? (
+          <StatChipGrid entries={entries} ratio={ratio} />
+        ) : (
+          <p className="muted" style={{ fontSize: '0.78rem', margin: '0.35rem 0 0' }}>No catalog stats at this upgrade.</p>
+        )}
+      </div>
+    )
+  }
+  const s0 = statEntries(item.stats_plus0)
+  const s10 = statEntries(item.stats_plus10)
+  let same = false
+  try {
+    same = JSON.stringify(item.stats_plus0 || {}) === JSON.stringify(item.stats_plus10 || {})
+  } catch (_) {
+    same = false
+  }
+  return (
+    <div className="item-stats-detail">
+      <div className="muted item-stats-caption">All catalog stats</div>
+      <div className="stats-line">+0</div>
+      {s0.length ? (
+        <StatChipGrid entries={s0} />
+      ) : (
+        <p className="muted" style={{ fontSize: '0.78rem', margin: '0.25rem 0 0' }}>No +0 catalog stats.</p>
+      )}
+      {!same ? (
+        <>
+          <div className="stats-line">+10</div>
+          {s10.length ? (
+            <StatChipGrid entries={s10} />
+          ) : (
+            <p className="muted" style={{ fontSize: '0.78rem', margin: '0.25rem 0 0' }}>No +10 catalog stats.</p>
+          )}
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+function WikiConfirmMenu({ menu, onOpen, onCancel }) {
+  if (!menu?.url) return null
+  return (
+    <div
+      className="mob-drop-menu wiki-confirm-menu"
+      style={{ left: menu.x, top: menu.y }}
+      role="menu"
+      aria-label="Confirm eqlwiki"
+    >
+      {menu.title ? <div className="mob-drop-menu-title">{menu.title}</div> : null}
+      <button type="button" role="menuitem" className="mob-drop-menu-item" onClick={onOpen}>
+        Open eqlwiki
+      </button>
+      <button type="button" role="menuitem" className="mob-drop-menu-item" onClick={onCancel}>
+        Cancel
+      </button>
+    </div>
+  )
+}
+
+/** Plain eqlwiki jumps confirm first. Non-eqlwiki external links stay direct. */
+function MaybeWikiLink({ href, children, onConfirmWiki, title, className }) {
+  const url = String(href || '').trim()
+  if (!url) return null
+  if (isEqlwikiUrl(url) && typeof onConfirmWiki === 'function') {
+    return (
+      <button
+        type="button"
+        className={className || 'zone-link'}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          onConfirmWiki(url, e, { title: title || 'eqlwiki' })
+        }}
+      >
+        {children}
+      </button>
+    )
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer">{children}</a>
+  )
 }
 
 /** Hover preview text from item-detail payload — never invents stats. */
@@ -597,7 +787,7 @@ function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
   )
 }
 
-function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
+function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip, onConfirmWiki }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
     const { x, y } = tipCoordsFromPointer(e)
@@ -623,7 +813,9 @@ function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
         <ItemIcon name={a.name} />
         <span className="alt-name">
           {a.url ? (
-            <a href={a.url} target="_blank" rel="noreferrer">{a.name}</a>
+            <MaybeWikiLink href={a.url} onConfirmWiki={onConfirmWiki} title={a.name}>
+              {a.name}
+            </MaybeWikiLink>
           ) : (
             a.name
           )}
@@ -637,7 +829,7 @@ function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip }) {
   )
 }
 
-function ZoneModal({ detail, onClose }) {
+function ZoneModal({ detail, onClose, onConfirmWiki }) {
   if (!detail) return null
   const ov = detail.overview || {}
   const drops = detail.drop_mobs || []
@@ -663,7 +855,12 @@ function ZoneModal({ detail, onClose }) {
                     {k.name || k.key || JSON.stringify(k)}
                     {k.required ? ' (required)' : ''}
                     {k.walkthrough_url ? (
-                      <> — <a href={k.walkthrough_url} target="_blank" rel="noreferrer">walkthrough</a></>
+                      <>
+                        {' — '}
+                        <MaybeWikiLink href={k.walkthrough_url} onConfirmWiki={onConfirmWiki} title="walkthrough">
+                          walkthrough
+                        </MaybeWikiLink>
+                      </>
                     ) : null}
                   </li>
                 )
@@ -680,7 +877,11 @@ function ZoneModal({ detail, onClose }) {
                 const label = typeof u === 'string' ? u : (u.label || u.title || url)
                 return (
                   <li key={i}>
-                    {url ? <a href={url} target="_blank" rel="noreferrer">{label}</a> : label}
+                    {url ? (
+                      <MaybeWikiLink href={url} onConfirmWiki={onConfirmWiki} title={label}>
+                        {label}
+                      </MaybeWikiLink>
+                    ) : label}
                   </li>
                 )
               })}
@@ -689,7 +890,9 @@ function ZoneModal({ detail, onClose }) {
         )}
         {detail.map_url ? (
           <p>
-            <a href={detail.map_url} target="_blank" rel="noreferrer">Zone map</a>
+            <MaybeWikiLink href={detail.map_url} onConfirmWiki={onConfirmWiki} title="Zone map">
+              Zone map
+            </MaybeWikiLink>
             <span className="muted"> (spawn markers only when research has coords)</span>
           </p>
         ) : (
@@ -830,6 +1033,9 @@ export default function App() {
   const [hoverTip, setHoverTip] = useState(null)
   const hoverTipClearRef = useRef(null)
   const [dropItemMenu, setDropItemMenu] = useState(null)
+  const [wikiConfirm, setWikiConfirm] = useState(null)
+  const wikiConfirmRef = useRef(null)
+  const itemDetailSeqRef = useRef(0)
   const dropItemCacheRef = useRef(new Map())
   const dropHoverTimerRef = useRef(null)
   const dropHoverSeqRef = useRef(0)
@@ -873,29 +1079,35 @@ export default function App() {
   const openItemInSearch = useCallback(async (itemName) => {
     const name = (itemName || '').trim()
     if (!name) return
+    const seq = ++itemDetailSeqRef.current
     setDropItemMenu(null)
+    setWikiConfirm(null)
     hideHoverTip()
     setTab('search')
     setSearchQ(name)
     setSearchLoading(true)
-    setItemDetail(null)
+    setItemDetail({ name, _loading: true })
     try {
       const res = await searchItems({ q: name, limit: 80 })
       setSearchResults(res)
-      const hit = (res.items || []).find((it) => String(it.name || '').toLowerCase() === name.toLowerCase())
+      const hit = (res.items || []).find((it) => sameItemName(it.name, name))
         || (res.items || [])[0]
       const detailName = hit?.name || name
       try {
         const d = await getItemDetail(detailName)
-        setItemDetail(d)
+        if (itemDetailSeqRef.current !== seq) return
+        setItemDetail(d && d.name ? d : { ...(d || {}), name: detailName })
       } catch (detailErr) {
+        if (itemDetailSeqRef.current !== seq) return
         setError(String(detailErr.message || detailErr))
       }
     } catch (err) {
+      if (itemDetailSeqRef.current !== seq) return
       setSearchResults(null)
+      setItemDetail(null)
       setError(String(err.message || err))
     } finally {
-      setSearchLoading(false)
+      if (itemDetailSeqRef.current === seq) setSearchLoading(false)
     }
   }, [hideHoverTip])
 
@@ -953,6 +1165,7 @@ export default function App() {
       hoverTipClearRef.current = null
     }
     setHoverTip(null)
+    setWikiConfirm(null)
     const cached = dropItemCacheRef.current.get(name.toLowerCase())
     const pad = 8
     let x = e.clientX + pad
@@ -973,6 +1186,42 @@ export default function App() {
         setDropItemMenu((m) => (m && m.name === name ? { ...m, url: eqlwikiItemUrl(name, d) } : m))
       }).catch(() => {})
     }
+  }, [])
+
+  useEffect(() => {
+    wikiConfirmRef.current = wikiConfirm
+  }, [wikiConfirm])
+
+  const confirmOpenEqlwiki = useCallback((url, e, opts = {}) => {
+    const href = String(url || '').trim()
+    if (!href) return
+    if (e?.preventDefault) e.preventDefault()
+    if (e?.stopPropagation) e.stopPropagation()
+    if (!isEqlwikiUrl(href)) {
+      openEqlwikiNow(href)
+      return
+    }
+    setDropItemMenu(null)
+    const { x, y } = menuCoords(e)
+    setWikiConfirm({
+      url: href,
+      x,
+      y,
+      title: opts.title || 'eqlwiki',
+      clearSelection: !!opts.clearSelection,
+    })
+  }, [])
+
+  const acceptWikiConfirm = useCallback(() => {
+    const url = wikiConfirmRef.current?.url
+    setWikiConfirm(null)
+    if (url) openEqlwikiNow(url)
+  }, [])
+
+  const cancelWikiConfirm = useCallback(() => {
+    const clear = !!wikiConfirmRef.current?.clearSelection
+    setWikiConfirm(null)
+    if (clear) setItemDetail(null)
   }, [])
 
   const catalogItemNameProps = {
@@ -1583,12 +1832,33 @@ export default function App() {
 
   const openItemDetail = async (name) => {
     if (!name) return
+    const seq = ++itemDetailSeqRef.current
+    setWikiConfirm(null)
+    setItemDetail({ name, _loading: true })
     try {
       const d = await getItemDetail(name)
-      setItemDetail(d)
+      if (itemDetailSeqRef.current !== seq) return
+      setItemDetail(d && d.name ? d : { ...(d || {}), name: d?.name || name })
     } catch (e) {
+      if (itemDetailSeqRef.current !== seq) return
       setError(String(e.message || e))
+      setItemDetail(null)
     }
+  }
+
+  const onSearchResultClick = (it, e) => {
+    const name = it?.name
+    if (!name) return
+    const onName = !!(e?.target && e.target.closest && e.target.closest('[data-search-item-name]'))
+    const selected = !!(itemDetail && sameItemName(itemDetail.name, name))
+    if (selected && onName) {
+      e.preventDefault()
+      e.stopPropagation()
+      const source = itemDetail._loading ? it : itemDetail
+      confirmOpenEqlwiki(eqlwikiItemUrl(name, source), e, { title: name, clearSelection: true })
+      return
+    }
+    if (!selected) openItemDetail(name)
   }
 
 
@@ -1611,6 +1881,25 @@ export default function App() {
       window.removeEventListener('mousedown', onPtr)
     }
   }, [dropItemMenu])
+
+  useEffect(() => {
+    if (!wikiConfirm) return undefined
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') setWikiConfirm(null)
+    }
+    const onPtr = (ev) => {
+      const t = ev.target
+      if (t && typeof t.closest === 'function' && t.closest('.wiki-confirm-menu')) return
+      setWikiConfirm(null)
+    }
+    window.addEventListener('keydown', onKey)
+    const t = window.setTimeout(() => window.addEventListener('mousedown', onPtr), 0)
+    return () => {
+      window.clearTimeout(t)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onPtr)
+    }
+  }, [wikiConfirm])
 
   // Load full catalog size (and empty-query page) when opening Item Search.
   useEffect(() => {
@@ -2321,7 +2610,9 @@ export default function App() {
                           onBlur={hideHoverTip}
                         >
                           {s.url ? (
-                            <a href={s.url} target="_blank" rel="noreferrer">{s.name}</a>
+                            <MaybeWikiLink href={s.url} onConfirmWiki={confirmOpenEqlwiki} title={s.name}>
+                              {s.name}
+                            </MaybeWikiLink>
                           ) : (
                             s.name
                           )}
@@ -2364,6 +2655,7 @@ export default function App() {
                               onShowTip={showHoverTip}
                               onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
+                              onConfirmWiki={confirmOpenEqlwiki}
                             />
                           ))}
                         </ul>
@@ -2572,7 +2864,9 @@ export default function App() {
                         {questDetail.url ? (
                           <>
                             {' · '}
-                            <a href={questDetail.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                            <MaybeWikiLink href={questDetail.url} onConfirmWiki={confirmOpenEqlwiki} title="eqlwiki">
+                              eqlwiki
+                            </MaybeWikiLink>
                           </>
                         ) : null}
                       </div>
@@ -2894,7 +3188,9 @@ export default function App() {
                         {mobDetail.url ? (
                           <>
                             {' · '}
-                            <a href={mobDetail.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                            <MaybeWikiLink href={mobDetail.url} onConfirmWiki={confirmOpenEqlwiki} title="eqlwiki">
+                              eqlwiki
+                            </MaybeWikiLink>
                           </>
                         ) : null}
                       </div>
@@ -2974,8 +3270,9 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Full EQ Legends catalog (~11k+ names from eqlwiki Category:Items, plus tools stats when known).
-                Open an item for description, tooltip, and quests (Quest Hub links when the quest is indexed).
-                Equipable items with an upgrade path use a +0…+10 slider (catalog +0 scaled like Quest Hub — never invented).
+                Click a row to expand every catalog stat. Equipables with an upgrade path use a +0…+10 slider
+                (catalog +0 scaled like Quest Hub — never invented).
+                Click the item name again while it is expanded for Open eqlwiki or Cancel.
                 Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
               </p>
               <div className="item-search-bar">
@@ -3006,9 +3303,17 @@ export default function App() {
               )}
               <div className="item-search-layout">
                 <ul className="item-search-list">
-                  {(searchResults?.items || []).map((it) => (
-                    <li key={it.name}>
-                      <button type="button" className="item-search-result" onClick={() => openItemDetail(it.name)}>
+                  {(searchResults?.items || []).map((it, searchIdx) => {
+                    const rowSelected = !!(itemDetail && sameItemName(itemDetail.name, it.name))
+                    const rowStatItem = rowSelected ? (itemDetail._loading ? it : itemDetail) : null
+                    return (
+                    <li key={it.name} className={rowSelected ? 'item-search-open' : ''}>
+                      <button
+                        type="button"
+                        className={`item-search-result${rowSelected ? ' is-selected' : ''}`}
+                        aria-expanded={rowSelected}
+                        onClick={(e) => onSearchResultClick(it, e)}
+                      >
                         <img
                           className="item-icon"
                           src={itemImageUrl(it.name)}
@@ -3017,11 +3322,13 @@ export default function App() {
                         />
                         <div>
                           <div className="item-search-name">
-                            {it.url ? (
-                              <a href={it.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                                {it.name}
-                              </a>
-                            ) : it.name}
+                            <span
+                              className="item-search-name-hit"
+                              data-search-item-name="1"
+                              title={rowSelected ? 'Click again: Open eqlwiki or Cancel' : 'Show all stats'}
+                            >
+                              {it.name}
+                            </span>
                             {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
                               <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
                             ) : null}
@@ -3030,15 +3337,36 @@ export default function App() {
                             {it.classes_str || (it.classes || []).join(', ') || (it.catalog_source === 'eqlwiki' ? 'Non-tools / open for wiki details' : '—')}
                             {it.zone ? ` · ${it.zone}` : ''}
                           </div>
-                          <div className="stats-line">
-                            {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
-                          </div>
+                          {!rowSelected ? (
+                            <div className="stats-line">
+                              {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
+                            </div>
+                          ) : null}
                         </div>
                       </button>
+                      {rowSelected ? (
+                        <div className="item-search-expand">
+                          {rowStatItem ? (
+                            <ItemStatsDetail
+                              item={rowStatItem}
+                              upgrade={searchItemUpgrade}
+                              onUpgrade={setSearchItemUpgrade}
+                              sliderId={`item-row-upgrade-${searchIdx}`}
+                            />
+                          ) : (
+                            <p className="muted" style={{ fontSize: '0.8rem', margin: '0.35rem 0' }}>Loading full stats…</p>
+                          )}
+                        </div>
+                      ) : null}
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
-                {itemDetail && (
+                {itemDetail && (() => {
+                  const searchHit = (searchResults?.items || []).find((it) => sameItemName(it.name, itemDetail.name))
+                  const panelItem = itemDetail._loading ? (searchHit || null) : itemDetail
+                  const panelMeta = panelItem || itemDetail
+                  return (
                   <div className="item-detail-panel">
                     <div className="item-name">
                       <img
@@ -3047,69 +3375,54 @@ export default function App() {
                         alt=""
                         onError={hideImg}
                       />
-                      {itemDetail.url ? (
-                        <a href={itemDetail.url} target="_blank" rel="noreferrer">{itemDetail.name}</a>
-                      ) : itemDetail.name}
+                      <button
+                        type="button"
+                        className="zone-link"
+                        data-search-item-name="1"
+                        title="Open eqlwiki or Cancel"
+                        onClick={(e) => confirmOpenEqlwiki(
+                          eqlwikiItemUrl(itemDetail.name, panelItem || itemDetail),
+                          e,
+                          { title: itemDetail.name, clearSelection: true },
+                        )}
+                      >
+                        {itemDetail.name}
+                      </button>
                     </div>
                     <div className="meta">
-                      {(itemDetail.slots || []).join(', ') || itemDetail.slot || (itemDetail.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
-                      {itemDetail.zone ? ` · ${itemDetail.zone}` : ''}
-                      {itemDetail.catalog_source ? ` · ${itemDetail.catalog_source}` : ''}
+                      {(panelMeta.slots || []).join(', ') || panelMeta.slot || (panelMeta.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
+                      {panelMeta.zone ? ` · ${panelMeta.zone}` : ''}
+                      {panelMeta.catalog_source ? ` · ${panelMeta.catalog_source}` : ''}
                     </div>
                     <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
-                      {itemDetail.classes_str || (itemDetail.classes || []).join(', ')}
+                      {panelMeta.classes_str || (panelMeta.classes || []).join(', ')}
                     </div>
-                    {itemShowsUpgradeSlider(itemDetail) ? (
-                      <>
-                        <div className="quest-reward-upgrade" style={{ marginTop: '0.5rem' }}>
-                          <label htmlFor="item-detail-upgrade">Upgrade +0…+10</label>
-                          <input
-                            id="item-detail-upgrade"
-                            type="range"
-                            min={0}
-                            max={10}
-                            value={searchItemUpgrade}
-                            onChange={(e) => setSearchItemUpgrade(Number(e.target.value))}
-                          />
-                          <span className="muted">+{searchItemUpgrade}</span>
-                        </div>
-                        <div className="stats-line">
-                          +{searchItemUpgrade}{' '}
-                          {fmtStats(itemStatsAtLevel(itemDetail, searchItemUpgrade), SHOW_REWARD) || '—'}
-                          {(() => {
-                            const ratio = itemRatioAtLevel(itemDetail, searchItemUpgrade)
-                            return ratio != null ? (
-                              <span className="muted"> · Ratio {Number(ratio).toFixed(4)}</span>
-                            ) : null
-                          })()}
-                        </div>
-                      </>
+                    {panelItem ? (
+                      <ItemStatsDetail
+                        item={panelItem}
+                        upgrade={searchItemUpgrade}
+                        onUpgrade={setSearchItemUpgrade}
+                        sliderId="item-detail-upgrade"
+                      />
                     ) : (
-                      <>
-                        <div className="stats-line" style={{ marginTop: '0.5rem' }}>
-                          +0 {fmtStats(itemDetail.stats_plus0, SHOW0) || '—'}
-                        </div>
-                        <div className="stats-line">
-                          +10 {fmtStats(itemDetail.stats_plus10, SHOW10) || '—'}
-                        </div>
-                      </>
+                      <p className="muted" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Loading full stats…</p>
                     )}
-                    {itemDetail.description ? (
+                    {!itemDetail._loading && itemDetail.description ? (
                       <p style={{ marginTop: '0.65rem', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
                         {itemDetail.description}
                       </p>
                     ) : null}
-                    {itemDetail.tooltipLines?.length > 0 && (
+                    {!itemDetail._loading && itemDetail.tooltipLines?.length > 0 && (
                       <pre className="help-md" style={{ marginTop: '0.65rem', fontSize: '0.75rem' }}>
                         {(itemDetail.tooltipLines || []).join('\n')}
                       </pre>
                     )}
-                    {!itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
+                    {!itemDetail._loading && !itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
                       <p className="muted" style={{ marginTop: '0.65rem', fontSize: '0.8rem' }}>
-                        No parsed wiki tooltip yet — open the eqlwiki link above for the full page.
+                        No parsed wiki tooltip yet — click the name for Open eqlwiki or Cancel.
                       </p>
                     )}
-                    {(itemDetail.quests || []).length > 0 ? (
+                    {!itemDetail._loading && (itemDetail.quests || []).length > 0 ? (
                       <div style={{ marginTop: '0.85rem' }}>
                         <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem' }}>
                           Quests this item is for
@@ -3145,13 +3458,14 @@ export default function App() {
                           })}
                         </ul>
                       </div>
-                    ) : (
+                    ) : !itemDetail._loading ? (
                       <p className="muted" style={{ marginTop: '0.85rem', fontSize: '0.8rem' }}>
                         No linked quests in decoded rewards or eqlwiki Related quests yet.
                       </p>
-                    )}
+                    ) : null}
                   </div>
-                )}
+                  )
+                })()}
               </div>
             </div>
           )}
@@ -3643,7 +3957,9 @@ export default function App() {
                               {guide.url ? (
                                 <>
                                   {' · '}
-                                  <a href={guide.url} target="_blank" rel="noreferrer">eqlwiki</a>
+                                  <MaybeWikiLink href={guide.url} onConfirmWiki={confirmOpenEqlwiki} title="eqlwiki">
+                                    eqlwiki
+                                  </MaybeWikiLink>
                                 </>
                               ) : null}
                             </div>
@@ -3843,7 +4159,7 @@ export default function App() {
         </div>
       )}
 
-      <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} />
+      <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} onConfirmWiki={confirmOpenEqlwiki} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
 
       {dropItemMenu ? (
@@ -3862,18 +4178,22 @@ export default function App() {
           >
             Open in Item Search
           </button>
-          <a
+          <button
+            type="button"
             role="menuitem"
             className="mob-drop-menu-item"
-            href={dropItemMenu.url}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setDropItemMenu(null)}
+            onClick={() => {
+              const url = dropItemMenu.url
+              setDropItemMenu(null)
+              openEqlwikiNow(url)
+            }}
           >
-            Open on eqlwiki ↗
-          </a>
+            Open on eqlwiki
+          </button>
         </div>
       ) : null}
+
+      <WikiConfirmMenu menu={wikiConfirm} onOpen={acceptWikiConfirm} onCancel={cancelWikiConfirm} />
 
       {hoverTip ? (
         <div
