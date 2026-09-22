@@ -295,6 +295,7 @@ const SCALABLE_STAT_KEYS = new Set([
   'AC', 'HP', 'MANA', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA', 'END', 'ATK',
   'SVM', 'SVF', 'SVC', 'SVD', 'SVP', 'SVV',
   'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
+  'Haste',
 ])
 const UPGRADE_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
@@ -337,7 +338,7 @@ function itemHasUpgradeableStats(detail) {
   if (!detail) return false
   const s0 = detail.stats_plus0 || {}
   if (!s0 || typeof s0 !== 'object' || !Object.keys(s0).length) return false
-  const hasScalable = Object.keys(s0).some((k) => SCALABLE_STAT_KEYS.has(k) || k === 'DMG')
+  const hasScalable = Object.keys(s0).some((k) => SCALABLE_STAT_KEYS.has(k) || k === 'DMG' || isCatalogHasteKey(k))
   if (hasScalable) return true
   const s10 = detail.stats_plus10 || {}
   try {
@@ -363,6 +364,10 @@ function itemRatioAtLevel(item, level) {
   return null
 }
 
+function isCatalogHasteKey(k) {
+  return String(k || '').toLowerCase() === 'haste'
+}
+
 /** Match backend decode_local.scale_item_stat / engine.scale_stats_to_level. */
 function scaleItemStat(base, level) {
   const o = Number(base)
@@ -382,9 +387,12 @@ function scaleStatsToLevel(stats0, level) {
       const base = Number(v)
       if (!Number.isFinite(base)) continue
       out[k] = lvl === 0 ? base : Math.floor(base * (1 + lvl / 10))
-    } else if (k === 'DLY' || k === 'FIRE_DMG' || k === 'COLD_DMG' || k === 'Haste') {
+    } else if (k === 'DLY' || k === 'FIRE_DMG' || k === 'COLD_DMG') {
+      // Delay and elemental bonus damage stay flat. Haste used to be in this
+      // set, so the upgrade slider never moved it. Catalog Haste is a real +0
+      // value; scale it with scaleItemStat like AC/HP/STR. Do not invent a base.
       out[k] = Number(v) || 0
-    } else if (SCALABLE_STAT_KEYS.has(k)) {
+    } else if (isCatalogHasteKey(k) || SCALABLE_STAT_KEYS.has(k)) {
       out[k] = scaleItemStat(v, lvl)
     } else {
       const n = Number(v)
@@ -1036,6 +1044,8 @@ export default function App() {
   const [wikiConfirm, setWikiConfirm] = useState(null)
   const wikiConfirmRef = useRef(null)
   const itemDetailSeqRef = useRef(0)
+  const searchSelectedAtRef = useRef(0)
+  const itemDetailPanelRef = useRef(null)
   const dropItemCacheRef = useRef(new Map())
   const dropHoverTimerRef = useRef(null)
   const dropHoverSeqRef = useRef(0)
@@ -1833,6 +1843,7 @@ export default function App() {
   const openItemDetail = async (name) => {
     if (!name) return
     const seq = ++itemDetailSeqRef.current
+    searchSelectedAtRef.current = performance.now()
     setWikiConfirm(null)
     setItemDetail({ name, _loading: true })
     try {
@@ -1846,19 +1857,27 @@ export default function App() {
     }
   }
 
+  const searchNameWikiReady = (name) => {
+    if (!itemDetail || itemDetail._loading) return false
+    if (!sameItemName(itemDetail.name, name)) return false
+    return performance.now() - searchSelectedAtRef.current > 500
+  }
+
   const onSearchResultClick = (it, e) => {
     const name = it?.name
     if (!name) return
     const onName = !!(e?.target && e.target.closest && e.target.closest('[data-search-item-name]'))
     const selected = !!(itemDetail && sameItemName(itemDetail.name, name))
-    if (selected && onName) {
+    // First click on the name (and any click on the row) opens the side panel.
+    // A second click on the name, after the panel is already open, asks before eqlwiki.
+    // The short guard keeps a double-click from treating the opening click as "already selected".
+    if (onName && selected && searchNameWikiReady(name)) {
       e.preventDefault()
       e.stopPropagation()
-      const source = itemDetail._loading ? it : itemDetail
-      confirmOpenEqlwiki(eqlwikiItemUrl(name, source), e, { title: name, clearSelection: true })
+      confirmOpenEqlwiki(eqlwikiItemUrl(name, itemDetail), e, { title: name, clearSelection: true })
       return
     }
-    if (!selected) openItemDetail(name)
+    if (!selected || itemDetail._loading) openItemDetail(name)
   }
 
 
@@ -1933,6 +1952,11 @@ export default function App() {
   useEffect(() => {
     setSearchItemUpgrade(0)
   }, [itemDetail?.name])
+
+  useEffect(() => {
+    if (tab !== 'search' || !itemDetail?.name) return
+    itemDetailPanelRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [tab, itemDetail?.name])
 
   const races = meta?.races?.races || []
   const priorityOptions = meta?.priority_stats || []
@@ -3367,7 +3391,7 @@ export default function App() {
                   const panelItem = itemDetail._loading ? (searchHit || null) : itemDetail
                   const panelMeta = panelItem || itemDetail
                   return (
-                  <div className="item-detail-panel">
+                  <div className="item-detail-panel" ref={itemDetailPanelRef}>
                     <div className="item-name">
                       <img
                         className="item-icon"
@@ -3380,11 +3404,14 @@ export default function App() {
                         className="zone-link"
                         data-search-item-name="1"
                         title="Open eqlwiki or Cancel"
-                        onClick={(e) => confirmOpenEqlwiki(
-                          eqlwikiItemUrl(itemDetail.name, panelItem || itemDetail),
-                          e,
-                          { title: itemDetail.name, clearSelection: true },
-                        )}
+                        onClick={(e) => {
+                          if (!searchNameWikiReady(itemDetail.name)) return
+                          confirmOpenEqlwiki(
+                            eqlwikiItemUrl(itemDetail.name, panelItem || itemDetail),
+                            e,
+                            { title: itemDetail.name, clearSelection: true },
+                          )
+                        }}
                       >
                         {itemDetail.name}
                       </button>

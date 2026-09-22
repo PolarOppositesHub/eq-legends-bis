@@ -4,7 +4,8 @@
 
 ## Item Search expand + eqlwiki confirm (still Version 1.0.21)
 - [x] Item Search: click a row expands that result and the side detail with every catalog stat key present (not the one-line summary). Equipables with an upgrade path get a +0…+10 slider. Values are catalog +0 scaled like Quest Hub. Missing stats stay missing.
-- [x] Second click on the expanded item name (list or detail) opens **Open eqlwiki** / **Cancel**. Cancel closes the menu and clears the selection. The name is not a direct wiki link.
+- [x] First click on the item name (or the row) opens the side panel with full stats + slider. Second click on the name while that item is already open asks **Open eqlwiki** / **Cancel**. A double-click does not jump to the wiki.
+- [x] Haste on the Item Search / Quest Hub reward slider uses `scale_item_stat` on the catalog Haste base. Root cause: Haste was grouped with DLY as non-scaling, so +0 and +10 stayed equal while AC/HP moved. BiS loadout haste ranking still uses the stored catalog base (stats_plus10 Haste equals +0 in decoded files).
 - [x] Straight-to-eqlwiki clicks elsewhere confirm the same way. CatalogItemName / Known Loot (and quest-reward / upgrade-name menus) still open eqlwiki in one step — no second confirm.
 - [x] Non-eqlwiki external links stay direct.
 - [ ] Josh spot-check in the app. No `.exe` from this change.

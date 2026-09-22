@@ -61,8 +61,33 @@ def _num(v, default=0.0) -> float:
         return default
 
 
+def scale_slider_stats(stats0: dict, level: int) -> dict:
+    """Stats for +0…+10 sliders (Item Search / Quest Hub rewards).
+
+    Same as scale_stats_to_level, except catalog Haste uses scale_item_stat.
+    Decoded stats_plus10 stores Haste equal to +0 for the loadout rule
+    ("worn haste does not scale"). The slider still had Haste in the
+    non-scaling set next to DLY, so moving +0…+10 never changed it while
+    AC/HP/STR moved. Scale the existing Haste base only — do not invent one.
+    """
+    out = scale_stats_to_level(stats0, level)
+    level = max(0, min(10, int(level)))
+    for k, v in (stats0 or {}).items():
+        if str(k).lower() != "haste":
+            continue
+        try:
+            out[k] = float(scale_item_stat(v, level))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def scale_stats_to_level(stats0: dict, level: int) -> dict:
-    """Scale +0 stats to upgrade level 0..10. Haste/DLY/FIRE_DMG/COLD_DMG do not scale."""
+    """Scale +0 stats to upgrade level 0..10. DLY/FIRE_DMG/COLD_DMG do not scale.
+
+    Haste stays flat here so BiS loadout ranking keeps the catalog base.
+    Sliders use scale_slider_stats.
+    """
     level = max(0, min(10, int(level)))
     out: dict[str, Any] = {}
     for k, v in (stats0 or {}).items():

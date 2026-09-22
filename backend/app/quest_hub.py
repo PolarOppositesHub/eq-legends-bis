@@ -200,7 +200,7 @@ def reward_item_names_for_quest(name: str) -> list[str]:
 def rewards_for_quest(name: str, *, upgrade: int = 0) -> list[dict[str, Any]]:
     """Resolve quest reward items with +0..+10 scaled stats (never invent stats)."""
     from . import item_catalog as ic
-    from .engine import ratio_at_level, scale_stats_to_level
+    from .engine import ratio_at_level, scale_slider_stats
 
     upgrade = max(0, min(10, int(upgrade)))
     out: list[dict[str, Any]] = []
@@ -215,7 +215,7 @@ def rewards_for_quest(name: str, *, upgrade: int = 0) -> list[dict[str, Any]]:
             })
             continue
         s0 = dict(it.get("stats_plus0") or {})
-        s10 = dict(it.get("stats_plus10") or scale_stats_to_level(s0, 10))
+        s10 = dict(it.get("stats_plus10") or scale_slider_stats(s0, 10))
         stats_by: dict[str, dict[str, Any]] = {}
         ratio_by: dict[str, float] = {}
         raw_for_ratio = {
@@ -224,13 +224,14 @@ def rewards_for_quest(name: str, *, upgrade: int = 0) -> list[dict[str, Any]]:
             "ratio_plus10": it.get("ratio_plus10"),
         }
         for lvl in range(0, 11):
-            stats_by[str(lvl)] = scale_stats_to_level(s0, lvl) if lvl else dict(s0)
             if lvl == 0:
-                # Keep +0 keys numeric like scale_stats_to_level
+                # Keep +0 keys as catalog values (Haste base is not scaled at +0).
                 stats_by["0"] = {
                     k: (float(v) if isinstance(v, (int, float)) else v)
                     for k, v in s0.items()
                 }
+            else:
+                stats_by[str(lvl)] = scale_slider_stats(s0, lvl)
             r = ratio_at_level(raw_for_ratio, lvl)
             if r is not None:
                 ratio_by[str(lvl)] = float(r)

@@ -136,8 +136,8 @@ export const APP_HELP = {
       id: 'search',
       title: 'Item Search',
       body: [
-        'Click a result to expand every catalog stat on that item. Click the name again while it is expanded: Open eqlwiki or Cancel (Cancel clears the selection).',
-        'Equipable items with an upgrade path use a +0…+10 slider (same scaling as Quest Hub rewards). Non-equipables keep static stats. Stats are never invented.',
+        'Click a result name or row to open the side panel with every catalog stat. Click the name again while it is open: Open eqlwiki or Cancel (Cancel clears the selection).',
+        'Equipable items with an upgrade path use a +0…+10 slider (same scaling as Quest Hub rewards, including catalog Haste). Non-equipables keep static stats. Stats are never invented.',
         'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
       ],
