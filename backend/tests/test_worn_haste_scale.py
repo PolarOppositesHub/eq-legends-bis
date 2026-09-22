@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.engine import apply_worn_haste, scale_slider_stats, scale_worn_haste  # noqa: E402
+from app.scoring import haste_bonus, item_haste  # noqa: E402
 from app.simulate import scale_stats, simulate_loadout  # noqa: E402
 
 
@@ -52,6 +53,17 @@ class WornHasteScaleTests(unittest.TestCase):
         self.assertEqual(out["haste"]["applied_pct"], 46)
         self.assertEqual(out["slots"]["BACK"]["stats"]["AC"], 20)
         self.assertEqual(out["slots"]["BACK"]["stats"]["Haste"], 46)
+
+    def test_plus0_and_plus10_differ_by_ten(self):
+        item = {"name": "Cloak of Flames", "stats_plus0": dict(CLOAK0), "stats_plus10": dict(CLOAK0)}
+        at0 = item_haste(item, 0)
+        at10 = item_haste(item, 10)
+        self.assertEqual(at0, 36)
+        self.assertEqual(at10, 46)
+        self.assertEqual(at10 - at0, 10)
+        # Default scoring column is +10, so the haste bonus uses 46 not the frozen 36.
+        self.assertEqual(item_haste(item), 46)
+        self.assertEqual(haste_bonus(item), 92)
 
 
 if __name__ == "__main__":

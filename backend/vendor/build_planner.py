@@ -193,9 +193,15 @@ def scale_stats_plus10(stats0: dict) -> dict:
                 out[k] = float(math.floor(float(v) * 2))  # level 10
             except (TypeError, ValueError):
                 continue
-        elif k == "DLY" or k in ("FIRE_DMG", "COLD_DMG", "Haste"):
+        elif k == "DLY" or k in ("FIRE_DMG", "COLD_DMG"):
             try:
                 out[k] = float(v)
+            except (TypeError, ValueError):
+                continue
+        elif str(k).lower() == "haste":
+            # Tooltip haste + 10. Not the AC curve, and not a freeze.
+            try:
+                out[k] = float(v) + 10
             except (TypeError, ValueError):
                 continue
         elif k in bx.STAT_COLS or k in {
@@ -234,14 +240,23 @@ def num(v, default=0.0) -> float:
 def positive(v: float) -> float:
     return v if v > 0 else 0.0
 
-def item_haste(item: dict) -> float:
-    """Worn haste percent from +10/+0 stats (does not scale)."""
+def item_haste(item: dict, level: int = 10) -> float:
+    """Worn haste = tooltip base + upgrade level (eqlegendstools).
+
+    stats_plus10.Haste in decoded files is a copy of +0, so it is the base,
+    not a measured +10. Default level is 10, matching the +10 scoring column.
+    """
     s10 = item.get("stats_plus10") or {}
     s0 = item.get("stats_plus0") or {}
-    h = s10.get("Haste")
-    if h is None:
-        h = s0.get("Haste")
-    return num(h)
+    b0 = s0.get("Haste")
+    b10 = s10.get("Haste")
+    if b0 is None and b10 is None:
+        return 0.0
+    lvl = max(0, min(10, int(level)))
+    if b0 is not None and b10 is not None and abs(num(b0) - num(b10)) > 1e-6 and lvl >= 10:
+        return num(b10)
+    base = b0 if b0 is not None else b10
+    return num(base) + lvl
 
 
 def haste_bonus(item: dict) -> float:
@@ -1003,7 +1018,7 @@ def write_stat_planner(wb, n_scores: int):
 
     ws["A6"] = "Haste:"
     ws["B6"] = (
-        "ONLY ONE worn haste item counts (tooltip 'Haste: +N%'; does not scale). "
+        "ONLY ONE worn haste item counts (tooltip 'Haste: +N%' at +0; +10 is that base plus 10). "
         "Loadout picks the single best Haste% piece; other haste gear is excluded so haste never stacks. "
         "Change planner classes on Class selector (B2–B4); scores precomputed for build-time trio (default PAL+MNK+WIZ). "
         "FINGER1/2 and EAR1/2 pick distinct pieces. Weapons rank by Ratio +10 first."
@@ -1180,7 +1195,7 @@ def write_how_to_use_extended(wb, summary, weapon_counts, pool_count, planner_cl
         "5. Class selector B2–B4: pick any 1–3 of the 16 classes (use (none) to leave empty). Default Paladin/Monk/Wizard.",
         "",
         "*** HASTE (important) ***",
-        "ONLY ONE worn haste item counts on a character. Worn haste is the tooltip line 'Haste: +N%' (Haste +0/+10 columns; value does NOT scale with upgrade).",
+        "ONLY ONE worn haste item counts on a character. Worn haste is the tooltip line 'Haste: +N%' at +0; Haste +10 is that base plus 10.",
         "Spell Haste / Summoning Haste / focus effects are NOT worn haste and are left in Effect text only.",
         "BiS ranking / Stat planner loadout: prefer the single best Haste% piece; do NOT stack multiple haste items.",
         "Individual item scores still SHOW haste and give a small haste preference; the loadout builder then keeps at most one haste item (highest % wins).",
@@ -1227,7 +1242,7 @@ def write_how_to_use_extended(wb, summary, weapon_counts, pool_count, planner_cl
         "Ratio = DMG / DLY when both known.",
         "",
         "Columns (gear sheets)",
-        "- Haste +0 / Haste +10: worn haste percent from tooltip 'Haste: +N%' when present (same value; does not scale).",
+        "- Haste +0 / Haste +10: worn haste from tooltip 'Haste: +N%' at +0; +10 is base + 10 (not the AC/HP curve).",
         "- Other stat columns: base (+0) and site-scaled (+10).",
         "",
         "Columns (weapons sheets)",

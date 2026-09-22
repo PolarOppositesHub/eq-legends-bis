@@ -121,8 +121,7 @@ def scale_stats_to_level(stats0: dict, level: int) -> dict:
     """Scale +0 stats to upgrade level 0..10. DLY/FIRE_DMG/COLD_DMG do not scale.
 
     Worn haste follows eqlegendstools: tooltip base + integer level.
-    BiS score still uses the stored tooltip haste (item_haste), so a flat
-    +level on every haste item does not reshuffle picks.
+    Scoring uses the same rule (default +10, one point per tier).
     """
     level = max(0, min(10, int(level)))
     out: dict[str, Any] = {}
@@ -197,7 +196,8 @@ def _public_item(item: dict, level: int = 10) -> dict:
         s_lvl = {k: (_num(v) if not isinstance(v, str) else v) for k, v in s_lvl.items()}
     apply_worn_haste(s_lvl, s0, level, s10_raw)
     s10 = dict(s10_raw or scale_stats_to_level(s0, 10))
-    haste = bp.item_haste(item)
+    _hk, h_scaled = _haste_pair(s_lvl)
+    haste = h_scaled if h_scaled is not None else bp.item_haste(item, level)
     return {
         "name": item.get("name"),
         "itemID": item.get("itemID"),
@@ -741,8 +741,13 @@ def recommend_bis(
         for r in ranked[: max(alts, 1) + 8]:
             if r["name"] == row["name"]:
                 continue
-            ih = bp.item_haste(r.get("item") or {})
             r_item = r.get("item") or {}
+            alt_up = scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {}
+            _hk, ih = _haste_pair(alt_up)
+            if ih is None and r_item:
+                ih = bp.item_haste(r_item, upgrade)
+            if ih is None:
+                ih = 0
             r_ratio = r.get("ratio_at_upgrade")
             if r_ratio is None and r_item:
                 r_ratio = ratio_at_level(r_item, upgrade)
@@ -760,7 +765,7 @@ def recommend_bis(
                 "bis_overlap": r.get("bis_overlap", 0),
                 "stats_plus0": r_item.get("stats_plus0") or {},
                 "stats_plus10": sc.enrich_stats_with_regen(r_item) if r_item else (r.get("stats_plus10") or {}),
-                "stats_at_upgrade": scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {},
+                "stats_at_upgrade": alt_up,
                 "url": r.get("url") or "",
                 "image_url": f"/api/item-image?name={r['name']}" if r.get("name") else "",
             })
