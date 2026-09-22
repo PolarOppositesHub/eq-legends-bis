@@ -225,7 +225,7 @@ def rewards_for_quest(name: str, *, upgrade: int = 0) -> list[dict[str, Any]]:
         }
         for lvl in range(0, 11):
             if lvl == 0:
-                # Keep +0 keys as catalog values (Haste base is not scaled at +0).
+                # Keep +0 keys as catalog values (haste base is the tooltip percent).
                 stats_by["0"] = {
                     k: (float(v) if isinstance(v, (int, float)) else v)
                     for k, v in s0.items()

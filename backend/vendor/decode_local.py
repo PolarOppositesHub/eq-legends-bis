@@ -160,6 +160,22 @@ def curl_fetch(path: str, dest: Path) -> None:
     subprocess.check_call(cmd)
 
 
+def scale_worn_haste(base, level: int):
+    """Worn haste from the live eqlegendstools item page.
+
+    scaleTooltipLine does ``Haste: +(Number(base) + upgrade.full)%``.
+    ``upgrade.full`` is the integer +0…+10 level, not the AC/HP curve
+    (``scale_item_stat`` would turn Cloak of Flames 36 into 72).
+    """
+    try:
+        o = float(base)
+    except (TypeError, ValueError):
+        return base
+    level = max(0, min(10, int(level or 0)))
+    n = o + level
+    return int(n) if float(n).is_integer() else n
+
+
 def scale_item_stat(base, level: int):
     try:
         o = float(base or 0)
@@ -188,6 +204,8 @@ def scale_stats(stats: dict | None, level: int) -> dict:
                 )
             except (TypeError, ValueError):
                 out[k] = v
+        elif str(k).lower() == "haste":
+            out[k] = scale_worn_haste(v, level)
         elif k in SCALABLE_STATS:
             out[k] = scale_item_stat(v, level)
         else:
@@ -328,8 +346,9 @@ def flatten_item(item, bis_classes, slug_map, weapons_by_name, weapons_by_id):
     if haste is not None:
         stats0["Haste"] = haste
 
-    # Haste / DLY / elemental bonus DMG do not scale with upgrade level
-    nonscale = {"DLY", "Haste", "FIRE_DMG", "COLD_DMG"}
+    # DLY / elemental bonus DMG do not scale. Worn haste uses scale_worn_haste
+    # (tooltip base + integer upgrade), matching eqlegendstools scaleTooltipLine.
+    nonscale = {"DLY", "FIRE_DMG", "COLD_DMG"}
     stats10 = scale_stats({k: v for k, v in stats0.items() if k not in nonscale}, 10)
     for k in nonscale:
         if k in stats0:
@@ -499,7 +518,7 @@ def main():
             h = tip_haste_by_name.get(row.get("name") or "")
             if h is not None:
                 row["stats_plus0"]["Haste"] = h
-                row["stats_plus10"]["Haste"] = h
+                row["stats_plus10"]["Haste"] = scale_worn_haste(h, 10)
         return row
 
     flat_all = []
@@ -577,7 +596,8 @@ def main():
         "default_planner_trio": ["Paladin", "Monk", "Wizard"],
         "counts": counts,
         "haste_note": (
-            "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). "
+            "Worn haste parsed from tooltip 'Haste: +N%' at +0. "
+            "eqlegendstools adds the integer upgrade level (not the AC/HP curve). "
             "Spell/focus/effect haste text is NOT treated as worn haste. "
             "Only ONE worn haste item counts in a loadout; that item haste stacks with Cast Buffs spell haste."
         ),
@@ -586,7 +606,8 @@ def main():
             "available": True,
             "note": "Site computes +0..+10 client-side; +10 columns derived with site formula from base stats.",
             "scalable_stats": sorted(SCALABLE_STATS | {"DMG"}),
-            "non_scalable": ["DLY", "Haste", "FIRE_DMG", "COLD_DMG"],
+            "non_scalable": ["DLY", "FIRE_DMG", "COLD_DMG"],
+            "haste": "tooltip base + integer upgrade level (eqlegendstools scaleTooltipLine)",
         },
         "stat_keys_seen": dict(Counter(k for r in flat_all for k in (r.get("stats_plus0") or {}))),
         "sample_items": [

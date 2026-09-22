@@ -16,10 +16,11 @@ TOTAL_KEYS = [
 # Reuse site scale formula from decode_local when available
 _scale = None
 _scaled_dmg = None
+_worn_haste = None
 try:
     from .paths import ensure_vendor_on_path
     ensure_vendor_on_path()
-    from decode_local import scale_item_stat as _scale  # type: ignore
+    from decode_local import scale_item_stat as _scale, scale_worn_haste as _worn_haste  # type: ignore
     import build_xlsx as _bx  # type: ignore
     _scaled_dmg = _bx.scaled_dmg
 except Exception:
@@ -57,8 +58,13 @@ def scale_stats(stats0: dict, level: int) -> dict:
                 out[k] = float(_scaled_dmg(v, level))
             else:
                 out[k] = float(math.floor(float(v) * (1 + level / 10)))
-        elif k in ("DLY", "FIRE_DMG", "COLD_DMG", "Haste"):
+        elif k in ("DLY", "FIRE_DMG", "COLD_DMG"):
             out[k] = num(v)
+        elif str(k).lower() == "haste":
+            if _worn_haste is not None:
+                out[k] = float(_worn_haste(v, level))
+            else:
+                out[k] = num(v) + level
         elif k in SCALABLE:
             if _scale is not None:
                 out[k] = float(_scale(v, level))
@@ -109,11 +115,38 @@ def simulate_loadout(
         else:
             stats = dict(s10)
 
-        h = item_haste(raw) if ("stats_plus0" in raw or "stats_plus10" in raw) else num(stats.get("Haste"))
-        if h <= 0 and isinstance(raw.get("item"), dict):
-            h = item_haste(raw["item"])
-        if h <= 0:
-            h = num(stats.get("Haste"))
+        def _pair(src):
+            if not isinstance(src, dict):
+                return None, None
+            for key, val in src.items():
+                if str(key).lower() == "haste":
+                    return key, num(val)
+            return None, None
+
+        k0, b0 = _pair(s0)
+        k10, b10 = _pair(s10)
+        if k0 or k10:
+            key = k0 or k10
+            if (
+                upgrade >= 10
+                and b0 is not None
+                and b10 is not None
+                and abs(b0 - b10) > 1e-6
+            ):
+                stats[key] = b10
+            else:
+                base = b0 if b0 is not None else b10
+                if _worn_haste is not None:
+                    stats[key] = float(_worn_haste(base, upgrade))
+                else:
+                    stats[key] = num(base) + upgrade
+            h = num(stats.get(key))
+        else:
+            h = item_haste(raw) if ("stats_plus0" in raw or "stats_plus10" in raw) else num(stats.get("Haste"))
+            if h <= 0 and isinstance(raw.get("item"), dict):
+                h = item_haste(raw["item"])
+            if h <= 0:
+                h = num(stats.get("Haste"))
 
         ratio = raw.get("ratio_plus10") if upgrade >= 10 else raw.get("ratio_plus0")
         if ratio is None:

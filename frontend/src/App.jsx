@@ -379,6 +379,14 @@ function scaleItemStat(base, level) {
   return Math.min(0, o + level)
 }
 
+/** eqlegendstools scaleTooltipLine: Haste% = tooltip base + integer upgrade. Not the AC curve. */
+function scaleWornHaste(base, level) {
+  const o = Number(base)
+  if (!Number.isFinite(o)) return base
+  const n = o + clampUpgrade(level)
+  return Number.isInteger(n) ? n : n
+}
+
 function scaleStatsToLevel(stats0, level) {
   const lvl = clampUpgrade(level)
   const out = {}
@@ -388,11 +396,12 @@ function scaleStatsToLevel(stats0, level) {
       if (!Number.isFinite(base)) continue
       out[k] = lvl === 0 ? base : Math.floor(base * (1 + lvl / 10))
     } else if (k === 'DLY' || k === 'FIRE_DMG' || k === 'COLD_DMG') {
-      // Delay and elemental bonus damage stay flat. Haste used to be in this
-      // set, so the upgrade slider never moved it. Catalog Haste is a real +0
-      // value; scale it with scaleItemStat like AC/HP/STR. Do not invent a base.
       out[k] = Number(v) || 0
-    } else if (isCatalogHasteKey(k) || SCALABLE_STAT_KEYS.has(k)) {
+    } else if (isCatalogHasteKey(k)) {
+      // Tooltip base + level. Stored stats_plus10.Haste copies +0, so it is not a measured +10.
+      const base = Number(v)
+      out[k] = Number.isFinite(base) ? scaleWornHaste(base, lvl) : v
+    } else if (SCALABLE_STAT_KEYS.has(k)) {
       out[k] = scaleItemStat(v, lvl)
     } else {
       const n = Number(v)
@@ -400,6 +409,22 @@ function scaleStatsToLevel(stats0, level) {
     }
   }
   return out
+}
+
+/** Collapsed +10 line keeps stored AC/HP, but haste follows the same slider rule. */
+function previewStatsPlus10(item) {
+  const s10 = { ...(item?.stats_plus10 || {}) }
+  const s0 = item?.stats_plus0 || {}
+  if (!Object.keys(s10).length) return scaleStatsToLevel(s0, 10)
+  for (const [k, v] of Object.entries(s0)) {
+    if (!isCatalogHasteKey(k)) continue
+    const base = Number(v)
+    const stored = Number(s10[k])
+    if (!Number.isFinite(base)) continue
+    if (Number.isFinite(stored) && stored !== base) continue
+    s10[k] = scaleWornHaste(base, 10)
+  }
+  return s10
 }
 
 function itemStatsAtLevel(item, level) {
@@ -3363,7 +3388,7 @@ export default function App() {
                           </div>
                           {!rowSelected ? (
                             <div className="stats-line">
-                              {fmtStats(it.stats_plus10 || it.stats_plus0, SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
+                              {fmtStats(previewStatsPlus10(it), SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
                             </div>
                           ) : null}
                         </div>
