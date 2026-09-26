@@ -124,16 +124,72 @@ export function previewStatsPlus10(item) {
   return s10
 }
 
+function hasteNumber(stats) {
+  if (!stats || typeof stats !== 'object') return null
+  for (const [k, v] of Object.entries(stats)) {
+    if (!isCatalogHasteKey(k)) continue
+    const n = Number(v)
+    if (Number.isFinite(n)) return n
+  }
+  return null
+}
+
+/** Tooltip base for worn haste. stats_plus10 often copies +0, so it is not a measured +10. */
+export function wornHasteBase(item) {
+  const from0 = hasteNumber(item?.stats_plus0)
+  if (from0 != null) return from0
+  for (const line of item?.tooltipLines || []) {
+    const m = /^Haste:\s*\+?(-?\d+)\s*%?\s*$/i.exec(String(line).trim())
+    if (m) return Number(m[1])
+  }
+  return hasteNumber(item?.stats_plus10)
+}
+
+/** Haste shown for an upgrade. Explicit stats_plus10 that differs from +0 wins at +10. */
+export function wornHasteAtLevel(item, level) {
+  const lvl = clampUpgrade(level)
+  const base = hasteNumber(item?.stats_plus0)
+  const plus10 = hasteNumber(item?.stats_plus10)
+  const tooltipBase = wornHasteBase(item)
+  if (base == null && plus10 == null && tooltipBase == null) return null
+  if (
+    lvl >= 10
+    && base != null
+    && plus10 != null
+    && Math.abs(base - plus10) > 1e-6
+  ) {
+    return plus10
+  }
+  const start = base != null ? base : tooltipBase
+  if (start == null) return plus10
+  return scaleWornHaste(start, lvl)
+}
+
+function withWornHaste(stats, item, level) {
+  const out = { ...(stats || {}) }
+  const haste = wornHasteAtLevel(item, level)
+  if (haste == null) return out
+  for (const k of Object.keys(out)) {
+    if (isCatalogHasteKey(k)) delete out[k]
+  }
+  out.Haste = haste
+  return out
+}
+
 export function itemStatsAtLevel(item, level) {
   if (!item) return {}
   const s0 = item.stats_plus0
+  let stats
   if (s0 && typeof s0 === 'object' && Object.keys(s0).length) {
-    return scaleStatsToLevel(s0, level)
+    stats = scaleStatsToLevel(s0, level)
+  } else {
+    const lvl = clampUpgrade(level)
+    // stats_plus10.Haste is often a copy of +0. Never show that copy as +10.
+    if (lvl >= 10) stats = item.stats_plus10 || item.stats_at_upgrade || {}
+    else if (lvl === 0) stats = item.stats_plus0 || item.stats_at_upgrade || {}
+    else stats = item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0 || {}
   }
-  const lvl = clampUpgrade(level)
-  if (lvl >= 10) return item.stats_plus10 || item.stats_at_upgrade || {}
-  if (lvl === 0) return item.stats_plus0 || item.stats_at_upgrade || {}
-  return item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0 || {}
+  return withWornHaste(stats, item, level)
 }
 
 function formatScaledNumber(n, sign) {

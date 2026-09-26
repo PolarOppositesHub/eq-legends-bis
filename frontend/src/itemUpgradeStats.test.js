@@ -5,6 +5,7 @@ import {
   itemStatsAtLevel,
   previewStatsPlus10,
   scaleTooltipLines,
+  wornHasteAtLevel,
 } from './itemUpgradeStats.js'
 
 const CLOAK_LINES = [
@@ -93,6 +94,29 @@ test('delay, effects, focus, and backstab damage stay put while DMG and regen sc
   assert.equal(stats.HP_REGEN, 20)
   assert.equal(stats.MANA_REGEN, 12)
   assert.equal(stats.FIRE_DMG, 4)
+})
+
+test('chip haste still scales when stats_plus0 is empty and +10 haste is a frozen copy', () => {
+  const item = {
+    stats_plus0: {},
+    stats_plus10: { Haste: 36, AC: 20 },
+    tooltipLines: ['Haste: +36%'],
+  }
+  assert.equal(wornHasteAtLevel(item, 0), 36)
+  assert.equal(wornHasteAtLevel(item, 10), 46)
+  assert.equal(itemStatsAtLevel(item, 0).Haste, 36)
+  assert.equal(itemStatsAtLevel(item, 10).Haste, 46)
+  assert.equal(scaleTooltipLines(item.tooltipLines, 10)[0], 'Haste: +46%')
+})
+
+test('explicit stats_plus10 haste that differs from +0 is kept at +10', () => {
+  const item = {
+    stats_plus0: { Haste: 36 },
+    stats_plus10: { Haste: 40 },
+  }
+  assert.equal(itemStatsAtLevel(item, 0).Haste, 36)
+  assert.equal(itemStatsAtLevel(item, 10).Haste, 40)
+  assert.equal(itemStatsAtLevel(item, 5).Haste, 41)
 })
 
 test('collapsed +10 preview adds the haste level when stored +10 haste copies +0', () => {
