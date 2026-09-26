@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node --test workspaceSessionStore.test.js",
+    "test": "node --test workspaceSessionStore.test.js packagingConfig.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis portable",
@@ -74,14 +74,15 @@
         }
       ],
       "artifactName": "EQ-Legends-BiS-${version}-${os}-${arch}.${ext}",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
+      "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "EQ Legends BiS",
+      "include": "installer.nsh",
       "installerIcon": "icon.ico",
       "uninstallerIcon": "icon.ico",
       "installerHeaderIcon": "icon.ico"

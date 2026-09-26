@@ -16,6 +16,7 @@ frontend/dist/
 desktop/build/*
 !desktop/build/icon.ico
 !desktop/build/icon.png
+!desktop/build/installer.nsh
 desktop/dist/
 *.exe
 *.blockmap

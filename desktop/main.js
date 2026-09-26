@@ -15,6 +15,13 @@ const crypto = require('crypto');
 const fs = require('fs');
 const workspaceStore = require('./workspaceSessionStore');
 
+// Windows taskbar pins use this id. It must match build.appId: electron-builder
+// derives the NSIS install GUID from it, and the installer stamps the same
+// value onto shortcuts (WinShell::SetLnkAUMI). Do not change the id.
+if (process.platform === 'win32') {
+  app.setAppUserModelId(require('./package.json').build.appId);
+}
+
 let mainWindow = null;
 let apiProc = null;
 let apiPort = 0;
