@@ -333,6 +333,7 @@ class Segmenter:
     def _apply_context(self, event: ParsedEvent, ts: datetime | None) -> None:
         for pet, owner, evidence in self.ctx.note_name_pets(event.source, event.target, event.pet):
             self._roster("pet", pet=pet, owner=owner, evidence=evidence)
+            self._roster("candidate_close", pet=pet)
         if event.kind == "group_join" and event.target and not is_you(event.target) and event.target != "You":
             self.ctx.add_group(event.target)
             self._roster("group_add", name=event.target)
@@ -357,6 +358,7 @@ class Segmenter:
                 name=event.player_name,
                 classes=event.player_classes,
                 level=event.player_level,
+                ts=_iso(ts),
             )
         elif event.kind == "level":
             # Loadout swaps drop the displayed level (50 then 29). That is not
@@ -366,10 +368,21 @@ class Segmenter:
             owner = self.character if is_you(event.owner) or event.owner == "You" else (event.owner or self.character)
             if self.ctx.bind_pet(event.pet, owner, "tell"):
                 self._roster("pet", pet=event.pet, owner=owner, evidence="tell")
+            if owner:
+                self._roster("candidate_close", pet=event.pet)
         elif event.kind == "pet_leader" and event.pet and event.owner:
             owner = self.character if is_you(event.owner) else event.owner
             if self.ctx.bind_pet(event.pet, owner, "leader"):
                 self._roster("pet", pet=event.pet, owner=owner, evidence="leader")
+            self._roster("candidate_close", pet=event.pet)
+        elif event.kind == "pet_nominate" and event.pet:
+            if self.ctx.note_candidate(event.pet, event.evidence or "nominate"):
+                self._roster(
+                    "candidate",
+                    pet=event.pet,
+                    evidence=event.evidence or "nominate",
+                    ts=_iso(ts),
+                )
         elif event.kind == "cast" and event.source and is_you(event.source):
             spell = (event.spell or "").strip()
             if spell == "Charm" or spell.startswith("Charm "):
@@ -379,6 +392,7 @@ class Segmenter:
             if self._charm_recent(ts) and self.ctx.bind_pet(event.pet, self.character, "charm"):
                 self.ctx.charmed.add(event.pet)
                 self._roster("pet", pet=event.pet, owner=self.character, evidence="charm")
+                self._roster("candidate_close", pet=event.pet)
         elif event.kind == "charm_break":
             self._drop_charm(event.pet)
         elif event.kind == "zone":
@@ -421,9 +435,40 @@ class Segmenter:
             owner = _canon(owner, self.character)
         return source, source_kind, owner, target, target_kind
 
+    def _note_same_npc(
+        self,
+        event: ParsedEvent,
+        offset: int | None,
+        source: str | None,
+        source_kind: str,
+        owner: str | None,
+        target: str | None,
+    ) -> None:
+        """Record a known player, or an unbound pet candidate, hitting this fight's NPC.
+
+        This does not start a fight. Raid scope is the manual allowlist plus
+        players who damaged the same NPC. There is no raid-roster line to parse.
+        """
+        fight = self.fight
+        if fight is None or not fight.open:
+            return
+        if source_kind not in {"other", "candidate"}:
+            return
+        if not source or not target or target not in fight.targets:
+            return
+        amount = int(event.amount or 0)
+        if not amount:
+            return
+        crit = _crit(event)
+        fight.agg(source, source_kind, owner).add_damage(amount, event.kind, crit, event.ts)
+        fight.breakdown.add_outgoing(source, event.kind, ability_name(event.kind, event.verb, event.spell), amount, crit)
+        fight.touch(event.ts, offset)
+        fight.last_combat_ts = event.ts or fight.last_combat_ts
+
     def _damage(self, event: ParsedEvent, offset: int | None) -> FightState | None:
         source, source_kind, owner, target, target_kind = self._sides(event)
         if not involve_friendly(source_kind, target_kind):
+            self._note_same_npc(event, offset, source, source_kind, owner, target)
             return None
         # Sourceless non-melee (environmental) does not start a fight.
         if event.kind == "ds" and source is None and (self.fight is None or not self.fight.open):

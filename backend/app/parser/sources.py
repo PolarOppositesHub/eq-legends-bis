@@ -130,11 +130,15 @@ class ActorContext:
     def __init__(self, character: str) -> None:
         self.character = character
         self.group: dict[str, str] = {}
+        self.allowlist: dict[str, str] = {}
         self.pets: dict[str, str | None] = {}
         self.pet_evidence: dict[str, str] = {}
         self.manual_pets: set[str] = set()
         self.players: set[str] = set()
         self.charmed: set[str] = set()
+        # Rule 5 nominations. These are prompts only and never an owner binding.
+        self.candidates: dict[str, str] = {}
+        self.dismissed: set[str] = set()
 
     def set_group(self, members: dict[str, str]) -> None:
         self.group = dict(members)
@@ -156,6 +160,42 @@ class ActorContext:
         if display and not is_you(display):
             self.players.add(display)
 
+    def add_allow(self, name: str) -> None:
+        display = name.strip()
+        if not display or is_you(display) or display.lower() == self.character.lower():
+            return
+        self.allowlist[display.lower()] = display
+
+    def remove_allow(self, name: str) -> None:
+        self.allowlist.pop(name.strip().lower(), None)
+
+    def note_candidate(self, pet: str, evidence: str) -> bool:
+        """Remember a nominating say. Never writes an owner binding.
+
+        Returns True the first time this pet becomes an open prompt.
+        """
+        pet = pet.strip()
+        if not pet or is_you(pet) or pet.lower() == self.character.lower():
+            return False
+        if is_npc_pet_name(pet):
+            return False
+        if pet in self.manual_pets or pet in self.dismissed:
+            return False
+        if self.pets.get(pet):
+            return False
+        if pet in self.candidates:
+            self.candidates[pet] = evidence
+            return False
+        self.candidates[pet] = evidence
+        return True
+
+    def dismiss_candidate(self, pet: str) -> None:
+        pet = pet.strip()
+        if not pet:
+            return
+        self.candidates.pop(pet, None)
+        self.dismissed.add(pet)
+
     def bind_pet(self, pet: str, owner: str | None, evidence: str, *, manual: bool = False) -> bool:
         """Return True when the binding changed. Manual wins over auto."""
         pet = pet.strip()
@@ -165,6 +205,11 @@ class ActorContext:
             self.manual_pets.add(pet)
             self.pets[pet] = owner
             self.pet_evidence[pet] = evidence
+            if owner:
+                self.candidates.pop(pet, None)
+                self.dismissed.discard(pet)
+            else:
+                self.dismiss_candidate(pet)
             if owner is None:
                 self.charmed.discard(pet)
             return True
@@ -174,6 +219,8 @@ class ActorContext:
             return False
         self.pets[pet] = owner
         self.pet_evidence[pet] = evidence
+        if owner:
+            self.candidates.pop(pet, None)
         return True
 
     def note_name_pets(self, *names: str | None) -> list[tuple[str, str, str]]:
@@ -213,8 +260,12 @@ class ActorContext:
         key = name.lower()
         if key in self.group or name in self.group.values():
             return "group"
+        if key in self.allowlist or name in self.allowlist.values():
+            return "group"
         if name in self.players:
             return "other"
+        if name in self.candidates:
+            return "candidate"
         return "npc"
 
     def in_group_name(self, name: str | None) -> str | None:

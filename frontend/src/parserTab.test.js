@@ -7,8 +7,12 @@ import { CreditsDialog } from './parserChrome.jsx'
 import {
   LEVEL_LOADOUT_NOTE,
   PARSER_EMPTY,
+  PET_LEADER_HINT,
+  RAID_SCOPE_NOTE,
   describeLevelChange,
   formatZone,
+  sourcesForScope,
+  visibleRate,
 } from './parserView.js'
 
 function markup(element) {
@@ -192,6 +196,88 @@ test('a level drop is kept and is not an error', () => {
   assert.equal(/\berror\b/i.test(LEVEL_LOADOUT_NOTE), false)
   const note = html.slice(html.indexOf('parser-level-note'))
   assert.equal(note.includes('warn-box'), false)
+})
+
+test('scope filter, pet prompt, and group allowlist render on the Parser tab', () => {
+  const html = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    fights: [sampleFight],
+    selectedFightId: 7,
+    detailStatus: 'ready',
+    scope: 'group',
+    character: 'Zasariz',
+    candidates: [{ pet: 'Jaber', evidence: 'nominate', status: 'open' }],
+    groupMembers: [{ name: 'Amop', via: 'log' }],
+    allowlist: ['Cara'],
+    loadouts: [
+      { name: 'Zasariz', classes: 'PAL/DRU/WIZ', level: 36 },
+      { name: 'Zasariz', classes: 'WAR/SHD/PAL', level: 12 },
+    ],
+    detail: {
+      id: 7,
+      duration_seconds: 30,
+      totals: { damage: 100, dps: 3.3 },
+      sources: [
+        { source: 'Zasariz', kind: 'self', damage: 80, dps: 8, sdps: 2.7, pets: [] },
+        { source: 'Amop', kind: 'group', damage: 20, dps: 2, sdps: 0.7, pets: [] },
+      ],
+    },
+  }))
+  assert.match(html, /data-testid="parser-scope"/)
+  assert.match(html, /data-testid="parser-scope-self"/)
+  assert.match(html, /data-testid="parser-scope-group"/)
+  assert.match(html, /data-testid="parser-scope-pets"/)
+  assert.match(html, /data-testid="parser-scope-raid"/)
+  assert.match(html, /data-testid="parser-scope-all"/)
+  assert.match(html, /data-testid="parser-scope-group"[^>]*aria-pressed="true"|aria-pressed="true"[^>]*data-testid="parser-scope-group"/)
+  assert.match(html, /data-testid="parser-pet-prompt"/)
+  assert.match(html, /Jaber — your pet\?/)
+  assert.match(html, /Set as pet of…/)
+  assert.match(html, /Unassign/)
+  assert.match(html, /data-testid="parser-group"/)
+  assert.match(html, /From the log: Amop/)
+  assert.match(html, /data-testid="parser-allow-list"/)
+  assert.match(html, />Cara</)
+  assert.match(html, /PAL\/DRU\/WIZ · 36/)
+  assert.match(html, /WAR\/SHD\/PAL · 12/)
+  assert.equal(html.includes(PET_LEADER_HINT), true)
+  assert.equal(html.includes(RAID_SCOPE_NOTE), false)
+  assert.match(html, /Total damage 100/)
+  assert.match(html, /3\.3 DPS/)
+
+  const raid = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    fights: [sampleFight],
+    scope: 'raid',
+  }))
+  assert.match(raid, /data-testid="parser-raid-note"/)
+  assert.equal(raid.includes(RAID_SCOPE_NOTE), true)
+})
+
+test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {
+  const detail = {
+    sources: [
+      { source: 'Zasariz', kind: 'self', damage: 10, pets: [] },
+      { source: 'Amop', kind: 'group', damage: 4, pets: [] },
+      { source: 'Jenann', kind: 'pet', owner: 'Zasariz', damage: 3, pets: [] },
+      { source: 'Jaber', kind: 'candidate', damage: 40, pets: [] },
+      { source: 'Brinn', kind: 'other', damage: 8, pets: [] },
+      { source: 'a rat', kind: 'npc', damage: 6, pets: [] },
+    ],
+  }
+  const names = (scope) => sourcesForScope(detail, scope, ['Cara']).map((row) => row.source)
+  assert.deepEqual(names('self'), ['Zasariz'])
+  assert.deepEqual(names('group'), ['Zasariz', 'Amop', 'Jenann'])
+  assert.deepEqual(names('pets'), ['Jenann'])
+  assert.deepEqual(names('raid'), ['Zasariz', 'Amop', 'Jenann', 'Brinn'])
+  assert.deepEqual(names('all'), ['Zasariz', 'Amop', 'Jenann', 'Jaber', 'Brinn', 'a rat'])
+  assert.equal(names('group').includes('Jaber'), false)
+  assert.equal(visibleRate(sourcesForScope(detail, 'group', ['Cara']), 2), 8.5)
+  assert.equal(visibleRate(sourcesForScope(detail, 'all', ['Cara']), 2), 35.5)
 })
 
 test('credits name eqlwiki CC BY-SA and eqlegendstools.com', () => {

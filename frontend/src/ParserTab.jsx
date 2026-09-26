@@ -4,23 +4,35 @@ import {
   getParserFight,
   getParserFights,
   getParserLogs,
+  getParserRoster,
   openParserStream,
+  postParserCandidate,
   postParserConfig,
+  postParserGroup,
   postParserLive,
   postParserLoad,
+  postParserPet,
 } from './parserApi.js'
 import {
   LEVEL_LOADOUT_NOTE,
   PARSER_EMPTY,
-  displaySources,
+  PET_LEADER_HINT,
+  RAID_SCOPE_NOTE,
+  SOURCE_SCOPES,
   formatDamage,
   formatDuration,
   formatFightTime,
   formatRate,
   formatTargets,
   formatZone,
+  loadoutText,
+  loadoutsFor,
   logOptionLabel,
+  petEvidenceLabel,
   sourceKindLabel,
+  sourcesForScope,
+  visibleDamage,
+  visibleRate,
 } from './parserView.js'
 
 function progressFromUpgrade(data) {
@@ -35,6 +47,25 @@ function progressFromUpgrade(data) {
     pct: data?.done ? 100 : pct,
     lines,
   }
+}
+
+export const emptyRoster = { group: [], allowlist: [], candidates: [], loadouts: [], pets: [] }
+
+function ownerOptions(character, members, allowNames) {
+  const names = []
+  const seen = new Set()
+  const push = (name) => {
+    const text = typeof name === 'string' ? name.trim() : ''
+    if (!text) return
+    const key = text.toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    names.push(text)
+  }
+  push(character)
+  for (const row of members) push(row?.name || row)
+  for (const name of allowNames) push(name)
+  return names
 }
 
 export function ParserPanel({
@@ -56,6 +87,20 @@ export function ParserPanel({
   detailStatus,
   mergePets,
   onMergePetsChange,
+  scope = 'group',
+  onScopeChange,
+  candidates = [],
+  onConfirmPet,
+  onDismissPet,
+  onSetPet,
+  onUnassignPet,
+  groupMembers = [],
+  allowlist = [],
+  loadouts = [],
+  petBindings = [],
+  character = '',
+  onAddAllow,
+  onRemoveAllow,
   onLoadLog,
   onRefresh,
   onSetEqFolder,
@@ -64,9 +109,17 @@ export function ParserPanel({
   notice,
   upgrading,
 }) {
+  const [assignPet, setAssignPet] = useState('')
+  const [assignOwner, setAssignOwner] = useState('')
+  const [allowName, setAllowName] = useState('')
   const list = Array.isArray(logs) ? logs : []
   const fightRows = Array.isArray(fights) ? fights : []
-  const sources = displaySources(detail)
+  const allowNames = Array.isArray(allowlist) ? allowlist : []
+  const sources = sourcesForScope(detail, scope, allowNames)
+  const prompts = Array.isArray(candidates) ? candidates : []
+  const members = Array.isArray(groupMembers) ? groupMembers : []
+  const classes = Array.isArray(loadouts) ? loadouts : []
+  const ownerChoices = ownerOptions(character, members, allowNames)
   const empty = logsStatus === 'ready' && list.length === 0
   const selected = list.find((log) => log.path === selectedPath) || null
   const pct = progress && progress.pct != null ? progress.pct : null
@@ -178,6 +231,62 @@ export function ParserPanel({
       ) : null}
 
       {!empty && logsStatus === 'ready' ? (
+        <section className="parser-roster" data-testid="parser-group">
+          <h3 className="parser-subhead">Group</h3>
+          <p className="note">
+            From the log: {members.length ? members.map((row) => row.name || row).join(', ') : 'none yet'}
+          </p>
+          <form
+            className="parser-allow"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const name = allowName.trim()
+              if (!name || !onAddAllow) return
+              onAddAllow(name)
+              setAllowName('')
+            }}
+          >
+            <label htmlFor="parser-allow-input">Allowlist</label>
+            <input
+              id="parser-allow-input"
+              data-testid="parser-allow-input"
+              value={allowName}
+              onChange={(e) => setAllowName(e.target.value)}
+              placeholder="Character name"
+            />
+            <button type="submit">Add</button>
+          </form>
+          {allowNames.length ? (
+            <ul className="parser-allow-list" data-testid="parser-allow-list">
+              {allowNames.map((name) => (
+                <li key={name}>
+                  {name}
+                  <button type="button" data-testid="parser-allow-remove" data-member={name} onClick={() => onRemoveAllow && onRemoveAllow(name)}>
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">Allowlist is empty. Names here stay in the group across restarts.</p>
+          )}
+          <h3 className="parser-subhead">Classes from /who</h3>
+          {classes.length ? (
+            <ul className="parser-loadouts" data-testid="parser-loadouts">
+              {classes.map((row) => (
+                <li key={`${row.name}:${row.classes}`}>
+                  {row.name} · {row.classes} · {row.level}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No /who lines yet. A line looks like [36 PAL/DRU/WIZ] Zasariz.</p>
+          )}
+          <p className="note">{PET_LEADER_HINT}</p>
+        </section>
+      ) : null}
+
+      {!empty && logsStatus === 'ready' ? (
         <div className="parser-split">
           <div>
             <h3 className="parser-subhead">Fights</h3>
@@ -238,6 +347,20 @@ export function ParserPanel({
           <div>
             <div className="parser-detail-head">
               <h3 className="parser-subhead">DPS</h3>
+              <div className="parser-scope" data-testid="parser-scope" role="group" aria-label="Source scope">
+                {SOURCE_SCOPES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={scope === item.id ? 'on' : undefined}
+                    aria-pressed={scope === item.id}
+                    data-testid={`parser-scope-${item.id}`}
+                    onClick={() => onScopeChange && onScopeChange(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
               <label className="check parser-merge" data-testid="parser-merge-pets">
                 <input
                   type="checkbox"
@@ -247,6 +370,21 @@ export function ParserPanel({
                 Merge pets
               </label>
             </div>
+            {scope === 'raid' ? (
+              <p className="note" data-testid="parser-raid-note">{RAID_SCOPE_NOTE}</p>
+            ) : null}
+            {prompts.length ? (
+              <div className="parser-prompts" data-testid="parser-pet-prompts">
+                {prompts.map((row) => (
+                  <div key={row.pet} className="parser-prompt" data-testid="parser-pet-prompt" data-pet={row.pet}>
+                    <p>{row.pet} — your pet?</p>
+                    <button type="button" onClick={() => onConfirmPet && onConfirmPet(row.pet)}>Yes</button>
+                    <button type="button" onClick={() => onDismissPet && onDismissPet(row.pet)}>Dismiss</button>
+                  </div>
+                ))}
+                <p className="note">{PET_LEADER_HINT} An unconfirmed name is never merged into you.</p>
+              </div>
+            ) : null}
             <p className="note">
               {mergePets
                 ? 'Merge pets adds each pet’s damage to its owner. The pet stays listed under that owner.'
@@ -263,9 +401,9 @@ export function ParserPanel({
             {detail && sources.length ? (
               <>
                 <p className="parser-totals" data-testid="parser-totals">
-                  Total damage {formatDamage(detail.totals?.damage)}
+                  Total damage {formatDamage(visibleDamage(sources))}
                   {' · '}
-                  {formatRate(detail.totals?.dps)} DPS
+                  {formatRate(visibleRate(sources, detail.duration_seconds))} DPS
                   {' · '}
                   {formatDuration(detail.duration_seconds)}
                 </p>
@@ -278,23 +416,85 @@ export function ParserPanel({
                         <th>Damage</th>
                         <th>DPS</th>
                         <th>SDPS</th>
+                        <th>Pet</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {sources.map((row) => (
+                      {sources.map((row) => {
+                        const binding = (Array.isArray(petBindings) ? petBindings : []).find((pet) => pet.pet === row.source)
+                        const evidence = petEvidenceLabel(binding?.evidence)
+                        const classesFor = loadoutText(loadoutsFor(row.source, classes))
+                        return (
                         <tr
                           key={`${row.nested ? 'pet' : 'src'}:${row.source}`}
                           className={row.nested ? 'parser-pet-row' : undefined}
                           data-source={row.source}
                           data-nested={row.nested ? '1' : '0'}
+                          title={evidence || undefined}
+                          onContextMenu={(e) => {
+                            e.preventDefault()
+                            setAssignPet(row.source)
+                            setAssignOwner(binding?.owner || character || '')
+                          }}
                         >
-                          <td>{row.nested ? `↳ ${row.source}` : row.source}</td>
-                          <td>{sourceKindLabel(row.kind)}</td>
+                          <td>
+                            {row.nested ? `↳ ${row.source}` : row.source}
+                            {classesFor ? <span className="parser-classes">{classesFor}</span> : null}
+                          </td>
+                          <td>{sourceKindLabel(row.kind)}{binding?.owner ? ` of ${binding.owner}` : ''}</td>
                           <td>{formatDamage(row.damage)}</td>
                           <td>{formatRate(row.dps)}</td>
                           <td>{formatRate(row.sdps)}</td>
+                          <td className="parser-actions">
+                            <button
+                              type="button"
+                              data-testid="parser-set-pet"
+                              data-pet={row.source}
+                              onClick={() => {
+                                setAssignPet(row.source)
+                                setAssignOwner(binding?.owner || character || '')
+                              }}
+                            >
+                              Set as pet of…
+                            </button>
+                            <button
+                              type="button"
+                              data-testid="parser-unassign"
+                              data-pet={row.source}
+                              onClick={() => onUnassignPet && onUnassignPet(row.source)}
+                            >
+                              Unassign
+                            </button>
+                            {assignPet === row.source ? (
+                              <form
+                                className="parser-assign"
+                                data-testid="parser-assign"
+                                onSubmit={(e) => {
+                                  e.preventDefault()
+                                  if (assignOwner && onSetPet) onSetPet(row.source, assignOwner)
+                                  setAssignPet('')
+                                }}
+                              >
+                                <label>
+                                  Owner
+                                  <select
+                                    value={assignOwner}
+                                    onChange={(e) => setAssignOwner(e.target.value)}
+                                    data-testid="parser-assign-owner"
+                                  >
+                                    <option value="">Choose</option>
+                                    {ownerChoices.map((name) => (
+                                      <option key={name} value={name}>{name}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <button type="submit">Save</button>
+                              </form>
+                            ) : null}
+                          </td>
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -342,6 +542,8 @@ export default function ParserTab({
   const [detailStatus, setDetailStatus] = useState('idle')
   const [notice, setNotice] = useState('')
   const [refreshNonce, setRefreshNonce] = useState(0)
+  const [scope, setScope] = useState('group')
+  const [roster, setRoster] = useState(emptyRoster)
   const sizeRef = useRef(0)
   const fightIdRef = useRef(fightId)
   const characterRef = useRef('')
@@ -414,12 +616,20 @@ export default function ParserTab({
   useEffect(() => {
     if (!selected?.character) {
       setFights([])
+      setRoster(emptyRoster)
       return undefined
     }
     let cancelled = false
     getParserFights(selected.character)
       .then((body) => {
         if (!cancelled) setFights(Array.isArray(body?.fights) ? body.fights : [])
+      })
+      .catch((err) => {
+        if (!cancelled) setNotice(String(err?.message || err))
+      })
+    getParserRoster(selected.character)
+      .then((body) => {
+        if (!cancelled) setRoster(body || emptyRoster)
       })
       .catch((err) => {
         if (!cancelled) setNotice(String(err?.message || err))
@@ -460,6 +670,9 @@ export default function ParserTab({
         if (!character) return
         getParserFights(character)
           .then((body) => setFights(Array.isArray(body?.fights) ? body.fights : []))
+          .catch(() => {})
+        getParserRoster(character)
+          .then((body) => setRoster(body || emptyRoster))
           .catch(() => {})
         const currentFight = fightIdRef.current
         if (currentFight) {
@@ -514,6 +727,7 @@ export default function ParserTab({
         if (data && typeof data.on === 'boolean') setLive(data.on)
       },
       reset: () => scheduleFights(),
+      roster: () => scheduleFights(),
     })
     return () => {
       clearTimeout(refreshTimer)
@@ -574,6 +788,8 @@ export default function ParserTab({
       const body = await getParserFights(selected.character)
       const nextFights = Array.isArray(body?.fights) ? body.fights : []
       setFights(nextFights)
+      const nextRoster = await getParserRoster(selected.character)
+      setRoster(nextRoster || emptyRoster)
       if (nextFights[0]) onFightId(nextFights[0].id)
     } catch (err) {
       setProgress(null)
@@ -620,6 +836,92 @@ export default function ParserTab({
       detailStatus={detailStatus}
       mergePets={mergePets}
       onMergePetsChange={onMergePets}
+      scope={scope}
+      onScopeChange={setScope}
+      candidates={roster.candidates}
+      groupMembers={roster.group}
+      allowlist={roster.allowlist}
+      loadouts={roster.loadouts}
+      petBindings={roster.pets}
+      character={selected?.character || ''}
+      onConfirmPet={(pet) => {
+        const name = selected?.character
+        if (!name) return
+        postParserCandidate({ character: name, pet, action: 'confirm', owner: name })
+          .then(() => getParserRoster(name))
+          .then((body) => {
+            setRoster(body || emptyRoster)
+            if (fightId) return getParserFight(fightId, mergePets)
+            return null
+          })
+          .then((body) => {
+            if (body) {
+              setDetail(body)
+              setDetailStatus('ready')
+            }
+          })
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
+      onDismissPet={(pet) => {
+        const name = selected?.character
+        if (!name) return
+        postParserCandidate({ character: name, pet, action: 'dismiss' })
+          .then(() => getParserRoster(name))
+          .then((body) => setRoster(body || emptyRoster))
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
+      onSetPet={(pet, owner) => {
+        const name = selected?.character
+        if (!name) return
+        postParserPet({ character: name, pet, owner })
+          .then(() => getParserRoster(name))
+          .then((body) => {
+            setRoster(body || emptyRoster)
+            if (fightId) return getParserFight(fightId, mergePets)
+            return null
+          })
+          .then((body) => {
+            if (body) {
+              setDetail(body)
+              setDetailStatus('ready')
+            }
+          })
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
+      onUnassignPet={(pet) => {
+        const name = selected?.character
+        if (!name) return
+        postParserPet({ character: name, pet, owner: null })
+          .then(() => getParserRoster(name))
+          .then((body) => {
+            setRoster(body || emptyRoster)
+            if (fightId) return getParserFight(fightId, mergePets)
+            return null
+          })
+          .then((body) => {
+            if (body) {
+              setDetail(body)
+              setDetailStatus('ready')
+            }
+          })
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
+      onAddAllow={(member) => {
+        const name = selected?.character
+        if (!name) return
+        postParserGroup({ character: name, member, action: 'add' })
+          .then(() => getParserRoster(name))
+          .then((body) => setRoster(body || emptyRoster))
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
+      onRemoveAllow={(member) => {
+        const name = selected?.character
+        if (!name) return
+        postParserGroup({ character: name, member, action: 'remove' })
+          .then(() => getParserRoster(name))
+          .then((body) => setRoster(body || emptyRoster))
+          .catch((err) => setNotice(String(err?.message || err)))
+      }}
       onLoadLog={onLoadLog}
       onRefresh={() => setRefreshNonce((n) => n + 1)}
       onSetEqFolder={onSetFolder}

@@ -55,6 +55,19 @@ class PetBody(BaseModel):
     owner: str | None = None
 
 
+class CandidateBody(BaseModel):
+    character: str
+    pet: str
+    action: str
+    owner: str | None = None
+
+
+class GroupBody(BaseModel):
+    character: str
+    member: str
+    action: str
+
+
 def _http_error(exc: Exception) -> HTTPException:
     if isinstance(exc, FileNotFoundError):
         return HTTPException(404, str(exc))
@@ -146,6 +159,47 @@ def post_pets(body: PetBody) -> dict[str, Any]:
 @router.get("/pets")
 def get_pets(character: str) -> dict[str, Any]:
     return {"character": character, "pets": get_service().list_pets(character)}
+
+
+@router.get("/roster")
+def get_roster(character: str) -> dict[str, Any]:
+    if not character.strip():
+        raise HTTPException(400, "character is required")
+    return get_service().roster(character.strip())
+
+
+@router.post("/candidates")
+def post_candidates(body: CandidateBody) -> dict[str, Any]:
+    character = body.character.strip()
+    pet = body.pet.strip()
+    action = body.action.strip().lower()
+    if not character or not pet:
+        raise HTTPException(400, "character and pet are required")
+    service = get_service()
+    if action == "dismiss":
+        return service.dismiss_candidate(character, pet)
+    if action == "confirm":
+        owner = body.owner.strip() if isinstance(body.owner, str) and body.owner.strip() else character
+        return service.set_pet_owner(character, pet, owner)
+    raise HTTPException(400, "action must be confirm or dismiss")
+
+
+@router.post("/group")
+def post_group(body: GroupBody) -> dict[str, Any]:
+    character = body.character.strip()
+    member = body.member.strip()
+    action = body.action.strip().lower()
+    if not character or not member:
+        raise HTTPException(400, "character and member are required")
+    service = get_service()
+    try:
+        if action == "add":
+            return service.add_allow(character, member)
+        if action == "remove":
+            return service.remove_allow(character, member)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    raise HTTPException(400, "action must be add or remove")
 
 
 @router.get("/stream")

@@ -45,13 +45,27 @@ export const getParserFight = (id, mergePets) => {
   return req(`/api/parser/fights/${encodeURIComponent(id)}?${q}`)
 }
 
+export const getParserRoster = (character) => {
+  const q = new URLSearchParams({ character })
+  return req(`/api/parser/roster?${q}`)
+}
+
+export const postParserPet = (body) =>
+  req('/api/parser/pets', { method: 'POST', body: JSON.stringify(body) })
+
+export const postParserCandidate = (body) =>
+  req('/api/parser/candidates', { method: 'POST', body: JSON.stringify(body) })
+
+export const postParserGroup = (body) =>
+  req('/api/parser/group', { method: 'POST', body: JSON.stringify(body) })
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {
     return { close() {} }
   }
   const source = new EventSource('/api/parser/stream')
-  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'message']
+  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message']
   for (const type of types) {
     source.addEventListener(type, (ev) => {
       let data = null
