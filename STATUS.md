@@ -1,6 +1,13 @@
 # EQ Legends BiS app status
 
-Version: **1.0.23** — PR #29 (Item Search tooltip stat text follows the +0…+10 slider, labeled 'Tooltip at +N'; hover previews +0, collapsed rows +10) + PR #30 (remembers the working session across launches in userData workspace-session.json; Settings > Reset to defaults > Start fresh clears it). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.1.0** — PR #32 (protect-existing harness + CI), PR #33 (sidecar parser: find the log, live tail, /api/parser and SSE), PR #34 (Parser tab, What's new in 1.1.0 dialog, Credits page). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.1.0
+- Parser tab: finds the character log automatically, Live follow, Load old log with progress, fight list, per-source DPS/SDPS with Merge pets, and empty-state hints for /log on.
+- What's new dialog for 1.1.0.
+- Credits page.
+- Automated safety-net tests in CI (Ubuntu and Windows).
+- Version bump across package.json, package-lock.json, and version.py sources.
 
 ## 1.0.23
 - Merged PR #29 Item Search tooltip scaling with upgrade slider.
