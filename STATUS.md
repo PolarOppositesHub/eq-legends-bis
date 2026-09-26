@@ -1,6 +1,16 @@
 # EQ Legends BiS app status
 
-Version: **1.1.0** — PR #32 (protect-existing harness + CI), PR #33 (sidecar parser: find the log, live tail, /api/parser and SSE), PR #34 (Parser tab, What's new in 1.1.0 dialog, Credits page). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.1.1** — PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.1.1
+- After updating, the app automatically rebuilds the existing 1.1.0 parse from the log, so there is nothing to redo.
+- Each fight keeps damage by attack and spell, healing, tanking, deaths, resists, and loot. Open a row for the breakdown, and use the timeline.
+- Item Search quest names that said "not in Quest Hub" now open the quest. Woven Skull Cap shows Wizard Test of Focus.
+- Fight history keeps everything by default. A full, long log is about 64 MB. The Parser tab can clear history for one character.
+- The Parser tab tracks pets and your group. Limit a fight to Self, Group, Pets, or All.
+- The desktop and Start Menu icons refresh to the dragon-eye seal on install and update.
+- Merge selected fights. Copy the parse as text or TSV, or save CSV and HTML. Browse older fights in the history list.
+- Version bump across package.json, package-lock.json, and version.py sources.
 
 ## 1.1.0
 - Parser tab: finds the character log automatically, Live follow, Load old log with progress, fight list, per-source DPS/SDPS with Merge pets, and empty-state hints for /log on.
