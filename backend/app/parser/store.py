@@ -2,7 +2,12 @@
 
 Keys are ``(file, generation, byte offset)``. Re-reading a log inserts nothing
 new. A truncation bumps ``generation`` so the recycled offsets are a new session.
-Raw log lines are not stored.
+Raw log lines are not stored. Drill-down re-reads the fight's byte range from
+the log file.
+
+Fight rows in this same database are the saved history. ``fight_retention_days``
+in ``settings`` prunes closed fights (0 keeps everything). Clearing deletes one
+character's fights and does not touch settings, roster, or other characters.
 """
 
 from __future__ import annotations
@@ -10,7 +15,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from .breakdown import Breakdown
@@ -21,6 +26,8 @@ from .models import ParsedEvent
 # derived aggregates change so the next launch rebuilds them from the logs.
 SCHEMA_VERSION = 2
 SCHEMA_VERSION_KEY = "schema_version"
+# 0 keeps every closed fight. A positive value is a maximum age in days.
+RETENTION_DAYS_KEY = "fight_retention_days"
 
 _DERIVED_TABLES = (
     "events",
@@ -243,6 +250,9 @@ class ParserDB:
             self.conn.execute("ALTER TABLE level_events ADD COLUMN classes TEXT")
         if "evidence" not in cols:
             self.conn.execute("ALTER TABLE level_events ADD COLUMN evidence TEXT")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fights_retention ON fights(open, end_ts, start_ts)"
+        )
 
     def close(self) -> None:
         with self.lock:
@@ -289,6 +299,116 @@ class ParserDB:
     def set_schema_version(self, version: int) -> None:
         self.set_setting(SCHEMA_VERSION_KEY, str(int(version)))
 
+    def retention_days(self) -> int:
+        """How long closed fights are kept. 0 means keep everything."""
+        raw = self.get_setting(RETENTION_DAYS_KEY)
+        if raw is None or str(raw).strip() == "":
+            return 0
+        try:
+            days = int(raw)
+        except ValueError:
+            return 0
+        return days if days > 0 else 0
+
+    def set_retention_days(self, days: int) -> int:
+        stored = int(days)
+        if stored < 0:
+            stored = 0
+        self.set_setting(RETENTION_DAYS_KEY, str(stored))
+        return stored
+
+    def prune_fights(self, now: datetime) -> int:
+        """Delete closed fights older than the retention window.
+
+        Open fights stay. Child rows and the combat events inside the fight's
+        byte range go with the fight. Loot, roster, and settings stay. Returns
+        the number of fights removed. A retention of 0 removes nothing.
+        """
+        days = self.retention_days()
+        if days <= 0:
+            return 0
+        cutoff = (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
+        with self.lock:
+            rows = list(self.conn.execute(
+                """
+                SELECT id, file_id, generation, start_offset, end_offset
+                FROM fights
+                WHERE open=0
+                  AND COALESCE(end_ts, start_ts) IS NOT NULL
+                  AND COALESCE(end_ts, start_ts) < ?
+                """,
+                (cutoff,),
+            ))
+            if not rows:
+                return 0
+            own_tx = not self.conn.in_transaction
+            if own_tx:
+                self.conn.execute("BEGIN IMMEDIATE")
+            try:
+                for row in rows:
+                    fight_id = int(row["id"])
+                    self.conn.execute("DELETE FROM fight_sources WHERE fight_id=?", (fight_id,))
+                    self.conn.execute("DELETE FROM fight_breakdown WHERE fight_id=?", (fight_id,))
+                    start = row["start_offset"]
+                    end = row["end_offset"]
+                    if start is not None and end is not None:
+                        self.conn.execute(
+                            """
+                            DELETE FROM events
+                            WHERE file_id=? AND generation=? AND offset>=? AND offset<=?
+                            """,
+                            (int(row["file_id"]), int(row["generation"]), int(start), int(end)),
+                        )
+                    self.conn.execute("DELETE FROM fights WHERE id=?", (fight_id,))
+                if own_tx:
+                    self.conn.commit()
+            except Exception:
+                if own_tx:
+                    self.conn.rollback()
+                raise
+        return len(rows)
+
+    def clear_character_fights(self, character: str) -> dict:
+        """Drop one character's saved fights and the combat events behind them.
+
+        Other characters, settings, pet bindings, group members, and economy
+        rows (loot, gives, merges, xp, levels) stay. The log file registration
+        stays so a later replay can read the log again.
+        """
+        character = character.strip()
+        with self.lock:
+            fights = list(self.conn.execute(
+                "SELECT id, file_id FROM fights WHERE character=?",
+                (character,),
+            ))
+            file_ids = {int(row["file_id"]) for row in fights}
+            for row in self.conn.execute("SELECT id FROM log_files WHERE character=?", (character,)):
+                file_ids.add(int(row["id"]))
+            own_tx = not self.conn.in_transaction
+            if own_tx:
+                self.conn.execute("BEGIN IMMEDIATE")
+            try:
+                for fight in fights:
+                    fight_id = int(fight["id"])
+                    self.conn.execute("DELETE FROM fight_sources WHERE fight_id=?", (fight_id,))
+                    self.conn.execute("DELETE FROM fight_breakdown WHERE fight_id=?", (fight_id,))
+                self.conn.execute("DELETE FROM fights WHERE character=?", (character,))
+                events_removed = 0
+                for file_id in file_ids:
+                    cur = self.conn.execute("DELETE FROM events WHERE file_id=?", (file_id,))
+                    events_removed += int(cur.rowcount or 0)
+                if own_tx:
+                    self.conn.commit()
+            except Exception:
+                if own_tx:
+                    self.conn.rollback()
+                raise
+        return {
+            "character": character,
+            "fights_removed": len(fights),
+            "events_removed": events_removed,
+        }
+
     def list_log_paths(self) -> list[str]:
         with self.lock:
             rows = self.conn.execute("SELECT path FROM log_files ORDER BY id").fetchall()
@@ -297,9 +417,9 @@ class ParserDB:
     def clear_derived(self) -> None:
         """Drop rebuilt parser output and rewind known logs to offset 0.
 
-        Settings, the chosen log paths, group/player notes, and manual pet
-        bindings stay. Automatic pet bindings are removed so the replay can
-        derive them again.
+        Settings (including fight retention), the chosen log paths, group/player
+        notes, and manual pet bindings stay. Automatic pet bindings are removed
+        so the replay can derive them again.
         """
         with self.lock:
             self.conn.execute("BEGIN IMMEDIATE")

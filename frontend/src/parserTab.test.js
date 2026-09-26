@@ -153,6 +153,30 @@ test('merge-pets toggle nests pets when on and lists them separately when off', 
   assert.match(offHtml, />Group</)
 })
 
+test('fight history shows retention, defaulting to keep everything, and a per-character clear', () => {
+  const html = markup(panel({
+    logs: [{
+      path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+      name: 'eqlog_Zasariz_qeynos.txt',
+      character: 'Zasariz',
+      server: 'qeynos',
+    }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    character: 'Zasariz',
+    retentionDays: 0,
+  }))
+  assert.match(html, /data-testid="parser-history"/)
+  assert.match(html, /data-testid="parser-retention"/)
+  assert.match(html, /value="0"/)
+  assert.match(html, /0 keeps every saved fight/)
+  assert.match(html, /data-testid="parser-clear-history"/)
+  assert.match(html, /Clear this character/)
+  assert.equal(/data-testid="parser-clear-history"[^>]*disabled/.test(html), false)
+  const idle = markup(panel())
+  assert.match(idle, /data-testid="parser-clear-history"[^>]*disabled/)
+})
+
 test('an in-progress parser upgrade shows a short updating state', () => {
   const html = markup(panel({ upgrading: true }))
   assert.match(html, /data-testid="parser-upgrade"/)

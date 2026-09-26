@@ -1052,6 +1052,17 @@ html[data-reduce-motion="1"] .load-bar-fill.indeterminate { animation: none; wid
   align-items: flex-end;
   margin: 0.35rem 0 0.25rem;
 }
+.parser-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.35rem 0 0.15rem;
+}
+.parser-history input[type="number"] {
+  width: 5rem;
+  margin-left: 0.35rem;
+}
 .parser-live.on {
   background: var(--gold);
   color: var(--gold-text);
