@@ -33,6 +33,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "workspaceSessionStore.js",
       "splash.html",
       "package.json",
       "build/icon.ico",
