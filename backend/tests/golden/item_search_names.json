@@ -1,0 +1,57 @@
+{
+  "queries": [
+    {
+      "limit": 10,
+      "names": [
+        "Cloak of Flames"
+      ],
+      "offset": 0,
+      "query": "cloak of flames",
+      "slot": null,
+      "total": 1
+    },
+    {
+      "limit": 20,
+      "names": [
+        "Flowing Black Robe",
+        "Flowing Black Silk Sash"
+      ],
+      "offset": 0,
+      "query": "flowing black",
+      "slot": null,
+      "total": 2
+    },
+    {
+      "limit": 10,
+      "names": [
+        "Cryosilk Sash",
+        "Flowing Black Silk Sash",
+        "Golden Sash of Tranquility",
+        "Loam Encrusted Sash",
+        "Sash of Ferocity",
+        "Thaumaturgist's Sash"
+      ],
+      "offset": 0,
+      "query": "sash",
+      "slot": "WAIST",
+      "total": 6
+    },
+    {
+      "limit": 8,
+      "names": [
+        "Aegis of Life",
+        "Astral Cloak of the Titans",
+        "Back Straps of Mastery",
+        "Bracelet of Clarification",
+        "Brewer's Mesh Cloak",
+        "Cloak of Flames",
+        "Cloak of Leaves",
+        "Cloak of Scales"
+      ],
+      "offset": 0,
+      "query": "",
+      "slot": "BACK",
+      "total": 27
+    }
+  ]
+}

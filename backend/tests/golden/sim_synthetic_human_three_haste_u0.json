@@ -1,0 +1,310 @@
+{
+  "equipped": {
+    "BACK": {
+      "haste": 36.0,
+      "is_weapon": false,
+      "name": "Cloak of Flames",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "BACK",
+      "stats": {
+        "AC": 10.0,
+        "AGI": 9.0,
+        "DEX": 9.0,
+        "END": 15.0,
+        "HP": 50.0,
+        "Haste": 36.0,
+        "INT": 8.0,
+        "MANA": 20.0,
+        "STA": 5.0,
+        "STR": 5.0,
+        "SVF": 15.0,
+        "WIS": 4.0
+      },
+      "url": ""
+    },
+    "CHEST": {
+      "haste": 31.0,
+      "is_weapon": false,
+      "name": "Synthetic Chest",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "CHEST",
+      "stats": {
+        "AC": 6.0,
+        "END": 10.0,
+        "HP": 25.0,
+        "Haste": 31.0
+      },
+      "url": ""
+    },
+    "WAIST": {
+      "haste": 21.0,
+      "is_weapon": false,
+      "name": "Flowing Black Silk Sash",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "WAIST",
+      "stats": {
+        "AC": 4.0,
+        "HP": 20.0,
+        "Haste": 21.0,
+        "STA": 3.0
+      },
+      "url": ""
+    }
+  },
+  "haste": {
+    "applied": 36,
+    "applied_pct": 36,
+    "items": [
+      {
+        "haste": 36.0,
+        "name": "Cloak of Flames",
+        "slot": "BACK"
+      },
+      {
+        "haste": 31.0,
+        "name": "Synthetic Chest",
+        "slot": "CHEST"
+      },
+      {
+        "haste": 21.0,
+        "name": "Flowing Black Silk Sash",
+        "slot": "WAIST"
+      }
+    ],
+    "rule": "ONLY ONE worn haste item counts (highest %). Spell/focus haste is not worn haste."
+  },
+  "haste_applied": 36,
+  "haste_pieces": [
+    {
+      "haste": 36.0,
+      "name": "Cloak of Flames",
+      "slot": "BACK"
+    },
+    {
+      "haste": 31.0,
+      "name": "Synthetic Chest",
+      "slot": "CHEST"
+    },
+    {
+      "haste": 21.0,
+      "name": "Flowing Black Silk Sash",
+      "slot": "WAIST"
+    }
+  ],
+  "haste_warning": "Multiple worn haste items equipped. Only highest counts: Cloak of Flames (+36% @ BACK). Ignored: Synthetic Chest (+31% @ CHEST), Flowing Black Silk Sash (+21% @ WAIST).",
+  "race": "Human",
+  "race_bases": {
+    "AGI": 75,
+    "CHA": 75,
+    "DEX": 75,
+    "INT": 75,
+    "STA": 75,
+    "STR": 75,
+    "SVC": 25,
+    "SVD": 15,
+    "SVF": 25,
+    "SVM": 25,
+    "SVP": 15,
+    "WIS": 75
+  },
+  "race_note": "Attr bases from eqlwiki Character Races. HP/Mana/Endurance/AC/resist racial bases treated as 0 (gear-only) unless noted.",
+  "slots": {
+    "AMMO": {
+      "haste": 0,
+      "name": "",
+      "slot": "AMMO",
+      "stats": {}
+    },
+    "ANY1": {
+      "haste": 0,
+      "name": "",
+      "slot": "ANY1",
+      "stats": {}
+    },
+    "ANY2": {
+      "haste": 0,
+      "name": "",
+      "slot": "ANY2",
+      "stats": {}
+    },
+    "ARMS": {
+      "haste": 0,
+      "name": "",
+      "slot": "ARMS",
+      "stats": {}
+    },
+    "BACK": {
+      "haste": 36.0,
+      "is_weapon": false,
+      "name": "Cloak of Flames",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "BACK",
+      "stats": {
+        "AC": 10.0,
+        "AGI": 9.0,
+        "DEX": 9.0,
+        "END": 15.0,
+        "HP": 50.0,
+        "Haste": 36.0,
+        "INT": 8.0,
+        "MANA": 20.0,
+        "STA": 5.0,
+        "STR": 5.0,
+        "SVF": 15.0,
+        "WIS": 4.0
+      },
+      "url": ""
+    },
+    "CHEST": {
+      "haste": 31.0,
+      "is_weapon": false,
+      "name": "Synthetic Chest",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "CHEST",
+      "stats": {
+        "AC": 6.0,
+        "END": 10.0,
+        "HP": 25.0,
+        "Haste": 31.0
+      },
+      "url": ""
+    },
+    "EAR1": {
+      "haste": 0,
+      "name": "",
+      "slot": "EAR1",
+      "stats": {}
+    },
+    "EAR2": {
+      "haste": 0,
+      "name": "",
+      "slot": "EAR2",
+      "stats": {}
+    },
+    "FACE": {
+      "haste": 0,
+      "name": "",
+      "slot": "FACE",
+      "stats": {}
+    },
+    "FEET": {
+      "haste": 0,
+      "name": "",
+      "slot": "FEET",
+      "stats": {}
+    },
+    "FINGER1": {
+      "haste": 0,
+      "name": "",
+      "slot": "FINGER1",
+      "stats": {}
+    },
+    "FINGER2": {
+      "haste": 0,
+      "name": "",
+      "slot": "FINGER2",
+      "stats": {}
+    },
+    "HANDS": {
+      "haste": 0,
+      "name": "",
+      "slot": "HANDS",
+      "stats": {}
+    },
+    "HEAD": {
+      "haste": 0,
+      "name": "",
+      "slot": "HEAD",
+      "stats": {}
+    },
+    "LEGS": {
+      "haste": 0,
+      "name": "",
+      "slot": "LEGS",
+      "stats": {}
+    },
+    "NECK": {
+      "haste": 0,
+      "name": "",
+      "slot": "NECK",
+      "stats": {}
+    },
+    "PRIMARY": {
+      "haste": 0,
+      "name": "",
+      "slot": "PRIMARY",
+      "stats": {}
+    },
+    "RANGE": {
+      "haste": 0,
+      "name": "",
+      "slot": "RANGE",
+      "stats": {}
+    },
+    "SECONDARY": {
+      "haste": 0,
+      "name": "",
+      "slot": "SECONDARY",
+      "stats": {}
+    },
+    "SHOULDERS": {
+      "haste": 0,
+      "name": "",
+      "slot": "SHOULDERS",
+      "stats": {}
+    },
+    "WAIST": {
+      "haste": 21.0,
+      "is_weapon": false,
+      "name": "Flowing Black Silk Sash",
+      "ratio": null,
+      "ratio10": null,
+      "slot": "WAIST",
+      "stats": {
+        "AC": 4.0,
+        "HP": 20.0,
+        "Haste": 21.0,
+        "STA": 3.0
+      },
+      "url": ""
+    },
+    "WRIST": {
+      "haste": 0,
+      "name": "",
+      "slot": "WRIST",
+      "stats": {}
+    }
+  },
+  "totals": {
+    "AC": 20,
+    "AGI": 84,
+    "ATK": 0,
+    "CHA": 75,
+    "DEX": 84,
+    "DMG": 0,
+    "END": 25,
+    "HP": 95,
+    "Haste": 36,
+    "INT": 83,
+    "MANA": 20,
+    "STA": 83,
+    "STR": 80,
+    "SVC": 25,
+    "SVD": 15,
+    "SVF": 40,
+    "SVM": 25,
+    "SVP": 15,
+    "SVV": 0,
+    "WIS": 79
+  },
+  "upgrade": 0,
+  "warnings": [
+    "Multiple worn haste items equipped. Only highest counts: Cloak of Flames (+36% @ BACK). Ignored: Synthetic Chest (+31% @ CHEST), Flowing Black Silk Sash (+21% @ WAIST)."
+  ],
+  "weapons": []
+}

@@ -1,0 +1,4830 @@
+{
+  "ac_softcap": {
+    "aa_softcap_pct": 12.0,
+    "base_softcap": 265.0,
+    "combat_stability_pct": 10,
+    "combat_stability_rank": 3,
+    "formula": "level * 6 + 25 (eqlwiki Statistics/AC for level ≤ 50)",
+    "level": 40,
+    "loadout_worn_ac": 333.0,
+    "note": "BiS assumes max Combat Stability + Physical Enhancement so the soft cap is the AA-raised target. Hit that worn-AC floor, then prefer other stats; overcap AC is lightly valued via class post-cap return. eqlwiki notes EQL caps may differ — working model only.",
+    "physical_enhancement": true,
+    "physical_enhancement_pct": 2,
+    "post_cap_return": 0.23,
+    "softcap_target": 296.8,
+    "sources": [
+      "https://eqlwiki.com/AC",
+      "https://eqlwiki.com/Alternate_Advancement"
+    ]
+  },
+  "character_level": 40,
+  "class_roles": {
+    "attr_weights": {
+      "AGI": 2.5,
+      "CHA": 1.5,
+      "DEX": 2.5,
+      "INT": 0.0,
+      "STA": 1.0,
+      "STR": 1.0,
+      "WIS": 0.5
+    },
+    "has_tank": false,
+    "roles": [
+      "dps",
+      "melee",
+      "hybrid",
+      "utility"
+    ],
+    "uses_mana": true
+  },
+  "classes": [
+    "Rogue",
+    "Ranger",
+    "Bard"
+  ],
+  "dual_wield_enabled": true,
+  "dual_wield_eval": {
+    "dw_chance": 0.5025,
+    "dw_skill": 201,
+    "mode": "dual_wield",
+    "model_note": "eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈201 @L40 (assumption: no skill table in decoded data; monk-style high-skill default)",
+    "pair_score": 3.0761654135338343,
+    "two_hand_name": "Blackened Alloy Bastard Sword",
+    "two_hand_score": 2.02974358974359
+  },
+  "haste_in_loadout": [
+    {
+      "haste": 46.0,
+      "name": "Renard's Belt of Quickness",
+      "slot": "WAIST"
+    }
+  ],
+  "haste_rule": "Only ONE worn haste item counts (highest %). Loadout enforces this.",
+  "maximize_hp_regen": false,
+  "mode": "AI Choice",
+  "pool_size": 424,
+  "prefer_ranged_damage": false,
+  "primary_stats": [],
+  "priority_stat": null,
+  "priority_stat_key": null,
+  "secondary_stats": [],
+  "slots": [
+    {
+      "alts": [
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Leatherfoot Raider Skullcap",
+          "name": "Leatherfoot Raider Skullcap",
+          "quest_source": "Leatherfoot Raiders",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 211.5,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "AGI": 10.0,
+            "CHA": 15.0,
+            "STR": 10.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "AC": 7,
+            "AGI": 5,
+            "CHA": 10,
+            "STR": 5,
+            "SVM": 5
+          },
+          "stats_plus10": {
+            "AC": 17.0,
+            "AGI": 15.0,
+            "CHA": 20,
+            "STR": 15.0,
+            "SVM": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/leatherfoot-raider-skullcap/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Leatherfoot Raiders"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Turban",
+          "name": "Golden Efreeti Turban",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 207.5,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "STR": 10.0,
+            "SVC": 11.0,
+            "SVD": 11.0,
+            "SVF": 11.0,
+            "SVM": 11.0,
+            "SVP": 11.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "STR": 5,
+            "SVC": 6,
+            "SVD": 6,
+            "SVF": 6,
+            "SVM": 6,
+            "SVP": 6
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "STR": 15.0,
+            "SVC": 16.0,
+            "SVD": 16.0,
+            "SVF": 16.0,
+            "SVM": 16.0,
+            "SVP": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-turban/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "the ghoul lord",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Skull-shaped Barbute",
+          "name": "Skull-shaped Barbute",
+          "quest_source": "Drops From: Lower Guk: the ghoul lord",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 207.0,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "HP": 52.0,
+            "SVM": 15.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "HP": 35,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "HP": 70,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/skull-shaped-barbute/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, Cleric of Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Helm",
+          "name": "Thorny Vine Helm",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: Cleric of Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 203.0,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "CHA": 14.0,
+            "MANA": 15.0,
+            "SVC": 12.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "CHA": 9,
+            "MANA": 10,
+            "SVC": 7,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "CHA": 19.0,
+            "MANA": 20,
+            "SVC": 17.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-helm/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "King Tranix",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Crown of King Tranix",
+          "name": "Crown of King Tranix",
+          "quest_source": "Drops From: Nagafen's Lair: King Tranix",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 202.0,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "CHA": 22.0,
+            "SVM": 30.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "CHA": 15,
+            "SVM": 20
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "CHA": 30,
+            "SVM": 40
+          },
+          "url": "https://eqlegendstools.com/items/crown-of-king-tranix/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard, Cleric, Druid, Enchanter, Magician, Necromancer, Shaman, Wizard",
+      "drops_mobs": "a froglok tactician",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Platinum Tiara",
+      "is_weapon": false,
+      "name": "Platinum Tiara",
+      "priority_value": 248.5,
+      "quest_source": "Drops From: Lower Guk: a froglok tactician",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 248.5,
+      "slot": "HEAD",
+      "stats_at_upgrade": {
+        "AC": 8.0,
+        "HP": 52.0,
+        "MANA": 75.0
+      },
+      "stats_plus0": {
+        "AC": 3,
+        "HP": 35,
+        "MANA": 50
+      },
+      "stats_plus10": {
+        "AC": 13.0,
+        "HP": 70,
+        "MANA": 100
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/platinum-tiara/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Lower Guk"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mask of Song",
+          "name": "Mask of Song",
+          "quest_source": "Bard Test of Tone",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 358.1,
+          "stats_at_upgrade": {
+            "AC": 18.0,
+            "AGI": 8.0,
+            "CHA": 8.0,
+            "DEX": 8.0,
+            "INT": 8.0,
+            "STA": 8.0,
+            "STR": 8.0,
+            "SVC": 12.0,
+            "SVD": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0,
+            "SVP": 12.0,
+            "WIS": 8.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "AGI": 3,
+            "CHA": 3,
+            "DEX": 3,
+            "INT": 3,
+            "STA": 3,
+            "STR": 3,
+            "SVC": 7,
+            "SVD": 7,
+            "SVF": 7,
+            "SVM": 7,
+            "SVP": 7,
+            "WIS": 3
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "AGI": 13.0,
+            "CHA": 13.0,
+            "DEX": 13.0,
+            "INT": 13.0,
+            "STA": 13.0,
+            "STR": 13.0,
+            "SVC": 17.0,
+            "SVD": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0,
+            "SVP": 17.0,
+            "WIS": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/mask-of-song/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Triumphant Mask",
+          "name": "Triumphant Mask",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 266.0,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 12.0,
+            "CHA": 12.0,
+            "STR": 12.0,
+            "SVM": 30.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": 7,
+            "CHA": 7,
+            "STR": 7,
+            "SVM": 20,
+            "WIS": 7
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 17.0,
+            "CHA": 17.0,
+            "STR": 17.0,
+            "SVM": 40,
+            "WIS": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/triumphant-mask/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Crystal Mask",
+          "name": "Crystal Mask",
+          "quest_source": "Rogue Test of Cunning",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 207.6,
+          "stats_at_upgrade": {
+            "AC": 13.0,
+            "DEX": 13.0,
+            "STR": 11.0,
+            "SVM": 15.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "DEX": 8,
+            "STR": 6,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "DEX": 18.0,
+            "STR": 16.0,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/crystal-mask/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lord Pickclaw",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Grotesque Alloy Mask",
+          "name": "Grotesque Alloy Mask",
+          "quest_source": "Drops From: Clan Runnyeye: Lord Pickclaw",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 191.9,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "AGI": 7.0,
+            "CHA": -7.0,
+            "DEX": 12.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 2,
+            "CHA": -15,
+            "DEX": 7,
+            "SVM": 5
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 12.0,
+            "CHA": 0,
+            "DEX": 17.0,
+            "SVM": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/grotesque-alloy-mask/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a glyphed ghoul",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Gilded Mistmoore Visor",
+          "name": "Gilded Mistmoore Visor",
+          "quest_source": "Drops From: Mistmoore Castle: a glyphed ghoul",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 134.0,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "STR": 10.0,
+            "SVF": 15.0
+          },
+          "stats_plus0": {
+            "AC": 7,
+            "STR": 5,
+            "SVF": 10
+          },
+          "stats_plus10": {
+            "AC": 17.0,
+            "STR": 15.0,
+            "SVF": 20
+          },
+          "url": "https://eqlegendstools.com/items/gilded-mistmoore-visor/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Cleric, Enchanter, Magician, Necromancer, Rogue, Shadow Knight, Warrior, Wizard",
+      "drops_mobs": "Innoruuk",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Darkbrood Mask",
+      "is_weapon": false,
+      "name": "Darkbrood Mask",
+      "priority_value": 376.5,
+      "quest_source": "Drops From: Plane of Hate: Innoruuk",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 376.5,
+      "slot": "FACE",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "AGI": 10.0,
+        "CHA": 10.0,
+        "INT": 10.0,
+        "MANA": 75.0,
+        "STR": 10.0,
+        "SVC": 10.0,
+        "SVD": 10.0,
+        "SVF": 10.0,
+        "SVP": 10.0,
+        "WIS": 10.0
+      },
+      "stats_plus0": {
+        "AC": 7,
+        "AGI": 5,
+        "CHA": 5,
+        "INT": 5,
+        "MANA": 50,
+        "STR": 5,
+        "SVC": 5,
+        "SVD": 5,
+        "SVF": 5,
+        "SVP": 5,
+        "WIS": 5
+      },
+      "stats_plus10": {
+        "AC": 17.0,
+        "AGI": 15.0,
+        "CHA": 15.0,
+        "INT": 15.0,
+        "MANA": 100,
+        "STR": 15.0,
+        "SVC": 15.0,
+        "SVD": 15.0,
+        "SVF": 15.0,
+        "SVP": 15.0,
+        "WIS": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/darkbrood-mask/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Sapphire Electrum Earring",
+          "name": "Black Sapphire Electrum Earring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 209.0,
+          "stats_at_upgrade": {
+            "AC": 7.0,
+            "END": 37.0,
+            "HP": 52.0,
+            "MANA": 37.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "END": 25,
+            "HP": 35,
+            "MANA": 25
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "END": 50,
+            "HP": 70,
+            "MANA": 50
+          },
+          "url": "https://eqlegendstools.com/items/black-sapphire-electrum-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Retseth Tretse",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Stonemelder's Band",
+          "name": "Stonemelder's Band",
+          "quest_source": "Drops From: The Hole: Retseth Tretse",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 162.0,
+          "stats_at_upgrade": {
+            "AC": 27.0,
+            "AGI": -17.0,
+            "DEX": -17.0
+          },
+          "stats_plus0": {
+            "AC": 18,
+            "AGI": -35,
+            "DEX": -35
+          },
+          "stats_plus10": {
+            "AC": 36,
+            "AGI": 0,
+            "DEX": 0
+          },
+          "url": "https://eqlegendstools.com/items/stonemelders-band/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Black Sapphire Earring",
+          "name": "Golden Black Sapphire Earring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 134.0,
+          "stats_at_upgrade": {
+            "HP": 37.0,
+            "MANA": 52.0
+          },
+          "stats_plus0": {
+            "HP": 25,
+            "MANA": 35
+          },
+          "stats_plus10": {
+            "HP": 50,
+            "MANA": 70
+          },
+          "url": "https://eqlegendstools.com/items/golden-black-sapphire-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Diamondine Earring",
+          "name": "Diamondine Earring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 110.5,
+          "stats_at_upgrade": {
+            "AC": 7.0,
+            "HP": 18.0,
+            "STR": 8.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "HP": 12,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "HP": 24,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/diamondine-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Ivandyr's Hoop",
+          "name": "Ivandyr's Hoop",
+          "quest_source": "Lynuga's Gem Collection",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 96.0,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "HP": 11.0,
+            "INT": 11.0,
+            "WIS": 11.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "HP": 6,
+            "INT": 6,
+            "WIS": 6
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "HP": 16.0,
+            "INT": 16.0,
+            "WIS": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/ivandyrs-hoop/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": ""
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Ranger",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Thunderforged Earring",
+      "is_weapon": false,
+      "name": "Thunderforged Earring",
+      "priority_value": 279.6,
+      "quest_source": "Ranger Test of Thunder",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 279.6,
+      "slot": "EAR1",
+      "stats_at_upgrade": {
+        "AC": 13.0,
+        "AGI": 13.0,
+        "DEX": 13.0,
+        "MANA": 37.0,
+        "WIS": 13.0
+      },
+      "stats_plus0": {
+        "AC": 8,
+        "AGI": 8,
+        "DEX": 8,
+        "MANA": 25,
+        "WIS": 8
+      },
+      "stats_plus10": {
+        "AC": 18.0,
+        "AGI": 18.0,
+        "DEX": 18.0,
+        "MANA": 50,
+        "WIS": 18.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/thunderforged-earring/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thunderforged Earring",
+          "name": "Thunderforged Earring",
+          "quest_source": "Ranger Test of Thunder",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 279.6,
+          "stats_at_upgrade": {
+            "AC": 13.0,
+            "AGI": 13.0,
+            "DEX": 13.0,
+            "MANA": 37.0,
+            "WIS": 13.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "AGI": 8,
+            "DEX": 8,
+            "MANA": 25,
+            "WIS": 8
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "AGI": 18.0,
+            "DEX": 18.0,
+            "MANA": 50,
+            "WIS": 18.0
+          },
+          "url": "https://eqlegendstools.com/items/thunderforged-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Retseth Tretse",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Stonemelder's Band",
+          "name": "Stonemelder's Band",
+          "quest_source": "Drops From: The Hole: Retseth Tretse",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 162.0,
+          "stats_at_upgrade": {
+            "AC": 27.0,
+            "AGI": -17.0,
+            "DEX": -17.0
+          },
+          "stats_plus0": {
+            "AC": 18,
+            "AGI": -35,
+            "DEX": -35
+          },
+          "stats_plus10": {
+            "AC": 36,
+            "AGI": 0,
+            "DEX": 0
+          },
+          "url": "https://eqlegendstools.com/items/stonemelders-band/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Black Sapphire Earring",
+          "name": "Golden Black Sapphire Earring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 134.0,
+          "stats_at_upgrade": {
+            "HP": 37.0,
+            "MANA": 52.0
+          },
+          "stats_plus0": {
+            "HP": 25,
+            "MANA": 35
+          },
+          "stats_plus10": {
+            "HP": 50,
+            "MANA": 70
+          },
+          "url": "https://eqlegendstools.com/items/golden-black-sapphire-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Diamondine Earring",
+          "name": "Diamondine Earring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 110.5,
+          "stats_at_upgrade": {
+            "AC": 7.0,
+            "HP": 18.0,
+            "STR": 8.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "HP": 12,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "HP": 24,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/diamondine-earring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Ivandyr's Hoop",
+          "name": "Ivandyr's Hoop",
+          "quest_source": "Lynuga's Gem Collection",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 96.0,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "HP": 11.0,
+            "INT": 11.0,
+            "WIS": 11.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "HP": 6,
+            "INT": 6,
+            "WIS": 6
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "HP": 16.0,
+            "INT": 16.0,
+            "WIS": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/ivandyrs-hoop/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": ""
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "ALL",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Black Sapphire Electrum Earring",
+      "is_weapon": false,
+      "name": "Black Sapphire Electrum Earring",
+      "priority_value": 209.0,
+      "quest_source": "Player Crafted: Jewelry Crafting",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 209.0,
+      "slot": "EAR2",
+      "stats_at_upgrade": {
+        "AC": 7.0,
+        "END": 37.0,
+        "HP": 52.0,
+        "MANA": 37.0
+      },
+      "stats_plus0": {
+        "AC": 2,
+        "END": 25,
+        "HP": 35,
+        "MANA": 25
+      },
+      "stats_plus10": {
+        "AC": 12.0,
+        "END": 50,
+        "HP": 70,
+        "MANA": 50
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/black-sapphire-electrum-earring/",
+      "why": "2nd AI choice",
+      "why_ui": "",
+      "zone": "Player Crafted"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Wispy Choker of Vigor",
+          "name": "Wispy Choker of Vigor",
+          "quest_source": "Rogue Plane of Sky Tests",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 270.8,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "AGI": 8.0,
+            "DEX": 14.0,
+            "HP": 30.0,
+            "STR": 14.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "AGI": 3,
+            "DEX": 9,
+            "HP": 20,
+            "STR": 9
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "AGI": 13.0,
+            "DEX": 19.0,
+            "HP": 40,
+            "STR": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/wispy-choker-of-vigor/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Sapphire Platinum Necklace",
+          "name": "Black Sapphire Platinum Necklace",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 242.0,
+          "stats_at_upgrade": {
+            "HP": 82.0,
+            "MANA": 82.0
+          },
+          "stats_plus0": {
+            "HP": 55,
+            "MANA": 55
+          },
+          "stats_plus10": {
+            "HP": 110,
+            "MANA": 110
+          },
+          "url": "https://eqlegendstools.com/items/black-sapphire-platinum-necklace/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bloodstar Pendant",
+          "name": "Bloodstar Pendant",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 228.0,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "CHA": 14.0,
+            "INT": 14.0,
+            "STR": 14.0,
+            "SVC": 10.0,
+            "SVD": 10.0,
+            "SVF": 10.0,
+            "SVM": 10.0,
+            "SVP": 10.0,
+            "WIS": 14.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "CHA": 9,
+            "INT": 9,
+            "STR": 9,
+            "SVC": 5,
+            "SVD": 5,
+            "SVF": 5,
+            "SVM": 5,
+            "SVP": 5,
+            "WIS": 9
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "CHA": 19.0,
+            "INT": 19.0,
+            "STR": 19.0,
+            "SVC": 15.0,
+            "SVD": 15.0,
+            "SVF": 15.0,
+            "SVM": 15.0,
+            "SVP": 15.0,
+            "WIS": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/bloodstar-pendant/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "an ogre priestess, an ogre shaman, Chief Goonda",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Glowing Bone Collar",
+          "name": "Glowing Bone Collar",
+          "quest_source": "Drops From: Western Plains of Karana: an ogre priestess; Western Plains of Karana: an ogre shaman; Western Plains of Karana: Chief Goonda",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 177.5,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "HP": 37.0,
+            "MANA": 37.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 25,
+            "MANA": 25
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 50,
+            "MANA": 50
+          },
+          "url": "https://eqlegendstools.com/items/glowing-bone-collar/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Western Plains of Karana"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Griffon Talon Necklace",
+          "name": "Griffon Talon Necklace",
+          "quest_source": "Ranger Test of Body",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 149.5,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "STA": 9.0,
+            "STR": 9.0,
+            "SVC": 10.0,
+            "SVF": 10.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "STA": 4,
+            "STR": 4,
+            "SVC": 5,
+            "SVF": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "STA": 14.0,
+            "STR": 14.0,
+            "SVC": 15.0,
+            "SVF": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/griffon-talon-necklace/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Amulet of the Fae",
+      "is_weapon": false,
+      "name": "Amulet of the Fae",
+      "priority_value": 324.3,
+      "quest_source": "Bard Test of Wind",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 324.3,
+      "slot": "NECK",
+      "stats_at_upgrade": {
+        "AC": 13.0,
+        "DEX": 9.0,
+        "HP": 75.0,
+        "STA": 9.0,
+        "STR": 10.0,
+        "SVD": 15.0,
+        "SVP": 15.0
+      },
+      "stats_plus0": {
+        "AC": 8,
+        "DEX": 4,
+        "HP": 50,
+        "STA": 4,
+        "STR": 5,
+        "SVD": 10,
+        "SVP": 10
+      },
+      "stats_plus10": {
+        "AC": 18.0,
+        "DEX": 14.0,
+        "HP": 100,
+        "STA": 14.0,
+        "STR": 15.0,
+        "SVD": 20,
+        "SVP": 20
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/amulet-of-the-fae/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Griffon Wing Spaulders",
+          "name": "Griffon Wing Spaulders",
+          "quest_source": "Rogue Test of Silence",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 293.7,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "AGI": 9.0,
+            "DEX": 11.0,
+            "HP": 45.0,
+            "STR": 11.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "AGI": 4,
+            "DEX": 6,
+            "HP": 30,
+            "STR": 6
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "AGI": 14.0,
+            "DEX": 16.0,
+            "HP": 60,
+            "STR": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/griffon-wing-spaulders/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mantle of the Songweaver",
+          "name": "Mantle of the Songweaver",
+          "quest_source": "Bard Test of Voice",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 280.9,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "AGI": 10.0,
+            "CHA": 10.0,
+            "DEX": 12.0,
+            "STR": 12.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "AGI": 5,
+            "CHA": 5,
+            "DEX": 7,
+            "STR": 7,
+            "SVM": 5
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "AGI": 15.0,
+            "CHA": 15.0,
+            "DEX": 17.0,
+            "STR": 17.0,
+            "SVM": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/mantle-of-the-songweaver/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Earthshaker's Mantle",
+          "name": "Earthshaker's Mantle",
+          "quest_source": "Ranger Test of Earth",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 246.1,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "DEX": 13.0,
+            "STR": 13.0,
+            "SVF": 15.0,
+            "SVM": 15.0,
+            "WIS": 13.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "DEX": 8,
+            "STR": 8,
+            "SVF": 10,
+            "SVM": 10,
+            "WIS": 8
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "DEX": 18.0,
+            "STR": 18.0,
+            "SVF": 20,
+            "SVM": 20,
+            "WIS": 18.0
+          },
+          "url": "https://eqlegendstools.com/items/earthshakers-mantle/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "kobold priest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Carnal Pauldrons",
+          "name": "Carnal Pauldrons",
+          "quest_source": "Drops From: Nagafen's Lair: kobold priest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 184.4,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "DEX": 12.0,
+            "MANA": 22.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "DEX": 7,
+            "MANA": 15
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "DEX": 17.0,
+            "MANA": 30
+          },
+          "url": "https://eqlegendstools.com/items/carnal-pauldrons/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "A Froglok Noble",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Gilded Cloth",
+          "name": "Gilded Cloth",
+          "quest_source": "Drops From: Lower Guk: A Froglok Noble",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 162.5,
+          "stats_at_upgrade": {
+            "AC": 8.0,
+            "AGI": 14.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 3,
+            "AGI": 9,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 13.0,
+            "AGI": 19.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/gilded-cloth/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "Bard, Cleric, Monk, Paladin, Ranger, Rogue, Shadow Knight, Shaman, Warrior",
+      "drops_mobs": "a rock golem, a revenant, a wanderer, Slizik the Mighty, A Ratman Warrior",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Imbued Granite Spaulders",
+      "is_weapon": false,
+      "name": "Imbued Granite Spaulders",
+      "priority_value": 280.0,
+      "quest_source": "Drops From: The Hole: a rock golem, a revenant, a wanderer, Slizik the Mighty, A Ratman Warrior",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 280.0,
+      "slot": "SHOULDERS",
+      "stats_at_upgrade": {
+        "AC": 30.0,
+        "SVC": 15.0,
+        "SVD": 15.0,
+        "SVF": 15.0,
+        "SVM": 15.0,
+        "SVP": 15.0
+      },
+      "stats_plus0": {
+        "AC": 20,
+        "SVC": 10,
+        "SVD": 10,
+        "SVF": 10,
+        "SVM": 10,
+        "SVP": 10
+      },
+      "stats_plus10": {
+        "AC": 40,
+        "SVC": 20,
+        "SVD": 20,
+        "SVF": 20,
+        "SVM": 20,
+        "SVP": 20
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/imbued-granite-spaulders/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "The Hole"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Vambraces",
+          "name": "Golden Efreeti Vambraces",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 207.2,
+          "stats_at_upgrade": {
+            "AC": 18.0,
+            "DEX": 11.0,
+            "END": 30.0,
+            "STA": 15.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 6,
+            "END": 20,
+            "STA": 10
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 16.0,
+            "END": 40,
+            "STA": 20
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-vambraces/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ire ghast",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Vambraces",
+          "name": "Thorny Vine Vambraces",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ire ghast",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 204.3,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "DEX": 14.0,
+            "INT": 14.0,
+            "SVM": 12.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "DEX": 9,
+            "INT": 9,
+            "SVM": 7
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "DEX": 19.0,
+            "INT": 19.0,
+            "SVM": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-vambraces/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ashenbone drake",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Vambraces",
+          "name": "Woven Shadow Vambraces",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ashenbone drake",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 202.5,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "DEX": 10.0,
+            "END": 22.0,
+            "STA": 10.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "DEX": 5,
+            "END": 15,
+            "STA": 5
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "DEX": 15.0,
+            "END": 30,
+            "STA": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-vambraces/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Warlord Skarlon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mithril Vambraces",
+          "name": "Mithril Vambraces",
+          "quest_source": "Drops From: Nagafen's Lair: Warlord Skarlon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 183.5,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "STR": 12.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "STR": 7,
+            "SVM": 5
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "STR": 17.0,
+            "SVM": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/mithril-vambraces/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lambent Vambraces",
+          "name": "Lambent Vambraces",
+          "quest_source": "Lambent Armor Quests",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 175.5,
+          "stats_at_upgrade": {
+            "AC": 16.0,
+            "CHA": 6.0,
+            "SVC": 7.0,
+            "SVD": 7.0,
+            "SVF": 7.0,
+            "SVM": 7.0,
+            "SVP": 7.0
+          },
+          "stats_plus0": {
+            "AC": 11,
+            "CHA": 1,
+            "SVC": 2,
+            "SVD": 2,
+            "SVF": 2,
+            "SVM": 2,
+            "SVP": 2
+          },
+          "stats_plus10": {
+            "AC": 22,
+            "CHA": 11.0,
+            "SVC": 12.0,
+            "SVD": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0,
+            "SVP": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/lambent-vambraces/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Temple of Solusek Ro"
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "Bard, Cleric, Paladin, Ranger, Rogue, Shadow Knight, Shaman, Warrior, Berserker",
+      "drops_mobs": "a forsaken revenant, an ire ghast, haunted chest",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Lustrous Russet Vambraces",
+      "is_weapon": false,
+      "name": "Lustrous Russet Vambraces",
+      "priority_value": 238.0,
+      "quest_source": "Drops From: Plane of Hate: a forsaken revenant, an ire ghast, haunted chest",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 238.0,
+      "slot": "ARMS",
+      "stats_at_upgrade": {
+        "AC": 22.0,
+        "DEX": 10.0,
+        "STR": 14.0
+      },
+      "stats_plus0": {
+        "AC": 15,
+        "DEX": 5,
+        "STR": 9
+      },
+      "stats_plus10": {
+        "AC": 30,
+        "DEX": 15.0,
+        "STR": 19.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/lustrous-russet-vambraces/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a fetid fiend, a spinechiller spider, a revultant rat, a kiraikuei, a loathling lich",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Bracer",
+          "name": "Woven Shadow Bracer",
+          "quest_source": "Drops From: Plane of Fear: a fetid fiend, a spinechiller spider; Plane of Hate: a revultant rat, a kiraikuei, a loathling lich",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 241.6,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "AGI": 8.0,
+            "DEX": 8.0,
+            "STR": 8.0,
+            "SVC": 10.0,
+            "SVF": 10.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "AGI": 3,
+            "DEX": 3,
+            "STR": 3,
+            "SVC": 5,
+            "SVF": 5
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "AGI": 13.0,
+            "DEX": 13.0,
+            "STR": 13.0,
+            "SVC": 15.0,
+            "SVF": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-bracer/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Hotof's Bracer",
+          "name": "Hotof's Bracer",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 240.0,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "CHA": 15.0,
+            "STR": 15.0,
+            "SVC": 22.0,
+            "SVF": 22.0,
+            "WIS": 15.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "CHA": 10,
+            "STR": 10,
+            "SVC": 15,
+            "SVF": 15,
+            "WIS": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "CHA": 20,
+            "STR": 20,
+            "SVC": 30,
+            "SVF": 30,
+            "WIS": 20
+          },
+          "url": "https://eqlegendstools.com/items/hotofs-bracer/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a decrepit warder, a samhain, an abhorrent, a scorn banshee",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Bracer",
+          "name": "Lustrous Russet Bracer",
+          "quest_source": "Drops From: Plane of Fear: a decrepit warder, a samhain; Plane of Hate: an abhorrent, a scorn banshee",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 217.1,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "DEX": 8.0,
+            "STR": 8.0,
+            "SVC": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "DEX": 3,
+            "STR": 3,
+            "SVC": 7,
+            "SVF": 7,
+            "SVM": 7
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "DEX": 13.0,
+            "STR": 13.0,
+            "SVC": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-bracer/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "Verishe Mal Executioner",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Verishe Bracer of Dominance",
+          "name": "Verishe Bracer of Dominance",
+          "quest_source": "Drops From: Splitpaw Lair: Verishe Mal Executioner",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 195.0,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "AGI": 8.0,
+            "STA": 8.0,
+            "STR": 8.0,
+            "SVD": 11.0,
+            "SVM": 11.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 3,
+            "STA": 3,
+            "STR": 3,
+            "SVD": 6,
+            "SVM": 6
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 13.0,
+            "STA": 13.0,
+            "STR": 13.0,
+            "SVD": 16.0,
+            "SVM": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/verishe-bracer-of-dominance/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Splitpaw Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a decrepit warder, a samhain, an abhorrent, a scorn banshee",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Bracer",
+          "name": "Thorny Vine Bracer",
+          "quest_source": "Drops From: Plane of Fear: a decrepit warder, a samhain; Plane of Hate: an abhorrent, a scorn banshee",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 184.5,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "AGI": 10.0,
+            "MANA": 15.0,
+            "STA": 10.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "AGI": 5,
+            "MANA": 10,
+            "STA": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "AGI": 15.0,
+            "MANA": 20,
+            "STA": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-bracer/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Rogue",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Shimmering Bracer of Protection",
+      "is_weapon": false,
+      "name": "Shimmering Bracer of Protection",
+      "priority_value": 281.6,
+      "quest_source": "Rogue Test of Stealth",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 281.6,
+      "slot": "WRIST",
+      "stats_at_upgrade": {
+        "AC": 15.0,
+        "DEX": 8.0,
+        "STR": 14.0,
+        "SVC": 13.0,
+        "SVD": 13.0,
+        "SVF": 13.0,
+        "SVM": 13.0,
+        "SVP": 13.0,
+        "WIS": 7.0
+      },
+      "stats_plus0": {
+        "AC": 10,
+        "DEX": 3,
+        "STR": 9,
+        "SVC": 8,
+        "SVD": 8,
+        "SVF": 8,
+        "SVM": 8,
+        "SVP": 8,
+        "WIS": 2
+      },
+      "stats_plus10": {
+        "AC": 20,
+        "DEX": 13.0,
+        "STR": 19.0,
+        "SVC": 18.0,
+        "SVD": 18.0,
+        "SVF": 18.0,
+        "SVM": 18.0,
+        "SVP": 18.0,
+        "WIS": 12.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/shimmering-bracer-of-protection/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a scareling, a shiverback, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Gauntlets",
+          "name": "Lustrous Russet Gauntlets",
+          "quest_source": "Drops From: Plane of Fear: a scareling, a shiverback; Plane of Hate: haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 278.5,
+          "stats_at_upgrade": {
+            "AC": 18.0,
+            "DEX": 10.0,
+            "HP": 75.0,
+            "STA": 10.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 5,
+            "HP": 50,
+            "STA": 5
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 15.0,
+            "HP": 100,
+            "STA": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-gauntlets/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a ghoul sentinel",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Dark Mail Gauntlets",
+          "name": "Dark Mail Gauntlets",
+          "quest_source": "Drops From: Lower Guk: a ghoul sentinel",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 265.5,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "DEX": 10.0,
+            "MANA": 75.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "DEX": 5,
+            "MANA": 50
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "DEX": 15.0,
+            "MANA": 100
+          },
+          "url": "https://eqlegendstools.com/items/dark-mail-gauntlets/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Cauldronboil",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Kedgemail Gauntlets",
+          "name": "Kedgemail Gauntlets",
+          "quest_source": "Drops From: Kedge Keep: Cauldronboil",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 247.0,
+          "stats_at_upgrade": {
+            "AC": 16.0,
+            "DEX": 10.0,
+            "MANA": 37.0,
+            "STR": 8.0
+          },
+          "stats_plus0": {
+            "AC": 11,
+            "DEX": 5,
+            "MANA": 25,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 22,
+            "DEX": 15.0,
+            "MANA": 50,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/kedgemail-gauntlets/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Kedge Keep"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lord Nagafen",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Gauntlets of Fiery Might",
+          "name": "Gauntlets of Fiery Might",
+          "quest_source": "Drops From: Nagafen's Lair: Lord Nagafen",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 246.4,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "DEX": 12.0,
+            "STA": 12.0,
+            "STR": 12.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "DEX": 7,
+            "STA": 7,
+            "STR": 7,
+            "SVD": 7,
+            "SVP": 7
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "DEX": 17.0,
+            "STA": 17.0,
+            "STR": 17.0,
+            "SVD": 17.0,
+            "SVP": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/gauntlets-of-fiery-might/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a scareling, a shiverback, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Gauntlets",
+          "name": "Thorny Vine Gauntlets",
+          "quest_source": "Drops From: Plane of Fear: a scareling, a shiverback; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 233.8,
+          "stats_at_upgrade": {
+            "AC": 16.0,
+            "DEX": 14.0,
+            "STR": 14.0,
+            "SVF": 12.0
+          },
+          "stats_plus0": {
+            "AC": 11,
+            "DEX": 9,
+            "STR": 9,
+            "SVF": 7
+          },
+          "stats_plus10": {
+            "AC": 22,
+            "DEX": 19.0,
+            "STR": 19.0,
+            "SVF": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-gauntlets/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "ALL",
+      "drops_mobs": "Fright, Dread, Terror, Cazic Thule (God)",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Slime Blood of Cazic Thule",
+      "is_weapon": false,
+      "name": "Slime Blood of Cazic Thule",
+      "priority_value": 444.4,
+      "quest_source": "Drops From: Plane of Fear: Fright, Dread, Terror, Cazic Thule (God)",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 444.4,
+      "slot": "HANDS",
+      "stats_at_upgrade": {
+        "AC": 24.0,
+        "AGI": 7.0,
+        "CHA": 7.0,
+        "DEX": 7.0,
+        "HP": 30.0,
+        "INT": 7.0,
+        "MANA": 30.0,
+        "STA": 7.0,
+        "STR": 7.0,
+        "SVC": 7.0,
+        "SVD": 7.0,
+        "SVF": 7.0,
+        "SVM": 7.0,
+        "SVP": 7.0,
+        "WIS": 7.0
+      },
+      "stats_plus0": {
+        "AC": 16,
+        "AGI": 2,
+        "CHA": 2,
+        "DEX": 2,
+        "HP": 20,
+        "INT": 2,
+        "MANA": 20,
+        "STA": 2,
+        "STR": 2,
+        "SVC": 2,
+        "SVD": 2,
+        "SVF": 2,
+        "SVM": 2,
+        "SVP": 2,
+        "WIS": 2
+      },
+      "stats_plus10": {
+        "AC": 32,
+        "AGI": 12.0,
+        "CHA": 12.0,
+        "DEX": 12.0,
+        "HP": 40,
+        "INT": 12.0,
+        "MANA": 40,
+        "STA": 12.0,
+        "STR": 12.0,
+        "SVC": 12.0,
+        "SVD": 12.0,
+        "SVF": 12.0,
+        "SVM": 12.0,
+        "SVP": 12.0,
+        "WIS": 12.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/slime-blood-of-cazic-thule/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Fear"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Imbrued Platemail Breastplate",
+          "name": "Imbrued Platemail Breastplate",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 453.2,
+          "stats_at_upgrade": {
+            "AC": 43.0,
+            "CHA": 14.0,
+            "DEX": 19.0,
+            "STR": 14.0,
+            "SVD": 15.0
+          },
+          "stats_plus0": {
+            "AC": 29,
+            "CHA": 9,
+            "DEX": 13,
+            "STR": 9,
+            "SVD": 10
+          },
+          "stats_plus10": {
+            "AC": 58,
+            "CHA": 19.0,
+            "DEX": 26,
+            "STR": 19.0,
+            "SVD": 20
+          },
+          "url": "https://eqlegendstools.com/items/imbrued-platemail-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a glare lord, a tentacle tormentor, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Breastplate",
+          "name": "Lustrous Russet Breastplate",
+          "quest_source": "Drops From: Plane of Fear: a glare lord, a tentacle tormentor; Plane of Hate: haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 450.0,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "DEX": 22.0,
+            "STA": 22.0,
+            "STR": 22.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "DEX": 15,
+            "STA": 15,
+            "STR": 15
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "DEX": 30,
+            "STA": 30,
+            "STR": 30
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a glare lord, a tentacle tormentor, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Chestplate",
+          "name": "Thorny Vine Chestplate",
+          "quest_source": "Drops From: Plane of Fear: a glare lord, a tentacle tormentor; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 394.5,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "HP": 75.0,
+            "STR": 14.0,
+            "WIS": 19.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "HP": 50,
+            "STR": 9,
+            "WIS": 13
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "HP": 100,
+            "STR": 19.0,
+            "WIS": 26
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-chestplate/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Red Dragonscale Armor",
+          "name": "Red Dragonscale Armor",
+          "quest_source": "Red Dragonscale Armor Quest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 329.0,
+          "stats_at_upgrade": {
+            "AC": 31.0,
+            "STR": 30.0,
+            "SVF": 15.0,
+            "SVM": 15.0
+          },
+          "stats_plus0": {
+            "AC": 21,
+            "STR": 20,
+            "SVF": 10,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 42,
+            "STR": 40,
+            "SVF": 20,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/red-dragonscale-armor/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": ""
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "kobold priest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mithril Breastplate",
+          "name": "Mithril Breastplate",
+          "quest_source": "Drops From: Nagafen's Lair: kobold priest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 318.0,
+          "stats_at_upgrade": {
+            "AC": 25.0,
+            "AGI": 22.0,
+            "HP": 45.0
+          },
+          "stats_plus0": {
+            "AC": 17,
+            "AGI": 15,
+            "HP": 30
+          },
+          "stats_plus10": {
+            "AC": 34,
+            "AGI": 30,
+            "HP": 60
+          },
+          "url": "https://eqlegendstools.com/items/mithril-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Rogue",
+      "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Woven Shadow Chestplate",
+      "is_weapon": false,
+      "name": "Woven Shadow Chestplate",
+      "priority_value": 486.2,
+      "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 486.2,
+      "slot": "CHEST",
+      "stats_at_upgrade": {
+        "AC": 39.0,
+        "AGI": 19.0,
+        "DEX": 19.0,
+        "STR": 19.0
+      },
+      "stats_plus0": {
+        "AC": 26,
+        "AGI": 13,
+        "DEX": 13,
+        "STR": 13
+      },
+      "stats_plus10": {
+        "AC": 52,
+        "AGI": 26,
+        "DEX": 26,
+        "STR": 26
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/woven-shadow-chestplate/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lord Nagafen",
+          "haste": 41.0,
+          "image_url": "/api/item-image?name=Cloak of Flames",
+          "name": "Cloak of Flames",
+          "quest_source": "Drops From: Nagafen's Lair: Lord Nagafen",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 448.8,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 14.0,
+            "DEX": 14.0,
+            "HP": 75.0,
+            "Haste": 41.0,
+            "SVF": 22.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": 9,
+            "DEX": 9,
+            "HP": 50,
+            "Haste": 36,
+            "SVF": 15
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 19.0,
+            "DEX": 19.0,
+            "HP": 100,
+            "Haste": 36,
+            "SVF": 30
+          },
+          "url": "https://eqlegendstools.com/items/cloak-of-flames/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Dark Cloak of the Sky",
+          "name": "Dark Cloak of the Sky",
+          "quest_source": "Ranger Test of Defense",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 355.4,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "AGI": 12.0,
+            "DEX": 12.0,
+            "HP": 82.0,
+            "STR": 12.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 7,
+            "DEX": 7,
+            "HP": 55,
+            "STR": 7,
+            "WIS": 7
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 17.0,
+            "DEX": 17.0,
+            "HP": 110,
+            "STR": 17.0,
+            "WIS": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/dark-cloak-of-the-sky/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=White Dragonscale Cloak",
+          "name": "White Dragonscale Cloak",
+          "quest_source": "White Dragonscale Cloak Quest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 329.5,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "INT": 14.0,
+            "MANA": 112.0,
+            "SVC": 37.0,
+            "WIS": 14.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "INT": 9,
+            "MANA": 75,
+            "SVC": 25,
+            "WIS": 9
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "INT": 19.0,
+            "MANA": 150,
+            "SVC": 50,
+            "WIS": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/white-dragonscale-cloak/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": ""
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lord of Ire",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shield of the Immaculate",
+          "name": "Shield of the Immaculate",
+          "quest_source": "Drops From: Plane of Hate: Lord of Ire",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 325.0,
+          "stats_at_upgrade": {
+            "AC": 37.0,
+            "STR": 15.0,
+            "SVD": 37.0
+          },
+          "stats_plus0": {
+            "AC": 25,
+            "STR": 10,
+            "SVD": 25
+          },
+          "stats_plus10": {
+            "AC": 50,
+            "STR": 20,
+            "SVD": 50
+          },
+          "url": "https://eqlegendstools.com/items/shield-of-the-immaculate/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "guano harvester",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Cloak of Shadows",
+          "name": "Cloak of Shadows",
+          "quest_source": "Drops From: Nagafen's Lair: guano harvester",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 224.2,
+          "stats_at_upgrade": {
+            "AC": 18.0,
+            "DEX": 19.0,
+            "SVD": 15.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 13,
+            "SVD": 10
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 26,
+            "SVD": 20
+          },
+          "url": "https://eqlegendstools.com/items/cloak-of-shadows/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Cleric, Paladin, Rogue, Warrior, Berserker",
+      "drops_mobs": "Innoruuk",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Brewer's Mesh Cloak",
+      "is_weapon": false,
+      "name": "Brewer's Mesh Cloak",
+      "priority_value": 464.0,
+      "quest_source": "Drops From: Plane of Hate: Innoruuk",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 464.0,
+      "slot": "BACK",
+      "stats_at_upgrade": {
+        "AC": 19.0,
+        "END": 82.0,
+        "HP": 75.0,
+        "MANA": 75.0,
+        "STR": 18.0,
+        "WIS": 18.0
+      },
+      "stats_plus0": {
+        "AC": 13,
+        "END": 55,
+        "HP": 50,
+        "MANA": 50,
+        "STR": 12,
+        "WIS": 12
+      },
+      "stats_plus10": {
+        "AC": 26,
+        "END": 110,
+        "HP": 100,
+        "MANA": 100,
+        "STR": 24,
+        "WIS": 24
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/brewers-mesh-cloak/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Dracoliche, Fright, Dread",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bone-Clasped Girdle",
+          "name": "Bone-Clasped Girdle",
+          "quest_source": "Drops From: Plane of Fear: Dracoliche, Fright, Dread",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 515.4,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "DEX": 12.0,
+            "HP": 112.0,
+            "MANA": 112.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "DEX": 7,
+            "HP": 75,
+            "MANA": 75,
+            "STA": 7,
+            "STR": 7
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "DEX": 17.0,
+            "HP": 150,
+            "MANA": 150,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/bone-clasped-girdle/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Icebelt",
+          "name": "Icebelt",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 369.0,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 15.0,
+            "DEX": 15.0,
+            "STR": 15.0,
+            "SVC": 10.0,
+            "SVD": 10.0,
+            "SVF": 10.0,
+            "SVM": 10.0,
+            "SVP": 10.0,
+            "WIS": 15.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": 10,
+            "DEX": 10,
+            "STR": 10,
+            "SVC": 5,
+            "SVD": 5,
+            "SVF": 5,
+            "SVM": 5,
+            "SVP": 5,
+            "WIS": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 20,
+            "DEX": 20,
+            "STR": 20,
+            "SVC": 15.0,
+            "SVD": 15.0,
+            "SVF": 15.0,
+            "SVM": 15.0,
+            "SVP": 15.0,
+            "WIS": 20
+          },
+          "url": "https://eqlegendstools.com/items/icebelt/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Master Yael",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brell's Girdle",
+          "name": "Brell's Girdle",
+          "quest_source": "Drops From: The Hole: Master Yael",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 330.0,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 0.0,
+            "DEX": 0.0,
+            "END": 75.0,
+            "MANA": 75.0,
+            "STA": 15.0,
+            "STR": 15.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": -5,
+            "DEX": -5,
+            "END": 50,
+            "MANA": 50,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 0,
+            "DEX": 0,
+            "END": 100,
+            "MANA": 100,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/brells-girdle/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Lady Vox",
+          "haste": 36.0,
+          "image_url": "/api/item-image?name=Runed Bolster Belt",
+          "name": "Runed Bolster Belt",
+          "quest_source": "Drops From: Permafrost: Lady Vox",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 293.5,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "DEX": 15.0,
+            "Haste": 36.0,
+            "STA": 15.0,
+            "STR": 15.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "DEX": 10,
+            "Haste": 31,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "DEX": 20,
+            "Haste": 31,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/runed-bolster-belt/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Permafrost"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a gust of wind, a thunder spirit, a thunder spirit princess, an essence carrier, Bazzzazzt, Bzzzt, Gorgalosk, Protector of Sky, Sister of the Spire, The Hand of Veeshan, The Spiroc Lord",
+          "haste": 26.0,
+          "image_url": "/api/item-image?name=Belt of Transience",
+          "name": "Belt of Transience",
+          "quest_source": "Drops From: Plane of Sky: a gust of wind, a thunder spirit/princess, an essence carrier, bees, Gorgalosk, Protector of Sky, Sister of the Spire, The Hand of Veeshan, The Spiroc Lord",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 247.0,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "DEX": 10.0,
+            "Haste": 26.0,
+            "STR": 10.0,
+            "SVP": 15.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "DEX": 5,
+            "Haste": 21,
+            "STR": 5,
+            "SVP": 10
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "DEX": 15.0,
+            "Haste": 21,
+            "STR": 15.0,
+            "SVP": 20
+          },
+          "url": "https://eqlegendstools.com/items/belt-of-transience/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Rogue",
+      "drops_mobs": "",
+      "haste": 46.0,
+      "image_url": "/api/item-image?name=Renard's Belt of Quickness",
+      "is_weapon": false,
+      "name": "Renard's Belt of Quickness",
+      "priority_value": 304.8,
+      "quest_source": "Rogue Test of Trickery",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 406.8,
+      "slot": "WAIST",
+      "stats_at_upgrade": {
+        "AC": 11.0,
+        "AGI": 18.0,
+        "CHA": 10.0,
+        "DEX": 18.0,
+        "Haste": 46.0,
+        "STR": 10.0
+      },
+      "stats_plus0": {
+        "AC": 6,
+        "AGI": 12,
+        "CHA": 5,
+        "DEX": 12,
+        "Haste": 41,
+        "STR": 5
+      },
+      "stats_plus10": {
+        "AC": 16.0,
+        "AGI": 24,
+        "CHA": 15.0,
+        "DEX": 24,
+        "Haste": 41,
+        "STR": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/renards-belt-of-quickness/",
+      "why": "best haste +51%; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Imbrued Platemail Greaves",
+          "name": "Imbrued Platemail Greaves",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 287.0,
+          "stats_at_upgrade": {
+            "AC": 24.0,
+            "AGI": 14.0,
+            "STA": 14.0,
+            "STR": 10.0,
+            "SVM": 15.0
+          },
+          "stats_plus0": {
+            "AC": 16,
+            "AGI": 9,
+            "STA": 9,
+            "STR": 5,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 32,
+            "AGI": 19.0,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/imbrued-platemail-greaves/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Greaves",
+          "name": "Thorny Vine Greaves",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 253.0,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "AGI": 14.0,
+            "MANA": 22.0,
+            "SVD": 12.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "AGI": 9,
+            "MANA": 15,
+            "SVD": 7,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "AGI": 19.0,
+            "MANA": 30,
+            "SVD": 17.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-greaves/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Greaves",
+          "name": "Lustrous Russet Greaves",
+          "quest_source": "Drops From: Plane of Hate: an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk, haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 240.0,
+          "stats_at_upgrade": {
+            "AC": 22.0,
+            "AGI": 10.0,
+            "STA": 10.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "AGI": 5,
+            "STA": 5,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "AGI": 15.0,
+            "STA": 15.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-greaves/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Greaves",
+          "name": "Woven Shadow Greaves",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 206.0,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "AGI": 10.0,
+            "SVD": 15.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "AGI": 5,
+            "SVD": 10,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "AGI": 15.0,
+            "SVD": 20,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-greaves/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Ivy Etched Leggings",
+          "name": "Ivy Etched Leggings",
+          "quest_source": "Ivy Etched Armor Quests",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 190.5,
+          "stats_at_upgrade": {
+            "AC": 18.0,
+            "AGI": 10.0,
+            "SVC": 10.0,
+            "SVF": 10.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "AGI": 5,
+            "SVC": 5,
+            "SVF": 5
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "AGI": 15.0,
+            "SVC": 15.0,
+            "SVF": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/ivy-etched-leggings/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Kithicor Forest"
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "ALL",
+      "drops_mobs": "Noble Dojorn, Overseer of Air",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Golden Efreeti Greaves",
+      "is_weapon": false,
+      "name": "Golden Efreeti Greaves",
+      "priority_value": 155.91520000000006,
+      "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 155.9152,
+      "slot": "LEGS",
+      "stats_at_upgrade": {
+        "AC": 22.0,
+        "AGI": 14.0,
+        "DEX": 15.0
+      },
+      "stats_plus0": {
+        "AC": 15,
+        "AGI": 9,
+        "DEX": 10
+      },
+      "stats_plus10": {
+        "AC": 30,
+        "AGI": 19.0,
+        "DEX": 20
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/golden-efreeti-greaves/",
+      "why": "AI choice for Rogue/Ranger/Bard; AC→softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a boogeyman, a phantasm, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Thorny Vine Boots",
+          "name": "Thorny Vine Boots",
+          "quest_source": "Drops From: Plane of Fear: a boogeyman, a phantasm; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 262.0,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "AGI": 14.0,
+            "STA": 10.0,
+            "STR": 10.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "AGI": 9,
+            "STA": 5,
+            "STR": 5,
+            "SVP": 7
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "AGI": 19.0,
+            "STA": 15.0,
+            "STR": 15.0,
+            "SVP": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/thorny-vine-boots/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a boogeyman, a phantasm, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Boots",
+          "name": "Lustrous Russet Boots",
+          "quest_source": "Drops From: Plane of Fear: a boogeyman, a phantasm; Plane of Hate: haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 255.0,
+          "stats_at_upgrade": {
+            "AC": 22.0,
+            "AGI": 10.0,
+            "INT": 10.0,
+            "SVD": 22.0,
+            "SVP": 22.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "AGI": 5,
+            "INT": 5,
+            "SVD": 15,
+            "SVP": 15,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "AGI": 15.0,
+            "INT": 15.0,
+            "SVD": 30,
+            "SVP": 30,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-boots/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a gorgon, a nightmare, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Boots",
+          "name": "Woven Shadow Boots",
+          "quest_source": "Drops From: Plane of Fear: a gorgon, a nightmare; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 230.0,
+          "stats_at_upgrade": {
+            "AC": 21.0,
+            "AGI": 14.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 14,
+            "AGI": 9,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 28,
+            "AGI": 19.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-boots/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a gorgon, a nightmare, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Imbrued Platemail Boots",
+          "name": "Imbrued Platemail Boots",
+          "quest_source": "Drops From: Plane of Fear: a gorgon, a nightmare; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 220.5,
+          "stats_at_upgrade": {
+            "AC": 24.0,
+            "STA": 14.0,
+            "STR": 10.0,
+            "SVC": 15.0
+          },
+          "stats_plus0": {
+            "AC": 16,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 10
+          },
+          "stats_plus10": {
+            "AC": 32,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 20
+          },
+          "url": "https://eqlegendstools.com/items/imbrued-platemail-boots/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a gorgon, a nightmare, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Footwraps",
+          "name": "Midnight Clad Footwraps",
+          "quest_source": "Drops From: Plane of Fear: a gorgon, a nightmare; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 182.5,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "STA": 14.0,
+            "STR": 10.0,
+            "SVC": 13.0,
+            "SVF": 13.0,
+            "SVM": 13.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 8,
+            "SVF": 8,
+            "SVM": 8
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 18.0,
+            "SVF": 18.0,
+            "SVM": 18.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-footwraps/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 2,
+      "classes_str": "Cleric, Druid, Paladin, Ranger, Rogue, Warrior",
+      "drops_mobs": "Innoruuk",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Leatherfoot Sandals",
+      "is_weapon": false,
+      "name": "Leatherfoot Sandals",
+      "priority_value": 244.277,
+      "quest_source": "Drops From: Plane of Hate: Innoruuk",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 244.277,
+      "slot": "FEET",
+      "stats_at_upgrade": {
+        "AC": 16.0,
+        "AGI": 15.0,
+        "MANA": 45.0,
+        "STR": 15.0,
+        "SVM": 30.0,
+        "WIS": 15.0
+      },
+      "stats_plus0": {
+        "AC": 11,
+        "AGI": 10,
+        "MANA": 30,
+        "STR": 10,
+        "SVM": 20,
+        "WIS": 10
+      },
+      "stats_plus10": {
+        "AC": 22,
+        "AGI": 20,
+        "MANA": 60,
+        "STR": 20,
+        "SVM": 40,
+        "WIS": 20
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/leatherfoot-sandals/",
+      "why": "AI choice for Rogue/Ranger/Bard; past AC softcap",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Efreeti Lord Djarn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Djarns Amethyst Ring",
+          "name": "Djarns Amethyst Ring",
+          "quest_source": "Drops From: Nagafen's Lair: Efreeti Lord Djarn",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 226.5,
+          "stats_at_upgrade": {
+            "AGI": 14.0,
+            "HP": 120.0
+          },
+          "stats_plus0": {
+            "AGI": 9,
+            "HP": 80
+          },
+          "stats_plus10": {
+            "AGI": 19.0,
+            "HP": 160
+          },
+          "url": "https://eqlegendstools.com/items/djarns-amethyst-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Fire Wedding Ring",
+          "name": "Platinum Fire Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 177.5,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "HP": 82.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 55
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 110
+          },
+          "url": "https://eqlegendstools.com/items/platinum-fire-wedding-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a reanimated hand (Lower Guk)",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Adamantite Band",
+          "name": "Adamantite Band",
+          "quest_source": "Drops From: Lower Guk: a reanimated hand (Lower Guk)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 150.0,
+          "stats_at_upgrade": {
+            "HP": 112.0,
+            "SVM": -5.0
+          },
+          "stats_plus0": {
+            "HP": 75,
+            "SVM": -10
+          },
+          "stats_plus10": {
+            "HP": 150,
+            "SVM": 0
+          },
+          "url": "https://eqlegendstools.com/items/adamantite-band/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Kindle",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Obsidian Ring",
+          "name": "Obsidian Ring",
+          "quest_source": "Drops From: Solusek's Eye: Kindle",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 126.6,
+          "stats_at_upgrade": {
+            "AC": 8.0,
+            "DEX": 8.0,
+            "HP": 15.0
+          },
+          "stats_plus0": {
+            "AC": 3,
+            "DEX": 3,
+            "HP": 10
+          },
+          "stats_plus10": {
+            "AC": 13.0,
+            "DEX": 13.0,
+            "HP": 20
+          },
+          "url": "https://eqlegendstools.com/items/obsidian-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Solusek's Eye"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a Lteth Val Deviant",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Splitpaw Keepsake Ring",
+          "name": "Splitpaw Keepsake Ring",
+          "quest_source": "Drops From: Splitpaw Lair: a Lteth Val Deviant",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 125.8,
+          "stats_at_upgrade": {
+            "AC": 7.0,
+            "DEX": 9.0,
+            "HP": 15.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "DEX": 4,
+            "HP": 10
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "DEX": 14.0,
+            "HP": 20
+          },
+          "url": "https://eqlegendstools.com/items/splitpaw-keepsake-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Splitpaw Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Cleric, Enchanter, Magician, Necromancer, Paladin, Rogue, Shadow Knight, Warrior, Wizard",
+      "drops_mobs": "Innoruuk",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Engineer's Ring",
+      "is_weapon": false,
+      "name": "Engineer's Ring",
+      "priority_value": 277.64,
+      "quest_source": "Drops From: Plane of Hate: Innoruuk",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 277.64,
+      "slot": "FINGER1",
+      "stats_at_upgrade": {
+        "AC": 30.0,
+        "AGI": 10.0,
+        "CHA": 10.0,
+        "DEX": 10.0,
+        "END": 30.0,
+        "HP": 10.0,
+        "INT": 10.0,
+        "MANA": 30.0,
+        "STA": 10.0,
+        "STR": 10.0,
+        "WIS": 10.0
+      },
+      "stats_plus0": {
+        "AC": 20,
+        "AGI": 5,
+        "CHA": 5,
+        "DEX": 5,
+        "END": 20,
+        "HP": 5,
+        "INT": 5,
+        "MANA": 20,
+        "STA": 5,
+        "STR": 5,
+        "WIS": 5
+      },
+      "stats_plus10": {
+        "AC": 40,
+        "AGI": 15.0,
+        "CHA": 15.0,
+        "DEX": 15.0,
+        "END": 40,
+        "HP": 15.0,
+        "INT": 15.0,
+        "MANA": 40,
+        "STA": 15.0,
+        "STR": 15.0,
+        "WIS": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/engineers-ring/",
+      "why": "AI choice for Rogue/Ranger/Bard; past AC softcap",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Engineer's Ring",
+          "name": "Engineer's Ring",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 453.5,
+          "stats_at_upgrade": {
+            "AC": 30.0,
+            "AGI": 10.0,
+            "CHA": 10.0,
+            "DEX": 10.0,
+            "END": 30.0,
+            "HP": 10.0,
+            "INT": 10.0,
+            "MANA": 30.0,
+            "STA": 10.0,
+            "STR": 10.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 20,
+            "AGI": 5,
+            "CHA": 5,
+            "DEX": 5,
+            "END": 20,
+            "HP": 5,
+            "INT": 5,
+            "MANA": 20,
+            "STA": 5,
+            "STR": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 40,
+            "AGI": 15.0,
+            "CHA": 15.0,
+            "DEX": 15.0,
+            "END": 40,
+            "HP": 15.0,
+            "INT": 15.0,
+            "MANA": 40,
+            "STA": 15.0,
+            "STR": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/engineers-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Fire Wedding Ring",
+          "name": "Platinum Fire Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 177.5,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "HP": 82.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 55
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 110
+          },
+          "url": "https://eqlegendstools.com/items/platinum-fire-wedding-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a reanimated hand (Lower Guk)",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Adamantite Band",
+          "name": "Adamantite Band",
+          "quest_source": "Drops From: Lower Guk: a reanimated hand (Lower Guk)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 150.0,
+          "stats_at_upgrade": {
+            "HP": 112.0,
+            "SVM": -5.0
+          },
+          "stats_plus0": {
+            "HP": 75,
+            "SVM": -10
+          },
+          "stats_plus10": {
+            "HP": 150,
+            "SVM": 0
+          },
+          "url": "https://eqlegendstools.com/items/adamantite-band/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "Kindle",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Obsidian Ring",
+          "name": "Obsidian Ring",
+          "quest_source": "Drops From: Solusek's Eye: Kindle",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 126.6,
+          "stats_at_upgrade": {
+            "AC": 8.0,
+            "DEX": 8.0,
+            "HP": 15.0
+          },
+          "stats_plus0": {
+            "AC": 3,
+            "DEX": 3,
+            "HP": 10
+          },
+          "stats_plus10": {
+            "AC": 13.0,
+            "DEX": 13.0,
+            "HP": 20
+          },
+          "url": "https://eqlegendstools.com/items/obsidian-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Solusek's Eye"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a Lteth Val Deviant",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Splitpaw Keepsake Ring",
+          "name": "Splitpaw Keepsake Ring",
+          "quest_source": "Drops From: Splitpaw Lair: a Lteth Val Deviant",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 125.8,
+          "stats_at_upgrade": {
+            "AC": 7.0,
+            "DEX": 9.0,
+            "HP": 15.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "DEX": 4,
+            "HP": 10
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "DEX": 14.0,
+            "HP": 20
+          },
+          "url": "https://eqlegendstools.com/items/splitpaw-keepsake-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Splitpaw Lair"
+        }
+      ],
+      "bis_overlap": 3,
+      "classes_str": "ALL",
+      "drops_mobs": "Efreeti Lord Djarn",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Djarns Amethyst Ring",
+      "is_weapon": false,
+      "name": "Djarns Amethyst Ring",
+      "priority_value": 226.5,
+      "quest_source": "Drops From: Nagafen's Lair: Efreeti Lord Djarn",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 226.5,
+      "slot": "FINGER2",
+      "stats_at_upgrade": {
+        "AGI": 14.0,
+        "HP": 120.0
+      },
+      "stats_plus0": {
+        "AGI": 9,
+        "HP": 80
+      },
+      "stats_plus10": {
+        "AGI": 19.0,
+        "HP": 160
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/djarns-amethyst-ring/",
+      "why": "2nd AI choice",
+      "why_ui": "",
+      "zone": "Nagafen's Lair"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "damage_score": 2.0297,
+          "haste": 0,
+          "name": "Blackened Alloy Bastard Sword",
+          "ratio_at_upgrade": 0.7949,
+          "ratio_plus10": 1.0769,
+          "score": 2.0297,
+          "stats_at_upgrade": {
+            "DLY": 39.0,
+            "DMG": 31.0,
+            "SVP": 8.0
+          },
+          "stats_plus10": {
+            "DLY": 39.0,
+            "DMG": 42,
+            "SVP": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/blackened-alloy-bastard-sword/",
+          "why": "best 2H expected-dmg 2.0297 (lost to DW pair); eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈201 @L40 (assumption: no skill table in decoded data; monk-style high-skill default)",
+          "why_ui": "Runner-up two-hander",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Arydryidriyorn",
+          "name": "Arydryidriyorn",
+          "quest_source": "Ranger Test of The Blade",
+          "ratio_at_upgrade": 0.8571,
+          "ratio_plus10": 1.1429,
+          "score": 8571.0,
+          "stats_at_upgrade": {
+            "DLY": 21.0,
+            "DMG": 18.0,
+            "HP": 75.0,
+            "STR": 13.0,
+            "WIS": 13.0
+          },
+          "stats_plus0": {
+            "DLY": 21,
+            "DMG": 12,
+            "HP": 50,
+            "STR": 8,
+            "WIS": 8
+          },
+          "stats_plus10": {
+            "DLY": 21.0,
+            "DMG": 24,
+            "HP": 100.0,
+            "STR": 18.0,
+            "WIS": 18.0
+          },
+          "url": "https://eqlegendstools.com/items/arydryidriyorn/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Spear of Harmony",
+          "name": "Spear of Harmony",
+          "quest_source": "Bard Test of Harmony",
+          "ratio_at_upgrade": 0.8571,
+          "ratio_plus10": 1.1429,
+          "score": 8571.0,
+          "stats_at_upgrade": {
+            "CHA": 10.0,
+            "DEX": 10.0,
+            "DLY": 21.0,
+            "DMG": 18.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "CHA": 5,
+            "DEX": 5,
+            "DLY": 21,
+            "DMG": 12,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "CHA": 15.0,
+            "DEX": 15.0,
+            "DLY": 21.0,
+            "DMG": 24,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/spear-of-harmony/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Clan Runnyeye: a Pickclaw Destroyer; Clan Runnyeye: a Pickclaw veteran; Clan Runnyeye: Battlelord Paluk; Clan Runnyeye: Lord Pickclaw",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Blackened Alloy Bastard Sword",
+          "name": "Blackened Alloy Bastard Sword",
+          "quest_source": "Clan Runnyeye: a Pickclaw Destroyer, a Pickclaw veteran, Battlelord Paluk, Lord Pickclaw",
+          "ratio_at_upgrade": 0.7949,
+          "ratio_plus10": 1.0769,
+          "score": 7949.0,
+          "stats_at_upgrade": {
+            "DLY": 39.0,
+            "DMG": 31.0,
+            "SVP": 8.0
+          },
+          "stats_plus0": {
+            "DLY": 39,
+            "DMG": 21,
+            "SVP": 3
+          },
+          "stats_plus10": {
+            "DLY": 39.0,
+            "DMG": 42,
+            "SVP": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/blackened-alloy-bastard-sword/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: Master Yael",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Earthshaker",
+          "name": "Earthshaker",
+          "quest_source": "The Hole: Master Yael",
+          "ratio_at_upgrade": 0.7857,
+          "ratio_plus10": 1.0571,
+          "score": 7857.0,
+          "stats_at_upgrade": {
+            "DEX": 0.0,
+            "DLY": 70.0,
+            "DMG": 55.0,
+            "STA": 11.0,
+            "STR": 11.0
+          },
+          "stats_plus0": {
+            "DEX": -5,
+            "DLY": 70,
+            "DMG": 37,
+            "STA": 6,
+            "STR": 6
+          },
+          "stats_plus10": {
+            "DEX": 0.0,
+            "DLY": 70.0,
+            "DMG": 74,
+            "STA": 16.0,
+            "STR": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/earthshaker/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "The Hole"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Rogue",
+      "damage_score": 3.0762,
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Thornstinger",
+      "is_weapon": true,
+      "name": "Thornstinger",
+      "priority_value": 2.214736842105263,
+      "quest_source": "Rogue Test of Deception",
+      "ratio_at_upgrade": 0.9474,
+      "ratio_plus10": 1.2632,
+      "score": 3.0762,
+      "slot": "PRIMARY",
+      "stats_at_upgrade": {
+        "AGI": 10.0,
+        "DEX": 10.0,
+        "DLY": 19.0,
+        "DMG": 18.0,
+        "HP": 75.0,
+        "STR": 10.0
+      },
+      "stats_plus0": {
+        "AGI": 5,
+        "DEX": 5,
+        "DLY": 19,
+        "DMG": 12,
+        "HP": 50,
+        "STR": 5
+      },
+      "stats_plus10": {
+        "AGI": 15.0,
+        "DEX": 15.0,
+        "DLY": 19.0,
+        "DMG": 24,
+        "HP": 100.0,
+        "STR": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/thornstinger/",
+      "weapon_compare": "dual_wield",
+      "why": "DW main score 3.0762 (main 2.2147 + off 0.8614) >= 2H Blackened Alloy Bastard Sword 2.0297; eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈201 @L40 (assumption: no skill table in decoded data; monk-style high-skill default)",
+      "why_ui": "Best dual-wield pair",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: Master Yael",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Serpent's Tooth",
+          "name": "Serpent's Tooth",
+          "quest_source": "The Hole: Master Yael",
+          "ratio_at_upgrade": 0.7037,
+          "ratio_plus10": 0.963,
+          "score": 7037.0,
+          "stats_at_upgrade": {
+            "DLY": 27.0,
+            "DMG": 19.0,
+            "STR": 8.0
+          },
+          "stats_plus0": {
+            "DLY": 27,
+            "DMG": 13,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "DLY": 27.0,
+            "DMG": 26,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/serpents-tooth/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Hate: Avatar of Abhorrence",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Vexthorne",
+          "name": "Vexthorne",
+          "quest_source": "Plane of Hate: Avatar of Abhorrence",
+          "ratio_at_upgrade": 0.6842,
+          "ratio_plus10": 0.9474,
+          "score": 6842.0,
+          "stats_at_upgrade": {
+            "DLY": 19.0,
+            "DMG": 13.0
+          },
+          "stats_plus0": {
+            "DLY": 19,
+            "DMG": 9
+          },
+          "stats_plus10": {
+            "DLY": 19.0,
+            "DMG": 18
+          },
+          "url": "https://eqlegendstools.com/items/vexthorne/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Fear: a dracoliche; Plane of Fear: Fright",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bone Razor",
+          "name": "Bone Razor",
+          "quest_source": "Plane of Fear: a dracoliche; Plane of Fear: Fright",
+          "ratio_at_upgrade": 0.6818,
+          "ratio_plus10": 0.9091,
+          "score": 6818.0,
+          "stats_at_upgrade": {
+            "DLY": 22.0,
+            "DMG": 15.0
+          },
+          "stats_plus0": {
+            "DLY": 22,
+            "DMG": 10
+          },
+          "stats_plus10": {
+            "DLY": 22.0,
+            "DMG": 20
+          },
+          "url": "https://eqlegendstools.com/items/bone-razor/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Fear"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Hate: Mistress of Scorn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Dawnchaser",
+          "name": "Dawnchaser",
+          "quest_source": "Plane of Hate: Mistress of Scorn",
+          "ratio_at_upgrade": 0.64,
+          "ratio_plus10": 0.88,
+          "score": 6400.0,
+          "stats_at_upgrade": {
+            "DLY": 25.0,
+            "DMG": 16.0
+          },
+          "stats_plus0": {
+            "DLY": 25,
+            "DMG": 11
+          },
+          "stats_plus10": {
+            "DLY": 25.0,
+            "DMG": 22
+          },
+          "url": "https://eqlegendstools.com/items/dawnchaser/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Hate: Maestro of Rancor",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Evensong",
+          "name": "Evensong",
+          "quest_source": "Plane of Hate: Maestro of Rancor",
+          "ratio_at_upgrade": 0.64,
+          "ratio_plus10": 0.88,
+          "score": 6400.0,
+          "stats_at_upgrade": {
+            "DLY": 25.0,
+            "DMG": 16.0
+          },
+          "stats_plus0": {
+            "DLY": 25,
+            "DMG": 11
+          },
+          "stats_plus10": {
+            "DLY": 25.0,
+            "DMG": 22
+          },
+          "url": "https://eqlegendstools.com/items/evensong/",
+          "why": "best ratio @+5",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Ranger",
+      "damage_score": 0.8614,
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Arydryidriyorn",
+      "is_weapon": true,
+      "name": "Arydryidriyorn",
+      "priority_value": 0.8614285714285713,
+      "quest_source": "Ranger Test of The Blade",
+      "ratio_at_upgrade": 0.8571,
+      "ratio_plus10": 1.1429,
+      "score": 0.8614,
+      "slot": "SECONDARY",
+      "stats_at_upgrade": {
+        "DLY": 21.0,
+        "DMG": 18.0,
+        "HP": 75.0,
+        "STR": 13.0,
+        "WIS": 13.0
+      },
+      "stats_plus0": {
+        "DLY": 21,
+        "DMG": 12,
+        "HP": 50,
+        "STR": 8,
+        "WIS": 8
+      },
+      "stats_plus10": {
+        "DLY": 21.0,
+        "DMG": 24,
+        "HP": 100.0,
+        "STR": 18.0,
+        "WIS": 18.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/arydryidriyorn/",
+      "weapon_compare": "dual_wield",
+      "why": "DW offhand with Thornstinger (pair score 3.0762, DWChance 50.25%); eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈201 @L40 (assumption: no skill table in decoded data; monk-style high-skill default)",
+      "why_ui": "Dual-wield offhand",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: a rock golem",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bow of the Underfoot",
+          "name": "Bow of the Underfoot",
+          "quest_source": "The Hole: a rock golem",
+          "ratio_at_upgrade": 0.8167,
+          "ratio_plus10": 1.1,
+          "score": 11022.92,
+          "stats_at_upgrade": {
+            "DEX": 9.0,
+            "DLY": 60.0,
+            "DMG": 49.0,
+            "STR": 9.0,
+            "SVC": 15.0
+          },
+          "stats_plus0": {
+            "DEX": 4,
+            "DLY": 60,
+            "DMG": 33,
+            "STR": 4,
+            "SVC": 10
+          },
+          "stats_plus10": {
+            "DEX": 14.0,
+            "DLY": 60.0,
+            "DMG": 66,
+            "STR": 14.0,
+            "SVC": 20.0
+          },
+          "url": "https://eqlegendstools.com/items/bow-of-the-underfoot/",
+          "why": "AI choice (best ratio)",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Everfrost Peaks: an ice giant; Nagafen's Lair: fire giant warrior; Nagafen's Lair: King Tranix; Nagafen's Lair: Warlord Skarlon; Permafrost: a priest of Nagafen; Permafrost: an ice giant diplomat; Permafrost: an ice giant magus",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Throwing Boulder",
+          "name": "Throwing Boulder",
+          "quest_source": "Everfrost Peaks: an ice giant; Nagafen's Lair: fire giant warrior, King Tranix, Warlord Skarlon; Permafrost: a priest of Nagafen, an ice giant diplomat, an ice giant magus",
+          "ratio_at_upgrade": 0.7714,
+          "ratio_plus10": 1.0286,
+          "score": 10286.0,
+          "stats_at_upgrade": {
+            "DLY": 35.0,
+            "DMG": 27.0
+          },
+          "stats_plus0": {
+            "DLY": 35,
+            "DMG": 18
+          },
+          "stats_plus10": {
+            "DLY": 35.0,
+            "DMG": 36
+          },
+          "url": "https://eqlegendstools.com/items/throwing-boulder/",
+          "why": "AI choice (best ratio)",
+          "why_ui": "",
+          "zone": "Everfrost Peaks, Nagafen's Lair, Permafrost"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Southern Karana: Coloth Meadowgreen; Southern Karana: Kroldir Thunderhoof",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Runed Oak Bow",
+          "name": "Runed Oak Bow",
+          "quest_source": "Southern Karana: Coloth Meadowgreen; Southern Karana: Kroldir Thunderhoof",
+          "ratio_at_upgrade": 0.7209,
+          "ratio_plus10": 0.9767,
+          "score": 9767.0,
+          "stats_at_upgrade": {
+            "DLY": 43.0,
+            "DMG": 31.0
+          },
+          "stats_plus0": {
+            "DLY": 43,
+            "DMG": 21
+          },
+          "stats_plus10": {
+            "DLY": 43.0,
+            "DMG": 42
+          },
+          "url": "https://eqlegendstools.com/items/runed-oak-bow/",
+          "why": "AI choice (best ratio)",
+          "why_ui": "",
+          "zone": "Southern Karana"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shaped Darkwood Compound Bow",
+          "name": "Shaped Darkwood Compound Bow",
+          "quest_source": "Player Crafted: Fletching",
+          "ratio_at_upgrade": 0.6829,
+          "ratio_plus10": 0.9268,
+          "score": 9268.0,
+          "stats_at_upgrade": {
+            "DLY": 41.0,
+            "DMG": 28.0
+          },
+          "stats_plus0": {
+            "DLY": 41,
+            "DMG": 19
+          },
+          "stats_plus10": {
+            "DLY": 41.0,
+            "DMG": 38
+          },
+          "url": "https://eqlegendstools.com/items/shaped-darkwood-compound-bow/",
+          "why": "AI choice (best ratio)",
+          "why_ui": "",
+          "zone": "Fletching"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Rain Caller",
+          "name": "Rain Caller",
+          "quest_source": "Rain Caller Quest",
+          "ratio_at_upgrade": 0.6667,
+          "ratio_plus10": 0.8889,
+          "score": 8909.48,
+          "stats_at_upgrade": {
+            "DEX": 11.0,
+            "DLY": 45.0,
+            "DMG": 30.0,
+            "STR": 11.0
+          },
+          "stats_plus0": {
+            "DEX": 6,
+            "DLY": 45,
+            "DMG": 20,
+            "STR": 6
+          },
+          "stats_plus10": {
+            "DEX": 16.0,
+            "DLY": 45.0,
+            "DMG": 40,
+            "STR": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/rain-caller/",
+          "why": "AI choice (best ratio)",
+          "why_ui": "",
+          "zone": "Rain Caller Quest"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Ranger",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Windstriker",
+      "is_weapon": true,
+      "name": "Windstriker",
+      "priority_value": 245.5,
+      "quest_source": "Ranger Test of Ranged Attack",
+      "ratio_at_upgrade": 1.1167,
+      "ratio_plus10": 1.5,
+      "score": 15055.825,
+      "slot": "RANGE",
+      "stats_at_upgrade": {
+        "AGI": 10.0,
+        "DEX": 10.0,
+        "DLY": 60.0,
+        "DMG": 67.0,
+        "HP": 75.0,
+        "STR": 10.0
+      },
+      "stats_plus0": {
+        "AGI": 5,
+        "DEX": 5,
+        "DLY": 60,
+        "DMG": 45,
+        "HP": 50,
+        "STR": 5
+      },
+      "stats_plus10": {
+        "AGI": 15.0,
+        "DEX": 15.0,
+        "DLY": 60.0,
+        "DMG": 90,
+        "HP": 100.0,
+        "STR": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/windstriker/",
+      "why": "AI choice (best ratio); past AC softcap",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Class 6 Steel Silver Tip Arrow",
+          "name": "Class 6 Steel Silver Tip Arrow",
+          "quest_source": "Player Crafted: Fletching (202 trivial)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 0.0,
+          "stats_at_upgrade": {
+            "DMG": 12.0
+          },
+          "stats_plus0": {
+            "DMG": 8
+          },
+          "stats_plus10": {
+            "DMG": 16
+          },
+          "url": "https://eqlegendstools.com/items/class-6-steel-silver-tip-arrow/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Fletching"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "a cloaked dhampyre",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Fleeting Memory",
+          "name": "Fleeting Memory",
+          "quest_source": "Drops From: Mistmoore Castle: a cloaked dhampyre",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 0.0,
+          "stats_at_upgrade": {
+            "COLD_DMG": 1.0,
+            "DMG": 10.0
+          },
+          "stats_plus0": {
+            "COLD_DMG": 1,
+            "DMG": 7
+          },
+          "stats_plus10": {
+            "COLD_DMG": 1,
+            "DMG": 14
+          },
+          "url": "https://eqlegendstools.com/items/fleeting-memory/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "Shellara Ebbhunter",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Gloomwater Arrow",
+          "name": "Gloomwater Arrow",
+          "quest_source": "Drops From: Kedge Keep: Shellara Ebbhunter",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 0.0,
+          "stats_at_upgrade": {
+            "DMG": 15.0
+          },
+          "stats_plus0": {
+            "DMG": 10
+          },
+          "stats_plus10": {
+            "DMG": 20
+          },
+          "url": "https://eqlegendstools.com/items/gloomwater-arrow/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Kedge Keep"
+        },
+        {
+          "bis_overlap": 2,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Steel Guardian Arrows",
+          "name": "Steel Guardian Arrows",
+          "quest_source": "Player Crafted: Fletching (335 trivial)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 0.0,
+          "stats_at_upgrade": {
+            "COLD_DMG": 3.0,
+            "DMG": 16.0
+          },
+          "stats_plus0": {
+            "COLD_DMG": 3,
+            "DMG": 11
+          },
+          "stats_plus10": {
+            "COLD_DMG": 3,
+            "DMG": 22
+          },
+          "url": "https://eqlegendstools.com/items/steel-guardian-arrows/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Fletching"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Blessed Champion Arrows",
+          "name": "Blessed Champion Arrows",
+          "quest_source": "Player Crafted: Fletching (335 trivial)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 0.0,
+          "stats_at_upgrade": {
+            "DMG": 16.0,
+            "FIRE_DMG": 4.0
+          },
+          "stats_plus0": {
+            "DMG": 11,
+            "FIRE_DMG": 4
+          },
+          "stats_plus10": {
+            "DMG": 22,
+            "FIRE_DMG": 4
+          },
+          "url": "https://eqlegendstools.com/items/blessed-champion-arrows/",
+          "why": "AI choice for Rogue/Ranger/Bard",
+          "why_ui": "",
+          "zone": "Fletching"
+        }
+      ],
+      "bis_overlap": 2,
+      "classes_str": "Warrior, Paladin, Ranger, Rogue",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Blessed Guardian Arrows",
+      "is_weapon": false,
+      "name": "Blessed Guardian Arrows",
+      "priority_value": 0.0,
+      "quest_source": "Player Crafted: Fletching (335 trivial)",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 0.0,
+      "slot": "AMMO",
+      "stats_at_upgrade": {
+        "COLD_DMG": 4.0,
+        "DMG": 16.0
+      },
+      "stats_plus0": {
+        "COLD_DMG": 4,
+        "DMG": 11
+      },
+      "stats_plus10": {
+        "COLD_DMG": 4,
+        "DMG": 22
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/blessed-guardian-arrows/",
+      "why": "AI choice for Rogue/Ranger/Bard; past AC softcap",
+      "why_ui": "",
+      "zone": "Fletching"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Chestplate",
+          "name": "Woven Shadow Chestplate",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 486.2,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "AGI": 19.0,
+            "DEX": 19.0,
+            "STR": 19.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "AGI": 13,
+            "DEX": 13,
+            "STR": 13
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "AGI": 26,
+            "DEX": 26,
+            "STR": 26
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-chestplate/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brewer's Mesh Cloak",
+          "name": "Brewer's Mesh Cloak",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 464.0,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "END": 82.0,
+            "HP": 75.0,
+            "MANA": 75.0,
+            "STR": 18.0,
+            "WIS": 18.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "END": 55,
+            "HP": 50,
+            "MANA": 50,
+            "STR": 12,
+            "WIS": 12
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "END": 110,
+            "HP": 100,
+            "MANA": 100,
+            "STR": 24,
+            "WIS": 24
+          },
+          "url": "https://eqlegendstools.com/items/brewers-mesh-cloak/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Engineer's Ring",
+          "name": "Engineer's Ring",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 453.5,
+          "stats_at_upgrade": {
+            "AC": 30.0,
+            "AGI": 10.0,
+            "CHA": 10.0,
+            "DEX": 10.0,
+            "END": 30.0,
+            "HP": 10.0,
+            "INT": 10.0,
+            "MANA": 30.0,
+            "STA": 10.0,
+            "STR": 10.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 20,
+            "AGI": 5,
+            "CHA": 5,
+            "DEX": 5,
+            "END": 20,
+            "HP": 5,
+            "INT": 5,
+            "MANA": 20,
+            "STA": 5,
+            "STR": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 40,
+            "AGI": 15.0,
+            "CHA": 15.0,
+            "DEX": 15.0,
+            "END": 40,
+            "HP": 15.0,
+            "INT": 15.0,
+            "MANA": 40,
+            "STA": 15.0,
+            "STR": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/engineers-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Imbrued Platemail Breastplate",
+          "name": "Imbrued Platemail Breastplate",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 453.2,
+          "stats_at_upgrade": {
+            "AC": 43.0,
+            "CHA": 14.0,
+            "DEX": 19.0,
+            "STR": 14.0,
+            "SVD": 15.0
+          },
+          "stats_plus0": {
+            "AC": 29,
+            "CHA": 9,
+            "DEX": 13,
+            "STR": 9,
+            "SVD": 10
+          },
+          "stats_plus10": {
+            "AC": 58,
+            "CHA": 19.0,
+            "DEX": 26,
+            "STR": 19.0,
+            "SVD": 20
+          },
+          "url": "https://eqlegendstools.com/items/imbrued-platemail-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a glare lord, a tentacle tormentor, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Breastplate",
+          "name": "Lustrous Russet Breastplate",
+          "quest_source": "Drops From: Plane of Fear: a glare lord, a tentacle tormentor; Plane of Hate: haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 450.0,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "DEX": 22.0,
+            "STA": 22.0,
+            "STR": 22.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "DEX": 15,
+            "STA": 15,
+            "STR": 15
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "DEX": 30,
+            "STA": 30,
+            "STR": 30
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard, Cleric, Druid, Enchanter, Magician, Necromancer, Shaman, Wizard",
+      "drops_mobs": "Dracoliche, Fright, Dread",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Bone-Clasped Girdle",
+      "is_weapon": false,
+      "name": "Bone-Clasped Girdle",
+      "priority_value": 515.4,
+      "quest_source": "Drops From: Plane of Fear: Dracoliche, Fright, Dread",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 515.4,
+      "slot": "ANY1",
+      "stats_at_upgrade": {
+        "AC": 9.0,
+        "DEX": 12.0,
+        "HP": 112.0,
+        "MANA": 112.0,
+        "STA": 12.0,
+        "STR": 12.0
+      },
+      "stats_plus0": {
+        "AC": 4,
+        "DEX": 7,
+        "HP": 75,
+        "MANA": 75,
+        "STA": 7,
+        "STR": 7
+      },
+      "stats_plus10": {
+        "AC": 14.0,
+        "DEX": 17.0,
+        "HP": 150,
+        "MANA": 150,
+        "STA": 17.0,
+        "STR": 17.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/bone-clasped-girdle/",
+      "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+      "why_ui": "",
+      "zone": "Plane of Fear"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Dracoliche, Fright, Dread",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bone-Clasped Girdle",
+          "name": "Bone-Clasped Girdle",
+          "quest_source": "Drops From: Plane of Fear: Dracoliche, Fright, Dread",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 515.4,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "DEX": 12.0,
+            "HP": 112.0,
+            "MANA": 112.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "DEX": 7,
+            "HP": 75,
+            "MANA": 75,
+            "STA": 7,
+            "STR": 7
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "DEX": 17.0,
+            "HP": 150,
+            "MANA": 150,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/bone-clasped-girdle/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Woven Shadow Chestplate",
+          "name": "Woven Shadow Chestplate",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 486.2,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "AGI": 19.0,
+            "DEX": 19.0,
+            "STR": 19.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "AGI": 13,
+            "DEX": 13,
+            "STR": 13
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "AGI": 26,
+            "DEX": 26,
+            "STR": 26
+          },
+          "url": "https://eqlegendstools.com/items/woven-shadow-chestplate/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brewer's Mesh Cloak",
+          "name": "Brewer's Mesh Cloak",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 464.0,
+          "stats_at_upgrade": {
+            "AC": 19.0,
+            "END": 82.0,
+            "HP": 75.0,
+            "MANA": 75.0,
+            "STR": 18.0,
+            "WIS": 18.0
+          },
+          "stats_plus0": {
+            "AC": 13,
+            "END": 55,
+            "HP": 50,
+            "MANA": 50,
+            "STR": 12,
+            "WIS": 12
+          },
+          "stats_plus10": {
+            "AC": 26,
+            "END": 110,
+            "HP": 100,
+            "MANA": 100,
+            "STR": 24,
+            "WIS": 24
+          },
+          "url": "https://eqlegendstools.com/items/brewers-mesh-cloak/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Engineer's Ring",
+          "name": "Engineer's Ring",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 453.5,
+          "stats_at_upgrade": {
+            "AC": 30.0,
+            "AGI": 10.0,
+            "CHA": 10.0,
+            "DEX": 10.0,
+            "END": 30.0,
+            "HP": 10.0,
+            "INT": 10.0,
+            "MANA": 30.0,
+            "STA": 10.0,
+            "STR": 10.0,
+            "WIS": 10.0
+          },
+          "stats_plus0": {
+            "AC": 20,
+            "AGI": 5,
+            "CHA": 5,
+            "DEX": 5,
+            "END": 20,
+            "HP": 5,
+            "INT": 5,
+            "MANA": 20,
+            "STA": 5,
+            "STR": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 40,
+            "AGI": 15.0,
+            "CHA": 15.0,
+            "DEX": 15.0,
+            "END": 40,
+            "HP": 15.0,
+            "INT": 15.0,
+            "MANA": 40,
+            "STA": 15.0,
+            "STR": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/engineers-ring/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 3,
+          "drops_mobs": "a glare lord, a tentacle tormentor, haunted chest",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lustrous Russet Breastplate",
+          "name": "Lustrous Russet Breastplate",
+          "quest_source": "Drops From: Plane of Fear: a glare lord, a tentacle tormentor; Plane of Hate: haunted chest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 450.0,
+          "stats_at_upgrade": {
+            "AC": 39.0,
+            "DEX": 22.0,
+            "STA": 22.0,
+            "STR": 22.0
+          },
+          "stats_plus0": {
+            "AC": 26,
+            "DEX": 15,
+            "STA": 15,
+            "STR": 15
+          },
+          "stats_plus10": {
+            "AC": 52,
+            "DEX": 30,
+            "STA": 30,
+            "STR": 30
+          },
+          "url": "https://eqlegendstools.com/items/lustrous-russet-breastplate/",
+          "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard",
+      "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Imbrued Platemail Breastplate",
+      "is_weapon": false,
+      "name": "Imbrued Platemail Breastplate",
+      "priority_value": 453.2,
+      "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 453.2,
+      "slot": "ANY2",
+      "stats_at_upgrade": {
+        "AC": 43.0,
+        "CHA": 14.0,
+        "DEX": 19.0,
+        "STR": 14.0,
+        "SVD": 15.0
+      },
+      "stats_plus0": {
+        "AC": 29,
+        "CHA": 9,
+        "DEX": 13,
+        "STR": 9,
+        "SVD": 10
+      },
+      "stats_plus10": {
+        "AC": 58,
+        "CHA": 19.0,
+        "DEX": 26,
+        "STR": 19.0,
+        "SVD": 20
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/imbrued-platemail-breastplate/",
+      "why": "AI choice for Rogue/Ranger/Bard; any-slot (no DMG)",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    }
+  ],
+  "tertiary_stats": [],
+  "upgrade": 5,
+  "weapon_pool_size": 424,
+  "weapon_rule": "PRIMARY/SECONDARY: any selected class can dual wield → compare best 1H+1H dual-wield pair vs best 2H using eqlwiki Game_Mechanics working Legends expected-damage model (L=40; DWChance=Skill/400, skill≈201). RANGE when Prefer ranged: ratio-only. Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
+}

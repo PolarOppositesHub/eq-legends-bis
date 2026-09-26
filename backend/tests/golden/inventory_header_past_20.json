@@ -1,0 +1,100 @@
+{
+  "all_items": [
+    {
+      "base_name": "Name",
+      "catalog_source": null,
+      "count": "Count",
+      "has_stats": false,
+      "id": "ID",
+      "in_catalog": false,
+      "location": "Location",
+      "name": "Name",
+      "planner_slot": null,
+      "reason": "unknown location",
+      "slots": "Slots",
+      "unmatched": true,
+      "upgrade_from_name": null
+    },
+    {
+      "base_name": "Cloak of Flames",
+      "catalog_source": "tools",
+      "count": "1",
+      "has_stats": true,
+      "id": "1",
+      "in_catalog": true,
+      "location": "Head",
+      "name": "Cloak of Flames",
+      "planner_slot": "HEAD",
+      "reason": null,
+      "slots": "10",
+      "unmatched": false,
+      "upgrade_from_name": null
+    }
+  ],
+  "catalog_coverage": {
+    "eqlwiki_names": 11820,
+    "index_path": "eqlwiki_item_names.json",
+    "note": "Item Search covers tools stats plus every eqlwiki item name (equipable and non-equipable). Stats come from decoded data or the wiki page only.",
+    "search_catalog": 11828,
+    "tools_items": 940
+  },
+  "equipment": {
+    "HEAD": "Cloak of Flames"
+  },
+  "note": "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). Every line is retained in all_items. Names match eqlegendstools BiS data and/or eqlwiki Category:Items (wiki matches do not invent stats). Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items.",
+  "skipped": [
+    {
+      "base_name": "Name",
+      "catalog_source": null,
+      "count": "Count",
+      "has_stats": false,
+      "id": "ID",
+      "in_catalog": false,
+      "location": "Location",
+      "name": "Name",
+      "planner_slot": null,
+      "reason": "unknown location",
+      "slots": "Slots",
+      "unmatched": true,
+      "upgrade_from_name": null
+    }
+  ],
+  "skipped_count": 1,
+  "unmatched": [
+    {
+      "base_name": "Name",
+      "catalog_source": null,
+      "count": "Count",
+      "has_stats": false,
+      "id": "ID",
+      "in_catalog": false,
+      "location": "Location",
+      "name": "Name",
+      "planner_slot": null,
+      "reason": "unknown location",
+      "slots": "Slots",
+      "unmatched": true,
+      "upgrade_from_name": null
+    }
+  ],
+  "unmatched_count": 1,
+  "upgrade_hints": {},
+  "warnings": [],
+  "worn": [
+    {
+      "base_name": "Cloak of Flames",
+      "catalog_source": "tools",
+      "count": "1",
+      "has_stats": true,
+      "id": "1",
+      "in_catalog": true,
+      "location": "Head",
+      "name": "Cloak of Flames",
+      "planner_slot": "HEAD",
+      "reason": null,
+      "slots": "10",
+      "unmatched": false,
+      "upgrade_from_name": null
+    }
+  ]
+}

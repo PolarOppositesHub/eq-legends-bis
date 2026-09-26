@@ -1,0 +1,85 @@
+{
+  "items": [
+    {
+      "name": "Cloak of Flames",
+      "scaled": {
+        "0": {
+          "AC": 10.0,
+          "AGI": 9.0,
+          "DEX": 9.0,
+          "HP": 50.0,
+          "Haste": 36.0,
+          "SVF": 15.0
+        },
+        "10": {
+          "AC": 20.0,
+          "AGI": 19.0,
+          "DEX": 19.0,
+          "HP": 100.0,
+          "Haste": 46.0,
+          "SVF": 30.0
+        },
+        "5": {
+          "AC": 15.0,
+          "AGI": 14.0,
+          "DEX": 14.0,
+          "HP": 75.0,
+          "Haste": 41.0,
+          "SVF": 22.0
+        }
+      },
+      "slot": "BACK",
+      "stats_plus0": {
+        "AC": 10,
+        "AGI": 9,
+        "DEX": 9,
+        "HP": 50,
+        "Haste": 36,
+        "SVF": 15
+      },
+      "stats_plus10_haste": 36
+    },
+    {
+      "name": "Flowing Black Silk Sash",
+      "scaled": {
+        "0": {
+          "Haste": 21.0
+        },
+        "10": {
+          "Haste": 31.0
+        },
+        "5": {
+          "Haste": 26.0
+        }
+      },
+      "slot": "WAIST",
+      "stats_plus0": {
+        "Haste": 21
+      },
+      "stats_plus10_haste": 21
+    },
+    {
+      "name": "Blued Two-Handed Hammer",
+      "scaled": {
+        "0": {
+          "DLY": 44.0,
+          "DMG": 21.0
+        },
+        "10": {
+          "DLY": 44.0,
+          "DMG": 42.0
+        },
+        "5": {
+          "DLY": 44.0,
+          "DMG": 31.0
+        }
+      },
+      "slot": "PRIMARY",
+      "stats_plus0": {
+        "DLY": 44,
+        "DMG": 21
+      },
+      "stats_plus10_haste": null
+    }
+  ]
+}
