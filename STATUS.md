@@ -1,6 +1,10 @@
 # EQ Legends BiS app status
 
-Version: **1.0.21** — UX batch PR #27 (Upgrade Priority +N labels, Item Search slider, Quest Hub CatalogItemName, splash fade). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.0.22** — PR #28 (Item Search full stats + first-click detail panel, eqlwiki open confirm, worn Haste scales as tooltip base + upgrade tier). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.0.22
+- Merged PR #28 Item Search expand + eqlwiki confirm + haste scaling.
+- Version bump across package.json + version.py sources.
 
 ## 1.0.21
 - Merged PR #27 UX batch.
