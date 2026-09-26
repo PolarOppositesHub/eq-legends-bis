@@ -1,6 +1,20 @@
 # Next build notes
 
-**Shipped as 1.1.0 (PRs #32 + #33 + #34 merged).** Updater untouched. Never invent item stats.
+**Shipped as 1.1.1 (PRs #36 + #37 + #38 + #39 + #40 + #41 merged).** Updater untouched. Never invent item stats.
+
+## 1.1.1 — Parser depth, quest links, fight history, seal icon
+- [x] PR #36: Each fight keeps a breakdown of damage by attack and spell, healing, what hit you, deaths, resists, and procs. After updating, the app automatically rebuilds the existing 1.1.0 parse from the log, so there is nothing to redo. The EQ folder, settings, and pet assignments stay.
+- [x] PR #37: Item Search quest names that said "not in Quest Hub" now open the quest. Woven Skull Cap shows Wizard Test of Focus.
+- [x] PR #38: Fight history is saved and kept across restarts. It keeps everything by default. A full, long log is about 64 MB. The Parser tab can clear history for one character (Clear this character) and leaves the others.
+- [x] PR #39: The Parser tab tracks pets and your group. A pet prompt waits until you confirm it. Limit a fight to Self, Group, Pets, or All. Clearing fight history does not forget who a pet belongs to.
+- [x] PR #40: The desktop and Start Menu icons refresh to the dragon-eye seal on install and update.
+- [x] PR #41: Open a name to see each attack and spell. A fight has a damage-over-time timeline and Healing, Tanking, Deaths, Resists, and Loot tabs. Select fights and merge them. Copy the parse as text or TSV, or save CSV and HTML. Browse older fights in the history list.
+- [x] Versions **1.1.1**
+- [ ] Josh spot-check in the installed app.
+
+---
+
+**1.1.0 shipped (PRs #32 + #33 + #34 merged).**
 
 ## 1.1.0 — Parser tab, What's new, Credits
 - [x] PR #32: automated safety-net tests (protect-existing harness + CI on Ubuntu and Windows).
