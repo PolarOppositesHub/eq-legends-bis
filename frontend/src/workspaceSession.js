@@ -9,7 +9,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'bags', 'quests', 'mobs', 'search']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'bags', 'quests', 'mobs', 'search', 'parser']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -134,6 +134,10 @@ export function defaultWorkspace(catalog) {
     selectedBuildId: '',
     importMeta: null,
     uiSettings: null,
+    parserLogPath: '',
+    parserMergePets: true,
+    parserFightId: null,
+    whatsNewSeen: '',
   }
 }
 
@@ -224,6 +228,29 @@ function pickNameMap(value, slots, itemExists) {
 
 function pickEnum(value, allowed, fallback) {
   return typeof value === 'string' && allowed.includes(value) ? value : fallback
+}
+
+function pickParserLogPath(value) {
+  if (typeof value !== 'string') return ''
+  const path = value.trim()
+  if (!path || path.length > 1024) return ''
+  if (/[\u0000-\u001f]/.test(path)) return ''
+  return path
+}
+
+function pickParserFightId(value) {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1 || n > 1e15) return null
+  return n
+}
+
+/** Release id such as 1.1.0. Future ids stay so a newer session still loads. */
+function pickWhatsNewSeen(value) {
+  if (typeof value !== 'string') return ''
+  const id = value.trim()
+  if (!/^[0-9]{1,4}(?:\.[0-9]{1,4}){1,3}$/.test(id)) return ''
+  return id
 }
 
 function sanitizeUiSettings(raw) {
@@ -369,6 +396,10 @@ export function sanitizeWorkspace(raw, catalog) {
       selectedBuildId: pickText(raw.selectedBuildId, 80),
       importMeta: sanitizeImportMeta(raw.importMeta, slots, itemExists),
       uiSettings: sanitizeUiSettings(raw.uiSettings),
+      parserLogPath: pickParserLogPath(raw.parserLogPath),
+      parserMergePets: pickBool(raw.parserMergePets, true),
+      parserFightId: pickParserFightId(raw.parserFightId),
+      whatsNewSeen: pickWhatsNewSeen(raw.whatsNewSeen),
     }
     return { restored: true, state }
   } catch (_) {

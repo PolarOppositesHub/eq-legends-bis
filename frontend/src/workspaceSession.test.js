@@ -306,4 +306,50 @@ test('future keys do not break loading the current session', () => {
   assert.equal(state.parserSettings, undefined)
   assert.equal(state.currencies, undefined)
   assert.equal(state.overlay, undefined)
+  assert.equal(state.parserLogPath, '')
+  assert.equal(state.parserMergePets, true)
+  assert.equal(state.parserFightId, null)
+  assert.equal(state.whatsNewSeen, '')
+})
+
+test('parser tab stays active across a session restore', async () => {
+  const storage = memoryStorage()
+  const env = { getDesktop: () => null, storage: () => storage }
+  const snap = buildWorkspaceSnapshot({
+    tab: 'parser',
+    classes: ['Monk', 'Wizard', 'Cleric'],
+    race: 'Dark Elf',
+    characterLevel: 42,
+    parserLogPath: 'C:\\Users\\Public\\Daybreak Game Company\\Installed Games\\EverQuest Legends\\Logs\\eqlog_Zasariz_qeynos.txt',
+    parserMergePets: false,
+    parserFightId: 12,
+    whatsNewSeen: '1.1.0',
+    parserSettings: { live: true },
+    currencies: { motes: 4 },
+  }, catalog)
+  assert.equal(snap.tab, 'parser')
+  assert.equal(snap.parserMergePets, false)
+  assert.equal(snap.parserFightId, 12)
+  assert.equal(snap.whatsNewSeen, '1.1.0')
+  assert.match(snap.parserLogPath, /eqlog_Zasariz_qeynos\.txt$/)
+  assert.equal(snap.parserSettings, undefined)
+  assert.equal(snap.currencies, undefined)
+  const saved = await saveWorkspaceSession(snap, env)
+  assert.equal(saved.ok, true)
+  const loaded = await loadWorkspaceSession(env)
+  const again = sanitizeWorkspace(loaded, catalog)
+  assert.equal(again.restored, true)
+  assert.equal(again.state.tab, 'parser')
+  assert.deepEqual(again.state.classes, ['Monk', 'Wizard', 'Cleric'])
+  assert.equal(again.state.race, 'Dark Elf')
+  assert.equal(again.state.characterLevel, 42)
+  assert.equal(again.state.parserMergePets, false)
+  assert.equal(again.state.parserFightId, 12)
+  assert.equal(again.state.parserLogPath, snap.parserLogPath)
+  assert.equal(again.state.whatsNewSeen, '1.1.0')
+  assert.equal(again.state.parserSettings, undefined)
+  assert.equal(again.state.currencies, undefined)
+  const junk = sanitizeWorkspace({ v: 1, tab: 'parser', whatsNewSeen: 'nope' }, catalog)
+  assert.equal(junk.state.tab, 'parser')
+  assert.equal(junk.state.whatsNewSeen, '')
 })

@@ -143,12 +143,22 @@ export const APP_HELP = {
       ],
     },
     {
+      id: 'parser',
+      title: 'Parser',
+      body: [
+        'Pick a character log from the EQ install folder (Logs\\eqlog_name_server.txt). Live follows that file while you play. Load old log replays a file already on disk.',
+        'Fights list time, zone when the log recorded one, targets, duration, and total damage. Select a fight for DPS and SDPS for you, your pet, and your group.',
+        'Merge pets rolls a pet into its owner. Level follows the current 3-class loadout, so a later lower level after a class swap is kept.',
+        'If no log is found, type /log on in game, check the EQ install folder, and check chat filters. Filtered chat channels are not written to the log.',
+      ],
+    },
+    {
       id: 'settings',
       title: 'Settings (cog)',
       body: [
         'Change color theme, compact badges, reduced motion, and funny loading tips.',
         'Theme and display options save in this browser / desktop profile (localStorage).',
-        'The working session (tab, classes, race, level, filters, simulator gear, Item Search, and the other views) is restored on the next launch, including after a crash.',
+        'The working session (tab, classes, race, level, filters, simulator gear, Item Search, Parser log, and the other views) is restored on the next launch, including after a crash.',
         'On desktop that session is stored in the app profile, not the page origin, so a new API port or an installer update does not wipe it.',
         'Settings → Reset to defaults, then Start fresh, clears the remembered session. Saved builds and the EQ install folder stay.',
         'Desktop: Quit is in Settings and the side menu (window X and Alt+F4 still work; the File menu is hidden).',

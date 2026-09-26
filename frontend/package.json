@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/workspaceSession.test.js src/itemUpgradeStats.test.js"
+    "test": "node --import ./src/jsxRegister.js --test src/workspaceSession.test.js src/itemUpgradeStats.test.js src/parserTab.test.js"
   },
   "dependencies": {
     "react": "^18.3.1",

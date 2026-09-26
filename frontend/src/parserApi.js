@@ -1,0 +1,75 @@
+const BASE = ''
+
+async function req(path, opts = {}) {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  })
+  if (!res.ok) {
+    let detail = res.statusText
+    try {
+      const body = await res.json()
+      detail = body.detail || JSON.stringify(body)
+    } catch (_) {
+      /* keep status text */
+    }
+    const error = new Error(typeof detail === 'string' ? detail : 'Parser request failed')
+    error.status = res.status
+    throw error
+  }
+  return res.json()
+}
+
+export const getParserConfig = () => req('/api/parser/config')
+
+export const postParserConfig = (body) =>
+  req('/api/parser/config', { method: 'POST', body: JSON.stringify(body) })
+
+export const getParserLogs = () => req('/api/parser/logs')
+
+export const postParserLoad = (path) =>
+  req('/api/parser/load', { method: 'POST', body: JSON.stringify({ path }) })
+
+export const postParserLive = (body) =>
+  req('/api/parser/live', { method: 'POST', body: JSON.stringify(body) })
+
+export const getParserFights = (character) => {
+  const q = new URLSearchParams()
+  if (character) q.set('character', character)
+  const qs = q.toString()
+  return req(`/api/parser/fights${qs ? `?${qs}` : ''}`)
+}
+
+export const getParserFight = (id, mergePets) => {
+  const q = new URLSearchParams({ merge_pets: mergePets ? 'true' : 'false' })
+  return req(`/api/parser/fights/${encodeURIComponent(id)}?${q}`)
+}
+
+/** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
+export function openParserStream(handlers = {}) {
+  if (typeof EventSource === 'undefined') {
+    return { close() {} }
+  }
+  const source = new EventSource('/api/parser/stream')
+  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'message']
+  for (const type of types) {
+    source.addEventListener(type, (ev) => {
+      let data = null
+      try {
+        data = JSON.parse(ev.data)
+      } catch (_) {
+        data = null
+      }
+      const fn = handlers[type] || handlers.onEvent
+      if (typeof fn === 'function') fn(data, ev)
+    })
+  }
+  source.onerror = () => {
+    if (typeof handlers.onError === 'function') handlers.onError()
+  }
+  return {
+    close() {
+      source.close()
+    },
+  }
+}

@@ -93,6 +93,22 @@ test('round-trip keeps a full workspace, including unknown future keys', () => {
   });
 });
 
+test('parser tab session round-trips and keeps unknown future keys', () => {
+  const dir = tempUserData();
+  const session = {
+    v: 1,
+    tab: 'parser',
+    classes: ['Monk', 'Wizard', 'Cleric'],
+    parserLogPath: 'C:\\Games\\EverQuest Legends\\Logs\\eqlog_Zasariz_qeynos.txt',
+    parserMergePets: false,
+    parserFightId: 12,
+    currencies: { 'Void-Touched Potential': 1 },
+  };
+  writeWorkspaceSession(dir, session);
+  assert.deepEqual(readWorkspaceSession(dir), session);
+  assert.equal(readWorkspaceSession(dir).tab, 'parser');
+});
+
 test('non-objects are rejected and do not replace a good file', () => {
   const dir = tempUserData();
   writeWorkspaceSession(dir, { tab: 'quests' });
