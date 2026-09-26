@@ -147,7 +147,10 @@ export const APP_HELP = {
       title: 'Settings (cog)',
       body: [
         'Change color theme, compact badges, reduced motion, and funny loading tips.',
-        'Settings save in this browser / desktop profile (localStorage).',
+        'Theme and display options save in this browser / desktop profile (localStorage).',
+        'The working session (tab, classes, race, level, filters, simulator gear, Item Search, and the other views) is restored on the next launch, including after a crash.',
+        'On desktop that session is stored in the app profile, not the page origin, so a new API port or an installer update does not wipe it.',
+        'Settings → Reset to defaults, then Start fresh, clears the remembered session. Saved builds and the EQ install folder stay.',
         'Desktop: Quit is in Settings and the side menu (window X and Alt+F4 still work; the File menu is hidden).',
       ],
     },

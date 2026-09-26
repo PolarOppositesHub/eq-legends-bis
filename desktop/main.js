@@ -13,6 +13,7 @@ const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
+const workspaceStore = require('./workspaceSessionStore');
 
 let mainWindow = null;
 let apiProc = null;
@@ -250,6 +251,8 @@ function showMainUi() {
   if (appUiShown || !splashDone || !apiReady) return;
   if (!mainWindow || mainWindow.isDestroyed()) return;
   appUiShown = true;
+  // Origin is http://127.0.0.1:<port>/ and the port changes every launch, so
+  // localStorage does not survive relaunch. Working session is userData instead.
   mainWindow.loadURL(`http://127.0.0.1:${apiPort}/`).catch((e) => {
     console.error('[eq] load UI', e);
   });
@@ -563,6 +566,36 @@ ipcMain.handle('eq:settings-set', async (_evt, patch) => {
     lastInventoryName: next.lastInventoryName || '',
     lastInventoryMtimeMs: next.lastInventoryMtimeMs || null,
   };
+});
+
+function userDataDir() {
+  return app.getPath('userData');
+}
+
+ipcMain.handle('eq:workspace-get', async () => {
+  try {
+    return { ok: true, workspace: workspaceStore.readWorkspaceSession(userDataDir()) };
+  } catch (e) {
+    return { ok: false, workspace: null, message: String(e && e.message ? e.message : e) };
+  }
+});
+
+ipcMain.handle('eq:workspace-set', async (_evt, session) => {
+  try {
+    workspaceStore.writeWorkspaceSession(userDataDir(), session);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: String(e && e.message ? e.message : e) };
+  }
+});
+
+ipcMain.handle('eq:workspace-clear', async () => {
+  try {
+    workspaceStore.clearWorkspaceSession(userDataDir());
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: String(e && e.message ? e.message : e) };
+  }
 });
 
 ipcMain.handle('eq:pick-eq-install-folder', async () => {

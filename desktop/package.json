@@ -9,6 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "test": "node --test workspaceSessionStore.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis portable",
