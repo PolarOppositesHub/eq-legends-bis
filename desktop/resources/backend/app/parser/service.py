@@ -7,6 +7,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+from .breakdown import Breakdown
 from .classify import classify_log_line
 from .discover import (
     DEFAULT_EQ_INSTALL,
@@ -383,6 +384,7 @@ class ParserService:
             if fight is None:
                 return None
             source_rows = self.db.fight_source_rows(fight_id)
+            breakdown = Breakdown.from_state(self.db.breakdown_state(fight_id))
         start = _parse_iso(fight["start_ts"])
         end = _parse_iso(fight["end_ts"])
         seconds = MIN_SECONDS
@@ -412,6 +414,12 @@ class ParserService:
             row = agg.to_row(seconds)
             row["kind"] = agg.source_kind
             rows.append(row)
+        parts = breakdown.to_api(seconds)
+        by_source: dict[str, list] = {}
+        for ability in parts["abilities"]:
+            by_source.setdefault(ability["source"], []).append(ability)
+        for row in rows:
+            row["abilities"] = by_source.get(row["source"], [])
         if merge_pets:
             rows = merge_pet_rows(rows)
             recompute_sdps(rows, seconds)
@@ -419,6 +427,10 @@ class ParserService:
             rows.sort(key=lambda row: (-int(row["damage"]), row["source"]))
             for row in rows:
                 row["pets"] = []
+        for row in rows:
+            row.setdefault("abilities", [])
+            for pet in row.get("pets") or []:
+                pet.setdefault("abilities", [])
         friendly = {"self", "group", "pet"}
         outgoing = sum(int(row["damage"]) for row in rows if row["kind"] in friendly)
         incoming = sum(int(row["damage_taken"]) for row in rows if row["kind"] in friendly)
@@ -444,7 +456,23 @@ class ParserService:
                 "sdps": outgoing / seconds,
             },
             "sources": rows,
+            "abilities": parts["abilities"],
+            "healing": parts["healing"],
+            "tanking": parts["tanking"],
+            "deaths": parts["deaths"],
+            "resists": parts["resists"],
+            "procs": parts["procs"],
+            "multi_attack": parts["multi_attack"],
         }
+
+    def list_economy(self, character: str | None = None, limit: int = 500, offset: int = 0) -> dict:
+        """Loot, turn-in, and merge streams captured for the currencies ledger."""
+        with self.db.lock:
+            return {
+                "loot": self.db.list_loot(character, limit, offset),
+                "gives": self.db.list_gives(character, limit, offset),
+                "merges": self.db.list_merges(character, limit, offset),
+            }
 
     def set_pet_owner(self, character: str, pet: str, owner: str | None) -> dict:
         with self.db.lock:

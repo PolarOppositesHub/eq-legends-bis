@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from .breakdown import Breakdown, ability_name, modifier_is
 from .models import ParsedEvent
 from .sources import ActorContext, canonical_name, involve_friendly, is_you, normalize_article
 
@@ -123,6 +124,7 @@ class FightState:
     player_died: bool = False
     open: bool = True
     db_id: int | None = None
+    breakdown: Breakdown = field(default_factory=Breakdown)
 
     def seconds(self) -> float:
         if self.start_ts and self.end_ts:
@@ -197,6 +199,26 @@ def _crit(event: ParsedEvent) -> bool:
     )
 
 
+def _incoming_event(
+    event: ParsedEvent,
+    source: str | None,
+    target: str | None,
+    ability: str | None,
+    amount: int | None,
+    critical: bool,
+) -> dict:
+    return {
+        "ts": _iso(event.ts),
+        "kind": event.kind,
+        "source": source,
+        "target": target,
+        "amount": amount,
+        "ability": ability,
+        "avoidance": event.avoidance,
+        "critical": critical,
+    }
+
+
 class Segmenter:
     def __init__(self, character: str, idle_seconds: float = 30.0, on_roster=None, on_close=None) -> None:
         self.character = character
@@ -230,6 +252,7 @@ class Segmenter:
             return None
         if ts is not None:
             fight.touch(ts, None)
+        fight.breakdown.finalize()
         fight.open = False
         self.closed.append(fight)
         self.fight = None
@@ -274,6 +297,9 @@ class Segmenter:
 
         if event.kind in DAMAGE_KINDS and event.amount:
             return self._damage(event, offset)
+        if event.kind in MISS_KINDS and event.avoidance == "protected":
+            self._protected(event)
+            return None
         if event.kind in MISS_KINDS and event.avoidance != "protected":
             return self._miss(event, offset)
         if event.kind == "heal":
@@ -283,6 +309,25 @@ class Segmenter:
             return self._death(event, offset)
         if event.kind == "knockout" and self.fight and self.fight.open:
             self.fight.player_died = True
+            self.fight.breakdown.push_incoming(self.character, {
+                "ts": _iso(event.ts),
+                "kind": "knockout",
+                "source": None,
+                "target": self.character,
+                "amount": None,
+                "ability": None,
+                "avoidance": None,
+                "critical": False,
+            })
+            return None
+        if event.kind == "resist":
+            self._resist(event)
+        elif event.kind == "proc":
+            self._proc(event)
+        elif event.kind == "rune":
+            self._rune(event)
+        elif event.kind == "self_damage":
+            self._self_damage(event)
         return None
 
     def _apply_context(self, event: ParsedEvent, ts: datetime | None) -> None:
@@ -384,12 +429,23 @@ class Segmenter:
         if event.kind == "ds" and source is None and (self.fight is None or not self.fight.open):
             return None
         fight = self._ensure(event.ts, offset)
-        if source and event.amount:
-            fight.agg(source, source_kind, owner).add_damage(
-                int(event.amount), event.kind, _crit(event), event.ts
-            )
-        if target and target_kind in {"self", "group", "pet"} and event.amount:
-            fight.agg(target, target_kind, self.ctx.owner_of(target)).damage_taken += int(event.amount)
+        name = ability_name(event.kind, event.verb, event.spell)
+        crit = _crit(event)
+        amount = int(event.amount or 0)
+        if source and amount:
+            fight.agg(source, source_kind, owner).add_damage(amount, event.kind, crit, event.ts)
+            fight.breakdown.add_outgoing(source, event.kind, name, amount, crit)
+            if event.kind == "melee":
+                fight.breakdown.note_swing(
+                    source,
+                    event.ts,
+                    flurry=modifier_is(event.modifiers, "flurry"),
+                    riposte=modifier_is(event.modifiers, "riposte"),
+                )
+        if target and target_kind in {"self", "group", "pet"} and amount:
+            fight.agg(target, target_kind, self.ctx.owner_of(target)).damage_taken += amount
+            fight.breakdown.add_incoming(target, source, event.kind, name, amount)
+            fight.breakdown.push_incoming(target, _incoming_event(event, source, target, name, amount, crit))
         if source_kind in {"self", "group", "pet"} and target_kind == "npc":
             self._note_target(target, "npc")
         if target_kind in {"self", "group", "pet"} and source_kind == "npc":
@@ -407,8 +463,22 @@ class Segmenter:
             return None
         fight = self.fight
         fight.touch(event.ts, offset)
+        name = ability_name(event.kind, event.verb, event.spell)
         if source and source_kind in {"self", "group", "pet", "other"}:
             fight.agg(source, source_kind, owner).misses += 1
+            miss_category = "melee" if event.kind == "miss" else (event.damage_type or event.kind)
+            fight.breakdown.add_ability_miss(source, miss_category, name)
+        if event.kind == "miss" and source:
+            fight.breakdown.note_swing(
+                source,
+                event.ts,
+                flurry=modifier_is(event.modifiers, "flurry"),
+                riposte=modifier_is(event.modifiers, "riposte"),
+            )
+        if target and target_kind in {"self", "group", "pet"}:
+            if event.avoidance:
+                fight.breakdown.add_avoidance(target, event.avoidance)
+            fight.breakdown.push_incoming(target, _incoming_event(event, source, target, name, 0, False))
         fight.last_combat_ts = event.ts or fight.last_combat_ts
         return None
 
@@ -417,15 +487,24 @@ class Segmenter:
             return
         if self.gap_too_wide(event.ts):
             return
-        source, source_kind, owner, _target, _target_kind = self._sides(event)
+        source, source_kind, owner, target, _target_kind = self._sides(event)
         if not source or source_kind not in {"self", "group", "pet", "other"}:
             return
         row = self.fight.agg(source, source_kind, owner)
-        row.heals += int(event.amount or 0)
-        if event.amount_full is not None:
-            row.heals_full += int(event.amount_full)
-        else:
-            row.heals_full += int(event.amount or 0)
+        actual = int(event.amount or 0)
+        full = int(event.amount_full) if event.amount_full is not None else actual
+        row.heals += actual
+        row.heals_full += full
+        spell = event.spell.strip() if event.spell else "(unknown spell)"
+        self.fight.breakdown.add_heal(
+            source,
+            target or source,
+            spell,
+            bool(event.over_time),
+            actual,
+            full,
+            _crit(event),
+        )
         self.fight.touch(event.ts, offset)
 
     def _death(self, event: ParsedEvent, offset: int | None) -> FightState | None:
@@ -444,11 +523,71 @@ class Segmenter:
                 fight.player_died = True
         elif event.kind == "death" and event.target and not is_you(event.target):
             self._mark_dead(event.target)
+        self._log_death(event)
         if event.pet and event.pet in self.ctx.charmed:
             self._drop_charm(event.pet)
         if fight.all_dead():
             return self.close(event.ts)
         return None
+
+    def _channel_open(self) -> bool:
+        return self.fight is not None and self.fight.open
+
+    def _protected(self, event: ParsedEvent) -> None:
+        """Defensive 'you are protected' line. It does not keep the fight open."""
+        if not self._channel_open():
+            return
+        source, _source_kind, _owner, target, target_kind = self._sides(event)
+        if not target or target_kind not in {"self", "group", "pet"}:
+            return
+        kind = event.avoidance or "protected"
+        self.fight.breakdown.add_avoidance(target, kind)
+        self.fight.breakdown.push_incoming(
+            target,
+            _incoming_event(event, source, target, event.spell, None, False),
+        )
+
+    def _resist(self, event: ParsedEvent) -> None:
+        if not self._channel_open():
+            return
+        source, _source_kind, _owner, target, _target_kind = self._sides(event)
+        spell = event.spell.strip() if event.spell else "(unknown spell)"
+        self.fight.breakdown.add_resist(source, target, spell)
+
+    def _proc(self, event: ParsedEvent) -> None:
+        if not self._channel_open():
+            return
+        source, _source_kind, _owner, _target, _target_kind = self._sides(event)
+        item = event.item.strip() if event.item else "(unknown item)"
+        self.fight.breakdown.add_proc(source or self.character, item)
+
+    def _rune(self, event: ParsedEvent) -> None:
+        if not self._channel_open():
+            return
+        source, _source_kind, _owner, _target, _target_kind = self._sides(event)
+        self.fight.breakdown.add_rune(source or self.character, int(event.amount or 0))
+
+    def _self_damage(self, event: ParsedEvent) -> None:
+        """``You hurt yourself`` is shown under tanking and kept out of DPS."""
+        if not self._channel_open():
+            return
+        source, _source_kind, _owner, target, _target_kind = self._sides(event)
+        who = target or source
+        if not who:
+            return
+        amount = int(event.amount or 0)
+        self.fight.breakdown.add_self_damage(who, amount)
+        self.fight.breakdown.push_incoming(
+            who,
+            _incoming_event(event, source, who, "hurt yourself", amount, False),
+        )
+
+    def _log_death(self, event: ParsedEvent) -> None:
+        victim = _canon(event.target, self.character) if event.target else None
+        if not victim or self.ctx.kind_of(victim) not in {"self", "group", "pet"}:
+            return
+        killer = _canon(event.source, self.character) if event.source else None
+        self.fight.breakdown.add_death(victim, killer, event.ts, event.kind)
 
     def finish(self) -> FightState | None:
         """Close an open fight at end of a historical replay."""

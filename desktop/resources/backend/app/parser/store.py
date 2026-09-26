@@ -13,6 +13,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
+from .breakdown import Breakdown
 from .fights import FightState, SourceAgg
 from .models import ParsedEvent
 
@@ -64,6 +65,11 @@ CREATE TABLE IF NOT EXISTS fights (
     open INTEGER NOT NULL DEFAULT 1,
     player_died INTEGER NOT NULL DEFAULT 0,
     UNIQUE (file_id, generation, start_offset)
+);
+
+CREATE TABLE IF NOT EXISTS fight_breakdown (
+    fight_id INTEGER PRIMARY KEY,
+    payload TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS fight_sources (
@@ -454,6 +460,13 @@ class ParserDB:
                     agg.melee, agg.spell_dmg, agg.dot, agg.ds, _iso(agg.first_ts), _iso(agg.last_ts),
                 ),
             )
+        self.conn.execute(
+            """
+            INSERT INTO fight_breakdown(fight_id, payload) VALUES(?, ?)
+            ON CONFLICT(fight_id) DO UPDATE SET payload=excluded.payload
+            """,
+            (fight_id, json.dumps(fight.breakdown.to_state())),
+        )
         return fight_id
 
     def load_open_fight(self, file_id: int, generation: int) -> FightState | None:
@@ -501,6 +514,7 @@ class ParserDB:
                 first_ts=_parse_iso(src["first_ts"]),
                 last_ts=_parse_iso(src["last_ts"]),
             )
+        fight.breakdown = Breakdown.from_state(self.breakdown_state(row["id"]))
         return fight
 
     def load_roster(self, character: str) -> tuple[dict[str, str], dict[str, str | None], set[str], set[str]]:
@@ -659,3 +673,72 @@ class ParserDB:
 
     def fight_source_rows(self, fight_id: int) -> list[sqlite3.Row]:
         return list(self.conn.execute("SELECT * FROM fight_sources WHERE fight_id=?", (fight_id,)))
+
+    def breakdown_state(self, fight_id: int) -> dict | None:
+        row = self.conn.execute(
+            "SELECT payload FROM fight_breakdown WHERE fight_id=?",
+            (fight_id,),
+        ).fetchone()
+        if row is None or not row["payload"]:
+            return None
+        try:
+            data = json.loads(row["payload"])
+        except json.JSONDecodeError:
+            return None
+        return data if isinstance(data, dict) else None
+
+    def _list_economy(self, table: str, character: str | None, limit: int, offset: int) -> list[sqlite3.Row]:
+        if table not in {"loot_events", "give_events", "merge_events"}:
+            raise ValueError(table)
+        sql = f"SELECT * FROM {table}"
+        args: list = []
+        if character:
+            sql += " WHERE character=?"
+            args.append(character)
+        sql += " ORDER BY COALESCE(ts, ''), offset LIMIT ? OFFSET ?"
+        args.extend([limit, offset])
+        return list(self.conn.execute(sql, args))
+
+    def list_loot(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        rows = []
+        for row in self._list_economy("loot_events", character, limit, offset):
+            rows.append({
+                "ts": row["ts"],
+                "character": row["character"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "from": row["from_name"],
+                "mode": row["mode"],
+                "coin_value": row["coin_copper"],
+                "coin_text": row["coin_text"],
+                "is_mote": bool(row["is_mote"]),
+                "is_wind_rune": bool(row["is_wind_rune"]),
+                "result_item": row["result_item"],
+                "result_tier": row["result_tier"],
+            })
+        return rows
+
+    def list_gives(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "npc": row["npc"],
+                "is_mote": bool(row["is_mote"]),
+                "is_wind_rune": bool(row["is_wind_rune"]),
+            }
+            for row in self._list_economy("give_events", character, limit, offset)
+        ]
+
+    def list_merges(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "result_item": row["result_item"],
+                "result_tier": row["result_tier"],
+            }
+            for row in self._list_economy("merge_events", character, limit, offset)
+        ]
