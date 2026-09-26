@@ -5,6 +5,7 @@ from __future__ import annotations
 import threading
 import time
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 from .breakdown import Breakdown
@@ -49,6 +50,33 @@ def iter_log_bytes(path: Path):
             offset += len(raw)
 
 
+def read_log_range(path: Path, start_offset: int, end_offset: int) -> list[dict]:
+    """Re-read one fight's lines. The database does not store raw log text.
+
+    ``end_offset`` is the byte offset where the fight's last line starts, so
+    that line is included.
+    """
+    start = max(0, int(start_offset))
+    end = max(0, int(end_offset))
+    if end < start:
+        start, end = end, start
+    lines: list[dict] = []
+    with open(path, "rb") as handle:
+        handle.seek(start)
+        offset = start
+        while True:
+            raw = handle.readline()
+            if not raw:
+                break
+            text = raw.decode("utf-8", errors="replace").rstrip("\r\n")
+            lines.append({"offset": offset, "text": text})
+            next_offset = offset + len(raw)
+            if next_offset > end:
+                break
+            offset = next_offset
+    return lines
+
+
 def _skeleton(message: str) -> str:
     import re
     text = re.sub(r"\d+(?:\.\d+)?", "N", message)
@@ -57,7 +85,13 @@ def _skeleton(message: str) -> str:
 
 
 class ParserService:
-    def __init__(self, user_data: Path | None = None, db_path: Path | None = None, idle_seconds: float = 30.0) -> None:
+    def __init__(
+        self,
+        user_data: Path | None = None,
+        db_path: Path | None = None,
+        idle_seconds: float = 30.0,
+        clock=None,
+    ) -> None:
         self.user_data = Path(user_data) if user_data else default_user_data()
         self.user_data.mkdir(parents=True, exist_ok=True)
         self.db = ParserDB(db_path or (self.user_data / "parser.db"))
@@ -81,9 +115,14 @@ class ParserService:
         self._upgrade_error: str | None = None
         self._upgrade_progress: dict | None = None
         self._schema_version = self.db.stored_schema_version()
+        self.clock = clock or datetime.now
+        # Cached with the folder so /config does not wait on a rebuild's DB lock.
+        self._retention_days = self.db.retention_days()
         # Returns immediately. A full-log rebuild takes long enough that it
         # must not sit on the process or the first /config request.
         self._maybe_start_upgrade()
+        if not self._upgrading:
+            self._prune_history()
 
     def close(self) -> None:
         """Stop a live tail and release the SQLite file so Windows can delete the temp dir."""
@@ -117,6 +156,16 @@ class ParserService:
         self.db.set_setting("idle_seconds", str(self.idle))
         return self.idle
 
+    def set_retention_days(self, days: int) -> int:
+        stored = self.db.set_retention_days(int(days))
+        self._retention_days = stored
+        self._prune_history()
+        return stored
+
+    def _prune_history(self) -> int:
+        """Apply the retention window. Safe to call when the window is 0."""
+        return self.db.prune_fights(self.clock())
+
     def list_logs(self, root: str | None = None) -> dict:
         folder = root or self.eq_folder()
         return {"folder": folder, "logs": discover_logs(folder)}
@@ -135,6 +184,7 @@ class ParserService:
             "schema_version": self._schema_version,
             "upgrade_error": self._upgrade_error,
             "upgrade_progress": dict(progress) if progress else None,
+            "fight_retention_days": self._retention_days,
         }
 
     def _maybe_start_upgrade(self) -> None:
@@ -185,6 +235,9 @@ class ParserService:
                         self._upgrade_one(index, len(paths), path)
                     self.db.set_schema_version(SCHEMA_VERSION)
                     self._schema_version = SCHEMA_VERSION
+                    # Replay restores every fight on the log. Retention is a
+                    # user setting and has to be applied again afterwards.
+                    self._prune_history()
                 finally:
                     self._replaying = False
         except Exception as exc:
@@ -410,6 +463,7 @@ class ParserService:
                 elif seg.fight is not None and seg.fight.open:
                     self.db.save_fight(file_id, generation, seg.fight)
                 self.db.mark_offset(file_id, st.st_size, st.st_size)
+                self.db.prune_fights(self.clock())
                 self.db.commit()
             except Exception:
                 self.db.conn.rollback()
@@ -551,8 +605,56 @@ class ParserService:
 
     def list_fights(self, character: str | None = None, limit: int = 200, offset: int = 0) -> dict:
         with self.db.lock:
+            self.db.prune_fights(self.clock())
             rows = self.db.list_fights(character=character, limit=limit, offset=offset)
         return {"fights": rows, "count": len(rows)}
+
+    def clear_character_history(self, character: str) -> dict:
+        """Remove one character's saved fights. Other characters stay.
+
+        Pet bindings, dismissed prompts, the group allowlist, and /who loadouts
+        stay with the character. Retention is a setting and is not cleared.
+        """
+        character = character.strip()
+        with self._replay_lock:
+            drop = [key for key, seg in self._segs.items() if seg.character == character]
+            for key in drop:
+                self._segs.pop(key, None)
+            removed = self.db.clear_character_fights(character)
+        return {"ok": True, **removed}
+
+    def fight_lines(self, fight_id: int) -> dict | None:
+        """Drill-down lines for one fight, re-read from the log byte range."""
+        with self.db.lock:
+            fight = self.db.get_fight_row(fight_id)
+            if fight is None:
+                return None
+            file_row = self.db.file_row(int(fight["file_id"]))
+            start = fight["start_offset"]
+            end = fight["end_offset"]
+            path = str(file_row["path"]) if file_row is not None else None
+        result = {
+            "id": int(fight["id"]),
+            "path": path,
+            "start_offset": start,
+            "end_offset": end,
+            "available": False,
+            "lines": [],
+        }
+        if path is None or start is None or end is None:
+            result["reason"] = "fight has no log byte range"
+            return result
+        file_path = Path(path)
+        if not file_path.is_file():
+            result["reason"] = "log file is missing"
+            return result
+        size = file_path.stat().st_size
+        if int(start) >= size:
+            result["reason"] = "log byte range is past the end of the file"
+            return result
+        result["lines"] = read_log_range(file_path, int(start), int(end))
+        result["available"] = True
+        return result
 
     def list_levels(self, character: str | None = None) -> dict:
         with self.db.lock:

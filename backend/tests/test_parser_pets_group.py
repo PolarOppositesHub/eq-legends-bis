@@ -1,7 +1,8 @@
 """Pets, group allowlist, and /who loadouts (1.1.1-B).
 
-A nominating say is a prompt only. Manual pet bindings and the allowlist
-survive the schema rebuild that drops derived fights and replays the log.
+A nominating say is a prompt only. Manual pet bindings, dismissals, and the
+allowlist survive a schema rebuild. A per-character fight clear and retention
+pruning remove fights only; they leave those same rows in place.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,12 +30,17 @@ def _write(path: Path, lines: list[str]) -> None:
 
 
 class PetsGroupTests(unittest.TestCase):
-    def _service(self, root: Path | None = None) -> tuple[ParserService, Path]:
+    def _service(self, root: Path | None = None, clock=None) -> tuple[ParserService, Path]:
         if root is None:
             tmp = tempfile.TemporaryDirectory()
             self.addCleanup(tmp.cleanup)
             root = Path(tmp.name)
-        service = ParserService(user_data=root / "user", db_path=root / "parser.db", idle_seconds=30)
+        service = ParserService(
+            user_data=root / "user",
+            db_path=root / "parser.db",
+            idle_seconds=30,
+            clock=clock,
+        )
         self.addCleanup(service.close)
         return service, root
 
@@ -136,6 +143,68 @@ class PetsGroupTests(unittest.TestCase):
         self.assertNotEqual(fido["kind"], "pet")
         self.assertIsNone(fido["owner"])
         self.assertEqual(fido.get("pets") or [], [])
+
+    def test_clear_and_retention_keep_manual_pets_and_dismissals(self):
+        """Fight history expires. Pet choices do not.
+
+        Retention deletes closed fights older than the window. Clear deletes
+        one character's fights and combat events. Neither drops a manual pet
+        binding, an unassign, a dismissed prompt, the allowlist, or a /who
+        loadout.
+        """
+        service, root = self._service(clock=lambda: datetime(2026, 9, 26, 12, 0, 0))
+        path = root / "eqlog_Zasariz_qeynos.txt"
+        _write(path, [
+            "[Tue Aug 04 22:00:00 2026] You have joined the group.",
+            "[Tue Aug 04 22:00:00 2026] Amop has joined the group.",
+            "[Tue Aug 04 22:00:00 2026] [36 PAL/DRU/WIZ] Zasariz (High Elf)  ZONE: North Freeport (freportn)",
+            "[Tue Aug 04 22:00:00 2026] Jenann told you, 'Attacking a rat Master.'",
+            "[Tue Aug 04 22:00:00 2026] Fido told you, 'Attacking a rat Master.'",
+            "[Tue Aug 04 22:00:00 2026] Jaber says, 'Following you, Master.'",
+            "[Tue Aug 04 22:00:01 2026] You slash a rat for 10 points of damage.",
+            "[Tue Aug 04 22:00:03 2026] You have slain a rat!",
+        ])
+        service.replay(path)
+        service.set_pet_owner("Zasariz", "Jenann", "Amop")
+        service.set_pet_owner("Zasariz", "Fido", None)
+        service.dismiss_candidate("Zasariz", "Jaber")
+        service.add_allow("Zasariz", "Cara")
+        self.assertEqual(service.list_fights("Zasariz")["count"], 1)
+
+        service.set_retention_days(30)
+        self.assertEqual(service.list_fights("Zasariz")["count"], 0)
+        self._assert_pet_choices(service)
+
+        cleared = service.clear_character_history("Zasariz")
+        self.assertTrue(cleared["ok"])
+        self.assertEqual(service.list_fights("Zasariz")["count"], 0)
+        self.assertEqual(service.db.retention_days(), 30)
+        self._assert_pet_choices(service)
+
+        service.close()
+        restarted, _root = self._service(root, clock=lambda: datetime(2026, 9, 26, 12, 0, 0))
+        self.assertEqual(restarted.list_fights("Zasariz")["count"], 0)
+        self.assertEqual(restarted.db.retention_days(), 30)
+        self._assert_pet_choices(restarted)
+
+    def _assert_pet_choices(self, service: ParserService) -> None:
+        pets = {row["pet"]: row for row in service.list_pets("Zasariz")}
+        self.assertEqual(pets["Jenann"]["owner"], "Amop")
+        self.assertTrue(pets["Jenann"]["manual"])
+        self.assertIsNone(pets["Fido"]["owner"])
+        self.assertTrue(pets["Fido"]["manual"])
+        self.assertNotIn("Jaber", pets)
+        roster = service.roster("Zasariz")
+        self.assertEqual(roster["candidates"], [])
+        self.assertEqual(roster["allowlist"], ["Cara"])
+        self.assertEqual(roster["loadouts"][0]["classes"], "PAL/DRU/WIZ")
+        self.assertEqual(roster["loadouts"][0]["level"], 36)
+        with service.db.lock:
+            dismissed = service.db.conn.execute(
+                "SELECT status FROM pet_candidates WHERE character=? AND pet=?",
+                ("Zasariz", "Jaber"),
+            ).fetchone()
+        self.assertEqual(dismissed["status"], "dismissed")
 
     def test_group_leave_clears_the_log_roster_and_keeps_the_allowlist(self):
         service, root = self._service()

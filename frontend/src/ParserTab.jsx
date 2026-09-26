@@ -7,6 +7,7 @@ import {
   getParserRoster,
   openParserStream,
   postParserCandidate,
+  postParserClearHistory,
   postParserConfig,
   postParserGroup,
   postParserLive,
@@ -34,6 +35,59 @@ import {
   visibleDamage,
   visibleRate,
 } from './parserView.js'
+
+function HistoryControls({
+  retentionDays,
+  character,
+  onRetentionDays,
+  onClearHistory,
+  historyBusy,
+  upgrading,
+}) {
+  const [draft, setDraft] = useState(String(retentionDays ?? 0))
+  useEffect(() => {
+    setDraft(String(retentionDays ?? 0))
+  }, [retentionDays])
+  const save = () => {
+    const parsed = Number(draft)
+    if (!Number.isFinite(parsed) || parsed < 0) return
+    if (typeof onRetentionDays === 'function') onRetentionDays(Math.floor(parsed))
+  }
+  return (
+    <div className="parser-history" data-testid="parser-history">
+      <label htmlFor="parser-retention">
+        Keep fights (days)
+        <input
+          id="parser-retention"
+          data-testid="parser-retention"
+          type="number"
+          min="0"
+          step="1"
+          value={draft}
+          disabled={historyBusy || upgrading}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </label>
+      <span className="muted">0 keeps every saved fight. Clearing fights keeps pet assignments, dismissals, and the group allowlist.</span>
+      <button
+        type="button"
+        data-testid="parser-retention-save"
+        disabled={historyBusy || upgrading}
+        onClick={save}
+      >
+        Save
+      </button>
+      <button
+        type="button"
+        data-testid="parser-clear-history"
+        disabled={!character || historyBusy || upgrading}
+        onClick={onClearHistory}
+      >
+        Clear this character
+      </button>
+    </div>
+  )
+}
 
 function progressFromUpgrade(data) {
   const size = Number(data?.size) || 0
@@ -108,6 +162,10 @@ export function ParserPanel({
   onOpenCredits,
   notice,
   upgrading,
+  retentionDays,
+  onRetentionDays,
+  onClearHistory,
+  historyBusy,
 }) {
   const [assignPet, setAssignPet] = useState('')
   const [assignOwner, setAssignOwner] = useState('')
@@ -173,6 +231,15 @@ export function ParserPanel({
           </button>
         ) : null}
       </div>
+
+      <HistoryControls
+        retentionDays={retentionDays}
+        character={character || ''}
+        onRetentionDays={onRetentionDays}
+        onClearHistory={onClearHistory}
+        historyBusy={!!historyBusy}
+        upgrading={!!upgrading}
+      />
 
       {folder ? (
         <p className="note" data-testid="parser-folder">
@@ -544,6 +611,8 @@ export default function ParserTab({
   const [refreshNonce, setRefreshNonce] = useState(0)
   const [scope, setScope] = useState('group')
   const [roster, setRoster] = useState(emptyRoster)
+  const [retentionDays, setRetentionDays] = useState(0)
+  const [historyBusy, setHistoryBusy] = useState(false)
   const sizeRef = useRef(0)
   const fightIdRef = useRef(fightId)
   const characterRef = useRef('')
@@ -573,6 +642,8 @@ export default function ParserTab({
         setLogs(nextLogs)
         setLogsStatus('ready')
         setLive(!!cfg?.live)
+        const days = Number(cfg?.fight_retention_days)
+        setRetentionDays(Number.isFinite(days) && days > 0 ? Math.floor(days) : 0)
         const rebuild = !!cfg?.upgrading
         upgradingRef.current = rebuild
         setUpgrading(rebuild)
@@ -799,6 +870,49 @@ export default function ParserTab({
     }
   }
 
+  const onRetentionDays = async (days) => {
+    setHistoryBusy(true)
+    setNotice('')
+    try {
+      const cfg = await postParserConfig({ fight_retention_days: days })
+      const saved = Number(cfg?.fight_retention_days)
+      setRetentionDays(Number.isFinite(saved) && saved > 0 ? Math.floor(saved) : 0)
+      if (selected?.character) {
+        const body = await getParserFights(selected.character)
+        setFights(Array.isArray(body?.fights) ? body.fights : [])
+      }
+    } catch (err) {
+      setNotice(String(err?.message || err))
+    } finally {
+      setHistoryBusy(false)
+    }
+  }
+
+  const onClearHistory = async () => {
+    if (!selected?.character) return
+    const label = selected.character
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      const ok = window.confirm(
+        `Clear saved fights for ${label}? Pet assignments, dismissals, and the group allowlist stay. Other characters stay.`,
+      )
+      if (!ok) return
+    }
+    setHistoryBusy(true)
+    setNotice('')
+    try {
+      await postParserClearHistory(label)
+      onFightId(null)
+      setDetail(null)
+      setDetailStatus('idle')
+      const body = await getParserFights(label)
+      setFights(Array.isArray(body?.fights) ? body.fights : [])
+    } catch (err) {
+      setNotice(String(err?.message || err))
+    } finally {
+      setHistoryBusy(false)
+    }
+  }
+
   const onSetFolder = async () => {
     if (!onSetEqFolder) return
     setNotice('')
@@ -928,6 +1042,10 @@ export default function ParserTab({
       canSetFolder={!!canSetFolder}
       onOpenCredits={onOpenCredits}
       notice={notice}
+      retentionDays={retentionDays}
+      onRetentionDays={onRetentionDays}
+      onClearHistory={onClearHistory}
+      historyBusy={historyBusy}
     />
   )
 }

@@ -35,6 +35,12 @@ def reset_service(service: ParserService | None = None) -> None:
 class ConfigBody(BaseModel):
     eq_install_folder: str | None = None
     idle_seconds: float | None = Field(default=None, gt=0, le=3600)
+    # 0 keeps every saved fight. A positive value is a maximum age in days.
+    fight_retention_days: int | None = Field(default=None, ge=0, le=36500)
+
+
+class ClearHistoryBody(BaseModel):
+    character: str
 
 
 class LoadBody(BaseModel):
@@ -88,6 +94,8 @@ def post_config(body: ConfigBody) -> dict[str, Any]:
         service.set_eq_folder(body.eq_install_folder)
     if body.idle_seconds is not None:
         service.set_idle(body.idle_seconds)
+    if body.fight_retention_days is not None:
+        service.set_retention_days(body.fight_retention_days)
     return service.config()
 
 
@@ -146,6 +154,22 @@ def get_fight(fight_id: int, merge_pets: bool = True) -> dict[str, Any]:
     if detail is None:
         raise HTTPException(404, "Fight not found")
     return detail
+
+
+@router.get("/fights/{fight_id}/lines")
+def get_fight_lines(fight_id: int) -> dict[str, Any]:
+    """Drill-down text re-read from the fight's log byte range."""
+    detail = get_service().fight_lines(fight_id)
+    if detail is None:
+        raise HTTPException(404, "Fight not found")
+    return detail
+
+
+@router.post("/history/clear")
+def post_clear_history(body: ClearHistoryBody) -> dict[str, Any]:
+    if not body.character.strip():
+        raise HTTPException(400, "character is required")
+    return get_service().clear_character_history(body.character.strip())
 
 
 @router.post("/pets")
