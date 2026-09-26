@@ -161,7 +161,7 @@ function StatChipGrid({ entries, ratio }) {
   return (
     <div className="item-stat-grid">
       {entries.map((e) => (
-        <span key={`${e.key}:${formatStatValue(e.value)}`} className="item-stat-chip">{e.key} {formatStatValue(e.value)}</span>
+        <span key={e.key} className="item-stat-chip">{e.key} {formatStatValue(e.value)}</span>
       ))}
       {ratio != null ? (
         <span className="item-stat-chip">Ratio {Number(ratio).toFixed(4)}</span>
