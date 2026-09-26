@@ -79,5 +79,8 @@ test('nsis shortcuts, seal icon, include script, and appId stay stable', () => {
   assert.equal(ignored, false);
 
   const mainJs = fs.readFileSync(path.join(desktopDir, 'main.js'), 'utf8');
-  assert.match(mainJs, /app\.setAppUserModelId\(require\('\.\/package\.json'\)\.build\.appId\)/);
+  const idMatch = mainJs.match(/const APP_USER_MODEL_ID = '([^']+)'/);
+  assert.ok(idMatch);
+  assert.equal(idMatch[1], build.appId);
+  assert.match(mainJs, /app\.setAppUserModelId\(APP_USER_MODEL_ID\)/);
 });
