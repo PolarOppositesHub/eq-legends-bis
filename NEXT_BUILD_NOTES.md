@@ -1,6 +1,15 @@
 # Next build notes
 
-**Shipped as 1.0.22 (PR #28 merged; Josh approved ship 2026-09-25).** Updater untouched. Never invent item stats.
+**Shipped as 1.0.23 (PRs #29 + #30 merged; Josh approved ship 2026-09-25).** Updater untouched. Never invent item stats.
+
+## 1.0.23 — Item Search tooltip scaling + session restore
+- [x] PR #29: Item Search tooltip-style stat text scales with the +0…+10 slider ("Tooltip at +N"); hover previews labeled +0; collapsed rows labeled +10.
+- [x] PR #30: working session remembered across launches (`workspace-session.json` under Electron userData); Settings > Reset to defaults > Start fresh clears it; saved builds unaffected.
+- [ ] Josh spot-check in the installed app.
+
+---
+
+**1.0.22 shipped (PR #28 merged; Josh approved ship 2026-09-25).**
 
 ## Item Search expand + eqlwiki confirm (Version 1.0.22)
 - [x] Item Search: click a row expands that result and the side detail with every catalog stat key present (not the one-line summary). Equipables with an upgrade path get a +0…+10 slider. Values are catalog +0 scaled like Quest Hub. Missing stats stay missing.

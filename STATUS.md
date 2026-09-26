@@ -1,6 +1,11 @@
 # EQ Legends BiS app status
 
-Version: **1.0.22** — PR #28 (Item Search full stats + first-click detail panel, eqlwiki open confirm, worn Haste scales as tooltip base + upgrade tier). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.0.23** — PR #29 (Item Search tooltip stat text follows the +0…+10 slider, labeled 'Tooltip at +N'; hover previews +0, collapsed rows +10) + PR #30 (remembers the working session across launches in userData workspace-session.json; Settings > Reset to defaults > Start fresh clears it). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.0.23
+- Merged PR #29 Item Search tooltip scaling with upgrade slider.
+- Merged PR #30 workspace session restore (saved builds unaffected).
+- Version bump across package.json + version.py sources.
 
 ## 1.0.22
 - Merged PR #28 Item Search expand + eqlwiki confirm + haste scaling.
