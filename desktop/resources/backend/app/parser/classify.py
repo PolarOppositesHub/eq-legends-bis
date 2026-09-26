@@ -18,7 +18,6 @@ from .sources import coin_to_copper, is_mote, is_wind_rune, item_tier, parse_ite
 _TS_RE = re.compile(
     r"^\[(?P<ts>[A-Za-z]{3} [A-Za-z]{3} \d{2} \d{2}:\d{2}:\d{2} \d{4})\] ?(?P<msg>.*)$"
 )
-_TS_FMT = "%a %b %d %H:%M:%S %Y"
 _TRAIL_MOD = re.compile(r" \(([A-Za-z][^)]*)\)\s*$")
 
 # Longest first so "frenzy on" / "frenzies on" win over shorter verbs.
@@ -195,9 +194,34 @@ _STORE_WHERE = {
 }
 
 
+_WEEKDAYS = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+_MONTHS = {
+    "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+}
+_TS_PARTS = re.compile(
+    r"^(?P<wday>[A-Za-z]{3}) (?P<mon>[A-Za-z]{3}) (?P<day>\d{2}) "
+    r"(?P<h>\d{2}):(?P<mi>\d{2}):(?P<s>\d{2}) (?P<year>\d{4})$"
+)
+
+
 def parse_timestamp(text: str) -> datetime | None:
+    """Parse an EQ timestamp. Day and month names are always English, even on a non-English Windows locale."""
+    match = _TS_PARTS.match(text)
+    if not match or match.group("wday") not in _WEEKDAYS:
+        return None
+    month = _MONTHS.get(match.group("mon"))
+    if month is None:
+        return None
     try:
-        return datetime.strptime(text, _TS_FMT)
+        return datetime(
+            int(match.group("year")),
+            month,
+            int(match.group("day")),
+            int(match.group("h")),
+            int(match.group("mi")),
+            int(match.group("s")),
+        )
     except ValueError:
         return None
 

@@ -71,6 +71,11 @@ class ParserService:
         self._replaying = False
         self._last_fight_emit = 0.0
 
+    def close(self) -> None:
+        """Stop a live tail and release the SQLite file so Windows can delete the temp dir."""
+        self.stop_live()
+        self.db.close()
+
     def eq_folder(self) -> str:
         saved = read_eq_install(self.user_data)
         if saved:

@@ -223,7 +223,11 @@ class ParserDB:
 
     def close(self) -> None:
         with self.lock:
-            self.conn.close()
+            conn = self.conn
+            if conn is None:
+                return
+            conn.close()
+            self.conn = None
 
     def begin(self) -> None:
         self.conn.execute("BEGIN IMMEDIATE")

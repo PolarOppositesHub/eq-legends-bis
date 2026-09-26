@@ -494,7 +494,9 @@ class FightReplayTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
-        return ParserService(user_data=root, db_path=root / "parser.db", idle_seconds=30), root
+        service = ParserService(user_data=root, db_path=root / "parser.db", idle_seconds=30)
+        self.addCleanup(service.close)
+        return service, root
 
     def test_synthetic_two_fights_dps_and_pets(self):
         service, root = self._service()
@@ -842,8 +844,9 @@ class DiscoveryAndApiTests(unittest.TestCase):
         install = root / "eq"
         (install / "Logs").mkdir(parents=True)
         log = install / "Logs" / "eqlog_Zasariz_qeynos.txt"
-        log.write_text("[Tue Aug 04 22:00:00 2026] You gain experience! (1.000%)\n", encoding="utf-8")
+        log.write_text("[Tue Aug 04 22:00:00 2026] You gain experience! (1.000%)\n", encoding="utf-8", newline="\n")
         service = ParserService(user_data=user, db_path=user / "parser.db")
+        self.addCleanup(service.close)
         service.set_eq_folder(str(install))
         # Other settings keys survive.
         settings = (user / "settings.json").read_text(encoding="utf-8")
@@ -854,11 +857,6 @@ class DiscoveryAndApiTests(unittest.TestCase):
         self.assertEqual(service.config()["idle_seconds"], 45)
 
     def test_rest_endpoints(self):
-        httpx = __import__("importlib").import_module("importlib").util
-        try:
-            import httpx  # noqa: F401
-        except ImportError:
-            self.skipTest("httpx is not installed")
         from fastapi.testclient import TestClient
 
         from app.main import app
@@ -879,6 +877,7 @@ class DiscoveryAndApiTests(unittest.TestCase):
             encoding="utf-8",
         )
         service = ParserService(user_data=root / "user", db_path=root / "parser.db")
+        self.addCleanup(service.close)
         reset_service(service)
         self.addCleanup(reset_service, None)
         client = TestClient(app)
@@ -925,7 +924,7 @@ class DiscoveryAndApiTests(unittest.TestCase):
         import socket
         import threading
 
-        import httpx
+        import httpx2
         import uvicorn
 
         from app.main import app
@@ -934,7 +933,9 @@ class DiscoveryAndApiTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
-        reset_service(ParserService(user_data=root / "user", db_path=root / "parser.db"))
+        service = ParserService(user_data=root / "user", db_path=root / "parser.db")
+        self.addCleanup(service.close)
+        reset_service(service)
         self.addCleanup(reset_service, None)
 
         sock = socket.socket()
@@ -951,7 +952,7 @@ class DiscoveryAndApiTests(unittest.TestCase):
             time.sleep(0.02)
         self.assertTrue(server.started)
 
-        with httpx.stream("GET", f"http://127.0.0.1:{port}/api/parser/stream", timeout=5.0) as response:
+        with httpx2.stream("GET", f"http://127.0.0.1:{port}/api/parser/stream", timeout=5.0) as response:
             self.assertEqual(response.status_code, 200)
             self.assertIn("text/event-stream", response.headers["content-type"])
             chunk = next(response.iter_text())
