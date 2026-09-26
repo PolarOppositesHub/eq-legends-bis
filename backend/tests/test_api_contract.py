@@ -44,7 +44,7 @@ class ApiContractTests(unittest.TestCase):
     def test_health_meta_classes_races(self):
         health = self._expect(self.client.get("/api/health"), ["ok", "version", "instance"])
         self.assertTrue(health["ok"])
-        self.assertEqual(health["version"], "1.0.23")
+        self.assertEqual(health["version"], "1.1.0")
         self._expect(
             self.client.get("/api/meta"),
             ["classes", "slots", "version", "haste_rule", "modes", "upgrade_levels"],

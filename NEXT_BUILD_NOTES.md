@@ -1,6 +1,17 @@
 # Next build notes
 
-**Shipped as 1.0.23 (PRs #29 + #30 merged; Josh approved ship 2026-09-25).** Updater untouched. Never invent item stats.
+**Shipped as 1.1.0 (PRs #32 + #33 + #34 merged).** Updater untouched. Never invent item stats.
+
+## 1.1.0 — Parser tab, What's new, Credits
+- [x] PR #32: automated safety-net tests (protect-existing harness + CI on Ubuntu and Windows).
+- [x] PR #33: sidecar parser, log discovery, live tail, /api/parser and SSE.
+- [x] PR #34: Parser tab (find the log automatically, Live follow, Load old log with progress, fight list, per-source DPS and SDPS with Merge pets, empty-state /log on hints), What's new in 1.1.0 dialog, Credits page.
+- [x] Versions **1.1.0**
+- [ ] Josh spot-check in the installed app.
+
+---
+
+**1.0.23 shipped (PRs #29 + #30 merged; Josh approved ship 2026-09-25).**
 
 ## 1.0.23 — Item Search tooltip scaling + session restore
 - [x] PR #29: Item Search tooltip-style stat text scales with the +0…+10 slider ("Tooltip at +N"); hover previews labeled +0; collapsed rows labeled +10.
