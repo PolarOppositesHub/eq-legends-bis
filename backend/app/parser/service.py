@@ -19,6 +19,7 @@ from .discover import (
     write_settings,
 )
 from .fights import MIN_SECONDS, Segmenter, SourceAgg, merge_pet_rows, recompute_sdps
+from .sources import is_npc_pet_name
 from .store import SCHEMA_VERSION, ParserDB, _parse_iso
 from .tail import LogTail, TailBatch, backfill_offset
 
@@ -518,22 +519,43 @@ class ParserService:
             elif op == "group_remove":
                 self.db.remove_group(character, payload["name"])
             elif op == "player":
-                self.db.note_player(character, payload["name"], payload.get("classes"), payload.get("level"))
+                name = payload["name"]
+                if isinstance(name, str) and name.lower() == character.lower():
+                    name = character
+                self.db.note_player(character, name, payload.get("classes"), payload.get("level"))
+                classes = payload.get("classes")
+                if classes:
+                    self.db.upsert_loadout(character, name, classes, payload.get("level"), payload.get("ts"))
             elif op == "pet":
                 self.db.bind_pet(character, payload["pet"], payload.get("owner"), payload.get("evidence") or "auto", False)
             elif op == "pet_clear":
                 self.db.clear_pet(character, payload["pet"])
+            elif op == "candidate":
+                opened = self.db.note_candidate(
+                    character,
+                    payload["pet"],
+                    payload.get("evidence") or "nominate",
+                    payload.get("ts"),
+                )
+                if opened and not self._replaying:
+                    self.hub.publish({"type": "roster", "character": character})
+            elif op == "candidate_close":
+                self.db.close_open_candidate(character, payload["pet"])
 
         def on_close(fight) -> None:
             self.db.save_fight(file_id, generation, fight)
             self._emit_fight(fight.summary())
 
         seg = Segmenter(character, idle_seconds=self.idle, on_roster=on_roster, on_close=on_close)
-        group, pets, manual, players = self.db.load_roster(character)
-        seg.ctx.group = group
-        seg.ctx.pets = dict(pets)
-        seg.ctx.manual_pets = set(manual)
-        seg.ctx.players = set(players)
+        roster = self.db.load_roster(character)
+        seg.ctx.group = roster["group"]
+        seg.ctx.pets = dict(roster["pets"])
+        seg.ctx.pet_evidence = dict(roster["evidence"])
+        seg.ctx.manual_pets = set(roster["manual"])
+        seg.ctx.players = set(roster["players"])
+        seg.ctx.allowlist = dict(roster["allowlist"])
+        seg.ctx.candidates = dict(roster["candidates"])
+        seg.ctx.dismissed = set(roster["dismissed"])
         seg.load_open(self.db.load_open_fight(file_id, generation))
         self._segs[key] = seg
         return seg
@@ -588,7 +610,11 @@ class ParserService:
         return {"fights": rows, "count": len(rows)}
 
     def clear_character_history(self, character: str) -> dict:
-        """Remove one character's saved fights. Other characters stay."""
+        """Remove one character's saved fights. Other characters stay.
+
+        Pet bindings, dismissed prompts, the group allowlist, and /who loadouts
+        stay with the character. Retention is a setting and is not cleared.
+        """
         character = character.strip()
         with self._replay_lock:
             drop = [key for key, seg in self._segs.items() if seg.character == character]
@@ -732,13 +758,122 @@ class ParserService:
             }
 
     def set_pet_owner(self, character: str, pet: str, owner: str | None) -> dict:
+        kind = "pet" if owner else ("npc" if is_npc_pet_name(pet) else "other")
         with self.db.lock:
             self.db.bind_pet(character, pet, owner, "manual", True)
+            if owner:
+                self.db.confirm_candidate(character, pet)
+            else:
+                self.db.dismiss_candidate(character, pet)
+            self.db.relabel_source(character, pet, kind, owner)
             self.db.commit()
             for seg in self._segs.values():
                 if seg.character == character:
                     seg.ctx.bind_pet(pet, owner, "manual", manual=True)
-        return {"ok": True, "character": character, "pet": pet, "owner": owner, "manual": True}
+                    self._relabel_open_source(seg, pet, kind, owner)
+        return {"ok": True, "character": character, "pet": pet, "owner": owner, "manual": True, "evidence": "manual"}
+
+    def dismiss_candidate(self, character: str, pet: str) -> dict:
+        """Hide the prompt. Does not write a pet binding."""
+        with self.db.lock:
+            self.db.dismiss_candidate(character, pet)
+            self.db.commit()
+            for seg in self._segs.values():
+                if seg.character == character:
+                    seg.ctx.dismiss_candidate(pet)
+        return {"ok": True, "character": character, "pet": pet, "status": "dismissed"}
+
+    def add_allow(self, character: str, member: str) -> dict:
+        member = member.strip()
+        if not member or member.lower() == character.lower():
+            raise ValueError("Name a group member other than yourself")
+        with self.db.lock:
+            self.db.add_allowlist(character, member)
+            self.db.relabel_kind(character, member, "group")
+            self.db.commit()
+            for seg in self._segs.values():
+                if seg.character == character:
+                    seg.ctx.add_allow(member)
+                    self._relabel_open_kind(seg, member, "group")
+        return {"ok": True, "character": character, "member": member}
+
+    def remove_allow(self, character: str, member: str) -> dict:
+        member = member.strip()
+        with self.db.lock:
+            self.db.remove_allowlist(character, member)
+            still_grouped = False
+            known = False
+            for seg in self._segs.values():
+                if seg.character != character:
+                    continue
+                seg.ctx.remove_allow(member)
+                still_grouped = member.lower() in seg.ctx.group or still_grouped
+                known = member in seg.ctx.players or known
+            if not still_grouped:
+                row = self.db.conn.execute(
+                    "SELECT 1 FROM group_members WHERE character=? AND lower(member)=lower(?)",
+                    (character, member),
+                ).fetchone()
+                still_grouped = row is not None
+            if not still_grouped:
+                player = self.db.conn.execute(
+                    "SELECT 1 FROM known_players WHERE character=? AND lower(name)=lower(?)",
+                    (character, member),
+                ).fetchone()
+                kind = "other" if (known or player is not None) else "npc"
+                self.db.relabel_kind(character, member, kind)
+                for seg in self._segs.values():
+                    if seg.character == character:
+                        self._relabel_open_kind(seg, member, kind)
+            self.db.commit()
+        return {"ok": True, "character": character, "member": member, "removed": True}
+
+    def roster(self, character: str) -> dict:
+        with self.db.lock:
+            group = self.db.list_group(character)
+            allowlist = self.db.list_allowlist(character)
+            candidates = self.db.list_candidates(character, "open")
+            loadouts = self.db.list_loadouts(character)
+            pets = self.list_pets_locked(character)
+        return {
+            "character": character,
+            "group": [{"name": name, "via": "log"} for name in group],
+            "allowlist": allowlist,
+            "candidates": candidates,
+            "loadouts": loadouts,
+            "pets": pets,
+        }
+
+    def list_pets_locked(self, character: str) -> list[dict]:
+        rows = self.db.conn.execute(
+            "SELECT pet, owner, evidence, manual FROM pet_bindings WHERE character=? ORDER BY pet",
+            (character,),
+        ).fetchall()
+        return [
+            {"pet": row["pet"], "owner": row["owner"], "evidence": row["evidence"], "manual": bool(row["manual"])}
+            for row in rows
+        ]
+
+    def _relabel_open_source(self, seg: Segmenter, source: str, kind: str, owner: str | None) -> None:
+        fight = seg.fight
+        if fight is None:
+            return
+        for name, row in list(fight.sources.items()):
+            if name.lower() != source.lower():
+                continue
+            row.source_kind = kind
+            row.owner = owner
+
+    def _relabel_open_kind(self, seg: Segmenter, source: str, kind: str) -> None:
+        fight = seg.fight
+        if fight is None:
+            return
+        for name, row in list(fight.sources.items()):
+            if name.lower() != source.lower():
+                continue
+            if row.source_kind in {"self", "pet"}:
+                continue
+            row.source_kind = kind
 
     def list_pets(self, character: str) -> list[dict]:
         with self.db.lock:

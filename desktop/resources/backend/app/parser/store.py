@@ -7,7 +7,9 @@ the log file.
 
 Fight rows in this same database are the saved history. ``fight_retention_days``
 in ``settings`` prunes closed fights (0 keeps everything). Clearing deletes one
-character's fights and does not touch settings, roster, or other characters.
+character's fights and combat events. It leaves settings, manual and automatic
+pet bindings, dismissed pet prompts, the group allowlist, /who loadouts, and
+other characters in place.
 """
 
 from __future__ import annotations
@@ -211,6 +213,30 @@ CREATE TABLE IF NOT EXISTS known_players (
     PRIMARY KEY (character, name)
 );
 
+CREATE TABLE IF NOT EXISTS pet_candidates (
+    character TEXT NOT NULL,
+    pet TEXT NOT NULL,
+    evidence TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    seen_ts TEXT,
+    PRIMARY KEY (character, pet)
+);
+
+CREATE TABLE IF NOT EXISTS group_allowlist (
+    character TEXT NOT NULL,
+    member TEXT NOT NULL,
+    PRIMARY KEY (character, member)
+);
+
+CREATE TABLE IF NOT EXISTS class_loadouts (
+    character TEXT NOT NULL,
+    name TEXT NOT NULL,
+    classes TEXT NOT NULL,
+    level INTEGER,
+    seen_ts TEXT,
+    PRIMARY KEY (character, name, classes)
+);
+
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -321,8 +347,9 @@ class ParserDB:
         """Delete closed fights older than the retention window.
 
         Open fights stay. Child rows and the combat events inside the fight's
-        byte range go with the fight. Loot, roster, and settings stay. Returns
-        the number of fights removed. A retention of 0 removes nothing.
+        byte range go with the fight. Pet bindings, dismissed prompts, the
+        group allowlist, /who loadouts, loot, and settings stay. Returns the
+        number of fights removed. A retention of 0 removes nothing.
         """
         days = self.retention_days()
         if days <= 0:
@@ -371,9 +398,12 @@ class ParserDB:
     def clear_character_fights(self, character: str) -> dict:
         """Drop one character's saved fights and the combat events behind them.
 
-        Other characters, settings, pet bindings, group members, and economy
-        rows (loot, gives, merges, xp, levels) stay. The log file registration
-        stays so a later replay can read the log again.
+        Other characters and settings (including fight retention) stay. So do
+        pet bindings, whether they were set by hand or read from the log,
+        dismissed "is this your pet?" prompts, the group allowlist, /who
+        loadouts, group members, and economy rows. Clearing saved fights does
+        not forget who a pet belongs to. The log file registration stays so a
+        later replay can read the log again.
         """
         character = character.strip()
         with self.lock:
@@ -418,8 +448,11 @@ class ParserDB:
         """Drop rebuilt parser output and rewind known logs to offset 0.
 
         Settings (including fight retention), the chosen log paths, group/player
-        notes, and manual pet bindings stay. Automatic pet bindings are removed
-        so the replay can derive them again.
+        notes, the manual group allowlist, dismissed pet prompts, and manual
+        pet bindings stay. Automatic pet bindings are removed so the replay can
+        derive them again. Open prompts are left in place; a replay will not
+        reopen one the user dismissed, and a stronger binding closes an open
+        prompt.
         """
         with self.lock:
             self.conn.execute("BEGIN IMMEDIATE")
@@ -694,22 +727,58 @@ class ParserDB:
         fight.breakdown = Breakdown.from_state(self.breakdown_state(row["id"]))
         return fight
 
-    def load_roster(self, character: str) -> tuple[dict[str, str], dict[str, str | None], set[str], set[str]]:
+    def load_roster(self, character: str) -> dict:
         group = {
             row["member"].lower(): row["member"]
             for row in self.conn.execute("SELECT member FROM group_members WHERE character=?", (character,))
         }
         pets: dict[str, str | None] = {}
+        evidence: dict[str, str] = {}
         manual: set[str] = set()
-        for row in self.conn.execute("SELECT pet, owner, manual FROM pet_bindings WHERE character=?", (character,)):
+        for row in self.conn.execute(
+            "SELECT pet, owner, evidence, manual FROM pet_bindings WHERE character=?",
+            (character,),
+        ):
             pets[row["pet"]] = row["owner"]
+            if row["evidence"]:
+                evidence[row["pet"]] = row["evidence"]
             if row["manual"]:
                 manual.add(row["pet"])
         players = {
             row["name"]
             for row in self.conn.execute("SELECT name FROM known_players WHERE character=?", (character,))
         }
-        return group, pets, manual, players
+        allowlist = {
+            row["member"].lower(): row["member"]
+            for row in self.conn.execute(
+                "SELECT member FROM group_allowlist WHERE character=? ORDER BY member",
+                (character,),
+            )
+        }
+        candidates = {
+            row["pet"]: (row["evidence"] or "nominate")
+            for row in self.conn.execute(
+                "SELECT pet, evidence FROM pet_candidates WHERE character=? AND status='open'",
+                (character,),
+            )
+        }
+        dismissed = {
+            row["pet"]
+            for row in self.conn.execute(
+                "SELECT pet FROM pet_candidates WHERE character=? AND status='dismissed'",
+                (character,),
+            )
+        }
+        return {
+            "group": group,
+            "pets": pets,
+            "evidence": evidence,
+            "manual": manual,
+            "players": players,
+            "allowlist": allowlist,
+            "candidates": candidates,
+            "dismissed": dismissed,
+        }
 
     def add_group(self, character: str, member: str) -> None:
         self.conn.execute(
@@ -765,6 +834,166 @@ class ParserDB:
         if row is not None and row["manual"]:
             return
         self.conn.execute("DELETE FROM pet_bindings WHERE character=? AND pet=?", (character, pet))
+
+    def note_candidate(self, character: str, pet: str, evidence: str, seen_ts: str | None = None) -> bool:
+        """Insert an open prompt. A dismissed or confirmed row stays as the user left it."""
+        row = self.conn.execute(
+            "SELECT status FROM pet_candidates WHERE character=? AND pet=?",
+            (character, pet),
+        ).fetchone()
+        if row is not None and row["status"] != "open":
+            return False
+        self.conn.execute(
+            """
+            INSERT INTO pet_candidates(character, pet, evidence, status, seen_ts)
+            VALUES(?, ?, ?, 'open', ?)
+            ON CONFLICT(character, pet) DO UPDATE SET
+                evidence=excluded.evidence,
+                seen_ts=COALESCE(excluded.seen_ts, pet_candidates.seen_ts)
+            WHERE pet_candidates.status='open'
+            """,
+            (character, pet, evidence, seen_ts),
+        )
+        return row is None
+
+    def dismiss_candidate(self, character: str, pet: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO pet_candidates(character, pet, evidence, status)
+            VALUES(?, ?, 'nominate', 'dismissed')
+            ON CONFLICT(character, pet) DO UPDATE SET status='dismissed'
+            """,
+            (character, pet),
+        )
+
+    def confirm_candidate(self, character: str, pet: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO pet_candidates(character, pet, evidence, status)
+            VALUES(?, ?, 'manual', 'confirmed')
+            ON CONFLICT(character, pet) DO UPDATE SET status='confirmed'
+            """,
+            (character, pet),
+        )
+
+    def close_open_candidate(self, character: str, pet: str) -> None:
+        """A stronger rule bound this name, so the prompt is no longer open."""
+        self.conn.execute(
+            """
+            UPDATE pet_candidates SET status='bound'
+            WHERE character=? AND pet=? AND status='open'
+            """,
+            (character, pet),
+        )
+
+    def list_candidates(self, character: str, status: str = "open") -> list[dict]:
+        rows = self.conn.execute(
+            """
+            SELECT pet, evidence, status, seen_ts FROM pet_candidates
+            WHERE character=? AND status=?
+            ORDER BY pet
+            """,
+            (character, status),
+        ).fetchall()
+        return [
+            {
+                "pet": row["pet"],
+                "evidence": row["evidence"],
+                "status": row["status"],
+                "seen_ts": row["seen_ts"],
+            }
+            for row in rows
+        ]
+
+    def add_allowlist(self, character: str, member: str) -> None:
+        self.conn.execute(
+            "INSERT OR IGNORE INTO group_allowlist(character, member) VALUES(?, ?)",
+            (character, member),
+        )
+
+    def remove_allowlist(self, character: str, member: str) -> None:
+        self.conn.execute(
+            "DELETE FROM group_allowlist WHERE character=? AND lower(member)=lower(?)",
+            (character, member),
+        )
+
+    def list_allowlist(self, character: str) -> list[str]:
+        rows = self.conn.execute(
+            "SELECT member FROM group_allowlist WHERE character=? ORDER BY member",
+            (character,),
+        ).fetchall()
+        return [row["member"] for row in rows]
+
+    def list_group(self, character: str) -> list[str]:
+        rows = self.conn.execute(
+            "SELECT member FROM group_members WHERE character=? ORDER BY member",
+            (character,),
+        ).fetchall()
+        return [row["member"] for row in rows]
+
+    def upsert_loadout(
+        self,
+        character: str,
+        name: str,
+        classes: str,
+        level: int | None,
+        seen_ts: str | None = None,
+    ) -> None:
+        """One row per 3-class trio. A different trio is not a higher level of the first."""
+        self.conn.execute(
+            """
+            INSERT INTO class_loadouts(character, name, classes, level, seen_ts)
+            VALUES(?, ?, ?, ?, ?)
+            ON CONFLICT(character, name, classes) DO UPDATE SET
+                level=excluded.level,
+                seen_ts=COALESCE(excluded.seen_ts, class_loadouts.seen_ts)
+            """,
+            (character, name, classes, level, seen_ts),
+        )
+
+    def list_loadouts(self, character: str) -> list[dict]:
+        rows = self.conn.execute(
+            """
+            SELECT name, classes, level, seen_ts FROM class_loadouts
+            WHERE character=?
+            ORDER BY name, classes
+            """,
+            (character,),
+        ).fetchall()
+        return [
+            {
+                "name": row["name"],
+                "classes": row["classes"],
+                "level": row["level"],
+                "seen_ts": row["seen_ts"],
+            }
+            for row in rows
+        ]
+
+    def relabel_source(self, character: str, source: str, kind: str, owner: str | None) -> None:
+        """Point stored fight rows at a manual pet owner without rewriting the log."""
+        self.conn.execute(
+            """
+            UPDATE fight_sources
+            SET source_kind=?, owner=?
+            WHERE lower(source)=lower(?)
+              AND fight_id IN (SELECT id FROM fights WHERE character=?)
+            """,
+            (kind, owner, source, character),
+        )
+
+    def relabel_kind(self, character: str, source: str, kind: str, skip: tuple[str, ...] = ("self", "pet")) -> None:
+        marks = ",".join("?" for _ in skip) or "''"
+        self.conn.execute(
+            f"""
+            UPDATE fight_sources
+            SET source_kind=?
+            WHERE lower(source)=lower(?)
+              AND source_kind NOT IN ({marks})
+              AND fight_id IN (SELECT id FROM fights WHERE character=?)
+            """,
+            (kind, source, *skip, character),
+        )
 
     def count_events(self, file_id: int | None = None) -> int:
         if file_id is None:

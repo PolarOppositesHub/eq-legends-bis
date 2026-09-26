@@ -131,20 +131,51 @@ export function sourceKindLabel(kind) {
   if (kind === 'self') return 'You'
   if (kind === 'pet') return 'Pet'
   if (kind === 'group') return 'Group'
+  if (kind === 'candidate') return 'Candidate'
+  if (kind === 'other') return 'Player'
+  if (kind === 'npc') return 'NPC'
   return 'Unknown'
+}
+
+export const SOURCE_SCOPES = [
+  { id: 'self', label: 'Self' },
+  { id: 'group', label: 'Group' },
+  { id: 'pets', label: 'Pets' },
+  { id: 'raid', label: 'Raid' },
+  { id: 'all', label: 'All' },
+]
+
+export const PET_LEADER_HINT = 'Ask group members to type /pet leader.'
+
+export const RAID_SCOPE_NOTE =
+  'Raid is your allowlist plus players who damaged the same NPC. Automatic raid rosters wait until a real raid log is sampled.'
+
+const PET_EVIDENCE = {
+  tell: 'Binding tell',
+  leader: '/pet leader',
+  charm: 'Your Charm',
+  warder_name: 'Warder name',
+  manual: 'Set by you',
+  nominate: 'Nominated in chat',
+}
+
+export function petEvidenceLabel(evidence) {
+  if (!evidence) return ''
+  return PET_EVIDENCE[evidence] || evidence
 }
 
 /**
  * Rows for the DPS table: you, your pet, and group members.
  * When the API merged pets, each pet is a nested row under its owner.
  */
-export function displaySources(detail) {
+export function displaySources(detail, options = {}) {
+  const includeOthers = !!options.includeOthers
   const sources = Array.isArray(detail?.sources) ? detail.sources : []
   const rows = []
   for (const src of sources) {
     if (!src || typeof src !== 'object') continue
     const pets = Array.isArray(src.pets) ? src.pets.filter((pet) => pet && typeof pet === 'object') : []
-    const keep = FRIENDLY.has(src.kind) || pets.length > 0
+    const keep = FRIENDLY.has(src.kind) || pets.length > 0 || (includeOthers && src.kind && src.kind !== 'unknown')
     if (!keep) continue
     rows.push({ ...src, nested: false, pets })
     for (const pet of pets) {
@@ -152,6 +183,69 @@ export function displaySources(detail) {
     }
   }
   return rows
+}
+
+/**
+ * SELF / GROUP / PETS / RAID / ALL.
+ * GROUP is you, log group, allowlist, and pets already rolled onto those rows.
+ * RAID adds the allowlist and players who damaged this fight. It does not
+ * invent a raid roster. A candidate pet is not merged into an owner.
+ */
+export function sourcesForScope(detail, scope, allowlist = []) {
+  const id = SOURCE_SCOPES.some((item) => item.id === scope) ? scope : 'group'
+  const includeOthers = id === 'all' || id === 'raid'
+  const rows = displaySources(detail, { includeOthers })
+  const allow = new Set(
+    (Array.isArray(allowlist) ? allowlist : [])
+      .map((name) => (typeof name === 'string' ? name.trim().toLowerCase() : ''))
+      .filter(Boolean),
+  )
+  if (id === 'all') return rows
+  if (id === 'self') return rows.filter((row) => row.kind === 'self' && !row.nested)
+  if (id === 'pets') return rows.filter((row) => row.kind === 'pet' || row.nested)
+  if (id === 'raid') {
+    return rows.filter((row) => {
+      if (row.kind === 'self' || row.kind === 'group' || row.kind === 'pet' || row.nested) return true
+      if (allow.has(String(row.source || '').toLowerCase())) return true
+      if (row.kind === 'other' && Number(row.damage) > 0) return true
+      return false
+    })
+  }
+  return rows.filter((row) => row.kind === 'self' || row.kind === 'group' || row.kind === 'pet' || row.nested)
+}
+
+export function visibleDamage(rows) {
+  if (!Array.isArray(rows)) return 0
+  return rows.reduce((sum, row) => {
+    if (!row || row.nested) return sum
+    const damage = Number(row.damage)
+    return sum + (Number.isFinite(damage) ? damage : 0)
+  }, 0)
+}
+
+/** Fight-length rate for the rows the scope is showing. Nested pets are already on the owner. */
+export function visibleRate(rows, seconds) {
+  const duration = Number(seconds)
+  if (!Number.isFinite(duration) || duration <= 0) return 0
+  return visibleDamage(rows) / duration
+}
+
+export function loadoutsFor(name, loadouts) {
+  if (!name || !Array.isArray(loadouts)) return []
+  const key = String(name).toLowerCase()
+  return loadouts.filter((row) => row && String(row.name || '').toLowerCase() === key)
+}
+
+export function loadoutText(rows) {
+  if (!Array.isArray(rows) || !rows.length) return ''
+  return rows
+    .map((row) => {
+      const classes = text(row.classes)
+      const level = row.level == null || row.level === '' ? '' : String(row.level)
+      return [classes, level].filter(Boolean).join(' ')
+    })
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /**

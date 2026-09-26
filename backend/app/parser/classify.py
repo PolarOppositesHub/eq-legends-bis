@@ -825,15 +825,9 @@ def _other(msg: str, mods: tuple[str, ...]) -> ParsedEvent | None:
     match = _CHARM_BREAK.match(msg)
     if match:
         return _event("charm_break", source="You", target=match.group("mob"), pet=match.group("mob"))
-    match = _WHO.match(msg)
-    if match:
-        return _event(
-            "who",
-            player_name=match.group("name"),
-            player_classes=match.group("classes"),
-            player_level=int(match.group("level")),
-            source=match.group("name"),
-        )
+    who = _who_event(msg)
+    if who:
+        return who
     match = _PROTECTED.match(msg)
     if match:
         return _event(
@@ -862,11 +856,29 @@ def _other(msg: str, mods: tuple[str, ...]) -> ParsedEvent | None:
     return None
 
 
+def _who_event(msg: str) -> ParsedEvent | None:
+    match = _WHO.match(msg)
+    if not match:
+        return None
+    return _event(
+        "who",
+        player_name=match.group("name"),
+        player_classes=match.group("classes"),
+        player_level=int(match.group("level")),
+        source=match.group("name"),
+    )
+
+
 def classify_message(message: str) -> ParsedEvent | None:
     """Classify one log message, without its timestamp prefix."""
     msg = message.strip()
     if not msg:
         return None
+    # The race sits in parentheses. A trailing ``(High Elf)`` is the who line,
+    # not a combat modifier, so match it before that parenthesis is stripped.
+    who = _who_event(msg)
+    if who:
+        return who
     msg, mods = _split_mods(msg)
 
     if " points of " in msg and " damage by " in msg:
