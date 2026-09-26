@@ -40,6 +40,14 @@ import {
   loadWorkspaceSession,
   saveWorkspaceSession,
 } from './workspaceStore.js'
+import {
+  SCALABLE_STAT_KEYS,
+  clampUpgrade,
+  isCatalogHasteKey,
+  itemStatsAtLevel,
+  previewStatsPlus10,
+  scaleTooltipLines,
+} from './itemUpgradeStats.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -280,11 +288,12 @@ function MaybeWikiLink({ href, children, onConfirmWiki, title, className }) {
   )
 }
 
-/** Hover preview text from item-detail payload — never invents stats. */
+/** Hover preview text from item-detail payload — never invents stats.
+ * Raw tooltip lines are the +0 item, so the preview says so. */
 function itemDetailTipText(detail) {
   if (!detail) return 'Loading…'
   const lines = detail.tooltipLines || []
-  if (Array.isArray(lines) && lines.length) return lines.slice(0, 24).join('\n')
+  if (Array.isArray(lines) && lines.length) return ['+0', ...lines.slice(0, 24)].join('\n')
   const parts = []
   const s0 = fmtStats(detail.stats_plus0, SHOW0)
   const s10 = fmtStats(detail.stats_plus10, SHOW_UP)
@@ -303,19 +312,7 @@ const SHOW_REWARD = [
   'SVF', 'SVC', 'SVM', 'SVP', 'SVD',
 ]
 
-const SCALABLE_STAT_KEYS = new Set([
-  'AC', 'HP', 'MANA', 'STR', 'STA', 'AGI', 'DEX', 'WIS', 'INT', 'CHA', 'END', 'ATK',
-  'SVM', 'SVF', 'SVC', 'SVD', 'SVP', 'SVV',
-  'HP_REGEN', 'MANA_REGEN', 'END_REGEN',
-  'Haste',
-])
 const UPGRADE_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-function clampUpgrade(n) {
-  const v = Number(n)
-  if (!Number.isFinite(v)) return 0
-  return Math.max(0, Math.min(10, Math.trunc(v)))
-}
 
 function enchantTag(level) {
   if (level == null || level === '') return ''
@@ -374,81 +371,6 @@ function itemRatioAtLevel(item, level) {
   if (lvl >= 10 && item.ratio_plus10 != null) return Number(item.ratio_plus10)
   if (lvl === 0 && item.ratio_plus0 != null) return Number(item.ratio_plus0)
   return null
-}
-
-function isCatalogHasteKey(k) {
-  return String(k || '').toLowerCase() === 'haste'
-}
-
-/** Match backend decode_local.scale_item_stat / engine.scale_stats_to_level. */
-function scaleItemStat(base, level) {
-  const o = Number(base)
-  if (!Number.isFinite(o)) return base
-  if (!o || !level) return Number.isInteger(o) ? o : o
-  const a = Math.floor(o * (1 + level / 10))
-  if (o > 0) return Math.max(a, o + level)
-  if (o < -10) return Math.ceil(o * Math.max(0, 10 - level) / 10)
-  return Math.min(0, o + level)
-}
-
-/** eqlegendstools scaleTooltipLine: Haste% = tooltip base + integer upgrade. Not the AC curve. */
-function scaleWornHaste(base, level) {
-  const o = Number(base)
-  if (!Number.isFinite(o)) return base
-  const n = o + clampUpgrade(level)
-  return Number.isInteger(n) ? n : n
-}
-
-function scaleStatsToLevel(stats0, level) {
-  const lvl = clampUpgrade(level)
-  const out = {}
-  for (const [k, v] of Object.entries(stats0 || {})) {
-    if (k === 'DMG') {
-      const base = Number(v)
-      if (!Number.isFinite(base)) continue
-      out[k] = lvl === 0 ? base : Math.floor(base * (1 + lvl / 10))
-    } else if (k === 'DLY' || k === 'FIRE_DMG' || k === 'COLD_DMG') {
-      out[k] = Number(v) || 0
-    } else if (isCatalogHasteKey(k)) {
-      // Tooltip base + level. Stored stats_plus10.Haste copies +0, so it is not a measured +10.
-      const base = Number(v)
-      out[k] = Number.isFinite(base) ? scaleWornHaste(base, lvl) : v
-    } else if (SCALABLE_STAT_KEYS.has(k)) {
-      out[k] = scaleItemStat(v, lvl)
-    } else {
-      const n = Number(v)
-      out[k] = Number.isFinite(n) ? n : v
-    }
-  }
-  return out
-}
-
-/** Collapsed +10 line keeps stored AC/HP, but haste follows the same slider rule. */
-function previewStatsPlus10(item) {
-  const s10 = { ...(item?.stats_plus10 || {}) }
-  const s0 = item?.stats_plus0 || {}
-  if (!Object.keys(s10).length) return scaleStatsToLevel(s0, 10)
-  for (const [k, v] of Object.entries(s0)) {
-    if (!isCatalogHasteKey(k)) continue
-    const base = Number(v)
-    const stored = Number(s10[k])
-    if (!Number.isFinite(base)) continue
-    if (Number.isFinite(stored) && stored !== base) continue
-    s10[k] = scaleWornHaste(base, 10)
-  }
-  return s10
-}
-
-function itemStatsAtLevel(item, level) {
-  if (!item) return {}
-  const s0 = item.stats_plus0
-  if (s0 && typeof s0 === 'object' && Object.keys(s0).length) {
-    return scaleStatsToLevel(s0, level)
-  }
-  const lvl = clampUpgrade(level)
-  if (lvl >= 10) return item.stats_plus10 || item.stats_at_upgrade || {}
-  if (lvl === 0) return item.stats_plus0 || item.stats_at_upgrade || {}
-  return item.stats_at_upgrade || item.stats_plus10 || item.stats_plus0 || {}
 }
 
 function upgradesFromImportHints(equipmentMap, hints, wornRows) {
@@ -3612,6 +3534,7 @@ export default function App() {
                   {(searchResults?.items || []).map((it, searchIdx) => {
                     const rowSelected = !!(itemDetail && sameItemName(itemDetail.name, it.name))
                     const rowStatItem = rowSelected ? (itemDetail._loading ? it : itemDetail) : null
+                    const collapsedPreview = fmtStats(previewStatsPlus10(it), SHOW_UP)
                     return (
                     <li key={it.name} className={rowSelected ? 'item-search-open' : ''}>
                       <button
@@ -3645,7 +3568,9 @@ export default function App() {
                           </div>
                           {!rowSelected ? (
                             <div className="stats-line">
-                              {fmtStats(previewStatsPlus10(it), SHOW_UP) || (it.has_stats ? '—' : 'Open for wiki stats / description')}
+                              {collapsedPreview
+                                ? `+10 ${collapsedPreview}`
+                                : (it.has_stats ? '—' : 'Open for wiki stats / description')}
                             </div>
                           ) : null}
                         </div>
@@ -3672,6 +3597,10 @@ export default function App() {
                   const searchHit = (searchResults?.items || []).find((it) => sameItemName(it.name, itemDetail.name))
                   const panelItem = itemDetail._loading ? (searchHit || null) : itemDetail
                   const panelMeta = panelItem || itemDetail
+                  const tipLevel = itemShowsUpgradeSlider(panelItem) ? clampUpgrade(searchItemUpgrade) : 0
+                  const tipLines = itemDetail._loading
+                    ? []
+                    : scaleTooltipLines(itemDetail.tooltipLines, tipLevel)
                   return (
                   <div className="item-detail-panel" ref={itemDetailPanelRef}>
                     <div className="item-name">
@@ -3721,10 +3650,13 @@ export default function App() {
                         {itemDetail.description}
                       </p>
                     ) : null}
-                    {!itemDetail._loading && itemDetail.tooltipLines?.length > 0 && (
-                      <pre className="help-md" style={{ marginTop: '0.65rem', fontSize: '0.75rem' }}>
-                        {(itemDetail.tooltipLines || []).join('\n')}
-                      </pre>
+                    {!itemDetail._loading && tipLines.length > 0 && (
+                      <div style={{ marginTop: '0.65rem' }}>
+                        <div className="muted item-stats-caption">Tooltip at +{tipLevel}</div>
+                        <pre className="help-md item-tooltip-at-upgrade" style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
+                          {tipLines.join('\n')}
+                        </pre>
+                      </div>
                     )}
                     {!itemDetail._loading && !itemDetail.tooltipLines?.length && !itemDetail.description && itemDetail.catalog_source === 'eqlwiki' && (
                       <p className="muted" style={{ marginTop: '0.65rem', fontSize: '0.8rem' }}>
