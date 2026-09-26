@@ -3,15 +3,17 @@ import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ParserPanel } from './ParserTab.jsx'
-import { CreditsDialog } from './parserChrome.jsx'
+import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import {
   LEVEL_LOADOUT_NOTE,
   PARSER_EMPTY,
   PET_LEADER_HINT,
   RAID_SCOPE_NOTE,
+  WHATS_NEW_TITLE,
   describeLevelChange,
   formatZone,
   sourcesForScope,
+  visibleDamage,
   visibleRate,
 } from './parserView.js'
 
@@ -281,6 +283,61 @@ test('scope filter, pet prompt, and group allowlist render on the Parser tab', (
   }))
   assert.match(raid, /data-testid="parser-raid-note"/)
   assert.equal(raid.includes(RAID_SCOPE_NOTE), true)
+})
+
+test('pets scope with merge pets totals the pet rows on screen', () => {
+  const detail = {
+    id: 7,
+    duration_seconds: 30,
+    totals: { damage: 140, dps: 4.6 },
+    sources: [
+      {
+        source: 'Zasariz',
+        kind: 'self',
+        damage: 100,
+        dps: 10,
+        sdps: 3.3,
+        pets: [{ source: 'a warder', kind: 'pet', owner: 'Zasariz', damage: 20, dps: 2, sdps: 0.7 }],
+      },
+      {
+        source: 'Amop',
+        kind: 'group',
+        damage: 40,
+        dps: 4,
+        sdps: 1.3,
+        pets: [],
+      },
+    ],
+  }
+  const html = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    fights: [sampleFight],
+    selectedFightId: 7,
+    detailStatus: 'ready',
+    scope: 'pets',
+    mergePets: true,
+    detail,
+  }))
+  assert.match(html, /data-testid="parser-scope-pets"/)
+  assert.match(html, /data-source="a warder" data-nested="1"/)
+  assert.equal(html.includes('data-source="Zasariz"'), false)
+  assert.match(html, /Total damage 20/)
+  assert.equal(visibleDamage(sourcesForScope(detail, 'pets')), 20)
+  assert.equal(visibleDamage(sourcesForScope(detail, 'group')), 140)
+  assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
+})
+
+test("what's new dialog shows the 1.1.1 notes", () => {
+  const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
+  assert.match(html, /data-testid="whats-new-dialog"/)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.1")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.1<\/h2>/)
+  assert.match(html, /Woven Skull Cap shows Wizard Test of Focus/)
+  assert.match(html, /rebuilds the existing 1\.1\.0 parse from the log/)
+  assert.match(html, /dragon-eye seal/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.0<\/h2>/.test(html), false)
 })
 
 test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {
