@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.0'
+export const WHATS_NEW_ID = '1.1.1'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,14 +23,16 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.0"
+export const WHATS_NEW_TITLE = "What's new in 1.1.1"
 
 export const WHATS_NEW_POINTS = [
-  'The Parser tab reads your EverQuest Legends combat log from disk. It does not read game memory or send keystrokes to the game.',
-  'Pick a character log, such as eqlog_Zasariz_qeynos.txt. Live follows the file while you play. Load old log replays a file already on disk and shows a progress bar.',
-  'Each fight lists the time, the zone when the log recorded one, the targets, the duration, and total damage from you, your pet, and your group.',
-  'The selected fight shows DPS and SDPS for you, your pet, and group members. Merge pets rolls a pet into its owner and still lists the pet underneath.',
-  LEVEL_LOADOUT_NOTE,
+  'After updating, the app automatically rebuilds the existing 1.1.0 parse from the log, so there is nothing to redo.',
+  'Each fight keeps damage by attack and spell, healing, tanking, deaths, resists, and loot. Open a row for the breakdown, and use the timeline.',
+  'Item Search quest names that said "not in Quest Hub" now open the quest. Woven Skull Cap shows Wizard Test of Focus.',
+  'Fight history keeps everything by default. A full, long log is about 64 MB. The Parser tab can clear history for one character.',
+  'The Parser tab tracks pets and your group. Limit a fight to Self, Group, Pets, or All.',
+  'The desktop and Start Menu icons refresh to the dragon-eye seal on install and update.',
+  'Merge selected fights. Copy the parse as text or TSV, or save CSV and HTML. Browse older fights in the history list.',
 ]
 
 export const CREDITS = [
@@ -214,16 +216,33 @@ export function sourcesForScope(detail, scope, allowlist = []) {
   return rows.filter((row) => row.kind === 'self' || row.kind === 'group' || row.kind === 'pet' || row.nested)
 }
 
+/**
+ * Sum damage for the rows on screen.
+ * Merge pets folds a pet into its owner and still lists the pet underneath.
+ * Skip that nested row when the owner is also shown, so it is not counted twice.
+ * Pets scope shows only those nested rows, so their damage is the total.
+ */
 export function visibleDamage(rows) {
   if (!Array.isArray(rows)) return 0
+  const coveredByOwner = new Set()
+  for (const row of rows) {
+    if (!row || row.nested) continue
+    const pets = Array.isArray(row.pets) ? row.pets : []
+    for (const pet of pets) {
+      const name = typeof pet?.source === 'string' ? pet.source.trim().toLowerCase() : ''
+      if (name) coveredByOwner.add(name)
+    }
+  }
   return rows.reduce((sum, row) => {
-    if (!row || row.nested) return sum
+    if (!row) return sum
+    const name = typeof row.source === 'string' ? row.source.trim().toLowerCase() : ''
+    if (row.nested && name && coveredByOwner.has(name)) return sum
     const damage = Number(row.damage)
     return sum + (Number.isFinite(damage) ? damage : 0)
   }, 0)
 }
 
-/** Fight-length rate for the rows the scope is showing. Nested pets are already on the owner. */
+/** Fight-length rate for the rows the scope is showing. */
 export function visibleRate(rows, seconds) {
   const duration = Number(seconds)
   if (!Number.isFinite(duration) || duration <= 0) return 0

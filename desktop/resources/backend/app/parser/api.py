@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import threading
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -18,11 +19,23 @@ router = APIRouter(prefix="/api/parser", tags=["parser"])
 _service: ParserService | None = None
 
 
+_service_lock = threading.Lock()
+
+
 def get_service() -> ParserService:
+    """Process-wide parser service.
+
+    FastAPI runs sync endpoints on a thread pool, so the Parser tab's first
+    requests arrive together. Without the lock each one built its own
+    ParserService (own SQLite connection, own 1.1.0 -> 1.1.1 rebuild thread)
+    and all but one rebuild failed with "database is locked".
+    """
     global _service
     if _service is None:
-        db = os.environ.get("EQ_PARSER_DB") or None
-        _service = ParserService(db_path=db)
+        with _service_lock:
+            if _service is None:
+                db = os.environ.get("EQ_PARSER_DB") or None
+                _service = ParserService(db_path=db)
     return _service
 
 
