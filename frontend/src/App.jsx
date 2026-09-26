@@ -28,6 +28,18 @@ import {
   loadUiSettings,
   saveUiSettings,
 } from './uiSettings.js'
+import {
+  buildWorkspaceSnapshot,
+  catalogFromMeta,
+  defaultWorkspace,
+  sanitizeWorkspace,
+} from './workspaceSession.js'
+import {
+  WORKSPACE_SAVE_DEBOUNCE_MS,
+  clearWorkspaceSession,
+  loadWorkspaceSession,
+  saveWorkspaceSession,
+} from './workspaceStore.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -1074,7 +1086,16 @@ export default function App() {
   const dropItemCacheRef = useRef(new Map())
   const dropHoverTimerRef = useRef(null)
   const dropHoverSeqRef = useRef(0)
-  const skipPriorityDefaultsRef = useRef(false)
+  const skipStatDefaultsForKeyRef = useRef(null)
+  const restoredBisOverridesRef = useRef(undefined)
+  const pendingSearchUpgradeRef = useRef(null)
+  const searchUpgradeItemRef = useRef('')
+  const searchRestoreNameRef = useRef('')
+  const sessionReadyRef = useRef(false)
+  const bisRunEpochRef = useRef(0)
+  const workspaceSnapshotRef = useRef(null)
+  const [sessionReady, setSessionReady] = useState(false)
+  const [resetArmed, setResetArmed] = useState(false)
   const ensuredImagesRef = useRef(new Set())
 
   const priorityStat = nonemptyStats(primaryStats)[0] || 'INT'
@@ -1298,34 +1319,137 @@ export default function App() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    beginLoad('meta', 'Loading catalog metadata…')
-    getMeta()
-      .then((m) => {
-        setMeta(m)
-        if (typeof m.prefer_ranged_damage_default === 'boolean') {
-          setPreferRanged(m.prefer_ranged_damage_default)
-        }
-        const levels = m.character_levels || []
-        if (levels.length) {
-          const maxLv = Math.min(MAX_LEVEL, Math.max(...levels))
-          setCharacterLevel(maxLv)
-        }
-      })
-      .catch((e) => setError(String(e.message || e)))
-      .finally(() => endLoad('meta'))
-  }, [beginLoad, endLoad])
+  const applyWorkspaceState = useCallback((state, opts = {}) => {
+    if (opts.keepStatTiers) {
+      skipStatDefaultsForKeyRef.current = (state.classes || []).join('\u0000')
+    } else {
+      skipStatDefaultsForKeyRef.current = null
+    }
+    setTab(state.tab || 'bis')
+    setClasses(state.classes || [])
+    setMode(state.mode || 'priority')
+    setPrimaryStats(state.primaryStats || [...EMPTY_TIERS])
+    setSecondaryStats(state.secondaryStats || [...EMPTY_TIERS])
+    setTertiaryStats(state.tertiaryStats || [...EMPTY_TIERS])
+    setMaximizeHpRegen(!!state.maximizeHpRegen)
+    setUpgrade(state.upgrade ?? 10)
+    setWornUpgrades(state.wornUpgrades || {})
+    setBisUpgrades(state.bisUpgrades || {})
+    setPreferRanged(state.preferRanged !== false)
+    setRace(state.race || 'Human')
+    setCharacterLevel(state.characterLevel || MAX_LEVEL)
+    setCastBuffsMode(state.castBuffsMode || 'off')
+    setAssumeMaxAas(state.assumeMaxAas !== false)
+    setEquipment(state.equipment || {})
+    setBisOverrides(state.bisOverrides || {})
+    setBagsQ(state.bagsQ || '')
+    setBagsLoc(state.bagsLoc || '')
+    setQuestQ(state.questQ || '')
+    setSelectedQuestName(state.selectedQuestName || '')
+    setQuestListCollapsed(!!state.questListCollapsed)
+    setQuestRewardUpgrade(state.questRewardUpgrade || 0)
+    setMobQ(state.mobQ || '')
+    setMobKind(state.mobKind || 'all')
+    setMobEra(state.mobEra || 'all')
+    setSelectedMobName(state.selectedMobName || '')
+    setMobListCollapsed(!!state.mobListCollapsed)
+    setSearchQ(state.searchQ || '')
+    setSearchSlot(state.searchSlot || '')
+    setSearchItemUpgrade(state.searchItemUpgrade || 0)
+    setBuildName(state.buildName || '')
+    setSelectedBuildId(state.selectedBuildId || '')
+    setImportMeta(state.importMeta || null)
+  }, [])
+
+  const resetWorkspaceToDefaults = useCallback(() => {
+    restoredBisOverridesRef.current = undefined
+    bisRunEpochRef.current += 1
+    searchRestoreNameRef.current = ''
+    pendingSearchUpgradeRef.current = null
+    skipStatDefaultsForKeyRef.current = null
+    const defaults = defaultWorkspace(catalogFromMeta(meta))
+    applyWorkspaceState(defaults, { keepStatTiers: false })
+    setBis(null)
+    setSim(null)
+    setSuggestions(null)
+    setSlotItems({})
+    setSearchResults(null)
+    setItemDetail(null)
+    setQuestResults(null)
+    setQuestDetail(null)
+    setMobResults(null)
+    setMobDetail(null)
+    setZoneDetail(null)
+    setError('')
+    setExportMsg('')
+    setImportMsg('Started fresh. Tab, classes, gear, and searches are back to defaults. Saved builds were kept.')
+    setResetArmed(false)
+    clearWorkspaceSession()
+  }, [meta, applyWorkspaceState])
 
   useEffect(() => {
-    if (skipPriorityDefaultsRef.current) {
-      skipPriorityDefaultsRef.current = false
-      return
+    let cancelled = false
+    beginLoad('meta', 'Loading catalog metadata…')
+    ;(async () => {
+      let saved = null
+      try {
+        saved = await loadWorkspaceSession()
+      } catch (_) {
+        saved = null
+      }
+      if (cancelled) return
+      try {
+        const m = await getMeta()
+        if (cancelled) return
+        setMeta(m)
+        const { restored, state } = sanitizeWorkspace(saved, catalogFromMeta(m))
+        if (restored) {
+          if (state.bisOverrides && Object.keys(state.bisOverrides).length) {
+            restoredBisOverridesRef.current = state.bisOverrides
+          }
+          if (state.searchSelectedName) {
+            searchRestoreNameRef.current = state.searchSelectedName
+            pendingSearchUpgradeRef.current = state.searchItemUpgrade
+          }
+          applyWorkspaceState(state, { keepStatTiers: true })
+          if (state.uiSettings) patchUiSettings(state.uiSettings)
+          if (state.searchSelectedName) {
+            setItemDetail({ name: state.searchSelectedName, _loading: true })
+          }
+        } else if (m) {
+          if (typeof m.prefer_ranged_damage_default === 'boolean') {
+            setPreferRanged(m.prefer_ranged_damage_default)
+          }
+          const levels = m.character_levels || []
+          if (levels.length) {
+            const maxLv = Math.min(MAX_LEVEL, Math.max(...levels))
+            setCharacterLevel(maxLv)
+          }
+        }
+        sessionReadyRef.current = true
+        setSessionReady(true)
+      } catch (e) {
+        if (!cancelled) setError(String(e.message || e))
+      } finally {
+        if (!cancelled) endLoad('meta')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [beginLoad, endLoad, applyWorkspaceState, patchUiSettings])
+
+  useEffect(() => {
+    const key = classes.join('\u0000')
+    if (skipStatDefaultsForKeyRef.current != null && skipStatDefaultsForKeyRef.current === key) {
+      const t = setTimeout(() => {
+        if (skipStatDefaultsForKeyRef.current === key) skipStatDefaultsForKeyRef.current = null
+      }, 0)
+      return () => clearTimeout(t)
     }
     if (!classes.length) {
       setPrimaryStats([...EMPTY_TIERS])
       setSecondaryStats([...EMPTY_TIERS])
       setTertiaryStats([...EMPTY_TIERS])
-      return
+      return undefined
     }
     let cancelled = false
     getPriorityDefaults(classes)
@@ -1372,7 +1496,22 @@ export default function App() {
     maximizeHpRegen, upgrade, preferRanged, characterLevel,
   ])
 
-  const runBis = useCallback(async () => {
+  const runBis = useCallback(async (opts) => {
+    const userInitiated = !!(opts && opts.nativeEvent)
+    if (userInitiated) {
+      bisRunEpochRef.current += 1
+      restoredBisOverridesRef.current = undefined
+    }
+    const epochAtStart = bisRunEpochRef.current
+    const shielded = restoredBisOverridesRef.current
+    const shieldedCopy = shielded ? { ...shielded } : null
+    if (shielded) {
+      queueMicrotask(() => {
+        if (restoredBisOverridesRef.current === shielded) {
+          restoredBisOverridesRef.current = undefined
+        }
+      })
+    }
     if (classes.length < 1) {
       setError('Pick at least one class (up to 3).')
       setBis(null)
@@ -1384,7 +1523,9 @@ export default function App() {
     try {
       const data = await postBis(bisRequestBody())
       setBis(data)
-      setBisOverrides({})
+      if (bisRunEpochRef.current !== epochAtStart) return
+      if (shieldedCopy) setBisOverrides(shieldedCopy)
+      else setBisOverrides({})
       const names = []
       for (const s of data.slots || []) {
         if (s.name) names.push(s.name)
@@ -1529,6 +1670,8 @@ export default function App() {
   }, [meta, equipment, upgrade])
 
   const clearEquipment = () => {
+    bisRunEpochRef.current += 1
+    restoredBisOverridesRef.current = undefined
     setEquipment({})
     setWornUpgrades({})
     setBisUpgrades({})
@@ -1803,7 +1946,9 @@ export default function App() {
   const loadBuild = (id) => {
     const b = builds.find((x) => x.id === id)
     if (!b) return
-    skipPriorityDefaultsRef.current = true
+    skipStatDefaultsForKeyRef.current = (b.classes || []).join('\u0000')
+    bisRunEpochRef.current += 1
+    restoredBisOverridesRef.current = undefined
     setSelectedBuildId(id)
     setClasses(b.classes || [])
     setRace(b.race || 'Human')
@@ -1975,8 +2120,43 @@ export default function App() {
   }, [tab, searchQ, searchSlot])
 
   useEffect(() => {
+    const name = itemDetail?.name || ''
+    const loading = !!itemDetail?._loading
+    if (pendingSearchUpgradeRef.current != null && name && !loading) {
+      setSearchItemUpgrade(pendingSearchUpgradeRef.current)
+      pendingSearchUpgradeRef.current = null
+      searchUpgradeItemRef.current = name
+      return undefined
+    }
+    if (loading && pendingSearchUpgradeRef.current != null) return undefined
+    if (searchUpgradeItemRef.current === name) return undefined
+    searchUpgradeItemRef.current = name
     setSearchItemUpgrade(0)
-  }, [itemDetail?.name])
+    return undefined
+  }, [itemDetail?.name, itemDetail?._loading])
+
+  useEffect(() => {
+    if (!sessionReady) return undefined
+    const name = searchRestoreNameRef.current
+    if (!name) return undefined
+    let cancelled = false
+    const seq = ++itemDetailSeqRef.current
+    getItemDetail(name).then((d) => {
+      if (cancelled || itemDetailSeqRef.current !== seq) return
+      searchRestoreNameRef.current = ''
+      if (d && d.name) setItemDetail(d)
+      else {
+        pendingSearchUpgradeRef.current = null
+        setItemDetail(null)
+      }
+    }).catch(() => {
+      if (cancelled || itemDetailSeqRef.current !== seq) return
+      searchRestoreNameRef.current = ''
+      pendingSearchUpgradeRef.current = null
+      setItemDetail(null)
+    })
+    return () => { cancelled = true }
+  }, [sessionReady])
 
   useEffect(() => {
     if (tab !== 'search' || !itemDetail?.name) return
@@ -1991,6 +2171,83 @@ export default function App() {
     if (fromMeta.length) return fromMeta
     return Array.from({ length: MAX_LEVEL }, (_, i) => i + 1)
   }, [meta])
+
+  const workspaceSnapshot = useMemo(() => {
+    if (!sessionReady) return null
+    return buildWorkspaceSnapshot({
+      tab,
+      classes,
+      mode,
+      primaryStats,
+      secondaryStats,
+      tertiaryStats,
+      maximizeHpRegen,
+      upgrade,
+      wornUpgrades,
+      bisUpgrades,
+      preferRanged,
+      race,
+      characterLevel,
+      castBuffsMode,
+      assumeMaxAas,
+      equipment,
+      bisOverrides,
+      bagsQ,
+      bagsLoc,
+      questQ,
+      selectedQuestName,
+      questListCollapsed,
+      questRewardUpgrade,
+      mobQ,
+      mobKind,
+      mobEra,
+      selectedMobName,
+      mobListCollapsed,
+      searchQ,
+      searchSlot,
+      searchSelectedName: itemDetail?.name || '',
+      searchItemUpgrade,
+      buildName,
+      selectedBuildId,
+      importMeta,
+      uiSettings,
+    }, catalogFromMeta(meta))
+  }, [
+    sessionReady, meta, tab, classes, mode, primaryStats, secondaryStats, tertiaryStats,
+    maximizeHpRegen, upgrade, wornUpgrades, bisUpgrades, preferRanged, race, characterLevel,
+    castBuffsMode, assumeMaxAas, equipment, bisOverrides, bagsQ, bagsLoc, questQ,
+    selectedQuestName, questListCollapsed, questRewardUpgrade, mobQ, mobKind, mobEra,
+    selectedMobName, mobListCollapsed, searchQ, searchSlot, itemDetail, searchItemUpgrade,
+    buildName, selectedBuildId, importMeta, uiSettings,
+  ])
+  workspaceSnapshotRef.current = workspaceSnapshot
+
+  useEffect(() => {
+    if (!sessionReady || !workspaceSnapshot) return undefined
+    const handle = setTimeout(() => {
+      saveWorkspaceSession(workspaceSnapshot)
+    }, WORKSPACE_SAVE_DEBOUNCE_MS)
+    return () => clearTimeout(handle)
+  }, [sessionReady, workspaceSnapshot])
+
+  useEffect(() => {
+    const flush = () => {
+      if (!sessionReadyRef.current || !workspaceSnapshotRef.current) return
+      saveWorkspaceSession(workspaceSnapshotRef.current)
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', flush)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', flush)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+    document.documentElement.dataset.workspaceReady = sessionReady ? '1' : '0'
+    return undefined
+  }, [sessionReady])
 
   const trioLabel = classes.length ? classes.join(' · ') : '(none selected)'
 
@@ -2285,7 +2542,7 @@ export default function App() {
   }, [allImportedItems, bagsQ, bagsLoc])
 
   return (
-    <div className="app">
+    <div className="app" data-workspace-ready={sessionReady ? '1' : '0'} data-active-tab={tab}>
       <LoadingOverlay
         open={loadJobs.length > 0}
         jobs={loadJobs}
@@ -3538,8 +3795,8 @@ export default function App() {
                     style={{ minWidth: 140 }}
                   />
                   <button type="button" className="gold" onClick={saveBuild}>Save build</button>
-                  <select
-                    value={selectedBuildId}
+                    <select
+                    value={builds.some((b) => b.id === selectedBuildId) ? selectedBuildId : ''}
                     onChange={(e) => {
                       const id = e.target.value
                       setSelectedBuildId(id)
@@ -3707,6 +3964,8 @@ export default function App() {
                             value={selectedBis}
                             onChange={(e) => {
                               const v = e.target.value
+                              bisRunEpochRef.current += 1
+                              restoredBisOverridesRef.current = undefined
                               setBisOverrides((prev) => {
                                 const next = { ...prev }
                                 if (!v) delete next[slot]
@@ -4089,7 +4348,7 @@ export default function App() {
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Settings">
             <h2>Settings</h2>
             <p className="muted" style={{ marginTop: 0 }}>
-              Options save on this device. Themes apply immediately.
+              Options save on this device. Themes apply immediately. Your working session is restored the next time you open the app.
             </p>
             <div className="settings-grid">
               <div className="settings-row">
@@ -4155,6 +4414,30 @@ export default function App() {
                   />
                   Enabled
                 </label>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <label>Working session</label>
+                  <span className="muted">
+                    Remembers your tab, classes, race, level, filters, simulator gear, and searches — including after a crash.
+                    Saved builds and the EQ install folder are kept.
+                  </span>
+                </div>
+                <div>
+                  <button type="button" onClick={() => setResetArmed((on) => !on)}>
+                    Reset to defaults
+                  </button>
+                  {resetArmed && (
+                    <div style={{ marginTop: '0.45rem' }}>
+                      <p className="muted" style={{ margin: '0 0 0.35rem' }}>
+                        Clear the remembered session and start fresh?
+                      </p>
+                      <button type="button" className="primary" onClick={resetWorkspaceToDefaults}>
+                        Start fresh
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               {isDesktopApp && (
                 <div className="settings-row">
