@@ -36,6 +36,9 @@ jobs:
         working-directory: frontend
         run: npm ci && npm test && npm run build
 
+      - name: Fetch main for packaging identity check
+        run: git fetch origin main --depth=1
+
       - name: Desktop tests
         working-directory: desktop
         run: npm test
