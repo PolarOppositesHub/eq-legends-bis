@@ -134,6 +134,7 @@ function envForApi() {
     EQ_FRONTEND_DIST: ui,
     EQ_LEGENDS_ROOT: legendsRoot,
     EQ_XLSX_DIR: app.getPath('userData'),
+    EQ_USER_DATA: app.getPath('userData'),
     EQ_IMAGES_DIR: imagesDir,
     EQ_API_PORT: String(apiPort),
     EQ_INSTANCE_NONCE: instanceNonce,

@@ -1,0 +1,169 @@
+[Tue Aug 04 22:07:56 2026] A Teir`Dal priest crushes YOU for 19 points of damage.
+[Tue Aug 04 22:07:56 2026] A Teir`Dal priest bashes YOU for 1 point of damage.
+[Tue Aug 04 22:07:56 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:07:58 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:07:58 2026] A Teir`Dal priest begins casting Root.
+[Tue Aug 04 22:07:59 2026] A Teir`Dal priestess tries to crush YOU, but misses!
+[Tue Aug 04 22:07:59 2026] A Teir`Dal priestess crushes YOU for 2 points of damage.
+[Tue Aug 04 22:07:59 2026] A Teir`Dal priestess tries to bash YOU, but misses!
+[Tue Aug 04 22:08:00 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:08:00 2026] A Teir`Dal priestess begins casting Holy Might.
+[Tue Aug 04 22:08:00 2026] Your feet adhere to the ground.
+[Tue Aug 04 22:08:00 2026] A Teir`Dal priest tries to crush YOU, but misses!
+[Tue Aug 04 22:08:01 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:08:02 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:08:02 2026] You overcome the stun!
+[Tue Aug 04 22:08:02 2026] a Teir`Dal priestess hit you for 32 points of magic damage by Holy Might.
+[Tue Aug 04 22:08:02 2026] You are struck by a sudden force.
+[Tue Aug 04 22:08:02 2026] A Teir`Dal priestess crushes YOU for 25 points of damage.
+[Tue Aug 04 22:08:02 2026] You can't cast spells while stunned!
+[Tue Aug 04 22:08:02 2026] You are no longer stunned.
+[Tue Aug 04 22:08:03 2026] You slash a Teir`Dal priest for 85 points of damage. (Critical)
+[Tue Aug 04 22:08:03 2026] A Teir`Dal priest crushes YOU for 2 points of damage.
+[Tue Aug 04 22:08:03 2026] You try to bash a Teir`Dal priest, but miss!
+[Tue Aug 04 22:08:04 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:05 2026] A Teir`Dal priest tries to bash YOU, but misses!
+[Tue Aug 04 22:08:05 2026] A Teir`Dal priest tries to bash YOU, but misses!
+[Tue Aug 04 22:08:05 2026] A Teir`Dal priestess crushes YOU for 2 points of damage.
+[Tue Aug 04 22:08:06 2026] A Teir`Dal priest crushes YOU for 17 points of damage.
+[Tue Aug 04 22:08:06 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:08:06 2026] You hit a Teir`Dal priest for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:06 2026] A Teir`Dal priest's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:08:06 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:08:06 2026] You hit a Teir`Dal priest for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:06 2026] A Teir`Dal priest's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:08:06 2026] You slash a Teir`Dal priest for 54 points of damage.
+[Tue Aug 04 22:08:06 2026] Your faction standing with Befallen Inhabitants has been adjusted by -2.
+[Tue Aug 04 22:08:06 2026] You gain experience! (1.675%)
+[Tue Aug 04 22:08:06 2026] You have slain a Teir`Dal priest!
+[Tue Aug 04 22:08:07 2026] A Teir`Dal priestess tries to bash YOU, but misses!
+[Tue Aug 04 22:08:07 2026] A Teir`Dal priestess tries to bash YOU, but misses!
+[Tue Aug 04 22:08:08 2026] A Teir`Dal priestess crushes YOU for 34 points of damage.
+[Tue Aug 04 22:08:08 2026] Auto attack is on.
+[Tue Aug 04 22:08:09 2026] You slash a Teir`Dal priestess for 46 points of damage.
+[Tue Aug 04 22:08:09 2026] Your attempt to disarm failed.
+[Tue Aug 04 22:08:09 2026] Your feet come free.
+[Tue Aug 04 22:08:09 2026] You already have your target's attention.
+[Tue Aug 04 22:08:10 2026] You smite a Teir`Dal priestess for 30 points of damage.
+[Tue Aug 04 22:08:10 2026] You hit a Teir`Dal priestess for 95 points of magic damage by Smiting Strike.
+[Tue Aug 04 22:08:10 2026] A Teir`Dal priestess staggers.
+[Tue Aug 04 22:08:10 2026] You try to smite a Teir`Dal priestess, but miss!
+[Tue Aug 04 22:08:10 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:11 2026] A Teir`Dal priestess tries to crush YOU, but misses!
+[Tue Aug 04 22:08:11 2026] A Teir`Dal priestess crushes YOU for 6 points of damage.
+[Tue Aug 04 22:08:13 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:08:13 2026] You hit a Teir`Dal priestess for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:13 2026] A Teir`Dal priestess's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:08:13 2026] You try to slash a Teir`Dal priestess, but a Teir`Dal priestess dodges!
+[Tue Aug 04 22:08:13 2026] You slash a Teir`Dal priestess for 50 points of damage.
+[Tue Aug 04 22:08:14 2026] You bash a Teir`Dal priestess for 36 points of damage.
+[Tue Aug 04 22:08:14 2026] A Teir`Dal priestess tries to crush YOU, but misses!
+[Tue Aug 04 22:08:14 2026] A Teir`Dal priestess crushes YOU for 4 points of damage.
+[Tue Aug 04 22:08:15 2026] You try to slash a Teir`Dal priestess, but miss!
+[Tue Aug 04 22:08:15 2026] You try to slash a Teir`Dal priestess, but miss!
+[Tue Aug 04 22:08:15 2026] A Teir`Dal priestess tries to bash YOU, but misses!
+[Tue Aug 04 22:08:15 2026] A Teir`Dal priestess bashes YOU for 1 point of damage.
+[Tue Aug 04 22:08:16 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:17 2026] A Teir`Dal priestess crushes YOU for 2 points of damage.
+[Tue Aug 04 22:08:19 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:08:19 2026] You hit a Teir`Dal priestess for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:19 2026] A Teir`Dal priestess's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:08:19 2026] A Teir`Dal priestess tries to crush YOU, but misses! (Riposte)
+[Tue Aug 04 22:08:19 2026] You slash a Teir`Dal priestess for 4 points of damage.
+[Tue Aug 04 22:08:20 2026] A Teir`Dal priestess crushes YOU for 34 points of damage.
+[Tue Aug 04 22:08:20 2026] A Teir`Dal priestess begins casting Greater Healing.
+[Tue Aug 04 22:08:21 2026] You slash a Teir`Dal priestess for 46 points of damage.
+[Tue Aug 04 22:08:21 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:24 2026] Your faction standing with Befallen Inhabitants has been adjusted by -2.
+[Tue Aug 04 22:08:24 2026] You gain experience! (1.675%)
+[Tue Aug 04 22:08:24 2026] You hit a Teir`Dal priestess for 184 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:08:24 2026] A Teir`Dal priestess's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:08:24 2026] You have slain a Teir`Dal priestess!
+[Tue Aug 04 22:08:30 2026] You looted a Fine Steel Two Handed Sword +1 from a Teir`Dal priest's corpse and sold it for 5 platinum.
+[Tue Aug 04 22:08:33 2026] A Teir`Dal ranger begins casting Shield of Thistles.
+[Tue Aug 04 22:08:33 2026] You looted a Fine Steel Warhammer from a Teir`Dal priestess's corpse and sold it for 4 platinum.
+[Tue Aug 04 22:08:38 2026] A Teir`Dal ranger begins casting Shield of Thistles.
+[Tue Aug 04 22:08:40 2026] a Teir`Dal shadowknight is surrounded by a thorny barrier.
+[Tue Aug 04 22:08:43 2026] Soldier of V`Zher slashes YOU for 3 points of damage.
+[Tue Aug 04 22:08:43 2026] Soldier of V`Zher cleaves YOU for 3 points of damage.
+[Tue Aug 04 22:08:43 2026] You are stunned!
+[Tue Aug 04 22:08:43 2026] Soldier of V`Zher bashes YOU for 1 point of damage.
+[Tue Aug 04 22:08:44 2026] Soldier of V`Zher tries to kick YOU, but misses!
+[Tue Aug 04 22:08:45 2026] You are no longer stunned.
+[Tue Aug 04 22:08:46 2026] Auto attack is on.
+[Tue Aug 04 22:08:46 2026] You bash Soldier of V`Zher for 26 points of damage.
+[Tue Aug 04 22:08:46 2026] You try to smite Soldier of V`Zher, but miss!
+[Tue Aug 04 22:08:46 2026] You slash Soldier of V`Zher for 10 points of damage.
+[Tue Aug 04 22:08:46 2026] You slash Soldier of V`Zher for 16 points of damage.
+[Tue Aug 04 22:08:46 2026] Soldier of V`Zher tries to slash YOU, but misses!
+[Tue Aug 04 22:08:47 2026] Your attempt to disarm failed.
+[Tue Aug 04 22:08:47 2026] You already have your target's attention.
+[Tue Aug 04 22:08:49 2026] You begin casting Stinging Swarm.
+[Tue Aug 04 22:08:49 2026] Soldier of V`Zher slashes YOU for 3 points of damage.
+[Tue Aug 04 22:08:52 2026] Your Stinging Swarm spell is interrupted.
+[Tue Aug 04 22:08:52 2026] Soldier of V`Zher bashes YOU for 1 point of damage.
+[Tue Aug 04 22:08:52 2026] Soldier of V`Zher bashes YOU for 1 point of damage.
+[Tue Aug 04 22:08:52 2026] You try to slash Soldier of V`Zher, but Soldier of V`Zher dodges!
+[Tue Aug 04 22:08:52 2026] You try to slash Soldier of V`Zher, but miss!
+[Tue Aug 04 22:08:52 2026] Soldier of V`Zher slashes YOU for 3 points of damage.
+[Tue Aug 04 22:08:52 2026] You try to slash Soldier of V`Zher, but miss!
+[Tue Aug 04 22:08:52 2026] You slash Soldier of V`Zher for 60 points of damage.
+[Tue Aug 04 22:08:52 2026] Soldier of V`Zher tries to kick YOU, but misses!
+[Tue Aug 04 22:08:53 2026] You begin casting Stinging Swarm.
+[Tue Aug 04 22:08:55 2026] Soldier of V`Zher slashes YOU for 42 points of damage.
+[Tue Aug 04 22:08:57 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:08:57 2026] Soldier of V`Zher is engulfed by a swarm.
+[Tue Aug 04 22:08:57 2026] You have become better at Specialize Conjuration! (23)
+[Tue Aug 04 22:08:57 2026] You slash Soldier of V`Zher for 60 points of damage.
+[Tue Aug 04 22:08:57 2026] Soldier of V`Zher tries to cleave YOU, but YOU parry!
+[Tue Aug 04 22:08:57 2026] You bash Soldier of V`Zher for 16 points of damage.
+[Tue Aug 04 22:08:57 2026] You bash Soldier of V`Zher for 32 points of damage.
+[Tue Aug 04 22:08:58 2026] Soldier of V`Zher slashes YOU for 18 points of damage.
+[Tue Aug 04 22:08:58 2026] Soldier of V`Zher slashes YOU for 30 points of damage.
+[Tue Aug 04 22:08:59 2026] You slash Soldier of V`Zher for 40 points of damage.
+[Tue Aug 04 22:08:59 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:09:00 2026] You avoid the stunning blow.
+[Tue Aug 04 22:09:00 2026] Soldier of V`Zher bashes YOU for 1 point of damage.
+[Tue Aug 04 22:09:00 2026] Soldier of V`Zher has taken 41 damage from your Stinging Swarm.
+[Tue Aug 04 22:09:01 2026] Soldier of V`Zher kicks YOU for 1 point of damage.
+[Tue Aug 04 22:09:01 2026] Soldier of V`Zher tries to kick YOU, but misses!
+[Tue Aug 04 22:09:01 2026] Soldier of V`Zher slashes YOU for 18 points of damage.
+[Tue Aug 04 22:09:01 2026] Soldier of V`Zher slashes YOU for 42 points of damage.
+[Tue Aug 04 22:09:02 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:09:02 2026] You hit Soldier of V`Zher for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:09:02 2026] Soldier of V`Zher's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:09:02 2026] You slash Soldier of V`Zher for 84 points of damage.
+[Tue Aug 04 22:09:02 2026] You try to smite Soldier of V`Zher, but Soldier of V`Zher dodges!
+[Tue Aug 04 22:09:04 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:09:04 2026] Soldier of V`Zher slashes YOU for 42 points of damage.
+[Tue Aug 04 22:09:04 2026] Soldier of V`Zher tries to slash YOU, but misses!
+[Tue Aug 04 22:09:06 2026] Soldier of V`Zher has taken 41 damage from your Stinging Swarm.
+[Tue Aug 04 22:09:07 2026] You regain your concentration and continue your casting.
+[Tue Aug 04 22:09:07 2026] You hit Soldier of V`Zher for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:09:07 2026] Soldier of V`Zher's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:09:07 2026] You slash Soldier of V`Zher for 74 points of damage.
+[Tue Aug 04 22:09:07 2026] You slash Soldier of V`Zher for 65 points of damage.
+[Tue Aug 04 22:09:07 2026] Your faction standing with Befallen Inhabitants has been adjusted by -2.
+[Tue Aug 04 22:09:07 2026] You gain experience! (2.617%)
+[Tue Aug 04 22:09:07 2026] You have slain Soldier of V`Zher!
+[Tue Aug 04 22:09:09 2026] You looted a Pristine Studded Leather Sleeves from Soldier of V`Zher's corpse to create a Pristine Studded Leather Sleeves +3
+[Tue Aug 04 22:11:22 2026] Auto attack is on.
+[Tue Aug 04 22:11:22 2026] You bash a Teir`Dal rogue for 20 points of damage.
+[Tue Aug 04 22:11:22 2026] You bash a Teir`Dal rogue for 10 points of damage.
+[Tue Aug 04 22:11:22 2026] You smite a Teir`Dal rogue for 16 points of damage.
+[Tue Aug 04 22:11:22 2026] You hit a Teir`Dal rogue for 95 points of magic damage by Smiting Strike.
+[Tue Aug 04 22:11:22 2026] A Teir`Dal rogue staggers.
+[Tue Aug 04 22:11:22 2026] You try to slash a Teir`Dal rogue, but miss!
+[Tue Aug 04 22:11:22 2026] You slash a Teir`Dal rogue for 70 points of damage.
+[Tue Aug 04 22:11:23 2026] Your attempt to disarm failed.
+[Tue Aug 04 22:11:23 2026] You have become better at Disarm! (105)
+[Tue Aug 04 22:11:24 2026] You begin casting Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:11:25 2026] A Teir`Dal rogue tries to pierce YOU, but misses!
+[Tue Aug 04 22:11:27 2026] You hit a Teir`Dal rogue for 297 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:11:27 2026] A Teir`Dal rogue's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:11:27 2026] You slash a Teir`Dal rogue for 60 points of damage.
+[Tue Aug 04 22:11:28 2026] Your faction standing with Befallen Inhabitants has been adjusted by -2.
+[Tue Aug 04 22:11:28 2026] You gain experience! (1.885%)
+[Tue Aug 04 22:11:28 2026] You hit a Teir`Dal rogue for 285 points of magic damage by Garrison's Mighty Mana Shock.
+[Tue Aug 04 22:11:28 2026] A Teir`Dal rogue's skin blisters as it is consumed by pure mana.
+[Tue Aug 04 22:11:28 2026] You have slain a Teir`Dal rogue!
