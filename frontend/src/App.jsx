@@ -48,6 +48,9 @@ import {
   previewStatsPlus10,
   scaleTooltipLines,
 } from './itemUpgradeStats.js'
+import ParserTab from './ParserTab.jsx'
+import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
+import { WHATS_NEW_ID } from './parserView.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -963,6 +966,12 @@ export default function App() {
   const [uiSettings, setUiSettings] = useState(() => loadUiSettings())
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appHelpOpen, setAppHelpOpen] = useState(false)
+  const [creditsOpen, setCreditsOpen] = useState(false)
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false)
+  const [parserLogPath, setParserLogPath] = useState('')
+  const [parserMergePets, setParserMergePets] = useState(true)
+  const [parserFightId, setParserFightId] = useState(null)
+  const [whatsNewSeenId, setWhatsNewSeenId] = useState('')
   const [loadJobs, setLoadJobs] = useState([])
   const loadJobsRef = useRef([])
   const [eqInstallFolder, setEqInstallFolder] = useState('')
@@ -1281,6 +1290,10 @@ export default function App() {
     setBuildName(state.buildName || '')
     setSelectedBuildId(state.selectedBuildId || '')
     setImportMeta(state.importMeta || null)
+    setParserLogPath(state.parserLogPath || '')
+    setParserMergePets(state.parserMergePets !== false)
+    setParserFightId(state.parserFightId || null)
+    setWhatsNewSeenId(state.whatsNewSeen || '')
   }, [])
 
   const resetWorkspaceToDefaults = useCallback(() => {
@@ -1350,6 +1363,7 @@ export default function App() {
         }
         sessionReadyRef.current = true
         setSessionReady(true)
+        if ((state?.whatsNewSeen || '') !== WHATS_NEW_ID) setWhatsNewOpen(true)
       } catch (e) {
         if (!cancelled) setError(String(e.message || e))
       } finally {
@@ -2133,6 +2147,10 @@ export default function App() {
       selectedBuildId,
       importMeta,
       uiSettings,
+      parserLogPath,
+      parserMergePets,
+      parserFightId,
+      whatsNewSeen: whatsNewSeenId,
     }, catalogFromMeta(meta))
   }, [
     sessionReady, meta, tab, classes, mode, primaryStats, secondaryStats, tertiaryStats,
@@ -2140,7 +2158,8 @@ export default function App() {
     castBuffsMode, assumeMaxAas, equipment, bisOverrides, bagsQ, bagsLoc, questQ,
     selectedQuestName, questListCollapsed, questRewardUpgrade, mobQ, mobKind, mobEra,
     selectedMobName, mobListCollapsed, searchQ, searchSlot, itemDetail, searchItemUpgrade,
-    buildName, selectedBuildId, importMeta, uiSettings,
+    buildName, selectedBuildId, importMeta, uiSettings, parserLogPath, parserMergePets,
+    parserFightId, whatsNewSeenId,
   ])
   workspaceSnapshotRef.current = workspaceSnapshot
 
@@ -2440,6 +2459,7 @@ export default function App() {
     { id: 'quests', label: 'Quest Hub' },
     { id: 'mobs', label: 'Mobs' },
     { id: 'search', label: 'Item Search' },
+    { id: 'parser', label: 'Parser' },
   ]
 
   const unmatchedNames = (importMeta?.unmatched || [])
@@ -2480,6 +2500,13 @@ export default function App() {
           </p>
         </div>
         <div className="header-actions">
+          <button
+            type="button"
+            className="header-text-btn"
+            onClick={() => setCreditsOpen(true)}
+          >
+            Credits
+          </button>
           <button
             type="button"
             className="icon-btn"
@@ -3493,6 +3520,21 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'parser' && (
+            <ParserTab
+              logPath={parserLogPath}
+              onLogPath={setParserLogPath}
+              mergePets={parserMergePets}
+              onMergePets={setParserMergePets}
+              fightId={parserFightId}
+              onFightId={setParserFightId}
+              eqInstallFolder={eqInstallFolder}
+              onSetEqFolder={pickEqInstallFolder}
+              canSetFolder={isDesktopApp}
+              onOpenCredits={() => setCreditsOpen(true)}
+            />
+          )}
+
           {tab === 'search' && (
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
@@ -4263,7 +4305,7 @@ export default function App() {
 
           <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.78rem', lineHeight: 1.45 }}>
             Stats from decoded catalog / eqlwiki only — never invented.
-            Use the <strong>?</strong> help and <strong>cog</strong> settings in the header anytime.
+            Use the <strong>?</strong> help, <strong>Credits</strong>, and <strong>cog</strong> settings in the header anytime.
             {isDesktopApp && (
               <>
                 {' '}Desktop: window <strong>X</strong>, <strong>Alt+F4</strong>, or{' '}
@@ -4351,7 +4393,7 @@ export default function App() {
                 <div>
                   <label>Working session</label>
                   <span className="muted">
-                    Remembers your tab, classes, race, level, filters, simulator gear, and searches — including after a crash.
+                    Remembers your tab, classes, race, level, filters, simulator gear, searches, and Parser log — including after a crash.
                     Saved builds and the EQ install folder are kept.
                   </span>
                 </div>
@@ -4424,6 +4466,16 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {creditsOpen && <CreditsDialog onClose={() => setCreditsOpen(false)} />}
+      {whatsNewOpen && (
+        <WhatsNewDialog
+          onClose={() => {
+            setWhatsNewSeenId(WHATS_NEW_ID)
+            setWhatsNewOpen(false)
+          }}
+        />
       )}
 
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} onConfirmWiki={confirmOpenEqlwiki} />
