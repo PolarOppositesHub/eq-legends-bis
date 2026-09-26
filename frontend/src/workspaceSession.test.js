@@ -233,3 +233,77 @@ test('desktop bridge ignores port-scoped localStorage', async () => {
   assert.equal(disk.value, null)
   assert.deepEqual(calls, ['get', 'set', 'clear'])
 })
+
+test('round-trip restores trio, search slider, and inventory import', async () => {
+  const storage = memoryStorage()
+  const env = { getDesktop: () => null, storage: () => storage }
+  const snap = buildWorkspaceSnapshot({
+    tab: 'search',
+    classes: ['Monk', 'Wizard', 'Cleric'],
+    race: 'Dark Elf',
+    characterLevel: 42,
+    mode: 'ai',
+    upgrade: 6,
+    equipment: { CHEST: 'Flowing Black Robe', PRIMARY: 'Jade Mace' },
+    wornUpgrades: { PRIMARY: 4 },
+    bisOverrides: { CHEST: 'Flowing Black Robe' },
+    searchQ: 'cloak of flames',
+    searchSlot: 'PRIMARY',
+    searchSelectedName: 'Cloak of Flames',
+    searchItemUpgrade: 10,
+    importMeta: {
+      source: 'Synth-Inventory.txt',
+      all_items: [{ name: 'Cloak of Flames', location: 'Back', upgrade_from_name: 0 }],
+      equipment: { CHEST: 'Flowing Black Robe' },
+    },
+  }, catalog)
+  const saved = await saveWorkspaceSession(snap, env)
+  assert.equal(saved.ok, true)
+  const loaded = await loadWorkspaceSession(env)
+  assert.deepEqual(loaded, snap)
+  const again = sanitizeWorkspace(loaded, catalog)
+  assert.equal(again.restored, true)
+  assert.deepEqual(again.state.classes, ['Monk', 'Wizard', 'Cleric'])
+  assert.equal(again.state.tab, 'search')
+  assert.equal(again.state.race, 'Dark Elf')
+  assert.equal(again.state.characterLevel, 42)
+  assert.equal(again.state.searchQ, 'cloak of flames')
+  assert.equal(again.state.searchSelectedName, 'Cloak of Flames')
+  assert.equal(again.state.searchItemUpgrade, 10)
+  assert.deepEqual(again.state.equipment, { CHEST: 'Flowing Black Robe', PRIMARY: 'Jade Mace' })
+  assert.equal(again.state.importMeta.source, 'Synth-Inventory.txt')
+  assert.equal(again.state.importMeta.all_items[0].name, 'Cloak of Flames')
+  assert.equal(again.state.bisOverrides.CHEST, 'Flowing Black Robe')
+})
+
+test('future keys do not break loading the current session', () => {
+  const future = {
+    v: 1,
+    tab: 'sim',
+    classes: ['Monk', 'Wizard', 'Cleric'],
+    race: 'Dark Elf',
+    characterLevel: 42,
+    searchQ: 'cloak of flames',
+    searchSlot: 'PRIMARY',
+    searchSelectedName: 'Cloak of Flames',
+    searchItemUpgrade: 5,
+    equipment: { PRIMARY: 'Jade Mace' },
+    parserSettings: { live: true, idleSeconds: 30, zones: ['plane of sky'] },
+    currencies: { motes: { 'Mote of Potential': 4 }, windRunes: { Azia: 1 } },
+    overlay: null,
+    extraNumber: 1,
+  }
+  const { restored, state } = sanitizeWorkspace(future, catalog)
+  assert.equal(restored, true)
+  assert.equal(state.tab, 'sim')
+  assert.deepEqual(state.classes, ['Monk', 'Wizard', 'Cleric'])
+  assert.equal(state.race, 'Dark Elf')
+  assert.equal(state.characterLevel, 42)
+  assert.equal(state.searchQ, 'cloak of flames')
+  assert.equal(state.searchSelectedName, 'Cloak of Flames')
+  assert.equal(state.searchItemUpgrade, 5)
+  assert.deepEqual(state.equipment, { PRIMARY: 'Jade Mace' })
+  assert.equal(state.parserSettings, undefined)
+  assert.equal(state.currencies, undefined)
+  assert.equal(state.overlay, undefined)
+})

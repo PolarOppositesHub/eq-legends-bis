@@ -62,6 +62,37 @@ test('round-trip, corrupt file, and settings.json stay independent', () => {
   assert.equal(fs.existsSync(settingsPath), true);
 });
 
+test('round-trip keeps a full workspace, including unknown future keys', () => {
+  const dir = tempUserData();
+  const session = {
+    v: 1,
+    tab: 'search',
+    classes: ['Monk', 'Wizard', 'Cleric'],
+    race: 'Dark Elf',
+    characterLevel: 42,
+    equipment: { BACK: 'Cloak of Flames', PRIMARY: 'Jade Mace' },
+    wornUpgrades: { BACK: 0, PRIMARY: 4 },
+    bisOverrides: { BACK: 'Cloak of Flames' },
+    searchQ: 'cloak of flames',
+    searchSelectedName: 'Cloak of Flames',
+    searchItemUpgrade: 10,
+    importMeta: {
+      source: 'Synth-Inventory.txt',
+      equipment: { BACK: 'Cloak of Flames' },
+    },
+    parserSettings: { live: true, idleSeconds: 30 },
+    currencies: { 'Void-Touched Potential': 1, motes: { 'Mote of Potential': 4 } },
+  };
+  writeWorkspaceSession(dir, session);
+  assert.deepEqual(readWorkspaceSession(dir), session);
+  const settingsPath = path.join(dir, 'settings.json');
+  fs.writeFileSync(settingsPath, JSON.stringify({ eqInstallFolder: 'C:\\Games\\EverQuest Legends' }), 'utf8');
+  writeWorkspaceSession(dir, session);
+  assert.deepEqual(JSON.parse(fs.readFileSync(settingsPath, 'utf8')), {
+    eqInstallFolder: 'C:\\Games\\EverQuest Legends',
+  });
+});
+
 test('non-objects are rejected and do not replace a good file', () => {
   const dir = tempUserData();
   writeWorkspaceSession(dir, { tab: 'quests' });

@@ -1,0 +1,23 @@
+Location	Name	ID	Count	Slots
+Head	Midnight Clad Headband	1001	1	10
+Ear	Left Ear Stud +2	1002	1	10
+Ear	Right Ear Stud	1003	1	10
+Ear-Slot7	Focus Stone	2001	1	10
+Chest	Empty	0	0	0
+Back	Cloak of Flames +0	3001	1	10
+Waist	Flowing Black Silk Sash +10	3002	1	10
+Primary	Blued Two-Handed Hammer +5*	4001	1	10
+Fingers	Ring of the Test Fixture	5001	1	10
+Fingers	Ring of the Test Fixture Two	5002	1	10
+Any Slot	Charm of the Fixture	6001	1	10
+General 1	Bag of Samples	7001	1	10
+General 1-Slot1	Mote of Infinitesimal Potential	148590	5	10
+Bank1	Banked Sample	8001	1	10
+SharedBank1	Shared Sample	9001	1	10
+Personal-Depot1	Depot Sample	9002	1	10
+Personal-Depot1-Slot3	Depot Child	9003	1	10
+
+KeyRing	Name	ID	
+Equipment	Synthetic Spare Cap	1001
+Augmentation	Synthetic Stone (Exaltation)	90001
+Activated	Synthetic Guise +4	90002

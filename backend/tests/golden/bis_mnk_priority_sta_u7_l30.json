@@ -1,0 +1,4380 @@
+{
+  "ac_softcap": {
+    "aa_softcap_pct": 12.0,
+    "base_softcap": 205.0,
+    "combat_stability_pct": 10,
+    "combat_stability_rank": 3,
+    "formula": "level * 6 + 25 (eqlwiki Statistics/AC for level ≤ 50)",
+    "level": 30,
+    "loadout_worn_ac": 214.0,
+    "note": "BiS assumes max Combat Stability + Physical Enhancement so the soft cap is the AA-raised target. Hit that worn-AC floor, then prefer other stats; overcap AC is lightly valued via class post-cap return. eqlwiki notes EQL caps may differ — working model only.",
+    "physical_enhancement": true,
+    "physical_enhancement_pct": 2,
+    "post_cap_return": 0.33,
+    "softcap_target": 229.6,
+    "sources": [
+      "https://eqlwiki.com/AC",
+      "https://eqlwiki.com/Alternate_Advancement"
+    ]
+  },
+  "character_level": 30,
+  "class_roles": {
+    "attr_weights": {
+      "AGI": 1.0,
+      "CHA": 0.0,
+      "DEX": 1.0,
+      "INT": 0.0,
+      "STA": 0.5,
+      "STR": 0.5,
+      "WIS": 0.0
+    },
+    "has_tank": false,
+    "roles": [
+      "dps",
+      "melee"
+    ],
+    "uses_mana": false
+  },
+  "classes": [
+    "Monk"
+  ],
+  "dual_wield_enabled": true,
+  "dual_wield_eval": {
+    "dw_chance": 0.3775,
+    "dw_skill": 151,
+    "mode": "dual_wield",
+    "model_note": "eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈151 @L30 (assumption: no skill table in decoded data; monk-style high-skill default)",
+    "pair_score": 3.254724025974026,
+    "two_hand_name": "TornEar Thumper",
+    "two_hand_score": 1.9141666666666666
+  },
+  "haste_in_loadout": [
+    {
+      "haste": 48.0,
+      "name": "Golden Sash of Tranquility",
+      "slot": "WAIST"
+    }
+  ],
+  "haste_rule": "Only ONE worn haste item counts (highest %). Loadout enforces this.",
+  "maximize_hp_regen": false,
+  "mode": "Priority Stat",
+  "pool_size": 227,
+  "prefer_ranged_damage": true,
+  "primary_stats": [
+    "STA"
+  ],
+  "priority_stat": "STA",
+  "priority_stat_key": "STA",
+  "secondary_stats": [],
+  "slots": [
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Brother Zephyl, Brother Qwinn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Headband",
+          "name": "Black Headband",
+          "quest_source": "Drops From: Rathe Mountains: Brother Zephyl; Southern Karana: Brother Qwinn",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1413.35,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "AGI": 10.0,
+            "CHA": 11.0,
+            "DEX": 10.0,
+            "HP": 11.0,
+            "INT": 8.0,
+            "STA": 11.0,
+            "STR": 9.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "AGI": 3,
+            "CHA": 4,
+            "DEX": 3,
+            "HP": 4,
+            "INT": 1,
+            "STA": 4,
+            "STR": 2
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "AGI": 13.0,
+            "CHA": 14.0,
+            "DEX": 13.0,
+            "HP": 14.0,
+            "INT": 11.0,
+            "STA": 14.0,
+            "STR": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/black-headband/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Rathe Mountains"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Turban",
+          "name": "Golden Efreeti Turban",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 17.25,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "STR": 12.0,
+            "SVC": 13.0,
+            "SVD": 13.0,
+            "SVF": 13.0,
+            "SVM": 13.0,
+            "SVP": 13.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "STR": 5,
+            "SVC": 6,
+            "SVD": 6,
+            "SVF": 6,
+            "SVM": 6,
+            "SVP": 6
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "STR": 15.0,
+            "SVC": 16.0,
+            "SVD": 16.0,
+            "SVF": 16.0,
+            "SVM": 16.0,
+            "SVP": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-turban/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a Pickclaw Foeseeker, Battlelord Paluk, Lord Pickclaw",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Blackened Alloy Coif",
+          "name": "Blackened Alloy Coif",
+          "quest_source": "Drops From: Clan Runnyeye: a Pickclaw Foeseeker, Battlelord Paluk, Lord Pickclaw",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 17.1,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "STR": 13.0,
+            "SVC": 13.0,
+            "SVD": 13.0,
+            "SVF": 13.0,
+            "SVM": 13.0,
+            "SVP": 13.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "STR": 6,
+            "SVC": 6,
+            "SVD": 6,
+            "SVF": 6,
+            "SVM": 6,
+            "SVP": 6
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "STR": 16.0,
+            "SVC": 16.0,
+            "SVD": 16.0,
+            "SVF": 16.0,
+            "SVM": 16.0,
+            "SVP": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/blackened-alloy-coif/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "the froglok king",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Crown of the Froglok Kings",
+          "name": "Crown of the Froglok Kings",
+          "quest_source": "Drops From: Lower Guk: the froglok king",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 15.6,
+          "stats_at_upgrade": {
+            "AC": 20.0,
+            "SVC": 34.0,
+            "SVF": 34.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "SVC": 20,
+            "SVF": 20
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "SVC": 40,
+            "SVF": 40
+          },
+          "url": "https://eqlegendstools.com/items/crown-of-the-froglok-kings/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "A Nisch Mas Mender",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Cap of Mending",
+          "name": "Cap of Mending",
+          "quest_source": "Drops From: Splitpaw Lair: A Nisch Mas Mender",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 14.4,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "CHA": 12.0,
+            "END": 17.0,
+            "HP": 17.0,
+            "STR": 12.0,
+            "SVP": 10.0
+          },
+          "stats_plus0": {
+            "AC": 3,
+            "CHA": 5,
+            "END": 10,
+            "HP": 10,
+            "STR": 5,
+            "SVP": 3
+          },
+          "stats_plus10": {
+            "AC": 13.0,
+            "CHA": 15.0,
+            "END": 20,
+            "HP": 20,
+            "STR": 15.0,
+            "SVP": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/cap-of-mending/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Splitpaw Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Beastlord, Druid, Enchanter, Magician, Monk, Necromancer, Rogue, Wizard",
+      "drops_mobs": "various mobs, a spite golem",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Midnight Clad Headband",
+      "is_weapon": false,
+      "name": "Midnight Clad Headband",
+      "priority_value": 20.0,
+      "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a spite golem",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 2007.8,
+      "slot": "HEAD",
+      "stats_at_upgrade": {
+        "AC": 9.0,
+        "INT": 17.0,
+        "STA": 17.0,
+        "WIS": 17.0
+      },
+      "stats_plus0": {
+        "AC": 2,
+        "INT": 10,
+        "STA": 10,
+        "WIS": 10
+      },
+      "stats_plus10": {
+        "AC": 12.0,
+        "INT": 20,
+        "STA": 20,
+        "WIS": 20
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/midnight-clad-headband/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Ton Po's Eye Patch",
+          "name": "Ton Po's Eye Patch",
+          "quest_source": "Monk Test of Sight",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 15.6,
+          "stats_at_upgrade": {
+            "AGI": 15.0,
+            "DEX": 15.0,
+            "END": 42.0,
+            "STR": 15.0
+          },
+          "stats_plus0": {
+            "AGI": 8,
+            "DEX": 8,
+            "END": 25,
+            "STR": 8
+          },
+          "stats_plus10": {
+            "AGI": 18.0,
+            "DEX": 18.0,
+            "END": 50,
+            "STR": 18.0
+          },
+          "url": "https://eqlegendstools.com/items/ton-pos-eye-patch/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Diamond Mask",
+          "name": "Golden Diamond Mask",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 12.45,
+          "stats_at_upgrade": {
+            "SVC": 17.0,
+            "SVD": 12.0,
+            "SVF": 17.0,
+            "SVM": 10.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "SVC": 10,
+            "SVD": 5,
+            "SVF": 10,
+            "SVM": 3,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "SVC": 20,
+            "SVD": 15.0,
+            "SVF": 20,
+            "SVM": 13.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/golden-diamond-mask/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lady Vox",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Tobrin's Mystical Eyepatch",
+          "name": "Tobrin's Mystical Eyepatch",
+          "quest_source": "Drops From: Permafrost: Lady Vox",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 9.0,
+          "stats_at_upgrade": {
+            "INT": 25.0,
+            "WIS": 25.0
+          },
+          "stats_plus0": {
+            "INT": 15,
+            "WIS": 15
+          },
+          "stats_plus10": {
+            "INT": 30,
+            "WIS": 30
+          },
+          "url": "https://eqlegendstools.com/items/tobrins-mystical-eyepatch/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Permafrost"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a Ghoul Assassin",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Guise of the Deceiver",
+          "name": "Guise of the Deceiver",
+          "quest_source": "Drops From: Lower Guk: a Ghoul Assassin",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 8.55,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "CHA": 22.0,
+            "SVM": 14.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "CHA": 13,
+            "SVM": 7
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "CHA": 26,
+            "SVM": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/guise-of-the-deceiver/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Shellara Ebbhunter",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Pearlescent Mask",
+          "name": "Pearlescent Mask",
+          "quest_source": "Drops From: Kedge Keep: Shellara Ebbhunter",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 7.5,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "AGI": 12.0,
+            "SVM": 17.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "AGI": 5,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "AGI": 15.0,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/pearlescent-mask/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Kedge Keep"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "The Prophet",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Rotting Faydark Mask",
+      "is_weapon": false,
+      "name": "Rotting Faydark Mask",
+      "priority_value": 12.0,
+      "quest_source": "Drops From: Crushbone: The Prophet",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1209.0,
+      "slot": "FACE",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "END": 12.0,
+        "HP": 12.0,
+        "MANA": 12.0,
+        "STA": 9.0
+      },
+      "stats_plus0": {
+        "AC": 5,
+        "END": 5,
+        "HP": 5,
+        "MANA": 5,
+        "STA": 2
+      },
+      "stats_plus10": {
+        "AC": 15.0,
+        "END": 15.0,
+        "HP": 15.0,
+        "MANA": 15.0,
+        "STA": 12.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/rotting-faydark-mask/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Crushbone"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Black Sapphire Earring",
+          "name": "Golden Black Sapphire Earring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 18.0,
+          "stats_at_upgrade": {
+            "HP": 42.0,
+            "MANA": 59.0
+          },
+          "stats_plus0": {
+            "HP": 25,
+            "MANA": 35
+          },
+          "stats_plus10": {
+            "HP": 50,
+            "MANA": 70
+          },
+          "url": "https://eqlegendstools.com/items/golden-black-sapphire-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Diamondine Earring",
+          "name": "Diamondine Earring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 7.35,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "HP": 20.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "HP": 12,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "HP": 24,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/diamondine-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Retseth Tretse",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Stonemelder's Band",
+          "name": "Stonemelder's Band",
+          "quest_source": "Drops From: The Hole: Retseth Tretse",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 5.4,
+          "stats_at_upgrade": {
+            "AC": 30.0,
+            "AGI": -10.0,
+            "DEX": -10.0
+          },
+          "stats_plus0": {
+            "AC": 18,
+            "AGI": -35,
+            "DEX": -35
+          },
+          "stats_plus10": {
+            "AC": 36,
+            "AGI": 0,
+            "DEX": 0
+          },
+          "url": "https://eqlegendstools.com/items/stonemelders-band/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "an Evil Eye prisoner, an evil eye, Lord Sviir, Ghanex Drah",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Polished Bone Hoop",
+          "name": "Polished Bone Hoop",
+          "quest_source": "Drops From: Clan Runnyeye: an Evil Eye prisoner; Eastern Karana: an evil eye; Gorge of King Xorbb (Beholder's Maze): an evil eye; Gorge of King Xorbb (Beholder's Maze): Lord Sviir; Southern Karana: Ghanex Drah",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 3.0,
+          "stats_at_upgrade": {
+            "MANA": 17.0
+          },
+          "stats_plus0": {
+            "MANA": 10
+          },
+          "stats_plus10": {
+            "MANA": 20
+          },
+          "url": "https://eqlegendstools.com/items/polished-bone-hoop/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "an ogre shaman, Chief Goonda, an ogre priestess",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Batskull Earring",
+          "name": "Batskull Earring",
+          "quest_source": "Drops From: Western Plains of Karana: an ogre shaman, Chief Goonda, an ogre priestess",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2.25,
+          "stats_at_upgrade": {
+            "INT": 12.0
+          },
+          "stats_plus0": {
+            "INT": 5
+          },
+          "stats_plus10": {
+            "INT": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/batskull-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Western Plains of Karana"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Black Sapphire Electrum Earring",
+      "is_weapon": false,
+      "name": "Black Sapphire Electrum Earring",
+      "priority_value": 0.0,
+      "quest_source": "Player Crafted: Jewelry Crafting",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 27.3,
+      "slot": "EAR1",
+      "stats_at_upgrade": {
+        "AC": 9.0,
+        "END": 42.0,
+        "HP": 59.0,
+        "MANA": 42.0
+      },
+      "stats_plus0": {
+        "AC": 2,
+        "END": 25,
+        "HP": 35,
+        "MANA": 25
+      },
+      "stats_plus10": {
+        "AC": 12.0,
+        "END": 50,
+        "HP": 70,
+        "MANA": 50
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/black-sapphire-electrum-earring/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Player Crafted"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Sapphire Electrum Earring",
+          "name": "Black Sapphire Electrum Earring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 27.3,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "END": 42.0,
+            "HP": 59.0,
+            "MANA": 42.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "END": 25,
+            "HP": 35,
+            "MANA": 25
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "END": 50,
+            "HP": 70,
+            "MANA": 50
+          },
+          "url": "https://eqlegendstools.com/items/black-sapphire-electrum-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Diamondine Earring",
+          "name": "Diamondine Earring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 7.35,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "HP": 20.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "HP": 12,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "HP": 24,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/diamondine-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Retseth Tretse",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Stonemelder's Band",
+          "name": "Stonemelder's Band",
+          "quest_source": "Drops From: The Hole: Retseth Tretse",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 5.4,
+          "stats_at_upgrade": {
+            "AC": 30.0,
+            "AGI": -10.0,
+            "DEX": -10.0
+          },
+          "stats_plus0": {
+            "AC": 18,
+            "AGI": -35,
+            "DEX": -35
+          },
+          "stats_plus10": {
+            "AC": 36,
+            "AGI": 0,
+            "DEX": 0
+          },
+          "url": "https://eqlegendstools.com/items/stonemelders-band/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "an Evil Eye prisoner, an evil eye, Lord Sviir, Ghanex Drah",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Polished Bone Hoop",
+          "name": "Polished Bone Hoop",
+          "quest_source": "Drops From: Clan Runnyeye: an Evil Eye prisoner; Eastern Karana: an evil eye; Gorge of King Xorbb (Beholder's Maze): an evil eye; Gorge of King Xorbb (Beholder's Maze): Lord Sviir; Southern Karana: Ghanex Drah",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 3.0,
+          "stats_at_upgrade": {
+            "MANA": 17.0
+          },
+          "stats_plus0": {
+            "MANA": 10
+          },
+          "stats_plus10": {
+            "MANA": 20
+          },
+          "url": "https://eqlegendstools.com/items/polished-bone-hoop/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "an ogre shaman, Chief Goonda, an ogre priestess",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Batskull Earring",
+          "name": "Batskull Earring",
+          "quest_source": "Drops From: Western Plains of Karana: an ogre shaman, Chief Goonda, an ogre priestess",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2.25,
+          "stats_at_upgrade": {
+            "INT": 12.0
+          },
+          "stats_plus0": {
+            "INT": 5
+          },
+          "stats_plus10": {
+            "INT": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/batskull-earring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Western Plains of Karana"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Golden Black Sapphire Earring",
+      "is_weapon": false,
+      "name": "Golden Black Sapphire Earring",
+      "priority_value": 0.0,
+      "quest_source": "Player Crafted: Jewelry Crafting",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 18.0,
+      "slot": "EAR2",
+      "stats_at_upgrade": {
+        "HP": 42.0,
+        "MANA": 59.0
+      },
+      "stats_plus0": {
+        "HP": 25,
+        "MANA": 35
+      },
+      "stats_plus10": {
+        "HP": 50,
+        "MANA": 70
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/golden-black-sapphire-earring/",
+      "why": "2nd priority tier",
+      "why_ui": "",
+      "zone": "Player Crafted"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Sapphire Platinum Necklace",
+          "name": "Black Sapphire Platinum Necklace",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 33.0,
+          "stats_at_upgrade": {
+            "HP": 93.0,
+            "MANA": 93.0
+          },
+          "stats_plus0": {
+            "HP": 55,
+            "MANA": 55
+          },
+          "stats_plus10": {
+            "HP": 110,
+            "MANA": 110
+          },
+          "url": "https://eqlegendstools.com/items/black-sapphire-platinum-necklace/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bloodstar Pendant",
+          "name": "Bloodstar Pendant",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 24.9,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "CHA": 16.0,
+            "INT": 16.0,
+            "STR": 16.0,
+            "SVC": 12.0,
+            "SVD": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0,
+            "SVP": 12.0,
+            "WIS": 16.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "CHA": 9,
+            "INT": 9,
+            "STR": 9,
+            "SVC": 5,
+            "SVD": 5,
+            "SVF": 5,
+            "SVM": 5,
+            "SVP": 5,
+            "WIS": 9
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "CHA": 19.0,
+            "INT": 19.0,
+            "STR": 19.0,
+            "SVC": 15.0,
+            "SVD": 15.0,
+            "SVF": 15.0,
+            "SVM": 15.0,
+            "SVP": 15.0,
+            "WIS": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/bloodstar-pendant/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Blue Diamond Pendant",
+          "name": "Golden Blue Diamond Pendant",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 19.5,
+          "stats_at_upgrade": {
+            "MANA": 34.0,
+            "SVC": 18.0,
+            "SVD": 13.0,
+            "SVF": 18.0,
+            "SVM": 11.0,
+            "SVP": 13.0
+          },
+          "stats_plus0": {
+            "MANA": 20,
+            "SVC": 11,
+            "SVD": 6,
+            "SVF": 11,
+            "SVM": 4,
+            "SVP": 6
+          },
+          "stats_plus10": {
+            "MANA": 40,
+            "SVC": 22,
+            "SVD": 16.0,
+            "SVF": 22,
+            "SVM": 14.0,
+            "SVP": 16.0
+          },
+          "url": "https://eqlegendstools.com/items/golden-blue-diamond-pendant/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "an ogre priestess, an ogre shaman, Chief Goonda",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Glowing Bone Collar",
+          "name": "Glowing Bone Collar",
+          "quest_source": "Drops From: Western Plains of Karana: an ogre priestess; Western Plains of Karana: an ogre shaman; Western Plains of Karana: Chief Goonda",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 17.25,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "HP": 42.0,
+            "MANA": 42.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 25,
+            "MANA": 25
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 50,
+            "MANA": 50
+          },
+          "url": "https://eqlegendstools.com/items/glowing-bone-collar/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Western Plains of Karana"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a werewolf",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Serpent Insignia Collar",
+          "name": "Serpent Insignia Collar",
+          "quest_source": "Drops From: Western Plains of Karana: a werewolf",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 11.25,
+          "stats_at_upgrade": {
+            "SVC": 12.0,
+            "SVD": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "SVC": 5,
+            "SVD": 5,
+            "SVF": 5,
+            "SVM": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "SVC": 15.0,
+            "SVD": 15.0,
+            "SVF": 15.0,
+            "SVM": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/serpent-insignia-collar/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Western Plains of Karana"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard, Beastlord, Berserker, Cleric, Druid, Monk, Paladin, Ranger, Rogue, Shadow Knight, Shaman, Warrior",
+      "drops_mobs": "an elite gnoll guard",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Studded Leather Collar",
+      "is_weapon": false,
+      "name": "Studded Leather Collar",
+      "priority_value": 11.0,
+      "quest_source": "Drops From: Blackburrow: an elite gnoll guard",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1103.6,
+      "slot": "NECK",
+      "stats_at_upgrade": {
+        "AC": 10.0,
+        "STA": 8.0,
+        "STR": 8.0
+      },
+      "stats_plus0": {
+        "AC": 3,
+        "STA": 1,
+        "STR": 1
+      },
+      "stats_plus10": {
+        "AC": 13.0,
+        "STA": 11.0,
+        "STR": 11.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/studded-leather-collar/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Blackburrow"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Splitpaw Commander",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bark Splinted Shoulderpads",
+          "name": "Bark Splinted Shoulderpads",
+          "quest_source": "Drops From: Blackburrow: Splitpaw Commander",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1406.9,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "STA": 11.0,
+            "SVD": 10.0,
+            "SVP": 10.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "STA": 4,
+            "SVD": 3,
+            "SVP": 3
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "STA": 14.0,
+            "SVD": 13.0,
+            "SVP": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/bark-splinted-shoulderpads/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Blackburrow"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Ton Po's Shoulder Wraps",
+          "name": "Ton Po's Shoulder Wraps",
+          "quest_source": "Monk Test of Tears",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 24.0,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 11.0,
+            "DEX": 11.0,
+            "STR": 11.0,
+            "SVC": 17.0,
+            "SVD": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0,
+            "SVP": 17.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "AGI": 4,
+            "DEX": 4,
+            "STR": 4,
+            "SVC": 10,
+            "SVD": 10,
+            "SVF": 10,
+            "SVM": 10,
+            "SVP": 10
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "AGI": 14.0,
+            "DEX": 14.0,
+            "STR": 14.0,
+            "SVC": 20,
+            "SVD": 20,
+            "SVF": 20,
+            "SVM": 20,
+            "SVP": 20
+          },
+          "url": "https://eqlegendstools.com/items/ton-pos-shoulder-wraps/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a rock golem, a revenant, a wanderer, Slizik the Mighty, A Ratman Warrior",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Imbued Granite Spaulders",
+          "name": "Imbued Granite Spaulders",
+          "quest_source": "Drops From: The Hole: a rock golem, a revenant, a wanderer, Slizik the Mighty, A Ratman Warrior",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 21.0,
+          "stats_at_upgrade": {
+            "AC": 34.0,
+            "SVC": 17.0,
+            "SVD": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0,
+            "SVP": 17.0
+          },
+          "stats_plus0": {
+            "AC": 20,
+            "SVC": 10,
+            "SVD": 10,
+            "SVF": 10,
+            "SVM": 10,
+            "SVP": 10
+          },
+          "stats_plus10": {
+            "AC": 40,
+            "SVC": 20,
+            "SVD": 20,
+            "SVF": 20,
+            "SVM": 20,
+            "SVP": 20
+          },
+          "url": "https://eqlegendstools.com/items/imbued-granite-spaulders/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Refugee Splitpaw (Monk)",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Refugee Shroud",
+          "name": "Refugee Shroud",
+          "quest_source": "Drops From: Blackburrow: Refugee Splitpaw (Monk)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 8.85,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "CHA": 11.0,
+            "MANA": 17.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "CHA": 4,
+            "MANA": 10,
+            "SVM": 3
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "CHA": 14.0,
+            "MANA": 20,
+            "SVM": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/refugee-shroud/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Blackburrow"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lord Darish",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Bandolier of Teeth",
+          "name": "Bandolier of Teeth",
+          "quest_source": "Drops From: Crushbone: Lord Darish",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 6.3,
+          "stats_at_upgrade": {
+            "HP": 17.0,
+            "STR": 8.0,
+            "SVP": 8.0
+          },
+          "stats_plus0": {
+            "HP": 10,
+            "STR": 1,
+            "SVP": 1
+          },
+          "stats_plus10": {
+            "HP": 20,
+            "STR": 11.0,
+            "SVP": 11.0
+          },
+          "url": "https://eqlegendstools.com/items/bandolier-of-teeth/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Crushbone"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Monk",
+      "drops_mobs": "Innoruuk (God), Grandmaster R`Tal",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Sode of Empowerment",
+      "is_weapon": false,
+      "name": "Sode of Empowerment",
+      "priority_value": 17.0,
+      "quest_source": "Drops From: Plane of Hate: Innoruuk (God), Grandmaster R`Tal",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1710.65,
+      "slot": "SHOULDERS",
+      "stats_at_upgrade": {
+        "AC": 17.0,
+        "AGI": 14.0,
+        "DEX": 14.0,
+        "STA": 14.0,
+        "STR": 14.0
+      },
+      "stats_plus0": {
+        "AC": 10,
+        "AGI": 7,
+        "DEX": 7,
+        "STA": 7,
+        "STR": 7
+      },
+      "stats_plus10": {
+        "AC": 20,
+        "AGI": 17.0,
+        "DEX": 17.0,
+        "STA": 17.0,
+        "STR": 17.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/sode-of-empowerment/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ashenbone drake",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Armbands",
+          "name": "Midnight Clad Armbands",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ashenbone drake",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1913.8,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "INT": 12.0,
+            "STA": 16.0,
+            "STR": 12.0,
+            "SVC": 14.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "INT": 5,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 7,
+            "SVD": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "INT": 15.0,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 17.0,
+            "SVD": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-armbands/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ire ghast",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shiverback-hide Armbands",
+          "name": "Shiverback-hide Armbands",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ire ghast",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1913.8,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "CHA": 12.0,
+            "END": 25.0,
+            "STA": 16.0,
+            "STR": 12.0,
+            "SVC": 14.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "CHA": 5,
+            "END": 15,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 7
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "CHA": 15.0,
+            "END": 30,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/shiverback-hide-armbands/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "fire goblin bartender",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Drake-hide Sleeves",
+          "name": "Drake-hide Sleeves",
+          "quest_source": "Drops From: Solusek's Eye: fire goblin bartender",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1305.1,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "HP": 17.0,
+            "STA": 10.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "HP": 10,
+            "STA": 3
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "HP": 20,
+            "STA": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/drake-hide-sleeves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Solusek's Eye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Soldier of V`Zher",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Pristine Studded Leather Sleeves",
+          "name": "Pristine Studded Leather Sleeves",
+          "quest_source": "Drops From: Befallen: Soldier of V`Zher",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1206.9,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "HP": 12.0,
+            "STA": 9.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "HP": 5,
+            "STA": 2,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "HP": 15.0,
+            "STA": 12.0,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/pristine-studded-leather-sleeves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Befallen"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Chokehold",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Armband of Serrated Teeth",
+          "name": "Armband of Serrated Teeth",
+          "quest_source": "Drops From: Crushbone: Chokehold",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1205.1,
+          "stats_at_upgrade": {
+            "DEX": 8.0,
+            "STA": 9.0,
+            "STR": 8.0,
+            "SVD": 9.0
+          },
+          "stats_plus0": {
+            "DEX": 1,
+            "STA": 2,
+            "STR": 1,
+            "SVD": 2
+          },
+          "stats_plus10": {
+            "DEX": 11.0,
+            "STA": 12.0,
+            "STR": 11.0,
+            "SVD": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/armband-of-serrated-teeth/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Crushbone"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "Noble Dojorn, Overseer of Air",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Golden Efreeti Vambraces",
+      "is_weapon": false,
+      "name": "Golden Efreeti Vambraces",
+      "priority_value": 20.0,
+      "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 2012.0,
+      "slot": "ARMS",
+      "stats_at_upgrade": {
+        "AC": 20.0,
+        "DEX": 13.0,
+        "END": 34.0,
+        "STA": 17.0
+      },
+      "stats_plus0": {
+        "AC": 12,
+        "DEX": 6,
+        "END": 20,
+        "STA": 10
+      },
+      "stats_plus10": {
+        "AC": 24,
+        "DEX": 16.0,
+        "END": 40,
+        "STA": 20
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/golden-efreeti-vambraces/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Back Straps of Mastery",
+          "name": "Back Straps of Mastery",
+          "quest_source": "Monk Test of Strength",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1724.3,
+          "stats_at_upgrade": {
+            "AC": 25.0,
+            "CHA": 12.0,
+            "HP": 85.0,
+            "STA": 14.0,
+            "STR": 14.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "CHA": 5,
+            "HP": 50,
+            "STA": 7,
+            "STR": 7
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "CHA": 15.0,
+            "HP": 100,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/back-straps-of-mastery/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a decrepit warder, a samhain, an abhorrent, a scorn banshee",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shiverback-hide Wristbands",
+          "name": "Shiverback-hide Wristbands",
+          "quest_source": "Drops From: Plane of Fear: a decrepit warder, a samhain; Plane of Hate: an abhorrent, a scorn banshee",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1514.1,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "AGI": 12.0,
+            "DEX": 12.0,
+            "END": 17.0,
+            "STA": 12.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "AGI": 5,
+            "DEX": 5,
+            "END": 10,
+            "STA": 5,
+            "SVD": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "AGI": 15.0,
+            "DEX": 15.0,
+            "END": 20,
+            "STA": 15.0,
+            "SVD": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/shiverback-hide-wristbands/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a fetid fiend, a spinechiller spider, a revultant rat, a kiraikuei, a loathling lich",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Wristbands",
+          "name": "Midnight Clad Wristbands",
+          "quest_source": "Drops From: Plane of Fear: a fetid fiend, a spinechiller spider; Plane of Hate: a revultant rat, a kiraikuei, a loathling lich",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1506.6,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "DEX": 12.0,
+            "STA": 12.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "DEX": 5,
+            "STA": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "DEX": 15.0,
+            "STA": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-wristbands/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Bracers",
+          "name": "Golden Efreeti Bracers",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 10.95,
+          "stats_at_upgrade": {
+            "AC": 15.0,
+            "AGI": 12.0,
+            "MANA": 34.0
+          },
+          "stats_plus0": {
+            "AC": 8,
+            "AGI": 5,
+            "MANA": 20
+          },
+          "stats_plus10": {
+            "AC": 18.0,
+            "AGI": 15.0,
+            "MANA": 40
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-bracers/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Hero Bracers",
+          "name": "Hero Bracers",
+          "quest_source": "Hero Bracers Quest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 10.35,
+          "stats_at_upgrade": {
+            "AC": 16.0,
+            "STR": 17.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "STR": 10,
+            "SVD": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "STR": 20,
+            "SVD": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/hero-bracers/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": ""
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "Petrifin",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Granite Bracer",
+      "is_weapon": false,
+      "name": "Granite Bracer",
+      "priority_value": 17.0,
+      "quest_source": "Drops From: Rathe Mountains: Petrifin",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1704.35,
+      "slot": "WRIST",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "STA": 14.0,
+        "STR": 11.0
+      },
+      "stats_plus0": {
+        "AC": 5,
+        "STA": 7,
+        "STR": 4
+      },
+      "stats_plus10": {
+        "AC": 15.0,
+        "STA": 17.0,
+        "STR": 14.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/granite-bracer/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Rathe Mountains"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Fright, Dread, Terror, Cazic Thule (God)",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Slime Blood of Cazic Thule",
+          "name": "Slime Blood of Cazic Thule",
+          "quest_source": "Drops From: Plane of Fear: Fright, Dread, Terror, Cazic Thule (God)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1236.6,
+          "stats_at_upgrade": {
+            "AC": 27.0,
+            "AGI": 9.0,
+            "CHA": 9.0,
+            "DEX": 9.0,
+            "HP": 34.0,
+            "INT": 9.0,
+            "MANA": 34.0,
+            "STA": 9.0,
+            "STR": 9.0,
+            "SVC": 9.0,
+            "SVD": 9.0,
+            "SVF": 9.0,
+            "SVM": 9.0,
+            "SVP": 9.0,
+            "WIS": 9.0
+          },
+          "stats_plus0": {
+            "AC": 16,
+            "AGI": 2,
+            "CHA": 2,
+            "DEX": 2,
+            "HP": 20,
+            "INT": 2,
+            "MANA": 20,
+            "STA": 2,
+            "STR": 2,
+            "SVC": 2,
+            "SVD": 2,
+            "SVF": 2,
+            "SVM": 2,
+            "SVP": 2,
+            "WIS": 2
+          },
+          "stats_plus10": {
+            "AC": 32,
+            "AGI": 12.0,
+            "CHA": 12.0,
+            "DEX": 12.0,
+            "HP": 40,
+            "INT": 12.0,
+            "MANA": 40,
+            "STA": 12.0,
+            "STR": 12.0,
+            "SVC": 12.0,
+            "SVD": 12.0,
+            "SVF": 12.0,
+            "SVM": 12.0,
+            "SVP": 12.0,
+            "WIS": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/slime-blood-of-cazic-thule/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "The Sporali Moldmaster",
+          "haste": 16.0,
+          "image_url": "/api/item-image?name=Sporali Gloves",
+          "name": "Sporali Gloves",
+          "quest_source": "Drops From: Clan Runnyeye: The Sporali Moldmaster",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 39.8,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "Haste": 16.0,
+            "SVD": 0.0,
+            "SVP": 0.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "Haste": 9,
+            "SVD": -2,
+            "SVP": -2
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "Haste": 9,
+            "SVD": 0,
+            "SVP": 0
+          },
+          "url": "https://eqlegendstools.com/items/sporali-gloves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Clan Runnyeye"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various trash and named mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=White Satin Gloves",
+          "name": "White Satin Gloves",
+          "quest_source": "Drops From: Plane of Sky: various trash and named mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 26.1,
+          "stats_at_upgrade": {
+            "AC": 11.0,
+            "HP": 42.0,
+            "MANA": 42.0,
+            "SVC": 0.0,
+            "SVD": 0.0,
+            "SVF": 51.0,
+            "SVM": 0.0,
+            "SVP": 0.0
+          },
+          "stats_plus0": {
+            "AC": 4,
+            "HP": 25,
+            "MANA": 25,
+            "SVC": -5,
+            "SVD": -5,
+            "SVF": 30,
+            "SVM": -5,
+            "SVP": -5
+          },
+          "stats_plus10": {
+            "AC": 14.0,
+            "HP": 50,
+            "MANA": 50,
+            "SVC": 0,
+            "SVD": 0,
+            "SVF": 60,
+            "SVM": 0,
+            "SVP": 0
+          },
+          "url": "https://eqlegendstools.com/items/white-satin-gloves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a scareling, a shiverback, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shiverback-hide Gloves",
+          "name": "Shiverback-hide Gloves",
+          "quest_source": "Drops From: Plane of Fear: a scareling, a shiverback; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 16.65,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "DEX": 16.0,
+            "END": 25.0,
+            "INT": 12.0,
+            "STR": 12.0,
+            "SVM": 14.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "DEX": 9,
+            "END": 15,
+            "INT": 5,
+            "STR": 5,
+            "SVM": 7
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "DEX": 19.0,
+            "END": 30,
+            "INT": 15.0,
+            "STR": 15.0,
+            "SVM": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/shiverback-hide-gloves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a frightfinger, a turmoil toad, a worry wraith, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Fistwraps",
+          "name": "Midnight Clad Fistwraps",
+          "quest_source": "Drops From: Plane of Fear: a frightfinger, a turmoil toad, a worry wraith; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 12.15,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "DEX": 16.0,
+            "INT": 12.0,
+            "STR": 12.0,
+            "SVM": 14.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "DEX": 9,
+            "INT": 5,
+            "STR": 5,
+            "SVM": 7
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "DEX": 19.0,
+            "INT": 15.0,
+            "STR": 15.0,
+            "SVM": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-fistwraps/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Bard, Monk, Paladin, Ranger, Rogue, Shadow Knight, Warrior, Beastlord, Berserker",
+      "drops_mobs": "Lord Nagafen",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Gauntlets of Fiery Might",
+      "is_weapon": false,
+      "name": "Gauntlets of Fiery Might",
+      "priority_value": 17.0,
+      "quest_source": "Drops From: Nagafen's Lair: Lord Nagafen",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1713.2,
+      "slot": "HANDS",
+      "stats_at_upgrade": {
+        "AC": 17.0,
+        "DEX": 14.0,
+        "STA": 14.0,
+        "STR": 14.0,
+        "SVD": 14.0,
+        "SVP": 14.0
+      },
+      "stats_plus0": {
+        "AC": 10,
+        "DEX": 7,
+        "STA": 7,
+        "STR": 7,
+        "SVD": 7,
+        "SVP": 7
+      },
+      "stats_plus10": {
+        "AC": 20,
+        "DEX": 17.0,
+        "STA": 17.0,
+        "STR": 17.0,
+        "SVD": 17.0,
+        "SVP": 17.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/gauntlets-of-fiery-might/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Nagafen's Lair"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Brother Zephyl, Brother Qwinn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Robe of the Lost Circle",
+          "name": "Robe of the Lost Circle",
+          "quest_source": "The Lost Circle; Monks of The Whistling Fist; Monk Epic Quest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1526.25,
+          "stats_at_upgrade": {
+            "AC": 25.0,
+            "AGI": 12.0,
+            "DEX": 12.0,
+            "HP": 85.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "AGI": 5,
+            "DEX": 5,
+            "HP": 50,
+            "STA": 5,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "AGI": 15.0,
+            "DEX": 15.0,
+            "HP": 100,
+            "STA": 15.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/robe-of-the-lost-circle/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Rathe Mountains"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Mortificator Syythrak",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Syythrak Hide Vest",
+          "name": "Syythrak Hide Vest",
+          "quest_source": "Drops From: Rathe Mountains: Mortificator Syythrak",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1507.5,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "DEX": 12.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "DEX": 5,
+            "STA": 5,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "DEX": 15.0,
+            "STA": 15.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/syythrak-hide-vest/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Rathe Mountains"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lockjaw",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Lockjaw Hide Vest",
+          "name": "Lockjaw Hide Vest",
+          "quest_source": "Drops From: Oasis of Marr: Lockjaw",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1503.6,
+          "stats_at_upgrade": {
+            "AC": 20.0,
+            "STA": 12.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "STA": 5
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "STA": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/lockjaw-hide-vest/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Oasis of Marr"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a froglok crusader",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mithril-Runed Tunic",
+          "name": "Mithril-Runed Tunic",
+          "quest_source": "Drops From: Lower Guk: a froglok crusader",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1305.25,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "STA": 10.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "STA": 3,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "STA": 13.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/mithril-runed-tunic/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Oracle of K`Arnon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Robe of the Oracle",
+          "name": "Robe of the Oracle",
+          "quest_source": "Drops From: Ocean of Tears: Oracle of K`Arnon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 14.85,
+          "stats_at_upgrade": {
+            "AC": 16.0,
+            "INT": 12.0,
+            "MANA": 42.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 9,
+            "INT": 5,
+            "MANA": 25,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 19.0,
+            "INT": 15.0,
+            "MANA": 50,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/robe-of-the-oracle/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Ocean of Tears"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Beastlord, Druid, Enchanter, Magician, Monk, Necromancer, Rogue, Wizard",
+      "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Midnight Clad Straps",
+      "is_weapon": false,
+      "name": "Midnight Clad Straps",
+      "priority_value": 26.0,
+      "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 2614.7,
+      "slot": "CHEST",
+      "stats_at_upgrade": {
+        "AC": 17.0,
+        "INT": 22.0,
+        "STA": 22.0,
+        "STR": 22.0,
+        "WIS": 22.0
+      },
+      "stats_plus0": {
+        "AC": 10,
+        "INT": 13,
+        "STA": 13,
+        "STR": 13,
+        "WIS": 13
+      },
+      "stats_plus10": {
+        "AC": 20,
+        "INT": 26,
+        "STA": 26,
+        "STR": 26,
+        "WIS": 26
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/midnight-clad-straps/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lord Nagafen",
+          "haste": 43.0,
+          "image_url": "/api/item-image?name=Cloak of Flames",
+          "name": "Cloak of Flames",
+          "quest_source": "Drops From: Nagafen's Lair: Lord Nagafen",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 120.2,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "AGI": 16.0,
+            "DEX": 16.0,
+            "HP": 85.0,
+            "Haste": 43.0,
+            "SVF": 25.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": 9,
+            "DEX": 9,
+            "HP": 50,
+            "Haste": 36,
+            "SVF": 15
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 19.0,
+            "DEX": 19.0,
+            "HP": 100,
+            "Haste": 36,
+            "SVF": 30
+          },
+          "url": "https://eqlegendstools.com/items/cloak-of-flames/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Grandmaster R`Tal",
+          "haste": 43.0,
+          "image_url": "/api/item-image?name=Rakusha Cloak",
+          "name": "Rakusha Cloak",
+          "quest_source": "Drops From: Plane of Hate: Grandmaster R`Tal",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 101.0,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "Haste": 43.0,
+            "SVF": 17.0,
+            "SVM": 17.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "Haste": 36,
+            "SVF": 10,
+            "SVM": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "Haste": 36,
+            "SVF": 20,
+            "SVM": 20
+          },
+          "url": "https://eqlegendstools.com/items/rakusha-cloak/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Cloak of Scales",
+          "name": "Cloak of Scales",
+          "quest_source": "Drops From: Plane of Hate: Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 58.5,
+          "stats_at_upgrade": {
+            "AC": 25.0,
+            "END": 85.0,
+            "HP": 85.0,
+            "INT": 17.0,
+            "MANA": 85.0,
+            "STR": 17.0,
+            "WIS": 17.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "END": 50,
+            "HP": 50,
+            "INT": 10,
+            "MANA": 50,
+            "STR": 10,
+            "WIS": 10
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "END": 100,
+            "HP": 100,
+            "INT": 20,
+            "MANA": 100,
+            "STR": 20,
+            "WIS": 20
+          },
+          "url": "https://eqlegendstools.com/items/cloak-of-scales/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=White Dragonscale Cloak",
+          "name": "White Dragonscale Cloak",
+          "quest_source": "White Dragonscale Cloak Quest",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 38.7,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "INT": 16.0,
+            "MANA": 127.0,
+            "SVC": 42.0,
+            "WIS": 16.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "INT": 9,
+            "MANA": 75,
+            "SVC": 25,
+            "WIS": 9
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "INT": 19.0,
+            "MANA": 150,
+            "SVC": 50,
+            "WIS": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/white-dragonscale-cloak/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": ""
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a cloaked dhampyre",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Hooded Black Cloak",
+          "name": "Hooded Black Cloak",
+          "quest_source": "Drops From: Mistmoore Castle: a cloaked dhampyre",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 18.75,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "HP": 76.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "HP": 45,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "HP": 90,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/hooded-black-cloak/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Monk",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Back Straps of Mastery",
+      "is_weapon": false,
+      "name": "Back Straps of Mastery",
+      "priority_value": 17.0,
+      "quest_source": "Monk Test of Strength",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1724.3,
+      "slot": "BACK",
+      "stats_at_upgrade": {
+        "AC": 25.0,
+        "CHA": 12.0,
+        "HP": 85.0,
+        "STA": 14.0,
+        "STR": 14.0
+      },
+      "stats_plus0": {
+        "AC": 15,
+        "CHA": 5,
+        "HP": 50,
+        "STA": 7,
+        "STR": 7
+      },
+      "stats_plus10": {
+        "AC": 30,
+        "CHA": 15.0,
+        "HP": 100,
+        "STA": 17.0,
+        "STR": 17.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/back-straps-of-mastery/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lady Vox",
+          "haste": 38.0,
+          "image_url": "/api/item-image?name=Runed Bolster Belt",
+          "name": "Runed Bolster Belt",
+          "quest_source": "Drops From: Permafrost: Lady Vox",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2090.25,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "DEX": 17.0,
+            "Haste": 38.0,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "DEX": 10,
+            "Haste": 31,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "DEX": 20,
+            "Haste": 31,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/runed-bolster-belt/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Permafrost"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Master Yael",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brell's Girdle",
+          "name": "Brell's Girdle",
+          "quest_source": "Drops From: The Hole: Master Yael",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2036.0,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "AGI": 0.0,
+            "DEX": 0.0,
+            "END": 85.0,
+            "MANA": 85.0,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": -5,
+            "DEX": -5,
+            "END": 50,
+            "MANA": 50,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 0,
+            "DEX": 0,
+            "END": 100,
+            "MANA": 100,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/brells-girdle/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Sabertooth Overseer",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Runed Sabertooth Girdle",
+          "name": "Runed Sabertooth Girdle",
+          "quest_source": "Drops From: Blackburrow: Sabertooth Overseer",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1504.5,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "STA": 12.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "STA": 5,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "STA": 15.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/runed-sabertooth-girdle/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Blackburrow"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Grodl Ripclaw",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brawler's Belt",
+          "name": "Brawler's Belt",
+          "quest_source": "Drops From: The Warrens: Grodl Ripclaw",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1204.05,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "STA": 9.0,
+            "STR": 9.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "STA": 2,
+            "STR": 2
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/brawlers-belt/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "The Warrens"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Antinime, Euboea Delewyn, Larisa Gelrith, Sister of Erollisi",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Purity Belt",
+          "name": "Purity Belt",
+          "quest_source": "Drops From: Ocean of Tears: Antinime, Euboea Delewyn, Larisa Gelrith, Sister of Erollisi",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1203.75,
+          "stats_at_upgrade": {
+            "AC": 10.0,
+            "STA": 9.0,
+            "STR": 9.0
+          },
+          "stats_plus0": {
+            "AC": 3,
+            "STA": 2,
+            "STR": 2
+          },
+          "stats_plus10": {
+            "AC": 13.0,
+            "STA": 12.0,
+            "STR": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/purity-belt/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Ocean of Tears"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Monk",
+      "drops_mobs": "",
+      "haste": 48.0,
+      "image_url": "/api/item-image?name=Golden Sash of Tranquility",
+      "is_weapon": false,
+      "name": "Golden Sash of Tranquility",
+      "priority_value": 0.0,
+      "quest_source": "Monk Test of Tranquility",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 117.75,
+      "slot": "WAIST",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "AGI": 25.0,
+        "DEX": 25.0,
+        "Haste": 48.0,
+        "STR": 25.0
+      },
+      "stats_plus0": {
+        "AC": 5,
+        "AGI": 15,
+        "DEX": 15,
+        "Haste": 41,
+        "STR": 15
+      },
+      "stats_plus10": {
+        "AC": 15.0,
+        "AGI": 30,
+        "DEX": 30,
+        "Haste": 41,
+        "STR": 30
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/golden-sash-of-tranquility/",
+      "why": "best haste +51%",
+      "why_ui": "",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Soldier of V`Zher",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Pristine Studded Leather Leggings",
+          "name": "Pristine Studded Leather Leggings",
+          "quest_source": "Drops From: Befallen: Soldier of V`Zher",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1505.4,
+          "stats_at_upgrade": {
+            "AC": 20.0,
+            "DEX": 9.0,
+            "STA": 12.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 2,
+            "STA": 5
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 12.0,
+            "STA": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/pristine-studded-leather-leggings/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Befallen"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Master Brewer",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Pub Pants",
+          "name": "Pub Pants",
+          "quest_source": "Drops From: Blackburrow: Master Brewer",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 10.65,
+          "stats_at_upgrade": {
+            "AC": 13.0,
+            "AGI": 12.0,
+            "END": 17.0,
+            "MANA": 17.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 5,
+            "END": 10,
+            "MANA": 10
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 15.0,
+            "END": 20,
+            "MANA": 20
+          },
+          "url": "https://eqlegendstools.com/items/pub-pants/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Blackburrow"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Greaves",
+          "name": "Golden Efreeti Greaves",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 10.35,
+          "stats_at_upgrade": {
+            "AC": 25.0,
+            "AGI": 16.0,
+            "DEX": 17.0
+          },
+          "stats_plus0": {
+            "AC": 15,
+            "AGI": 9,
+            "DEX": 10
+          },
+          "stats_plus10": {
+            "AC": 30,
+            "AGI": 19.0,
+            "DEX": 20
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-greaves/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shiverback-hide Leggings",
+          "name": "Shiverback-hide Leggings",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: an elite dragoon, Innoruuk's Chosen, a Disciple of Innoruuk, a Knight of Innoruuk",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 9.3,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "AGI": 12.0,
+            "SVF": 14.0,
+            "WIS": 12.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "AGI": 5,
+            "SVF": 7,
+            "WIS": 5
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "AGI": 15.0,
+            "SVF": 17.0,
+            "WIS": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/shiverback-hide-leggings/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "death beetle",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Black Chitin Leggings",
+          "name": "Black Chitin Leggings",
+          "quest_source": "Drops From: Nagafen's Lair: death beetle",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 8.55,
+          "stats_at_upgrade": {
+            "AC": 14.0,
+            "HP": 17.0,
+            "MANA": 17.0
+          },
+          "stats_plus0": {
+            "AC": 7,
+            "HP": 10,
+            "MANA": 10
+          },
+          "stats_plus10": {
+            "AC": 17.0,
+            "HP": 20,
+            "MANA": 20
+          },
+          "url": "https://eqlegendstools.com/items/black-chitin-leggings/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Beastlord, Druid, Enchanter, Magician, Monk, Necromancer, Rogue, Wizard",
+      "drops_mobs": "various mobs, an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Midnight Clad Leggings",
+      "is_weapon": false,
+      "name": "Midnight Clad Leggings",
+      "priority_value": 19.0,
+      "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: an elite dragoon, Innoruuk's Chosen, an Agent of Innoruuk, a Champion of Innoruuk, a Sage of Innoruuk",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1909.45,
+      "slot": "LEGS",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "INT": 12.0,
+        "STA": 16.0,
+        "SVF": 15.0,
+        "WIS": 12.0
+      },
+      "stats_plus0": {
+        "AC": 5,
+        "INT": 5,
+        "STA": 9,
+        "SVF": 8,
+        "WIS": 5
+      },
+      "stats_plus10": {
+        "AC": 15.0,
+        "INT": 15.0,
+        "STA": 19.0,
+        "SVF": 18.0,
+        "WIS": 15.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/midnight-clad-leggings/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a boogeyman, a phantasm, various mobs",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Shiverback-hide Boots",
+          "name": "Shiverback-hide Boots",
+          "quest_source": "Drops From: Plane of Fear: a boogeyman, a phantasm; Plane of Hate: various mobs",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1907.5,
+          "stats_at_upgrade": {
+            "AC": 13.0,
+            "AGI": 16.0,
+            "STA": 16.0,
+            "STR": 12.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 9,
+            "STA": 9,
+            "STR": 5
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 19.0,
+            "STA": 19.0,
+            "STR": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/shiverback-hide-boots/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Sandals of Alacrity",
+          "name": "Sandals of Alacrity",
+          "quest_source": "Monk Test of Speed",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 14.4,
+          "stats_at_upgrade": {
+            "AC": 13.0,
+            "AGI": 17.0,
+            "HP": 34.0,
+            "STR": 17.0
+          },
+          "stats_plus0": {
+            "AC": 6,
+            "AGI": 10,
+            "HP": 20,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 16.0,
+            "AGI": 20,
+            "HP": 40,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/sandals-of-alacrity/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a goblin scryer",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Wolf Fur Slippers",
+          "name": "Wolf Fur Slippers",
+          "quest_source": "Drops From: Permafrost: a goblin scryer",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 10.35,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "AGI": 14.0,
+            "MANA": 34.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "AGI": 7,
+            "MANA": 20
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "AGI": 17.0,
+            "MANA": 40
+          },
+          "url": "https://eqlegendstools.com/items/wolf-fur-slippers/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Permafrost"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Efreeti Lord Djarn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Boots",
+          "name": "Golden Efreeti Boots",
+          "quest_source": "Drops From: Nagafen's Lair: Efreeti Lord Djarn",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 9.6,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "INT": 16.0,
+            "SVP": 8.0,
+            "WIS": 16.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "INT": 9,
+            "SVP": 1,
+            "WIS": 9
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "INT": 19.0,
+            "SVP": 11.0,
+            "WIS": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-boots/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Ambassador DVinn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Wood Elf Scout Shoes",
+          "name": "Wood Elf Scout Shoes",
+          "quest_source": "Drops From: Crushbone: Ambassador DVinn",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 8.85,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "AGI": 9.0,
+            "DEX": 8.0,
+            "SVC": 9.0,
+            "SVF": 9.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "AGI": 2,
+            "DEX": 1,
+            "SVC": 2,
+            "SVF": 2
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "AGI": 12.0,
+            "DEX": 11.0,
+            "SVC": 12.0,
+            "SVF": 12.0
+          },
+          "url": "https://eqlegendstools.com/items/wood-elf-scout-shoes/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Crushbone"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "Beastlord, Druid, Enchanter, Magician, Monk, Necromancer, Rogue, Wizard",
+      "drops_mobs": "a gorgon, a nightmare, various mobs",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Midnight Clad Footwraps",
+      "is_weapon": false,
+      "name": "Midnight Clad Footwraps",
+      "priority_value": 19.0,
+      "quest_source": "Drops From: Plane of Fear: a gorgon, a nightmare; Plane of Hate: various mobs",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 1912.75,
+      "slot": "FEET",
+      "stats_at_upgrade": {
+        "AC": 13.0,
+        "STA": 16.0,
+        "STR": 12.0,
+        "SVC": 15.0,
+        "SVF": 15.0,
+        "SVM": 15.0
+      },
+      "stats_plus0": {
+        "AC": 6,
+        "STA": 9,
+        "STR": 5,
+        "SVC": 8,
+        "SVF": 8,
+        "SVM": 8
+      },
+      "stats_plus10": {
+        "AC": 16.0,
+        "STA": 19.0,
+        "STR": 15.0,
+        "SVC": 18.0,
+        "SVF": 18.0,
+        "SVM": 18.0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/midnight-clad-footwraps/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Plane of Fear; Plane of Hate"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "a reanimated hand (Lower Guk)",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Adamantite Band",
+          "name": "Adamantite Band",
+          "quest_source": "Drops From: Lower Guk: a reanimated hand (Lower Guk)",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 22.5,
+          "stats_at_upgrade": {
+            "HP": 127.0,
+            "SVM": -3.0
+          },
+          "stats_plus0": {
+            "HP": 75,
+            "SVM": -10
+          },
+          "stats_plus10": {
+            "HP": 150,
+            "SVM": 0
+          },
+          "url": "https://eqlegendstools.com/items/adamantite-band/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Lower Guk"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Fire Wedding Ring",
+          "name": "Platinum Fire Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 18.75,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "HP": 93.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 55
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 110
+          },
+          "url": "https://eqlegendstools.com/items/platinum-fire-wedding-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Skull Ring",
+          "name": "Platinum Skull Ring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 15.0,
+          "stats_at_upgrade": {
+            "CHA": 0.0,
+            "HP": 51.0,
+            "MANA": 34.0
+          },
+          "stats_plus0": {
+            "CHA": -5,
+            "HP": 30,
+            "MANA": 20
+          },
+          "stats_plus10": {
+            "CHA": 0,
+            "HP": 60,
+            "MANA": 40
+          },
+          "url": "https://eqlegendstools.com/items/platinum-skull-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Hamed's Ring of Tears",
+          "name": "Hamed's Ring of Tears",
+          "quest_source": "Something is Wrrrong",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 14.85,
+          "stats_at_upgrade": {
+            "END": 25.0,
+            "MANA": 25.0,
+            "SVC": 10.0,
+            "SVF": 10.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "END": 15,
+            "MANA": 15,
+            "SVC": 3,
+            "SVF": 3,
+            "SVM": 3
+          },
+          "stats_plus10": {
+            "END": 30,
+            "MANA": 30,
+            "SVC": 13.0,
+            "SVF": 13.0,
+            "SVM": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/hameds-ring-of-tears/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Kerra Isle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Diamond Wedding Ring",
+          "name": "Platinum Diamond Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 12.75,
+          "stats_at_upgrade": {
+            "SVC": 14.0,
+            "SVD": 14.0,
+            "SVF": 14.0,
+            "SVM": 14.0,
+            "SVP": 14.0
+          },
+          "stats_plus0": {
+            "SVC": 7,
+            "SVD": 7,
+            "SVF": 7,
+            "SVM": 7,
+            "SVP": 7
+          },
+          "stats_plus10": {
+            "SVC": 17.0,
+            "SVD": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0,
+            "SVP": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/platinum-diamond-wedding-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "Efreeti Lord Djarn",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Djarns Amethyst Ring",
+      "is_weapon": false,
+      "name": "Djarns Amethyst Ring",
+      "priority_value": 0.0,
+      "quest_source": "Drops From: Nagafen's Lair: Efreeti Lord Djarn",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 26.85,
+      "slot": "FINGER1",
+      "stats_at_upgrade": {
+        "AGI": 16.0,
+        "HP": 136.0
+      },
+      "stats_plus0": {
+        "AGI": 9,
+        "HP": 80
+      },
+      "stats_plus10": {
+        "AGI": 19.0,
+        "HP": 160
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/djarns-amethyst-ring/",
+      "why": "priority P:STA",
+      "why_ui": "",
+      "zone": "Nagafen's Lair"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Efreeti Lord Djarn",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Djarns Amethyst Ring",
+          "name": "Djarns Amethyst Ring",
+          "quest_source": "Drops From: Nagafen's Lair: Efreeti Lord Djarn",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 26.85,
+          "stats_at_upgrade": {
+            "AGI": 16.0,
+            "HP": 136.0
+          },
+          "stats_plus0": {
+            "AGI": 9,
+            "HP": 80
+          },
+          "stats_plus10": {
+            "AGI": 19.0,
+            "HP": 160
+          },
+          "url": "https://eqlegendstools.com/items/djarns-amethyst-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Nagafen's Lair"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Fire Wedding Ring",
+          "name": "Platinum Fire Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 18.75,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "HP": 93.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "HP": 55
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "HP": 110
+          },
+          "url": "https://eqlegendstools.com/items/platinum-fire-wedding-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lasna Cheroon",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Skull Ring",
+          "name": "Platinum Skull Ring",
+          "quest_source": "Drops From: Mistmoore Castle: Lasna Cheroon",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 15.0,
+          "stats_at_upgrade": {
+            "CHA": 0.0,
+            "HP": 51.0,
+            "MANA": 34.0
+          },
+          "stats_plus0": {
+            "CHA": -5,
+            "HP": 30,
+            "MANA": 20
+          },
+          "stats_plus10": {
+            "CHA": 0,
+            "HP": 60,
+            "MANA": 40
+          },
+          "url": "https://eqlegendstools.com/items/platinum-skull-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Hamed's Ring of Tears",
+          "name": "Hamed's Ring of Tears",
+          "quest_source": "Something is Wrrrong",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 14.85,
+          "stats_at_upgrade": {
+            "END": 25.0,
+            "MANA": 25.0,
+            "SVC": 10.0,
+            "SVF": 10.0,
+            "SVM": 10.0
+          },
+          "stats_plus0": {
+            "END": 15,
+            "MANA": 15,
+            "SVC": 3,
+            "SVF": 3,
+            "SVM": 3
+          },
+          "stats_plus10": {
+            "END": 30,
+            "MANA": 30,
+            "SVC": 13.0,
+            "SVF": 13.0,
+            "SVM": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/hameds-ring-of-tears/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Kerra Isle"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Platinum Diamond Wedding Ring",
+          "name": "Platinum Diamond Wedding Ring",
+          "quest_source": "Player Crafted: Jewelry Crafting",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 12.75,
+          "stats_at_upgrade": {
+            "SVC": 14.0,
+            "SVD": 14.0,
+            "SVF": 14.0,
+            "SVM": 14.0,
+            "SVP": 14.0
+          },
+          "stats_plus0": {
+            "SVC": 7,
+            "SVD": 7,
+            "SVF": 7,
+            "SVM": 7,
+            "SVP": 7
+          },
+          "stats_plus10": {
+            "SVC": 17.0,
+            "SVD": 17.0,
+            "SVF": 17.0,
+            "SVM": 17.0,
+            "SVP": 17.0
+          },
+          "url": "https://eqlegendstools.com/items/platinum-diamond-wedding-ring/",
+          "why": "priority P:STA",
+          "why_ui": "",
+          "zone": "Player Crafted"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "a reanimated hand (Lower Guk)",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Adamantite Band",
+      "is_weapon": false,
+      "name": "Adamantite Band",
+      "priority_value": 0.0,
+      "quest_source": "Drops From: Lower Guk: a reanimated hand (Lower Guk)",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 22.5,
+      "slot": "FINGER2",
+      "stats_at_upgrade": {
+        "HP": 127.0,
+        "SVM": -3.0
+      },
+      "stats_plus0": {
+        "HP": 75,
+        "SVM": -10
+      },
+      "stats_plus10": {
+        "HP": 150,
+        "SVM": 0
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/adamantite-band/",
+      "why": "2nd priority tier",
+      "why_ui": "",
+      "zone": "Lower Guk"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "damage_score": 1.9142,
+          "haste": 0,
+          "name": "TornEar Thumper",
+          "ratio_at_upgrade": 0.8333,
+          "ratio_plus10": 1.0,
+          "score": 1.9142,
+          "stats_at_upgrade": {
+            "AGI": 0.0,
+            "DLY": 30.0,
+            "DMG": 25.0,
+            "END": 34.0,
+            "HP": 34.0,
+            "STR": 16.0
+          },
+          "stats_plus10": {
+            "AGI": 0.0,
+            "DLY": 30.0,
+            "DMG": 30,
+            "END": 40.0,
+            "HP": 40.0,
+            "STR": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/tornear-thumper/",
+          "why": "best 2H expected-dmg 1.9142 (lost to DW pair); eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈151 @L30 (assumption: no skill table in decoded data; monk-style high-skill default)",
+          "why_ui": "Runner-up two-hander",
+          "zone": "Splitpaw Lair"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Splitpaw Lair: a Tesch Val Brute",
+          "haste": 0,
+          "image_url": "/api/item-image?name=TornEar Thumper",
+          "name": "TornEar Thumper",
+          "quest_source": "Splitpaw Lair: a Tesch Val Brute",
+          "ratio_at_upgrade": 0.8333,
+          "ratio_plus10": 1.0,
+          "score": 8333.0,
+          "stats_at_upgrade": {
+            "AGI": 0.0,
+            "DLY": 30.0,
+            "DMG": 25.0,
+            "END": 34.0,
+            "HP": 34.0,
+            "STR": 16.0
+          },
+          "stats_plus0": {
+            "AGI": -5,
+            "DLY": 30,
+            "DMG": 15,
+            "END": 20,
+            "HP": 20,
+            "STR": 9
+          },
+          "stats_plus10": {
+            "AGI": 0.0,
+            "DLY": 30.0,
+            "DMG": 30,
+            "END": 40.0,
+            "HP": 40.0,
+            "STR": 19.0
+          },
+          "url": "https://eqlegendstools.com/items/tornear-thumper/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Splitpaw Lair"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Sky: a thunder spirit princess; Plane of Sky: an essence carrier; Plane of Sky: Bazzt Zzzt; Plane of Sky: Gorgalosk; Plane of Sky: Noble Dojorn; Plane of Sky: Protector of Sky; Plane of Sky: Sister of the Spire",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Whitened Treant Fists",
+          "name": "Whitened Treant Fists",
+          "quest_source": "Plane of Sky: a thunder spirit princess, an essence carrier, Bazzt Zzzt, Gorgalosk, Noble Dojorn, Protector of Sky, Sister of the Spire",
+          "ratio_at_upgrade": 0.8214,
+          "ratio_plus10": 1.0,
+          "score": 8214.0,
+          "stats_at_upgrade": {
+            "DLY": 28.0,
+            "DMG": 23.0
+          },
+          "stats_plus0": {
+            "DLY": 28,
+            "DMG": 14
+          },
+          "stats_plus10": {
+            "DLY": 28.0,
+            "DMG": 28
+          },
+          "url": "https://eqlegendstools.com/items/whitened-treant-fists/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Blued Two-Handed Hammer",
+          "name": "Blued Two-Handed Hammer",
+          "quest_source": "The Visiting Priestess",
+          "ratio_at_upgrade": 0.7955,
+          "ratio_plus10": 0.9545,
+          "score": 7955.0,
+          "stats_at_upgrade": {
+            "DEX": 10.0,
+            "DLY": 44.0,
+            "DMG": 35.0,
+            "MANA": 51.0,
+            "STA": 10.0,
+            "SVF": 17.0
+          },
+          "stats_plus0": {
+            "DEX": 3,
+            "DLY": 44,
+            "DMG": 21,
+            "MANA": 30,
+            "STA": 3,
+            "SVF": 10
+          },
+          "stats_plus10": {
+            "DEX": 13.0,
+            "DLY": 44.0,
+            "DMG": 42,
+            "MANA": 60.0,
+            "STA": 13.0,
+            "SVF": 20.0
+          },
+          "url": "https://eqlegendstools.com/items/blued-two-handed-hammer/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "The Visiting Priestess"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: an elemental deceiver; The Hole: an elemental warrior; The Hole: an elemental channeler; The Hole: an elemental visier; The Hole: an elemental crusader; The Hole: an elemental capturer; The Hole: an elemental harvester; The Hole: an elemental wizard; The Hole: A Ratman Warrior",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Smoldering Brand",
+          "name": "Smoldering Brand",
+          "quest_source": "The Hole: an elemental deceiver; The Hole: an elemental warrior; The Hole: an elemental channeler; The Hole: an elemental visier; The Hole: an elemental crusader; The Hole: an elemental capturer; The Hole: an elemental harvester; The Hole: an elemental wizard; The Hole: A Ratman Warrior",
+          "ratio_at_upgrade": 0.6818,
+          "ratio_plus10": 0.8182,
+          "score": 6818.0,
+          "stats_at_upgrade": {
+            "DLY": 22.0,
+            "DMG": 15.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "DLY": 22,
+            "DMG": 9,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "DLY": 22.0,
+            "DMG": 18,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/smoldering-brand/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "The Hole"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Monk",
+      "damage_score": 3.2547,
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Wu's Fist of Mastery",
+      "is_weapon": true,
+      "name": "Wu's Fist of Mastery",
+      "priority_value": 2.6345454545454547,
+      "quest_source": "Monk Test of Fists",
+      "ratio_at_upgrade": 1.2273,
+      "ratio_plus10": 1.4545,
+      "score": 3.2547,
+      "slot": "PRIMARY",
+      "stats_at_upgrade": {
+        "DLY": 22.0,
+        "DMG": 27.0
+      },
+      "stats_plus0": {
+        "DLY": 22,
+        "DMG": 16
+      },
+      "stats_plus10": {
+        "DLY": 22.0,
+        "DMG": 32
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/wus-fist-of-mastery/",
+      "weapon_compare": "dual_wield",
+      "why": "DW main score 3.2547 (main 2.6345 + off 0.6202) >= 2H TornEar Thumper 1.9142; eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈151 @L30 (assumption: no skill table in decoded data; monk-style high-skill default)",
+      "why_ui": "Best dual-wield pair",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Wu's Fist of Mastery",
+          "name": "Wu's Fist of Mastery",
+          "quest_source": "Monk Test of Fists",
+          "ratio_at_upgrade": 1.2273,
+          "ratio_plus10": 1.4545,
+          "score": 12273.0,
+          "stats_at_upgrade": {
+            "DLY": 22.0,
+            "DMG": 27.0
+          },
+          "stats_plus0": {
+            "DLY": 22,
+            "DMG": 16
+          },
+          "stats_plus10": {
+            "DLY": 22.0,
+            "DMG": 32
+          },
+          "url": "https://eqlegendstools.com/items/wus-fist-of-mastery/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: an elemental deceiver; The Hole: an elemental warrior; The Hole: an elemental channeler; The Hole: an elemental visier; The Hole: an elemental crusader; The Hole: an elemental capturer; The Hole: an elemental harvester; The Hole: an elemental wizard; The Hole: A Ratman Warrior",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Smoldering Brand",
+          "name": "Smoldering Brand",
+          "quest_source": "The Hole: an elemental deceiver; The Hole: an elemental warrior; The Hole: an elemental channeler; The Hole: an elemental visier; The Hole: an elemental crusader; The Hole: an elemental capturer; The Hole: an elemental harvester; The Hole: an elemental wizard; The Hole: A Ratman Warrior",
+          "ratio_at_upgrade": 0.6818,
+          "ratio_plus10": 0.8182,
+          "score": 6818.0,
+          "stats_at_upgrade": {
+            "DLY": 22.0,
+            "DMG": 15.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "DLY": 22,
+            "DMG": 9,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "DLY": 22.0,
+            "DMG": 18,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/smoldering-brand/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "The Hole: a rock golem",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Mudman Enforcer",
+          "name": "Mudman Enforcer",
+          "quest_source": "The Hole: a rock golem",
+          "ratio_at_upgrade": 0.65,
+          "ratio_plus10": 0.8,
+          "score": 6500.0,
+          "stats_at_upgrade": {
+            "DLY": 20.0,
+            "DMG": 13.0,
+            "STR": 10.0
+          },
+          "stats_plus0": {
+            "DLY": 20,
+            "DMG": 8,
+            "STR": 3
+          },
+          "stats_plus10": {
+            "DLY": 20.0,
+            "DMG": 16,
+            "STR": 13.0
+          },
+          "url": "https://eqlegendstools.com/items/mudman-enforcer/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Mistmoore Castle: Princess Cherista",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Cherista's Fangs",
+          "name": "Cherista's Fangs",
+          "quest_source": "Mistmoore Castle: Princess Cherista",
+          "ratio_at_upgrade": 0.6071,
+          "ratio_plus10": 0.7143,
+          "score": 6071.0,
+          "stats_at_upgrade": {
+            "DLY": 28.0,
+            "DMG": 17.0
+          },
+          "stats_plus0": {
+            "DLY": 28,
+            "DMG": 10
+          },
+          "stats_plus10": {
+            "DLY": 28.0,
+            "DMG": 20
+          },
+          "url": "https://eqlegendstools.com/items/cheristas-fangs/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Mistmoore Castle"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Najena: Unbound Flame",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Flaming Fist",
+          "name": "Flaming Fist",
+          "quest_source": "Najena: Unbound Flame",
+          "ratio_at_upgrade": 0.5556,
+          "ratio_plus10": 0.6667,
+          "score": 5556.0,
+          "stats_at_upgrade": {
+            "DLY": 18.0,
+            "DMG": 10.0,
+            "SVF": 34.0
+          },
+          "stats_plus0": {
+            "DLY": 18,
+            "DMG": 6,
+            "SVF": 20
+          },
+          "stats_plus10": {
+            "DLY": 18.0,
+            "DMG": 12,
+            "SVF": 40.0
+          },
+          "url": "https://eqlegendstools.com/items/flaming-fist/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Najena"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Monk",
+      "damage_score": 0.6202,
+      "drops_mobs": "Plane of Sky: a thunder spirit princess; Plane of Sky: an essence carrier; Plane of Sky: Bazzt Zzzt; Plane of Sky: Gorgalosk; Plane of Sky: Noble Dojorn; Plane of Sky: Protector of Sky; Plane of Sky: Sister of the Spire",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Whitened Treant Fists",
+      "is_weapon": true,
+      "name": "Whitened Treant Fists",
+      "priority_value": 0.6201785714285714,
+      "quest_source": "Plane of Sky: a thunder spirit princess, an essence carrier, Bazzt Zzzt, Gorgalosk, Noble Dojorn, Protector of Sky, Sister of the Spire",
+      "ratio_at_upgrade": 0.8214,
+      "ratio_plus10": 1.0,
+      "score": 0.6202,
+      "slot": "SECONDARY",
+      "stats_at_upgrade": {
+        "DLY": 28.0,
+        "DMG": 23.0
+      },
+      "stats_plus0": {
+        "DLY": 28,
+        "DMG": 14
+      },
+      "stats_plus10": {
+        "DLY": 28.0,
+        "DMG": 28
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/whitened-treant-fists/",
+      "weapon_compare": "dual_wield",
+      "why": "DW offhand with Wu's Fist of Mastery (pair score 3.2547, DWChance 37.75%); eqlwiki Game_Mechanics working Legends model (not exact): DB=HandMod*max(L,DMG)*(min(DLY,50)/40)*(L/100); 1H HandMod=0.8, 2H=1.1; Main=((2*DMG)+DB)/DLY; Off=DWChance*((2*DMG)/DLY); DWChance=skill/400 with skill≈151 @L30 (assumption: no skill table in decoded data; monk-style high-skill default)",
+      "why_ui": "Dual-wield offhand",
+      "zone": "Plane of Sky"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "Plane of Fear: a turmoil toad",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Turmoil Warts",
+          "name": "Turmoil Warts",
+          "quest_source": "Plane of Fear: a turmoil toad",
+          "ratio_at_upgrade": 0.625,
+          "ratio_plus10": 0.75,
+          "score": 6250.0,
+          "stats_at_upgrade": {
+            "DLY": 24.0,
+            "DMG": 15.0
+          },
+          "stats_plus0": {
+            "DLY": 24,
+            "DMG": 9
+          },
+          "stats_plus10": {
+            "DLY": 24.0,
+            "DMG": 18
+          },
+          "url": "https://eqlegendstools.com/items/turmoil-warts/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Plane of Fear"
+        },
+        {
+          "bis_overlap": 0,
+          "drops_mobs": "",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Antonian Javelin",
+          "name": "Antonian Javelin",
+          "quest_source": "Player Crafted: Blacksmithing",
+          "ratio_at_upgrade": 0.4333,
+          "ratio_plus10": 0.5333,
+          "score": 4333.0,
+          "stats_at_upgrade": {
+            "DLY": 30.0,
+            "DMG": 13.0
+          },
+          "stats_plus0": {
+            "DLY": 30,
+            "DMG": 8
+          },
+          "stats_plus10": {
+            "DLY": 30.0,
+            "DMG": 16
+          },
+          "url": "https://eqlegendstools.com/items/antonian-javelin/",
+          "why": "best ratio @+7",
+          "why_ui": "",
+          "zone": "Blacksmithing"
+        }
+      ],
+      "bis_overlap": 0,
+      "classes_str": "Monk",
+      "drops_mobs": "Plane of Hate: a kiraikuei",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Shuriken of the Tranquil",
+      "is_weapon": true,
+      "name": "Shuriken of the Tranquil",
+      "priority_value": 1.0,
+      "quest_source": "Plane of Hate: a kiraikuei",
+      "ratio_at_upgrade": 1.0,
+      "ratio_plus10": 1.2,
+      "score": 10000.0,
+      "slot": "RANGE",
+      "stats_at_upgrade": {
+        "DLY": 20.0,
+        "DMG": 20.0
+      },
+      "stats_plus0": {
+        "DLY": 20,
+        "DMG": 12
+      },
+      "stats_plus10": {
+        "DLY": 20.0,
+        "DMG": 24
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/shuriken-of-the-tranquil/",
+      "why": "best ratio @+7",
+      "why_ui": "Best weapon ratio @+7",
+      "zone": "Plane of Hate"
+    },
+    {
+      "alts": [],
+      "bis_overlap": 0,
+      "classes_str": "",
+      "drops_mobs": "",
+      "haste": 0,
+      "image_url": "",
+      "is_weapon": false,
+      "name": "",
+      "priority_value": 0,
+      "quest_source": "",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 0.0,
+      "slot": "AMMO",
+      "stats_at_upgrade": {},
+      "stats_plus0": {},
+      "stats_plus10": {},
+      "upgrade": 7,
+      "url": "",
+      "why": "no item",
+      "why_ui": "",
+      "zone": ""
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Straps",
+          "name": "Midnight Clad Straps",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2614.7,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "INT": 22.0,
+            "STA": 22.0,
+            "STR": 22.0,
+            "WIS": 22.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "INT": 13,
+            "STA": 13,
+            "STR": 13,
+            "WIS": 13
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "INT": 26,
+            "STA": 26,
+            "STR": 26,
+            "WIS": 26
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-straps/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Master Yael",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Brell's Girdle",
+          "name": "Brell's Girdle",
+          "quest_source": "Drops From: The Hole: Master Yael",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2036.0,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "AGI": 0.0,
+            "DEX": 0.0,
+            "END": 85.0,
+            "MANA": 85.0,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "AGI": -5,
+            "DEX": -5,
+            "END": 50,
+            "MANA": 50,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "AGI": 0,
+            "DEX": 0,
+            "END": 100,
+            "MANA": 100,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/brells-girdle/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "The Hole"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Vambraces",
+          "name": "Golden Efreeti Vambraces",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2012.0,
+          "stats_at_upgrade": {
+            "AC": 20.0,
+            "DEX": 13.0,
+            "END": 34.0,
+            "STA": 17.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 6,
+            "END": 20,
+            "STA": 10
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 16.0,
+            "END": 40,
+            "STA": 20
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-vambraces/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a spite golem",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Headband",
+          "name": "Midnight Clad Headband",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a spite golem",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2007.8,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "INT": 17.0,
+            "STA": 17.0,
+            "WIS": 17.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "INT": 10,
+            "STA": 10,
+            "WIS": 10
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "INT": 20,
+            "STA": 20,
+            "WIS": 20
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-headband/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ashenbone drake",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Armbands",
+          "name": "Midnight Clad Armbands",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ashenbone drake",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1913.8,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "INT": 12.0,
+            "STA": 16.0,
+            "STR": 12.0,
+            "SVC": 14.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "INT": 5,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 7,
+            "SVD": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "INT": 15.0,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 17.0,
+            "SVD": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-armbands/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "Lady Vox",
+      "haste": 38.0,
+      "image_url": "/api/item-image?name=Runed Bolster Belt",
+      "is_weapon": false,
+      "name": "Runed Bolster Belt",
+      "priority_value": 20.0,
+      "quest_source": "Drops From: Permafrost: Lady Vox",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 2090.25,
+      "slot": "ANY1",
+      "stats_at_upgrade": {
+        "AC": 12.0,
+        "DEX": 17.0,
+        "Haste": 38.0,
+        "STA": 17.0,
+        "STR": 17.0
+      },
+      "stats_plus0": {
+        "AC": 5,
+        "DEX": 10,
+        "Haste": 31,
+        "STA": 10,
+        "STR": 10
+      },
+      "stats_plus10": {
+        "AC": 15.0,
+        "DEX": 20,
+        "Haste": 31,
+        "STA": 20,
+        "STR": 20
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/runed-bolster-belt/",
+      "why": "priority P:STA; any-slot (no DMG)",
+      "why_ui": "",
+      "zone": "Permafrost"
+    },
+    {
+      "alts": [
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "amygdalan knight, amygdalan warrior, class-specific mini-bosses",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Straps",
+          "name": "Midnight Clad Straps",
+          "quest_source": "Drops From: Plane of Fear: amygdalan knight, amygdalan warrior; Plane of Hate: class-specific mini-bosses",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2614.7,
+          "stats_at_upgrade": {
+            "AC": 17.0,
+            "INT": 22.0,
+            "STA": 22.0,
+            "STR": 22.0,
+            "WIS": 22.0
+          },
+          "stats_plus0": {
+            "AC": 10,
+            "INT": 13,
+            "STA": 13,
+            "STR": 13,
+            "WIS": 13
+          },
+          "stats_plus10": {
+            "AC": 20,
+            "INT": 26,
+            "STA": 26,
+            "STR": 26,
+            "WIS": 26
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-straps/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Lady Vox",
+          "haste": 38.0,
+          "image_url": "/api/item-image?name=Runed Bolster Belt",
+          "name": "Runed Bolster Belt",
+          "quest_source": "Drops From: Permafrost: Lady Vox",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2090.25,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "DEX": 17.0,
+            "Haste": 38.0,
+            "STA": 17.0,
+            "STR": 17.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "DEX": 10,
+            "Haste": 31,
+            "STA": 10,
+            "STR": 10
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "DEX": 20,
+            "Haste": 31,
+            "STA": 20,
+            "STR": 20
+          },
+          "url": "https://eqlegendstools.com/items/runed-bolster-belt/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Permafrost"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "Noble Dojorn, Overseer of Air",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Golden Efreeti Vambraces",
+          "name": "Golden Efreeti Vambraces",
+          "quest_source": "Drops From: Plane of Sky: Noble Dojorn, Overseer of Air",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2012.0,
+          "stats_at_upgrade": {
+            "AC": 20.0,
+            "DEX": 13.0,
+            "END": 34.0,
+            "STA": 17.0
+          },
+          "stats_plus0": {
+            "AC": 12,
+            "DEX": 6,
+            "END": 20,
+            "STA": 10
+          },
+          "stats_plus10": {
+            "AC": 24,
+            "DEX": 16.0,
+            "END": 40,
+            "STA": 20
+          },
+          "url": "https://eqlegendstools.com/items/golden-efreeti-vambraces/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Sky"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a spite golem",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Headband",
+          "name": "Midnight Clad Headband",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a spite golem",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 2007.8,
+          "stats_at_upgrade": {
+            "AC": 9.0,
+            "INT": 17.0,
+            "STA": 17.0,
+            "WIS": 17.0
+          },
+          "stats_plus0": {
+            "AC": 2,
+            "INT": 10,
+            "STA": 10,
+            "WIS": 10
+          },
+          "stats_plus10": {
+            "AC": 12.0,
+            "INT": 20,
+            "STA": 20,
+            "WIS": 20
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-headband/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        },
+        {
+          "bis_overlap": 1,
+          "drops_mobs": "various mobs, a forsaken revenant, an ashenbone drake",
+          "haste": 0,
+          "image_url": "/api/item-image?name=Midnight Clad Armbands",
+          "name": "Midnight Clad Armbands",
+          "quest_source": "Drops From: Plane of Fear: various mobs; Plane of Hate: a forsaken revenant, an ashenbone drake",
+          "ratio_at_upgrade": null,
+          "ratio_plus10": null,
+          "score": 1913.8,
+          "stats_at_upgrade": {
+            "AC": 12.0,
+            "INT": 12.0,
+            "STA": 16.0,
+            "STR": 12.0,
+            "SVC": 14.0,
+            "SVD": 12.0,
+            "SVP": 12.0
+          },
+          "stats_plus0": {
+            "AC": 5,
+            "INT": 5,
+            "STA": 9,
+            "STR": 5,
+            "SVC": 7,
+            "SVD": 5,
+            "SVP": 5
+          },
+          "stats_plus10": {
+            "AC": 15.0,
+            "INT": 15.0,
+            "STA": 19.0,
+            "STR": 15.0,
+            "SVC": 17.0,
+            "SVD": 15.0,
+            "SVP": 15.0
+          },
+          "url": "https://eqlegendstools.com/items/midnight-clad-armbands/",
+          "why": "priority P:STA; any-slot (no DMG)",
+          "why_ui": "",
+          "zone": "Plane of Fear; Plane of Hate"
+        }
+      ],
+      "bis_overlap": 1,
+      "classes_str": "ALL",
+      "drops_mobs": "Master Yael",
+      "haste": 0,
+      "image_url": "/api/item-image?name=Brell's Girdle",
+      "is_weapon": false,
+      "name": "Brell's Girdle",
+      "priority_value": 20.0,
+      "quest_source": "Drops From: The Hole: Master Yael",
+      "ratio_at_upgrade": null,
+      "ratio_plus10": null,
+      "score": 2036.0,
+      "slot": "ANY2",
+      "stats_at_upgrade": {
+        "AC": 17.0,
+        "AGI": 0.0,
+        "DEX": 0.0,
+        "END": 85.0,
+        "MANA": 85.0,
+        "STA": 17.0,
+        "STR": 17.0
+      },
+      "stats_plus0": {
+        "AC": 10,
+        "AGI": -5,
+        "DEX": -5,
+        "END": 50,
+        "MANA": 50,
+        "STA": 10,
+        "STR": 10
+      },
+      "stats_plus10": {
+        "AC": 20,
+        "AGI": 0,
+        "DEX": 0,
+        "END": 100,
+        "MANA": 100,
+        "STA": 20,
+        "STR": 20
+      },
+      "upgrade": 7,
+      "url": "https://eqlegendstools.com/items/brells-girdle/",
+      "why": "priority P:STA; any-slot (no DMG)",
+      "why_ui": "",
+      "zone": "The Hole"
+    }
+  ],
+  "tertiary_stats": [],
+  "upgrade": 7,
+  "weapon_pool_size": 227,
+  "weapon_rule": "PRIMARY/SECONDARY: any selected class can dual wield → compare best 1H+1H dual-wield pair vs best 2H using eqlwiki Game_Mechanics working Legends expected-damage model (L=30; DWChance=Skill/400, skill≈151). RANGE when Prefer ranged: ratio-only. Non-weapon gear: usable by any selected class (union); multi-class preferred on ties."
+}
