@@ -20,6 +20,7 @@ from . import item_catalog as item_catalog_mod
 from .races import get_races_payload
 
 from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_mode, xlsx_dir
+from .parser.api import router as parser_router
 from .version import __version__
 
 LEGENDS = legends_root()
@@ -763,6 +764,8 @@ def _mount_spa() -> None:
             },
         )
 
+
+app.include_router(parser_router)
 
 if packaged_mode() or FRONTEND_DIST.exists():
     _mount_spa()
