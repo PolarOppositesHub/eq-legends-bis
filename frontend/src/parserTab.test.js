@@ -12,6 +12,8 @@ import {
   WHATS_NEW_TITLE,
   describeLevelChange,
   formatZone,
+  isRebuildBusy,
+  UPGRADE_STALLED_NOTE,
   sourcesForScope,
   visibleDamage,
   visibleRate,
@@ -329,15 +331,17 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.1 notes", () => {
+test("what's new dialog shows the 1.1.2 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.1")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.1<\/h2>/)
-  assert.match(html, /Woven Skull Cap shows Wizard Test of Focus/)
-  assert.match(html, /rebuilds the existing 1\.1\.0 parse from the log/)
-  assert.match(html, /dragon-eye seal/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.0<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.2")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.2<\/h2>/)
+  assert.match(html, /Best in Slot icons/)
+  assert.match(html, /no longer freezes the rest of the app/)
+  assert.match(html, /parser-stall\.log/)
+  assert.match(html, /database is locked/)
+  assert.match(html, /missing from the 1\.1\.1/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.1<\/h2>/.test(html), false)
 })
 
 test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {
@@ -424,4 +428,21 @@ test('credits name eqlwiki CC BY-SA and eqlegendstools.com', () => {
   assert.match(html, /CC BY-SA 4\.0/)
   assert.match(html, /eqlegendstools\.com/)
   assert.match(html, /creativecommons\.org\/licenses\/by-sa\/4\.0/)
+})
+
+
+test('a 503 from a parser read during a rebuild is treated as busy, not an error', () => {
+  const busy = Object.assign(new Error('Parser data is being rebuilt.'), { status: 503 })
+  assert.equal(isRebuildBusy(busy), true)
+  assert.equal(isRebuildBusy(Object.assign(new Error('nope'), { status: 500 })), false)
+  assert.equal(isRebuildBusy(null), false)
+})
+
+test('a stalled rebuild tells the user what to do instead of spinning forever', () => {
+  const html = markup(panel({ upgrading: true, upgradeStalled: true }))
+  assert.match(html, /data-testid="parser-upgrade-stalled"/)
+  assert.ok(html.includes('parser-stall.log'))
+  assert.ok(UPGRADE_STALLED_NOTE.includes('Restart the app'))
+  const healthy = markup(panel({ upgrading: true, upgradeStalled: false }))
+  assert.doesNotMatch(healthy, /parser-upgrade-stalled/)
 })

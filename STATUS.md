@@ -1,6 +1,13 @@
 # EQ Legends BiS app status
 
-Version: **1.1.1** — PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.1.2** — parser rebuild no longer freezes the app on the first launch after an update. 1.1.1 is PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export), and PR #43 (first launch no longer fails with "database is locked"). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.1.2
+- After an update, the app rebuilds parser data from the log in the background. That rebuild no longer freezes the rest of the app. Best in Slot icons and the other pages keep working while it runs, and the Parser tab refreshes once when it finishes.
+- If the rebuild stops moving for a minute, the Parser tab says so. A thread stack is saved to logs\parser-stall.log in the app data folder.
+- One app window per user. Main-process and sidecar output is written under logs in the app data folder, so a stuck launch leaves a trace.
+- 1.1.1 also fixed a first launch that could stop with "database is locked" (PR #43). The 1.1.1 notes missed that.
+- Version bump across package.json, package-lock.json, and version.py sources.
 
 ## 1.1.1
 - After updating, the app automatically rebuilds the existing 1.1.0 parse from the log, so there is nothing to redo.

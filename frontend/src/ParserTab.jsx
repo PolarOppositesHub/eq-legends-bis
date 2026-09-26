@@ -52,6 +52,8 @@ import {
   zoneSession,
 } from './parserDepth.js'
 import {
+  UPGRADE_STALLED_NOTE,
+  isRebuildBusy,
   LEVEL_LOADOUT_NOTE,
   PARSER_EMPTY,
   PET_LEADER_HINT,
@@ -360,6 +362,7 @@ export function ParserPanel({
   onOpenCredits,
   notice,
   upgrading,
+  upgradeStalled = false,
   retentionDays,
   onRetentionDays,
   onClearHistory,
@@ -544,6 +547,9 @@ export function ParserPanel({
 
       {upgrading ? (
         <p className="note" data-testid="parser-upgrade" role="status">Updating parser data…</p>
+      ) : null}
+      {upgrading && upgradeStalled ? (
+        <p className="warn-box" data-testid="parser-upgrade-stalled" role="alert">{UPGRADE_STALLED_NOTE}</p>
       ) : null}
 
       {progress && (progress.active || progress.done) ? (
@@ -1036,6 +1042,7 @@ export default function ParserTab({
   const [liveBusy, setLiveBusy] = useState(false)
   const [loadingLog, setLoadingLog] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+  const [upgradeStalled, setUpgradeStalled] = useState(false)
   const [progress, setProgress] = useState(null)
   const [fights, setFights] = useState([])
   const [detail, setDetail] = useState(null)
@@ -1092,6 +1099,7 @@ export default function ParserTab({
         upgradingRef.current = rebuild
         setUpgrading(rebuild)
         if (rebuild && cfg.upgrade_progress) setProgress(progressFromUpgrade(cfg.upgrade_progress))
+        setUpgradeStalled(rebuild && !!cfg?.upgrade_stalled)
         if (cfg?.live && cfg.live_path && nextLogs.some((log) => log.path === cfg.live_path)) {
           onLogPath(cfg.live_path)
         }
@@ -1111,9 +1119,11 @@ export default function ParserTab({
       getParserConfig()
         .then((cfg) => {
           if (cfg?.upgrade_progress) setProgress(progressFromUpgrade(cfg.upgrade_progress))
+          setUpgradeStalled(!!cfg?.upgrading && !!cfg?.upgrade_stalled)
           if (!cfg?.upgrading) {
             upgradingRef.current = false
             setUpgrading(false)
+            if (cfg?.upgrade_error) setNotice(String(cfg.upgrade_error))
             setRefreshNonce((n) => n + 1)
           }
         })
@@ -1142,14 +1152,14 @@ export default function ParserTab({
         setFightsTruncated(body.truncated)
       })
       .catch((err) => {
-        if (!cancelled) setNotice(String(err?.message || err))
+        if (!cancelled && !isRebuildBusy(err)) setNotice(String(err?.message || err))
       })
     getParserRoster(selected.character)
       .then((body) => {
         if (!cancelled) setRoster(body || emptyRoster)
       })
       .catch((err) => {
-        if (!cancelled) setNotice(String(err?.message || err))
+        if (!cancelled && !isRebuildBusy(err)) setNotice(String(err?.message || err))
       })
     return () => { cancelled = true }
   }, [selected?.character, selected?.path, refreshNonce])
@@ -1191,6 +1201,7 @@ export default function ParserTab({
       })
       .catch((err) => {
         if (cancelled) return
+        if (isRebuildBusy(err)) return
         setDetail(null)
         const missing = err?.status === 404 || /not found/i.test(String(err?.message || ''))
         setDetailStatus(missing ? 'missing' : 'error')
@@ -1202,6 +1213,9 @@ export default function ParserTab({
   useEffect(() => {
     let refreshTimer = null
     const scheduleFights = () => {
+      // Requests made during a rebuild would only get 503. The upgrade done
+      // event refreshes everything once.
+      if (upgradingRef.current) return
       clearTimeout(refreshTimer)
       refreshTimer = setTimeout(() => {
         const character = characterRef.current
@@ -1230,8 +1244,11 @@ export default function ParserTab({
         const active = !!(data && data.active && !data.done)
         upgradingRef.current = active
         setUpgrading(active)
+        if (typeof data?.stalled === 'boolean') setUpgradeStalled(active && data.stalled)
+        if (!active) setUpgradeStalled(false)
         if (data?.error) setNotice(String(data.error))
         if (data?.done) {
+          setRefreshNonce((n) => n + 1)
           setProgress((prev) => (
             prev ? { ...prev, active: false, done: true, pct: prev.pct == null ? 100 : prev.pct } : prev
           ))
@@ -1411,6 +1428,7 @@ export default function ParserTab({
       onToggleLive={onToggleLive}
       loadingLog={loadingLog}
       upgrading={upgrading}
+      upgradeStalled={upgradeStalled}
       progress={progress}
       fights={fights}
       selectedFightId={fightId}
