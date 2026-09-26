@@ -151,6 +151,8 @@ CREATE TABLE IF NOT EXISTS level_events (
     ts TEXT,
     character TEXT,
     level INTEGER,
+    classes TEXT,
+    evidence TEXT,
     ability_points INTEGER,
     ability_total INTEGER,
     PRIMARY KEY (file_id, generation, offset)
@@ -208,7 +210,16 @@ class ParserDB:
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA synchronous=NORMAL")
         self.conn.executescript(_SCHEMA)
+        self._migrate()
         self.conn.commit()
+
+    def _migrate(self) -> None:
+        """Add loadout columns when a database was created before them."""
+        cols = {row[1] for row in self.conn.execute("PRAGMA table_info(level_events)")}
+        if "classes" not in cols:
+            self.conn.execute("ALTER TABLE level_events ADD COLUMN classes TEXT")
+        if "evidence" not in cols:
+            self.conn.execute("ALTER TABLE level_events ADD COLUMN evidence TEXT")
 
     def close(self) -> None:
         with self.lock:
@@ -352,15 +363,38 @@ class ParserDB:
                 ),
             )
         elif event.kind == "level":
+            # A drop from 50 to 29 is a class-loadout swap, not a bad parse.
+            # Welcome lines name no trio, so classes stays null.
+            evidence = "ability" if event.level is None and event.ability_points is not None else "level_line"
             self.conn.execute(
                 """
                 INSERT OR IGNORE INTO level_events(
-                    file_id, generation, offset, ts, character, level, ability_points, ability_total
-                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                    file_id, generation, offset, ts, character, level, classes, evidence,
+                    ability_points, ability_total
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     file_id, generation, offset, _iso(event.ts), character,
-                    event.level, event.ability_points, event.ability_total,
+                    event.level, None, evidence, event.ability_points, event.ability_total,
+                ),
+            )
+        elif (
+            event.kind == "who"
+            and event.player_name
+            and event.player_name.lower() == character.lower()
+            and event.player_classes
+        ):
+            # /who is the log's evidence of which trio is on, and at what level.
+            self.conn.execute(
+                """
+                INSERT OR IGNORE INTO level_events(
+                    file_id, generation, offset, ts, character, level, classes, evidence,
+                    ability_points, ability_total
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    file_id, generation, offset, _iso(event.ts), character,
+                    event.player_level, event.player_classes, "who", None, None,
                 ),
             )
 
@@ -552,6 +586,19 @@ class ParserDB:
         else:
             row = self.conn.execute(f"SELECT COUNT(*) AS n FROM {table} WHERE file_id=?", (file_id,)).fetchone()
         return int(row["n"])
+
+    def list_level_events(self, character: str | None = None) -> list[dict]:
+        """Level observations in log order. ``classes`` is set only from /who evidence."""
+        sql = """
+            SELECT ts, character, level, classes, evidence, ability_points, ability_total, offset
+            FROM level_events
+        """
+        args: list = []
+        if character:
+            sql += " WHERE character=?"
+            args.append(character)
+        sql += " ORDER BY COALESCE(ts, ''), offset"
+        return [dict(row) for row in self.conn.execute(sql, args)]
 
     def list_fights(self, character: str | None = None, limit: int = 200, offset: int = 0) -> list[dict]:
         sql = "SELECT * FROM fights"

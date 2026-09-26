@@ -573,6 +573,56 @@ class FightReplayTests(unittest.TestCase):
         self.assertEqual(pets[0]["evidence"], "warder_name")
         self.assertFalse(pets[0]["manual"])
 
+    def test_level_drop_is_a_loadout_swap(self):
+        """A trio swap can ding 50 and later print Welcome to level 29.
+
+        That is not a parse error, and it does not split the fight or change
+        who the damage is credited to. Classes are recorded only from /who.
+        """
+        service, root = self._service()
+        path = root / "eqlog_Zasariz_qeynos.txt"
+        path.write_text(
+            "\n".join([
+                "[Tue Sep 01 21:12:20 2026] You slash a rat for 100 points of damage.",
+                "[Tue Sep 01 21:12:21 2026] You have gained a level! Welcome to level 50!",
+                "[Tue Sep 01 21:12:22 2026] [36 PAL/DRU/WIZ] Zasariz (High Elf)  ZONE: North Freeport (freportn)",
+                "[Tue Sep 01 21:12:23 2026] [20 PAL/DRU/WIZ] Amop (High Elf)",
+                "[Tue Sep 01 21:12:24 2026] You have gained a level! Welcome to level 29!",
+                "[Tue Sep 01 21:12:25 2026] You slash a rat for 20 points of damage.",
+                "[Tue Sep 01 21:12:26 2026] You have slain a rat!",
+                "",
+            ]),
+            encoding="utf-8",
+        )
+        stats = service.replay(path)
+        self.assertEqual(stats["fights"], 1)
+        # Two ding lines plus Zasariz's own /who. Amop's /who is not our level.
+        self.assertEqual(stats["levels"], 3)
+
+        levels = service.list_levels("Zasariz")["levels"]
+        self.assertEqual(
+            [(row["level"], row["classes"], row["evidence"]) for row in levels],
+            [
+                (50, None, "level_line"),
+                (36, "PAL/DRU/WIZ", "who"),
+                (29, None, "level_line"),
+            ],
+        )
+
+        fights = service.list_fights(character="Zasariz")["fights"]
+        self.assertEqual(len(fights), 1)
+        self.assertEqual(fights[0]["your_damage"], 120)
+        detail = service.fight_detail(fights[0]["id"], merge_pets=False)
+        by_name = {row["source"]: row for row in detail["sources"]}
+        self.assertEqual(by_name["Zasariz"]["kind"], "self")
+        self.assertEqual(by_name["Zasariz"]["damage"], 120)
+        self.assertEqual(detail["totals"]["damage"], 120)
+        self.assertNotIn("Amop", by_name)
+
+        again = service.replay(path)
+        self.assertEqual(again["events_inserted"], 0)
+        self.assertEqual(len(service.list_levels("Zasariz")["levels"]), 3)
+
     def test_public_master_say_does_not_bind_tell_does(self):
         service, root = self._service()
         path = root / "eqlog_Zasariz_qeynos.txt"

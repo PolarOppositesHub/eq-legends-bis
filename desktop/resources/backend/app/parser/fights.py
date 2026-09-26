@@ -302,13 +302,21 @@ class Segmenter:
             self.ctx.note_player(event.target)
             self._roster("player", name=event.target)
         elif event.kind == "who" and event.player_name:
-            self.ctx.note_player(event.player_name)
+            # A /who for the log character is a loadout snapshot. It must not
+            # reclassify that character as another player, and the level on it
+            # is not a single running character level.
+            if event.player_name.lower() != self.character.lower() and not is_you(event.player_name):
+                self.ctx.note_player(event.player_name)
             self._roster(
                 "player",
                 name=event.player_name,
                 classes=event.player_classes,
                 level=event.player_level,
             )
+        elif event.kind == "level":
+            # Loadout swaps drop the displayed level (50 then 29). That is not
+            # combat and does not move fight boundaries or source kinds.
+            return
         elif event.kind == "pet_tell" and event.pet:
             owner = self.character if is_you(event.owner) or event.owner == "You" else (event.owner or self.character)
             if self.ctx.bind_pet(event.pet, owner, "tell"):

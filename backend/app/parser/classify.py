@@ -676,6 +676,8 @@ def _progress(msg: str) -> ParsedEvent | None:
     # party_xp above double-counts. Set it only from the party group.
     match = _LEVEL_RE.match(msg) or _WELCOME_RE.match(msg)
     if match:
+        # The number is the level of the trio that just dinged. Swapping a
+        # class can print a lower level later. This line names no classes.
         return _event("level", source="You", level=int(match.group("level")))
     match = _AA_N.match(msg)
     if match:

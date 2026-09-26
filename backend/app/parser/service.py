@@ -367,6 +367,11 @@ class ParserService:
             rows = self.db.list_fights(character=character, limit=limit, offset=offset)
         return {"fights": rows, "count": len(rows)}
 
+    def list_levels(self, character: str | None = None) -> dict:
+        with self.db.lock:
+            rows = self.db.list_level_events(character)
+        return {"levels": rows}
+
     def fight_detail(self, fight_id: int, merge_pets: bool = True) -> dict | None:
         with self.db.lock:
             fight = self.db.get_fight_row(fight_id)
