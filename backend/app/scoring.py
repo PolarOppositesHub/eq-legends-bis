@@ -99,13 +99,37 @@ def enrich_stats_with_regen(item: dict) -> dict:
     return s10
 
 
-def item_haste(item: dict) -> float:
-    s10 = item.get("stats_plus10") or {}
+def _haste_raw(stats: dict | None):
+    if not isinstance(stats, dict):
+        return None
+    for key in ("Haste", "haste", "HASTE"):
+        if key in stats and stats[key] is not None:
+            return stats[key]
+    return None
+
+
+def item_haste(item: dict, level: int = 10) -> float:
+    """Worn haste at an upgrade: tooltip base + integer level.
+
+    Official tooltip scaling is ``Haste: +(base + upgradeLevel)%``, one point
+    per tier, not the AC/HP floor curve. Decoded stats_plus10.Haste copies the
+    +0 tooltip, so returning that value raw is the freeze. Scoring compares
+    items on the +10 column unless ``level`` is passed. If plus10 haste
+    actually differs from plus0, level 10 keeps that explicit value.
+    """
+    if not item:
+        return 0.0
     s0 = item.get("stats_plus0") or {}
-    h = s10.get("Haste")
-    if h is None:
-        h = s0.get("Haste")
-    return num(h)
+    s10 = item.get("stats_plus10") or {}
+    b0 = _haste_raw(s0)
+    b10 = _haste_raw(s10)
+    if b0 is None and b10 is None:
+        return 0.0
+    lvl = max(0, min(10, int(level)))
+    if lvl >= 10 and b0 is not None and b10 is not None and abs(num(b0) - num(b10)) > 1e-6:
+        return num(b10)
+    base = b0 if b0 is not None else b10
+    return num(base) + lvl
 
 
 def haste_bonus(item: dict) -> float:

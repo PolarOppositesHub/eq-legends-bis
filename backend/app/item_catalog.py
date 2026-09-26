@@ -79,9 +79,15 @@ def _scale_stats_plus10(stats0: dict[str, Any]) -> dict[str, Any]:
                 out[k] = float(math.floor(float(v) * 2))
             except (TypeError, ValueError):
                 continue
-        elif k in ("DLY", "FIRE_DMG", "COLD_DMG", "Haste"):
+        elif k in ("DLY", "FIRE_DMG", "COLD_DMG"):
             try:
                 out[k] = float(v)
+            except (TypeError, ValueError):
+                continue
+        elif str(k).lower() == "haste":
+            # eqlegendstools: tooltip haste + 10. Not the AC curve.
+            try:
+                out[k] = float(v) + 10
             except (TypeError, ValueError):
                 continue
         elif k in _SCALABLE:

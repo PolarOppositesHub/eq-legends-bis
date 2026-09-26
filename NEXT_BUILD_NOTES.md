@@ -1,5 +1,17 @@
 # Next build notes
 
+**UX parked on 1.0.21 — do not bump version, do not Windows-pack, do not touch the updater.** Never invent item stats.
+
+## Item Search expand + eqlwiki confirm (still Version 1.0.21)
+- [x] Item Search: click a row expands that result and the side detail with every catalog stat key present (not the one-line summary). Equipables with an upgrade path get a +0…+10 slider. Values are catalog +0 scaled like Quest Hub. Missing stats stay missing.
+- [x] First click on the item name (or the row) opens the side panel with full stats + slider. Second click on the name while that item is already open asks **Open eqlwiki** / **Cancel**. A double-click does not jump to the wiki.
+- [x] Haste on the Item Search / Quest Hub slider, simulator, and BiS score is tooltip base + integer upgrade (eqlegendstools `Haste: +(base + upgradeLevel)%`). Root cause was an intentional freeze next to DLY. Decoded `stats_plus10.Haste` copies +0, so it is not a measured +10. Cloak of Flames is 36 at +0 and 46 at +10 (differs by 10). Not the AC/HP floor curve.
+- [x] Straight-to-eqlwiki clicks elsewhere confirm the same way. CatalogItemName / Known Loot (and quest-reward / upgrade-name menus) still open eqlwiki in one step — no second confirm.
+- [x] Non-eqlwiki external links stay direct.
+- [ ] Josh spot-check in the app. No `.exe` from this change.
+
+---
+
 **v1.0.12 READY TO SHIP — merge PR #13, then build.** Agent cannot build Windows `.exe` or create GitHub Releases. Never invent item stats.
 
 ## Overnight / Josh — GitHub Release v1.0.12

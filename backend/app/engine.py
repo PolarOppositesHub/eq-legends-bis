@@ -20,7 +20,7 @@ DECODED = decoded_dir()
 
 import build_planner as bp  # noqa: E402
 import build_xlsx as bx  # noqa: E402
-from decode_local import SCALABLE_STATS, scale_item_stat  # noqa: E402
+from decode_local import SCALABLE_STATS, scale_item_stat, scale_worn_haste as _scale_worn_haste  # noqa: E402
 
 _paths.apply_legends_roots()
 
@@ -61,8 +61,68 @@ def _num(v, default=0.0) -> float:
         return default
 
 
+def _haste_pair(stats: dict | None) -> tuple[str | None, float | None]:
+    if not isinstance(stats, dict):
+        return None, None
+    for k, v in stats.items():
+        if str(k).lower() != "haste":
+            continue
+        try:
+            return str(k), float(v)
+        except (TypeError, ValueError):
+            return str(k), None
+    return None, None
+
+
+def scale_worn_haste(base, level: int):
+    """eqlegendstools scaleTooltipLine: Haste% = tooltip base + integer upgrade.
+
+    Not scale_item_stat. Cloak of Flames tooltip is 36; +10 is 46, not 72.
+    """
+    return _scale_worn_haste(base, level)
+
+
+def apply_worn_haste(stats: dict, s0: dict | None, level: int, s10: dict | None = None) -> dict:
+    """Put sourced haste onto a stat dict for this upgrade.
+
+    Decoded stats_plus10.Haste is a copy of +0 on every catalog row (the
+    decoder used to freeze it). When +10 haste actually differs from +0,
+    level 10 keeps that explicit value. Otherwise haste is tooltip base + level.
+    """
+    if not isinstance(stats, dict):
+        return stats
+    k0, b0 = _haste_pair(s0)
+    k10, b10 = _haste_pair(s10)
+    if k0 is None and k10 is None:
+        return stats
+    key = k0 or k10
+    level = max(0, min(10, int(level)))
+    if (
+        level >= 10
+        and b0 is not None
+        and b10 is not None
+        and abs(b0 - b10) > 1e-6
+    ):
+        stats[key] = b10
+        return stats
+    base = b0 if b0 is not None else b10
+    if base is None:
+        return stats
+    stats[key] = float(scale_worn_haste(base, level))
+    return stats
+
+
+def scale_slider_stats(stats0: dict, level: int) -> dict:
+    """Stats for +0…+10 sliders (Item Search / Quest Hub rewards)."""
+    return scale_stats_to_level(stats0, level)
+
+
 def scale_stats_to_level(stats0: dict, level: int) -> dict:
-    """Scale +0 stats to upgrade level 0..10. Haste/DLY/FIRE_DMG/COLD_DMG do not scale."""
+    """Scale +0 stats to upgrade level 0..10. DLY/FIRE_DMG/COLD_DMG do not scale.
+
+    Worn haste follows eqlegendstools: tooltip base + integer level.
+    Scoring uses the same rule (default +10, one point per tier).
+    """
     level = max(0, min(10, int(level)))
     out: dict[str, Any] = {}
     for k, v in (stats0 or {}).items():
@@ -82,8 +142,13 @@ def scale_stats_to_level(stats0: dict, level: int) -> dict:
                     out[k] = float(bx.scaled_dmg(base, level))
                 except Exception:
                     out[k] = float(math.floor(base * (1 + level / 10)))
-        elif k in ("DLY", "FIRE_DMG", "COLD_DMG", "Haste"):
+        elif k in ("DLY", "FIRE_DMG", "COLD_DMG"):
             out[k] = float(v) if v is not None else 0.0
+        elif str(k).lower() == "haste":
+            try:
+                out[k] = float(scale_worn_haste(v, level))
+            except (TypeError, ValueError):
+                out[k] = v
         elif k in SCALABLE_STATS or k in TOTAL_STAT_KEYS:
             out[k] = float(scale_item_stat(v, level))
         else:
@@ -123,13 +188,16 @@ def _load_catalog_and_slug():
 def _public_item(item: dict, level: int = 10) -> dict:
     """Serialize item for API without nested circular refs."""
     s0 = dict(item.get("stats_plus0") or {})
-    s_lvl = scale_stats_to_level(s0, level) if level != 10 else dict(item.get("stats_plus10") or scale_stats_to_level(s0, 10))
+    s10_raw = item.get("stats_plus10") or {}
+    s_lvl = scale_stats_to_level(s0, level) if level != 10 else dict(s10_raw or scale_stats_to_level(s0, 10))
     if level == 0:
         s_lvl = dict(s0)
         # ensure numeric
         s_lvl = {k: (_num(v) if not isinstance(v, str) else v) for k, v in s_lvl.items()}
-    s10 = dict(item.get("stats_plus10") or scale_stats_to_level(s0, 10))
-    haste = bp.item_haste(item)
+    apply_worn_haste(s_lvl, s0, level, s10_raw)
+    s10 = dict(s10_raw or scale_stats_to_level(s0, 10))
+    _hk, h_scaled = _haste_pair(s_lvl)
+    haste = h_scaled if h_scaled is not None else bp.item_haste(item, level)
     return {
         "name": item.get("name"),
         "itemID": item.get("itemID"),
@@ -563,6 +631,8 @@ def recommend_bis(
         s_up = scale_stats_to_level(s0, upgrade) if item else {}
         if upgrade == 10 and s10:
             s_up = dict(s10)
+        if item:
+            apply_worn_haste(s_up, s0, upgrade, s10)
         row = {
             "slot": slot,
             "name": cand.get("name") or "",
@@ -602,7 +672,8 @@ def recommend_bis(
             row["why_ui"] = f"Best weapon ratio @+{upgrade}"
             if ratio_u is not None:
                 row["score"] = round(float(ratio_u) * 10000.0, 4)
-        h = bp.item_haste(item) if item else _num((row["stats_plus10"] or {}).get("Haste"))
+        _hk, h_scaled = _haste_pair(s_up)
+        h = h_scaled if h_scaled is not None else (bp.item_haste(item) if item else _num((row["stats_plus10"] or {}).get("Haste")))
         row["haste"] = h if h > 0 else 0
         if row["haste"] > 0 and row["name"]:
             haste_items.append({"slot": slot, "name": row["name"], "haste": row["haste"]})
@@ -670,8 +741,13 @@ def recommend_bis(
         for r in ranked[: max(alts, 1) + 8]:
             if r["name"] == row["name"]:
                 continue
-            ih = bp.item_haste(r.get("item") or {})
             r_item = r.get("item") or {}
+            alt_up = scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {}
+            _hk, ih = _haste_pair(alt_up)
+            if ih is None and r_item:
+                ih = bp.item_haste(r_item, upgrade)
+            if ih is None:
+                ih = 0
             r_ratio = r.get("ratio_at_upgrade")
             if r_ratio is None and r_item:
                 r_ratio = ratio_at_level(r_item, upgrade)
@@ -689,7 +765,7 @@ def recommend_bis(
                 "bis_overlap": r.get("bis_overlap", 0),
                 "stats_plus0": r_item.get("stats_plus0") or {},
                 "stats_plus10": sc.enrich_stats_with_regen(r_item) if r_item else (r.get("stats_plus10") or {}),
-                "stats_at_upgrade": scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {},
+                "stats_at_upgrade": alt_up,
                 "url": r.get("url") or "",
                 "image_url": f"/api/item-image?name={r['name']}" if r.get("name") else "",
             })
@@ -889,10 +965,14 @@ def simulate(
                 "upgrade": slot_level,
             })
             continue
-        stats = scale_stats_to_level(item.get("stats_plus0") or {}, slot_level)
-        if slot_level == 10 and item.get("stats_plus10"):
-            stats = dict(item["stats_plus10"])
-        h = bp.item_haste(item)
+        s0_item = item.get("stats_plus0") or {}
+        s10_item = item.get("stats_plus10") or {}
+        stats = scale_stats_to_level(s0_item, slot_level)
+        if slot_level == 10 and s10_item:
+            stats = dict(s10_item)
+        apply_worn_haste(stats, s0_item, slot_level, s10_item)
+        _hk, h_scaled = _haste_pair(stats)
+        h = h_scaled if h_scaled is not None else bp.item_haste(item)
         entry = {
             "slot": slot,
             "name": item["name"],
@@ -1072,7 +1152,7 @@ def meta_payload() -> dict:
         ],
         "haste_rule": summary.get("haste_note") or (
             "Only ONE worn haste item counts (highest %). That stacks with spell haste from Cast Buffs. "
-            "Combined haste caps at 175% (185% for Monk). Haste does not scale with upgrade."
+            "Combined haste caps at 175% (185% for Monk). Worn haste is the tooltip base plus the integer upgrade level."
         ),
         "weapon_rule": (
             "PRIMARY/SECONDARY: DW pair vs 2H expected-dmg when any DW class selected; "

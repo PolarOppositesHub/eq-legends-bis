@@ -727,6 +727,48 @@ input[type="range"] { min-width: 120px; accent-color: var(--gold); }
 }
 .item-search-result:hover { background: var(--chip); }
 .item-search-name { font-weight: 700; color: var(--heading); }
+.item-search-name-hit { color: inherit; }
+.item-search-result.is-selected {
+  background: var(--chip);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.item-search-result.is-selected .item-search-name-hit {
+  border-bottom: 1px dotted var(--gold);
+  cursor: pointer;
+}
+.item-search-open { background: #121212; }
+.item-search-expand {
+  padding: 0.15rem 0.75rem 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.item-stats-detail { margin-top: 0.35rem; }
+.item-stats-caption { font-size: 0.75rem; margin-top: 0.35rem; }
+.item-stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+.item-stat-chip {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #e6e6e6;
+}
+.item-name .zone-link,
+.alt-name .zone-link,
+.bis-item-name .zone-link {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: inherit;
+  text-decoration: none;
+}
+.item-name .zone-link:hover,
+.alt-name .zone-link:hover,
+.bis-item-name .zone-link:hover { text-decoration: underline; }
 .item-detail-panel {
   background: var(--panel2);
   border: 1px solid var(--gold);

@@ -136,9 +136,10 @@ export const APP_HELP = {
       id: 'search',
       title: 'Item Search',
       body: [
-        'Look up any EQ Legends item by name (gear and non-equipables). Open a result for stats and wiki description when available.',
-        'Equipable items with an upgrade path use a +0…+10 slider on the detail pane (same scaling as Quest Hub rewards). Non-equipables keep static stats.',
-        'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list — stats are never invented.',
+        'Click a result name or row to open the side panel with every catalog stat. Click the name again while it is open: Open eqlwiki or Cancel (Cancel clears the selection).',
+        'Equipable items with an upgrade path use a +0…+10 slider. Catalog haste is the tooltip percent plus that upgrade level (eqlegendstools), not the AC curve. Non-equipables keep static stats. Stats are never invented.',
+        'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
+        'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
       ],
     },
     {

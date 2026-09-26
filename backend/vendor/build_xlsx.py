@@ -403,7 +403,7 @@ def weapon_records(catalog: dict, slug_map: dict, target_classes=None, any_class
                 "ratio0": ratio(dmg0, dly),
                 "ratio10": ratio(dmg10, dly),
                 "haste0": clean_num(haste),
-                "haste10": clean_num(haste),  # worn haste does not scale
+                "haste10": clean_num(None if haste is None else int(haste) + 10),
                 "effect": extract_effect_from_tip(tip),
                 "url": item_url(name, slug_map),
                 "itemID": w.get("itemID"),
@@ -610,7 +610,7 @@ def write_class_selector(wb, summary, weapon_counts, gear_counts, planner_classe
     ws.cell(row, 1).font = Font(bold=True, size=12)
     row += 1
     ws.cell(row, 1, (
-        "Worn haste is the tooltip line 'Haste: +N%' (shown as Haste +0 / Haste +10; value does not scale). "
+        "Worn haste is the tooltip line 'Haste: +N%' at +0. Haste +10 is that base plus 10 (one point per upgrade). "
         "Spell Haste / Summoning Haste focus effects are NOT worn haste. "
         "BiS loadout ranking picks at most ONE haste item (highest %); other haste pieces are ranked without double-counting."
     ))
@@ -630,7 +630,7 @@ def write_class_selector(wb, summary, weapon_counts, gear_counts, planner_classe
     row += 1
     ws.cell(row, 1, (
         "Weapon DMG at level L: =FLOOR(DMG0*(1+L/10),1). Ratio = DMG/DLY (DLY unchanged). "
-        "Haste does NOT scale. Other positive stats: =MAX(FLOOR(S*(1+L/10),1), S+L)."
+        "Haste: base + upgrade level (not FLOOR(S*(1+L/10))). Other positive stats: =MAX(FLOOR(S*(1+L/10),1), S+L)."
     ))
 
     ws.column_dimensions["A"].width = 52

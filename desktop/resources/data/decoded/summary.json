@@ -49,7 +49,7 @@
     "bis_Warrior": 276,
     "bis_Wizard": 239
   },
-  "haste_note": "Worn haste parsed from tooltip 'Haste: +N%' (does not scale with upgrade). Spell/focus/effect haste text is NOT treated as worn haste. Only ONE worn haste item counts in a loadout; that item haste stacks with Cast Buffs spell haste.",
+  "haste_note": "Worn haste is the tooltip 'Haste: +N%' at upgrade +0. eqlegendstools adds the integer upgrade level (not the AC/HP curve). Spell/focus/effect haste text is NOT worn haste. Only ONE worn haste item counts; it stacks with Cast Buffs spell haste.",
   "haste_top": [
     {
       "name": "Belt of the Four Winds",
@@ -289,10 +289,10 @@
     ],
     "non_scalable": [
       "DLY",
-      "Haste",
       "FIRE_DMG",
       "COLD_DMG"
-    ]
+    ],
+    "haste": "tooltip base + integer upgrade level (eqlegendstools scaleTooltipLine)"
   },
   "stat_keys_seen": {
     "AC": 593,
