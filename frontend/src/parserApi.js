@@ -45,6 +45,13 @@ export const getParserFight = (id, mergePets) => {
   return req(`/api/parser/fights/${encodeURIComponent(id)}?${q}`)
 }
 
+/** Lines for one fight, re-read from the log. The database does not store them. */
+export const getParserFightLines = (id) =>
+  req(`/api/parser/fights/${encodeURIComponent(id)}/lines`)
+
+export const postParserClearHistory = (character) =>
+  req('/api/parser/history/clear', { method: 'POST', body: JSON.stringify({ character }) })
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {

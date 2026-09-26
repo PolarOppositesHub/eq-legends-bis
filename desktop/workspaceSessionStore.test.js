@@ -93,6 +93,41 @@ test('round-trip keeps a full workspace, including unknown future keys', () => {
   });
 });
 
+test('parser.db stays separate from the session and settings files', () => {
+  const dir = tempUserData();
+  const settingsPath = path.join(dir, 'settings.json');
+  const parserDb = path.join(dir, 'parser.db');
+  const sessionPath = sessionFilePath(dir);
+  assert.equal(path.basename(parserDb), 'parser.db');
+  assert.notEqual(parserDb, sessionPath);
+  assert.notEqual(parserDb, settingsPath);
+  assert.equal(path.basename(sessionPath), FILE_NAME);
+  assert.equal(path.basename(settingsPath), 'settings.json');
+
+  const settings = { eqInstallFolder: 'C:\\Games\\EverQuest Legends' };
+  const session = {
+    v: 1,
+    tab: 'parser',
+    parserLogPath: 'C:\\Games\\EverQuest Legends\\Logs\\eqlog_Zasariz_qeynos.txt',
+    parserFightId: 4,
+  };
+  fs.writeFileSync(settingsPath, JSON.stringify(settings), 'utf8');
+  writeWorkspaceSession(dir, session);
+  assert.equal(fs.existsSync(parserDb), false);
+
+  fs.writeFileSync(parserDb, 'sqlite-stand-in', 'utf8');
+  assert.deepEqual(readWorkspaceSession(dir), session);
+  assert.deepEqual(JSON.parse(fs.readFileSync(settingsPath, 'utf8')), settings);
+
+  writeWorkspaceSession(dir, { ...session, parserFightId: 9 });
+  assert.equal(fs.readFileSync(parserDb, 'utf8'), 'sqlite-stand-in');
+  assert.deepEqual(JSON.parse(fs.readFileSync(settingsPath, 'utf8')), settings);
+  clearWorkspaceSession(dir);
+  assert.equal(fs.existsSync(parserDb), true);
+  assert.equal(fs.readFileSync(parserDb, 'utf8'), 'sqlite-stand-in');
+  assert.equal(fs.existsSync(settingsPath), true);
+});
+
 test('parser tab session round-trips and keeps unknown future keys', () => {
   const dir = tempUserData();
   const session = {
