@@ -1197,6 +1197,85 @@ html[data-reduce-motion="1"] .load-bar-fill.indeterminate { animation: none; wid
   color: var(--muted);
   font-size: 0.72rem;
 }
+.parser-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.45rem 0;
+}
+.parser-tabs button {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+}
+.parser-tabs button.on,
+.parser-tabs button[aria-selected="true"] {
+  background: var(--gold);
+  color: var(--gold-text);
+  border-color: var(--gold-dark);
+}
+.parser-chart {
+  margin: 0.4rem 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--gold-dark);
+  border-radius: 12px;
+  background: var(--panel2);
+}
+.parser-chart svg { width: 100%; height: auto; display: block; }
+.parser-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.parser-legend span[data-series="outgoing"] { color: var(--gold); font-weight: 700; }
+.parser-legend span[data-series="incoming"] { color: var(--danger); font-weight: 700; }
+.parser-spell-page {
+  margin: 0.45rem 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--gold-dark);
+  border-radius: 12px;
+  background: var(--panel2);
+}
+.parser-spell-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.9rem;
+  margin: 0.35rem 0;
+}
+.parser-spell-stats div { min-width: 4.5rem; }
+.parser-spell-stats dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.parser-spell-stats dd { margin: 0; font-weight: 700; }
+.parser-death {
+  margin: 0.45rem 0;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel2);
+}
+.parser-death h4 { margin: 0; color: var(--heading); font-size: 0.9rem; }
+.parser-death-log { margin: 0.25rem 0 0; padding-left: 1.2rem; }
+.parser-copy-out {
+  margin: 0.4rem 0;
+  padding: 0.55rem 0.7rem;
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #0d0d0d;
+  color: var(--gold);
+  border: 1px solid var(--gold-dark);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+.parser-ability-row td { background: var(--bg-accent); }
+.parser-export, .parser-actions { margin: 0.35rem 0; }
 @media (max-width: 960px) {
   .parser-split { grid-template-columns: 1fr; }
 }
