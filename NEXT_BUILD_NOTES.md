@@ -1,5 +1,18 @@
 # Next build notes
 
+**Shipped as 1.1.2.** Updater untouched. Never invent item stats.
+
+## 1.1.2 — Parser rebuild no longer freezes the app
+- [x] After an update, the parser rebuild holds the database for the whole replay. Reads from the Parser tab now answer immediately instead of parking a browser connection, so Best in Slot icons and the rest of the app keep working. The tab does not refetch on every fight during the replay. It refreshes once when the rebuild finishes.
+- [x] A rebuild that does not move for a minute is marked stalled. Every thread's stack is appended to logs/parser-stall.log in the app data folder.
+- [x] The sidecar writes a rotating eq-api.log and a crash stack log. The Electron main process writes main.log and allows only one app window per user.
+- [x] 1.1.1 also fixed a first launch that could stop with "database is locked" (PR #43). The 1.1.1 What's new notes missed that.
+- [x] Versions **1.1.2**
+- [ ] Follow-ups, not in this release: release the database lock between replay chunks (or read from a second connection) so fight data is readable during a rebuild, and make the rebuild resumable instead of starting over after a kill. Shut the sidecar down gracefully instead of force-killing it. The git copy under desktop/resources/backend is still a stale snapshot (the comment that called it the packaged import path was corrected; the build copies backend/ when it packs).
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Shipped as 1.1.1 (PRs #36 + #37 + #38 + #39 + #40 + #41 merged).** Updater untouched. Never invent item stats.
 
 ## 1.1.1 — Parser depth, quest links, fight history, seal icon

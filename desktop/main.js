@@ -26,6 +26,40 @@ if (process.platform === 'win32') {
 }
 
 let mainWindow = null;
+
+// One app per user. A second launch (double-clicked shortcut during a slow
+// first start) would spawn a second sidecar on the same parser.db and start a
+// second rebuild; one of them then fails with "database is locked".
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
+}
+
+// Main-process + sidecar output also goes to <userData>/logs/main.log. Before
+// 1.1.2 it only went to console, which a packaged Windows app throws away.
+let mainLogStream = null;
+function mainLog(level, ...parts) {
+  const line = `${new Date().toISOString()} ${level} ${parts.map((p) => (typeof p === 'string' ? p : String(p))).join(' ')}\n`;
+  try {
+    if (!mainLogStream) {
+      const dir = path.join(app.getPath('userData'), 'logs');
+      fs.mkdirSync(dir, { recursive: true });
+      const file = path.join(dir, 'main.log');
+      try {
+        if (fs.existsSync(file) && fs.statSync(file).size > 2_000_000) fs.renameSync(file, `${file}.1`);
+      } catch (_) { /* rotation is best effort */ }
+      mainLogStream = fs.createWriteStream(file, { flags: 'a' });
+    }
+    mainLogStream.write(line);
+  } catch (_) { /* logging must never break the app */ }
+}
 let apiProc = null;
 let apiPort = 0;
 let instanceNonce = '';
@@ -66,10 +100,13 @@ function findPythonSidecar() {
     ? path.join(appRoot, '.venv', 'Scripts', 'python.exe')
     : path.join(appRoot, '.venv', 'bin', 'python');
   const py = fs.existsSync(venvPy) ? venvPy : (process.platform === 'win32' ? 'python' : 'python3');
+  // Prefer the repo backend. desktop/resources/backend is a git snapshot
+  // that can lag (the build copies backend/ in at pack time). A packaged app
+  // has no repo tree, so this falls through to resources/backend.
   const candidates = [
-    path.join(res, 'backend', 'packaging', 'api_entry.py'),
-    path.join(rootForScripts(), 'backend', 'packaging', 'api_entry.py'),
     path.join(appRoot, 'backend', 'packaging', 'api_entry.py'),
+    path.join(rootForScripts(), 'backend', 'packaging', 'api_entry.py'),
+    path.join(res, 'backend', 'packaging', 'api_entry.py'),
   ];
   const script = candidates.find((c) => fs.existsSync(c)) || candidates[candidates.length - 1];
   return { cmd: py, args: [script, '--port', String(apiPort)] };
@@ -119,9 +156,14 @@ function envForApi() {
     ? legends
     : (fs.existsSync(path.join(legendsDev, 'build_planner.py')) ? legendsDev : legends);
 
-  const backendRoot = fs.existsSync(path.join(root, 'backend', 'app'))
-    ? root
-    : appRoot;
+  // Dev has both the repo and a git snapshot under resources. The snapshot
+  // can lag (older vendor, missing timeline.py). Prefer the repo. A packaged
+  // app's appRoot is the resources tree the build just copied.
+  const repoBackend = path.join(appRoot, 'backend', 'app');
+  const mirrorBackend = path.join(root, 'backend', 'app');
+  const backendRoot = fs.existsSync(repoBackend)
+    ? appRoot
+    : (fs.existsSync(mirrorBackend) ? root : appRoot);
   const pyPath = [
     backendRoot,
     path.join(backendRoot, 'backend'),
@@ -178,16 +220,18 @@ function startApi() {
     spec.args = ['--port', String(apiPort)];
   }
   console.log('[eq] starting API:', spec.cmd, spec.args.join(' '));
+  mainLog('info', '[eq] starting API:', spec.cmd, spec.args.join(' '), 'argv:', process.argv.slice(1).join(' '));
   apiProc = spawn(spec.cmd, spec.args, {
     env,
     cwd: path.dirname(spec.cmd),
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
   });
-  apiProc.stdout.on('data', (d) => console.log('[api]', d.toString().trimEnd()));
-  apiProc.stderr.on('data', (d) => console.error('[api]', d.toString().trimEnd()));
+  apiProc.stdout.on('data', (d) => { const t = d.toString().trimEnd(); console.log('[api]', t); mainLog('api', t); });
+  apiProc.stderr.on('data', (d) => { const t = d.toString().trimEnd(); console.error('[api]', t); mainLog('api', t); });
   apiProc.on('exit', (code, signal) => {
     console.log('[eq] API exited', code, signal);
+    mainLog('info', '[eq] API exited', code, signal);
     apiProc = null;
   });
 }
@@ -402,6 +446,7 @@ function setupUpdater() {
 
     autoUpdater.on('error', (err) => {
       console.log('[updater] error:', err && err.message);
+      mainLog('warn', '[updater] error:', err && err.message);
     });
 
     autoUpdater.on('update-available', async (info) => {
@@ -731,6 +776,7 @@ ipcMain.handle('eq:check-updates', async () => {
 });
 
 app.whenReady().then(async () => {
+  if (!gotSingleInstanceLock) return;
   // Drop the stock File/Edit/View menu — in-app Quit + window chrome still exit.
   Menu.setApplicationMenu(null);
   instanceNonce = crypto.randomBytes(16).toString('hex');

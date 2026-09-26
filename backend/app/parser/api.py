@@ -9,10 +9,10 @@ import threading
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from .service import LogRejected, ParserService
+from .service import LogRejected, ParserBusy, ParserService
 
 router = APIRouter(prefix="/api/parser", tags=["parser"])
 
@@ -37,6 +37,15 @@ def get_service() -> ParserService:
                 db = os.environ.get("EQ_PARSER_DB") or None
                 _service = ParserService(db_path=db)
     return _service
+
+
+def busy_response(exc: ParserBusy) -> JSONResponse:
+    """503 with a hint the Parser tab uses to wait for the rebuild quietly."""
+    return JSONResponse(
+        status_code=503,
+        content={"detail": str(exc), "rebuilding": True},
+        headers={"Retry-After": "2"},
+    )
 
 
 def reset_service(service: ParserService | None = None) -> None:
@@ -148,7 +157,9 @@ def get_fights(
     limit: int = Query(default=200, ge=1, le=2000),
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
-    return get_service().list_fights(character=character, limit=limit, offset=offset)
+    service = get_service()
+    with service.read_guard():
+        return service.list_fights(character=character, limit=limit, offset=offset)
 
 
 @router.get("/loot")
@@ -158,12 +169,16 @@ def get_loot(
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     """Loot, give, and merge events already stored while the log is read."""
-    return get_service().list_economy(character=character, limit=limit, offset=offset)
+    service = get_service()
+    with service.read_guard():
+        return service.list_economy(character=character, limit=limit, offset=offset)
 
 
 @router.get("/fights/{fight_id}")
 def get_fight(fight_id: int, merge_pets: bool = True) -> dict[str, Any]:
-    detail = get_service().fight_detail(fight_id, merge_pets=merge_pets)
+    service = get_service()
+    with service.read_guard():
+        detail = service.fight_detail(fight_id, merge_pets=merge_pets)
     if detail is None:
         raise HTTPException(404, "Fight not found")
     return detail
@@ -172,7 +187,9 @@ def get_fight(fight_id: int, merge_pets: bool = True) -> dict[str, Any]:
 @router.get("/fights/{fight_id}/timeline")
 def get_fight_timeline(fight_id: int, ability: str | None = None) -> dict[str, Any]:
     """Per-second damage and healing, re-read from the fight's log byte range."""
-    detail = get_service().fight_timeline(fight_id, ability=ability)
+    service = get_service()
+    with service.read_guard():
+        detail = service.fight_timeline(fight_id, ability=ability)
     if detail is None:
         raise HTTPException(404, "Fight not found")
     return detail
@@ -181,7 +198,9 @@ def get_fight_timeline(fight_id: int, ability: str | None = None) -> dict[str, A
 @router.get("/fights/{fight_id}/lines")
 def get_fight_lines(fight_id: int) -> dict[str, Any]:
     """Drill-down text re-read from the fight's log byte range."""
-    detail = get_service().fight_lines(fight_id)
+    service = get_service()
+    with service.read_guard():
+        detail = service.fight_lines(fight_id)
     if detail is None:
         raise HTTPException(404, "Fight not found")
     return detail
@@ -204,14 +223,18 @@ def post_pets(body: PetBody) -> dict[str, Any]:
 
 @router.get("/pets")
 def get_pets(character: str) -> dict[str, Any]:
-    return {"character": character, "pets": get_service().list_pets(character)}
+    service = get_service()
+    with service.read_guard():
+        return {"character": character, "pets": service.list_pets(character)}
 
 
 @router.get("/roster")
 def get_roster(character: str) -> dict[str, Any]:
     if not character.strip():
         raise HTTPException(400, "character is required")
-    return get_service().roster(character.strip())
+    service = get_service()
+    with service.read_guard():
+        return service.roster(character.strip())
 
 
 @router.post("/candidates")

@@ -20,7 +20,9 @@ from . import item_catalog as item_catalog_mod
 from .races import get_races_payload
 
 from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_mode, xlsx_dir
+from .parser.api import busy_response as parser_busy_response
 from .parser.api import router as parser_router
+from .parser.service import ParserBusy
 from .version import __version__
 
 LEGENDS = legends_root()
@@ -766,6 +768,12 @@ def _mount_spa() -> None:
 
 
 app.include_router(parser_router)
+
+
+@app.exception_handler(ParserBusy)
+async def _parser_busy(_request, exc: ParserBusy):
+    # Parser reads answer 503 during a rebuild instead of holding a connection.
+    return parser_busy_response(exc)
 
 if packaged_mode() or FRONTEND_DIST.exists():
     _mount_spa()

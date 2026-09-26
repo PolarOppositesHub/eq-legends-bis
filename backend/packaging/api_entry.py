@@ -11,6 +11,8 @@ Sets EQ_PACKAGED=1 and starts uvicorn serving backend.app.main:app
 from __future__ import annotations
 
 import argparse
+import copy
+import faulthandler
 import os
 import sys
 from pathlib import Path
@@ -44,6 +46,49 @@ def _bootstrap_path() -> None:
             os.environ.setdefault("EQ_LEGENDS_ROOT", str(legends))
 
 
+def _log_dir() -> Path | None:
+    """<user data>/logs, the same folder Electron uses. None when unknown."""
+    root = os.environ.get("EQ_USER_DATA") or os.environ.get("EQ_XLSX_DIR")
+    if not root:
+        return None
+    path = Path(root) / "logs"
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return None
+    return path
+
+
+def _log_config(log_dir: Path | None) -> dict:
+    """uvicorn's console logging plus a rotating eq-api.log (access + errors).
+
+    Before 1.1.2 the sidecar only logged to a pipe, so a stuck or failed
+    request left no trace on the user's machine.
+    """
+    from uvicorn.config import LOGGING_CONFIG
+
+    config = copy.deepcopy(LOGGING_CONFIG)
+    if log_dir is None:
+        return config
+    config["formatters"]["file"] = {
+        "format": "%(asctime)s.%(msecs)03d %(levelname)s %(name)s %(message)s",
+        "datefmt": "%Y-%m-%d %H:%M:%S",
+    }
+    config["handlers"]["file"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "file",
+        "filename": str(log_dir / "eq-api.log"),
+        "maxBytes": 2_000_000,
+        "backupCount": 3,
+        "encoding": "utf-8",
+    }
+    for name in ("uvicorn", "uvicorn.access"):
+        config["loggers"].setdefault(name, {"level": "INFO"})
+        config["loggers"][name].setdefault("handlers", [])
+        config["loggers"][name]["handlers"].append("file")
+    return config
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="EQ Legends BiS API sidecar")
     parser.add_argument("--host", default="127.0.0.1")
@@ -64,12 +109,21 @@ def main(argv: list[str] | None = None) -> int:
 
     import uvicorn
 
+    log_dir = _log_dir()
+    if log_dir is not None:
+        try:
+            # Fatal errors and hard crashes still leave every thread's stack behind.
+            faulthandler.enable(file=open(log_dir / "eq-api-fault.log", "a", encoding="utf-8"), all_threads=True)
+        except OSError:
+            pass
+
     # Import after path bootstrap
     uvicorn.run(
         "backend.app.main:app",
         host=args.host,
         port=args.port,
         log_level="info",
+        log_config=_log_config(log_dir),
         reload=False,
         workers=1,
     )

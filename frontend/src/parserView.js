@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.1'
+export const WHATS_NEW_ID = '1.1.2'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,16 +23,12 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.1"
+export const WHATS_NEW_TITLE = "What's new in 1.1.2"
 
 export const WHATS_NEW_POINTS = [
-  'After updating, the app automatically rebuilds the existing 1.1.0 parse from the log, so there is nothing to redo.',
-  'Each fight keeps damage by attack and spell, healing, tanking, deaths, resists, and loot. Open a row for the breakdown, and use the timeline.',
-  'Item Search quest names that said "not in Quest Hub" now open the quest. Woven Skull Cap shows Wizard Test of Focus.',
-  'Fight history keeps everything by default. A full, long log is about 64 MB. The Parser tab can clear history for one character.',
-  'The Parser tab tracks pets and your group. Limit a fight to Self, Group, Pets, or All.',
-  'The desktop and Start Menu icons refresh to the dragon-eye seal on install and update.',
-  'Merge selected fights. Copy the parse as text or TSV, or save CSV and HTML. Browse older fights in the history list.',
+  'After an update, the app rebuilds parser data from your log in the background. That rebuild no longer freezes the rest of the app. Best in Slot icons and the other pages keep working while it runs, and the Parser tab refreshes once when it finishes.',
+  'If the rebuild stops moving for a minute, the Parser tab says so and points at logs\\parser-stall.log in the app data folder, instead of spinning forever.',
+  '1.1.1 also fixed a first launch that could stop with "database is locked". That note was missing from the 1.1.1 What\'s new list.',
 ]
 
 export const CREDITS = [
@@ -291,3 +287,13 @@ function text(value) {
   if (typeof value !== 'string') return ''
   return value.trim()
 }
+
+
+// A parser read answered 503 because a rebuild holds the database. The tab
+// waits for the rebuild's done event instead of showing an error.
+export function isRebuildBusy(err) {
+  return !!err && Number(err.status) === 503
+}
+
+export const UPGRADE_STALLED_NOTE =
+  'The parser update has not moved for a minute. Details were saved to logs\\parser-stall.log in the app data folder. Restart the app to retry the update.'

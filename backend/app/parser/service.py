@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import faulthandler
+import os
 import threading
 import time
 from collections import Counter
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -25,11 +28,29 @@ from .tail import LogTail, TailBatch, backfill_offset
 from .timeline import build_timeline
 
 CHUNK_LINES = 50_000
+# How long a UI read may wait for the database lock before answering 503.
+READ_LOCK_TIMEOUT = 1.5
+# A rebuild that has not advanced for this long is reported as stalled and
+# every thread's stack is written to <user data>/logs/parser-stall.log.
+UPGRADE_STALL_SECONDS = 60.0
 _TEXT_SUFFIXES = {".txt", ".log"}
 
 
 class LogRejected(ValueError):
     """The path is not a text combat log we are willing to read."""
+
+
+class ParserBusy(RuntimeError):
+    """A replay or rebuild holds the parser database. Answer now, do not wait.
+
+    A request that waits on the lock for the whole replay parks one of the
+    browser's six connections to the sidecar. A few parked requests starve the
+    rest: config polls and item icons queue in Chromium and the app looks dead
+    (1.1.1 first launch, 2026-09-26).
+    """
+
+    def __init__(self, message: str = "Parser data is being rebuilt. Try again when it finishes.") -> None:
+        super().__init__(message)
 
 
 def _check_log(path: Path) -> None:
@@ -115,6 +136,8 @@ class ParserService:
         self._upgrading = False
         self._upgrade_error: str | None = None
         self._upgrade_progress: dict | None = None
+        self._upgrade_stalled = False
+        self._upgrade_watch: threading.Thread | None = None
         self._schema_version = self.db.stored_schema_version()
         self.clock = clock or datetime.now
         # Cached with the folder so /config does not wait on a rebuild's DB lock.
@@ -185,6 +208,8 @@ class ParserService:
             "schema_version": self._schema_version,
             "upgrade_error": self._upgrade_error,
             "upgrade_progress": dict(progress) if progress else None,
+            "upgrade_stalled": self._upgrade_stalled,
+            "rebuilding": self._replaying,
             "fight_retention_days": self._retention_days,
         }
 
@@ -206,6 +231,73 @@ class ParserService:
             daemon=True,
         )
         self._upgrade_thread.start()
+        self._upgrade_watch = threading.Thread(
+            target=self._watch_upgrade,
+            name="parser-upgrade-watchdog",
+            daemon=True,
+        )
+        self._upgrade_watch.start()
+
+    @contextmanager
+    def read_guard(self, timeout: float = READ_LOCK_TIMEOUT):
+        """Hold the DB lock for one UI read, or raise ParserBusy right away.
+
+        Replays hold ``db.lock`` for the whole log. UI reads must not queue
+        behind that; they answer 503 and the Parser tab refreshes when the
+        rebuild's ``upgrade`` done event arrives.
+        """
+        if self._replaying:
+            raise ParserBusy()
+        if not self.db.lock.acquire(timeout=timeout):
+            raise ParserBusy()
+        try:
+            yield
+        finally:
+            self.db.lock.release()
+
+    def _stall_log_path(self) -> Path:
+        return Path(self.user_data) / "logs" / "parser-stall.log"
+
+    def dump_threads(self, reason: str) -> Path | None:
+        """Append every thread's Python stack to the stall log. Never raises."""
+        try:
+            path = self._stall_log_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "a", encoding="utf-8") as handle:
+                handle.write(f"\n=== {datetime.now().isoformat(timespec='seconds')} {reason}\n")
+                handle.write(f"progress={self._upgrade_progress!r}\n")
+                handle.flush()
+                faulthandler.dump_traceback(file=handle, all_threads=True)
+            return path
+        except Exception:
+            return None
+
+    def _progress_marker(self) -> tuple:
+        progress = self._upgrade_progress or {}
+        return (progress.get("file_index"), progress.get("lines"), progress.get("offset"), progress.get("done"))
+
+    def _watch_upgrade(self, poll: float = 5.0, stall_seconds: float | None = None) -> None:
+        """Flag a rebuild that stopped advancing and record where it is stuck."""
+        limit = UPGRADE_STALL_SECONDS if stall_seconds is None else stall_seconds
+        marker = self._progress_marker()
+        changed = time.monotonic()
+        reported = False
+        while self._upgrading:
+            time.sleep(poll)
+            current = self._progress_marker()
+            now = time.monotonic()
+            if current != marker:
+                marker = current
+                changed = now
+                if self._upgrade_stalled:
+                    self._upgrade_stalled = False
+                    self.hub.publish({"type": "upgrade", "active": True, "done": False, "stalled": False})
+                continue
+            if not reported and now - changed >= limit and self._upgrading:
+                reported = True
+                self._upgrade_stalled = True
+                self.dump_threads(f"parser rebuild made no progress for {int(now - changed)}s")
+                self.hub.publish({"type": "upgrade", "active": True, "done": False, "stalled": True})
 
     def _upgrade_worker(self) -> None:
         error = None
@@ -416,6 +508,8 @@ class ParserService:
         lines = classified = unclassified = inserted = duplicate = 0
         started = time.perf_counter()
         with self.db.lock:
+            # Test hook. Unset in production, so a normal replay never waits here.
+            self._wait_for_test_gate()
             row = self.db.upsert_file(str(path), character, server, st.st_size, st.st_mtime)
             file_id = int(row["id"])
             if st.st_size < int(row["last_offset"] or 0):
@@ -597,7 +691,37 @@ class ParserService:
             }
         self.hub.publish(payload)
 
+    def _wait_for_test_gate(self) -> None:
+        """Pause a replay while ``EQ_PARSER_REBUILD_GATE`` names a file.
+
+        The file is polled until it contains ``release``. The caller already
+        holds ``db.lock``, which is what made the 1.1.1 UI look frozen.
+        Production never sets the variable. While paused, fight events are
+        offered the same way a long replay offers them; ``_emit_fight`` drops
+        those during a replay so 1.1.2 does not refetch into the lock.
+        """
+        gate = os.environ.get("EQ_PARSER_REBUILD_GATE", "").strip()
+        if not gate:
+            return
+        path = Path(gate)
+        deadline = time.monotonic() + 180.0
+        while time.monotonic() < deadline:
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError:
+                text = ""
+            if "release" in text.lower():
+                return
+            self._emit_fight({"id": 0, "character": ""})
+            time.sleep(0.35)
+
     def _emit_fight(self, summary: dict) -> None:
+        # A replay closes hundreds of fights. Each event made the Parser tab
+        # fetch fights, roster and detail, and every one of those requests
+        # waited on db.lock until the replay ended. The replay's own progress
+        # and done events are enough; the tab refreshes once when it finishes.
+        if self._replaying:
+            return
         now = time.monotonic()
         if now - self._last_fight_emit < 0.25:
             return

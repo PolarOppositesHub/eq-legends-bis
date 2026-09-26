@@ -550,7 +550,13 @@ class BreakdownTests(unittest.TestCase):
         module = ROOT / "backend" / "app" / "parser" / "breakdown.py"
         mirror = ROOT / "desktop" / "resources" / "backend" / "app" / "parser" / "breakdown.py"
         self.assertTrue(module.is_file())
-        self.assertTrue(mirror.is_file(), "desktop/resources/backend is what the packaged app imports")
+        self.assertTrue(
+            mirror.is_file(),
+            "desktop/resources/backend is a git snapshot of backend/. "
+            "scripts/bundle_desktop_resources.py copies backend/ into the package; "
+            "the snapshot can lag (it has been missing timeline.py) and is not what "
+            "a dev Electron launch imports.",
+        )
         specs = [
             ROOT / "backend" / "packaging" / "eq-api.spec",
             ROOT / "packaging" / "eq-api.spec",
