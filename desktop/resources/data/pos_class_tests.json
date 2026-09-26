@@ -1,0 +1,1883 @@
+{
+  "license": "CC BY-SA",
+  "attribution": "Plane of Sky class tests transcribed from the EverQuest Legends Wiki (https://eqlwiki.com/Plane_of_Sky), used under CC BY-SA. Quest names, givers, trigger phrases, wind runes, required items, island tags, and reward items are copied from that page's class-test tables. Aliases are catalog spellings or item-page labels for the same reward or the same required item — not invented quests.",
+  "source_url": "https://eqlwiki.com/Plane_of_Sky",
+  "fetched": "2026-09-26",
+  "test_count": 95,
+  "tests": [
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Tone",
+      "giver": "Cilin Spellsinger",
+      "keyword": "tone",
+      "reward": "Mask of Song",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Light Woolen Mask",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Voice",
+      "giver": "Cilin Spellsinger",
+      "keyword": "voice",
+      "reward": "Mantle of the Songweaver",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Light Woolen Mantle",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Pitch",
+      "giver": "Cilin Spellsinger",
+      "keyword": "pitch",
+      "reward": "Ervaj's Flute of Flight",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Crude Wooden Flute",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Wind",
+      "giver": "Cilin Spellsinger",
+      "keyword": "wind",
+      "reward": "Amulet of the Fae",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Amulet of Woven Hair",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Brass",
+      "giver": "Cilin Spellsinger",
+      "keyword": "brass",
+      "reward": "Denon's Horn of Disaster",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Glowing Diamond",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Efreeti War Horn",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Bard",
+      "section": "Bard Tests",
+      "quest": "Bard Test of Harmony",
+      "giver": "Cilin Spellsinger",
+      "keyword": "harmony",
+      "reward": "Spear of Harmony",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Nebulous Diamond",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti War Spear",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Beastlord",
+      "section": "Beastlord Tests",
+      "quest": "Beastlord Test of Aviak",
+      "giver": "Animist Kratho",
+      "keyword": "aviak",
+      "reward": "Spiroc Beak Earcuff",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Spiroc Elder's Totem",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Beastlord",
+      "section": "Beastlord Tests",
+      "quest": "Beastlord Test of Azarack",
+      "giver": "Animist Kratho",
+      "keyword": "azarack",
+      "reward": "Azarack Skin Wristwraps",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Azarack Skin",
+          "tag": "2-PoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Beastlord",
+      "section": "Beastlord Tests",
+      "quest": "Beastlord Test of Claw",
+      "giver": "Animist Kratho",
+      "keyword": "claw",
+      "reward": "Windhowl",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Sphinx Claw",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Mithril Bands",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Brass Knuckles",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Beastlord",
+      "section": "Beastlord Tests",
+      "quest": "Beastlord Test of Harpy",
+      "giver": "Animist Kratho",
+      "keyword": "harpy",
+      "reward": "Griffon-Hide Armguards",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Leather Cord",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Beastlord",
+      "section": "Beastlord Tests",
+      "quest": "Beastlord Test of Wind",
+      "giver": "Animist Kratho",
+      "keyword": "wind",
+      "reward": "Diaphonous Waistband",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "Silken Wrap",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Sharpness",
+      "giver": "Stragen The Hewer",
+      "keyword": "sharpness",
+      "reward": "Skycleaver",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Djinni War Blade",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Efreeti Standard",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Will",
+      "giver": "Stragen The Hewer",
+      "keyword": "will",
+      "reward": "Molten Coil",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Pulsating Ruby",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Ferocity",
+      "giver": "Stragen The Hewer",
+      "keyword": "ferocity",
+      "reward": "Sash of Ferocity",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "High Quality Raiment",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Burden",
+      "giver": "Stragen The Hewer",
+      "keyword": "burden",
+      "reward": "Shroud of the Sky",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Feathered Cape",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Blood",
+      "giver": "Stragen The Hewer",
+      "keyword": "blood",
+      "reward": "Blood-Drawn Runes",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Azarack Blood",
+          "tag": "2-PoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Berserker",
+      "section": "Berserker Tests",
+      "quest": "Berserker Test of Fools Errand",
+      "giver": "Stragen The Hewer",
+      "keyword": "fools errand",
+      "reward": "Cudgel of the Fool",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Jester's Mask",
+          "tag": "4-KoS"
+        },
+        {
+          "name": "Efreeti Great Staff",
+          "tag": "8-EoV"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of Courage",
+      "giver": "Josin Faithbringer",
+      "keyword": "courage",
+      "reward": "Truewind Earring",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Silver Hoop",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of Skill",
+      "giver": "Josin Faithbringer",
+      "keyword": "skill",
+      "reward": "Aegis of the Wind",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Small Shield",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of Protection",
+      "giver": "Josin Faithbringer",
+      "keyword": "protection",
+      "reward": "Pauldrons of Piety",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Shiny Pauldrons",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of Resolution",
+      "giver": "Josin Faithbringer",
+      "keyword": "resolution",
+      "reward": "Necklace of Resolution",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Silvered Spiroc Necklace",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of Theurgy",
+      "giver": "Josin Faithbringer",
+      "keyword": "theurgy",
+      "reward": "Theurgist's Star",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Djinni Aura",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Efreeti Mace",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Cleric",
+      "section": "Cleric Tests",
+      "quest": "Cleric Test of The Weak",
+      "giver": "Josin Faithbringer",
+      "keyword": "weak",
+      "reward": "Baton of the Sky",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Mithril Bands",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Standard",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of Wolf",
+      "giver": "Strandar Pinemist",
+      "keyword": "wolf",
+      "reward": "Drake-Hide Mask",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Worn Leather Mask",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": [
+        "Druid Test of The Wolf"
+      ]
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of Bear",
+      "giver": "Strandar Pinemist",
+      "keyword": "bear",
+      "reward": "Nature Walker's Mantle",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Mantle of Woven Grass",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": [
+        "Druid Test of The Bear"
+      ]
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of Tree",
+      "giver": "Strandar Pinemist",
+      "keyword": "tree",
+      "reward": "Shillelagh",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Spiroc Battle Staff",
+          "tag": "5-SL"
+        },
+        {
+          "name": "Efreeti Statuette",
+          "tag": ""
+        }
+      ],
+      "aliases": [
+        "Druid Test of The Tree"
+      ]
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of The Bee",
+      "giver": "Strandar Pinemist",
+      "keyword": "bee",
+      "reward": "Honeycomb Belt",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Divine Honeycomb",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of Eagle",
+      "giver": "Strandar Pinemist",
+      "keyword": "eagle",
+      "reward": "Spiroc Banisher Focus",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Ethereal Ruby",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Spiroc Elder's Totem",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": [
+        "Druid Test of The Eagle"
+      ]
+    },
+    {
+      "class": "Druid",
+      "section": "Druid Tests",
+      "quest": "Druid Test of Nature",
+      "giver": "Strandar Pinemist",
+      "keyword": "nature",
+      "reward": "Espri",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Storm Sky Opal",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Scimitar",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Illusion",
+      "giver": "Enchanter Jolas",
+      "keyword": "illusion",
+      "reward": "Sphinx Hair Cord",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Finely Woven Cloth Cord",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Metamorphism",
+      "giver": "Enchanter Jolas",
+      "keyword": "metamorphism",
+      "reward": "Wind Walker's Mantle",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "Light Cloth Mantle",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Deception",
+      "giver": "Enchanter Jolas",
+      "keyword": "deception",
+      "reward": "Ivory Mask",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Silken Mask",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Dislocation",
+      "giver": "Enchanter Jolas",
+      "keyword": "dislocation",
+      "reward": "Earring of Displacement",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Adamantium Earring",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": [
+        "Enchanter Test of Disillusion"
+      ]
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Memorization",
+      "giver": "Enchanter Jolas",
+      "keyword": "memorization",
+      "reward": "Necklace of Whispering Winds",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Glowing Necklace",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Enchanter",
+      "section": "Enchanter Tests",
+      "quest": "Enchanter Test of Incapacitation",
+      "giver": "Enchanter Jolas",
+      "keyword": "incapacitation",
+      "reward": "Rod of the Protecting Winds",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Large Sky Sapphire",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Wind Staff",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Clarification",
+      "giver": "Magus Frinon",
+      "keyword": "clarification",
+      "reward": "Bracelet of Clarification",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Feathered Cape",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Empowerment",
+      "giver": "Magus Frinon",
+      "keyword": "empowerment",
+      "reward": "Mask of Empowerment",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Ceramic Mask",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Shielding",
+      "giver": "Magus Frinon",
+      "keyword": "shielding",
+      "reward": "Gold White Pendant",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Golden Coffer",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Summoning",
+      "giver": "Magus Frinon",
+      "keyword": "summoning",
+      "reward": "Drake-Hide Amice",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Large Diamond",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Interpretation",
+      "giver": "Magus Frinon",
+      "keyword": "interpretation",
+      "reward": "Duennan Shielding Ring",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Golden Efreeti Ring",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Gesticulation",
+      "giver": "Magus Frinon",
+      "keyword": "gesticulation",
+      "reward": "Staff of The Magister",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Hazy Opal",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Magi Staff",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Magician",
+      "section": "Magician Tests",
+      "quest": "Magician Test of Displacement",
+      "giver": "Magus Frinon",
+      "keyword": "displacement",
+      "reward": "Staff of Elemental Mastery: Air",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Crown of Elemental Mastery",
+          "tag": "7-Trash"
+        },
+        {
+          "name": "Large Opal",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Djinni Stave",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Strength",
+      "giver": "Holwin",
+      "keyword": "strength",
+      "reward": "Back Straps of Mastery",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Silken Strands",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Sight",
+      "giver": "Holwin",
+      "keyword": "sight",
+      "reward": "Ton Po's Eye Patch",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "Cracked Leather Eyepatch",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Speed",
+      "giver": "Holwin",
+      "keyword": "speed",
+      "reward": "Sandals of Alacrity",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Dove Slippers",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Tears",
+      "giver": "Holwin",
+      "keyword": "tears",
+      "reward": "Ton Po's Shoulder Wraps",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Silken Wrap",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Fists",
+      "giver": "Holwin",
+      "keyword": "fists",
+      "reward": "Wu's Fist of Mastery",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Nebulous Sapphire",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Brass Knuckles",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Monk",
+      "section": "Monk Tests",
+      "quest": "Monk Test of Tranquility",
+      "giver": "Holwin",
+      "keyword": "tranquility",
+      "reward": "Golden Sash of Tranquility",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Tear of Quellious",
+          "tag": "8-EoV"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Flight",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "flight",
+      "reward": "Bloody Griffon-Hide Wrist Guard",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Griffon's Beak",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Power",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "power",
+      "reward": "Cloak of Spiroc Feathers",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Black Silk Cape",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Mind",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "mind",
+      "reward": "Bloodsoaked Raiment",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "Fine Cloth Raiment",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": [
+        "Necromancer Test of The Mind"
+      ]
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Heart",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "heart",
+      "reward": "Sphinx Heart Amulet",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Pulsating Ruby",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Finger",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "finger",
+      "reward": "Band of Wailing Winds",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Ring of Veeshan",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": [
+        "Necromancer Test of The Finger"
+      ]
+    },
+    {
+      "class": "Necromancer",
+      "section": "Necromancer Tests",
+      "quest": "Necromancer Test of Hands",
+      "giver": "Drakis Bloodcaster",
+      "keyword": "hands",
+      "reward": "Gorgon Head Staff",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Gorgon Head",
+          "tag": "3-Gorga"
+        },
+        {
+          "name": "Efreeti Great Staff",
+          "tag": "8-EoV"
+        }
+      ],
+      "aliases": [
+        "Necromancer Test of The Hands"
+      ]
+    },
+    {
+      "class": "Paladin",
+      "section": "Paladin Tests",
+      "quest": "Paladin Test of Spirit",
+      "giver": "Dason Goldblade",
+      "keyword": "spirit",
+      "reward": "Girdle of Faith",
+      "runes": [
+        "Wind Rune Lena"
+      ],
+      "items": [
+        {
+          "name": "Ivory Sky Diamond",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Paladin",
+      "section": "Paladin Tests",
+      "quest": "Paladin Test of Sacrifice",
+      "giver": "Dason Goldblade",
+      "keyword": "sacrifice",
+      "reward": "Aldryn, Blade of the Ocean",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "Bixie Sword Blade",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Paladin",
+      "section": "Paladin Tests",
+      "quest": "Paladin Test of Love",
+      "giver": "Dason Goldblade",
+      "keyword": "love",
+      "reward": "Thelvorn, Blade of Light",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "Golden Hilt",
+          "tag": "7-Trash"
+        },
+        {
+          "name": "Sphinx Claw",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Paladin",
+      "section": "Paladin Tests",
+      "quest": "Paladin Test of Compassion",
+      "giver": "Dason Goldblade",
+      "keyword": "compassion",
+      "reward": "Truvinan",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Large Sky Diamond",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Zweihander",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of Body",
+      "giver": "Ranger Spirit",
+      "keyword": "body",
+      "reward": "Griffon Talon Necklace",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Griffon Talon",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of Defense",
+      "giver": "Ranger Spirit",
+      "keyword": "defense",
+      "reward": "Dark Cloak of the Sky",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Fine Velvet Cloak",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of The Earth",
+      "giver": "Ranger Spirit",
+      "keyword": "elemental earth",
+      "reward": "Earthshaker's Mantle",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Spiroc Earth Totem",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": [
+        "Ranger Test of Earth"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of Thunder",
+      "giver": "Ranger Spirit",
+      "keyword": "elemental thunder",
+      "reward": "Thunderforged Earring",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "White Gold Earring",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of Blade",
+      "giver": "Ranger Spirit",
+      "keyword": "blade",
+      "reward": "Arydryidriyorn",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Circlet of Brambles",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Efreeti Long Sword",
+          "tag": ""
+        }
+      ],
+      "aliases": [
+        "Ranger Test of The Blade"
+      ]
+    },
+    {
+      "class": "Ranger",
+      "section": "Ranger Tests",
+      "quest": "Ranger Test of Ranged Attack",
+      "giver": "Ranger Spirit",
+      "keyword": "ranged attack",
+      "reward": "Windstriker",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Shimmering Pearl",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti War Bow",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Thievery",
+      "giver": "Thalik Silenthand",
+      "keyword": "thievery",
+      "reward": "Wispy Choker of Vigor",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "Inlaid Choker",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Trickery",
+      "giver": "Thalik Silenthand",
+      "keyword": "trickery",
+      "reward": "Renard's Belt of Quickness",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Sphinxian Circlet",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Silence",
+      "giver": "Thalik Silenthand",
+      "keyword": "silence",
+      "reward": "Griffon Wing Spaulders",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Spiroc Sky Totem",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Cunning",
+      "giver": "Thalik Silenthand",
+      "keyword": "cunning",
+      "reward": "Crystal Mask",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Jester's Mask",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Stealth",
+      "giver": "Thalik Silenthand",
+      "keyword": "stealth",
+      "reward": "Shimmering Bracer of Protection",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "Fine Wool Cloak",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Rogue",
+      "section": "Rogue Tests",
+      "quest": "Rogue Test of Deception",
+      "giver": "Thalik Silenthand",
+      "keyword": "deception",
+      "reward": "Thornstinger",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Bixie Stinger",
+          "tag": "6-BZ"
+        },
+        {
+          "name": "Bloodsky Sapphire",
+          "tag": "8-EoV"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Bash",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "bash",
+      "reward": "Amulet of the Sphinx Eye",
+      "runes": [
+        "Wind Rune Ozah"
+      ],
+      "items": [
+        {
+          "name": "Finely Crafted Amulet",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Bash"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Smash",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "smash",
+      "reward": "Crimson Ring of the Djinni",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Silvery Ring",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Smash"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Slash",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "slash",
+      "reward": "Pegasus-Hide Belt",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Finely Woven Cloth Belt",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Slash"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Disempowerment",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "disempowerment",
+      "reward": "Blood Sky Face Plate",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Rusted Pauldrons",
+          "tag": "6-BZ"
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Disempowerment"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Envenoming",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "envenoming",
+      "reward": "Obtenebrate Mithril Guard",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Efreeti War Shield",
+          "tag": ""
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Envenoming"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Raising of the Dead",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "raising of the dead",
+      "reward": "Pearlescent Pauldrons",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Sphinxian Ring",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Fae Pauldrons",
+          "tag": "8-EoV"
+        }
+      ],
+      "aliases": [
+        "Shadow Knight Test of Raising the Dead"
+      ]
+    },
+    {
+      "class": "Shadow Knight",
+      "section": "Shadow Knight Tests",
+      "quest": "Shadow Knight Test of Necropotence",
+      "giver": "Sarkis Ebonblade",
+      "keyword": "necropotence",
+      "reward": "Khyldorn the Blood Drinker",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Blood Sky Ruby",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti War Axe",
+          "tag": ""
+        }
+      ],
+      "aliases": [
+        "Shadowknight Test of Necropotence"
+      ]
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of Might",
+      "giver": "Medicine Man Veetra",
+      "keyword": "might",
+      "reward": "Amulet of the Fang",
+      "runes": [
+        "Wind Rune Meda"
+      ],
+      "items": [
+        {
+          "name": "Leather Cord",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of Health",
+      "giver": "Medicine Man Veetra",
+      "keyword": "health",
+      "reward": "Bracelet of the Spirits",
+      "runes": [
+        "Wind Rune Kala"
+      ],
+      "items": [
+        {
+          "name": "Ceremonial Belt",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of Sight",
+      "giver": "Medicine Man Veetra",
+      "keyword": "sight",
+      "reward": "Fairy-Hide Mantle",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Light Damask Mantle",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of Shrink",
+      "giver": "Medicine Man Veetra",
+      "keyword": "shrink",
+      "reward": "Warhammer of the Wind",
+      "runes": [
+        "Wind Rune Ena"
+      ],
+      "items": [
+        {
+          "name": "Corrosive Venom",
+          "tag": "6-BZ"
+        },
+        {
+          "name": "Efreeti War Club",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of Snake",
+      "giver": "Medicine Man Veetra",
+      "keyword": "snake",
+      "reward": "Vermilion Sky Ring",
+      "runes": [
+        "Wind Rune Heda"
+      ],
+      "items": [
+        {
+          "name": "Bixie Essence",
+          "tag": "6"
+        },
+        {
+          "name": "Spiritualist`s Ring",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": [
+        "Shaman Test of the Snake"
+      ]
+    },
+    {
+      "class": "Shaman",
+      "section": "Shaman Tests",
+      "quest": "Shaman Test of The Witch Doctor",
+      "giver": "Medicine Man Veetra",
+      "keyword": "witch doctor",
+      "reward": "Garduk",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "Symbol of Veeshan",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti War Maul",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Skill",
+      "giver": "Torgon Blademaster",
+      "keyword": "skill",
+      "reward": "Azure Ruby Ring",
+      "runes": [
+        "Wind Rune Neza"
+      ],
+      "items": [
+        {
+          "name": "Azure Ring",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Strength",
+      "giver": "Torgon Blademaster",
+      "keyword": "strength",
+      "reward": "Runed Wind Amulet",
+      "runes": [
+        "Wind Rune Azia"
+      ],
+      "items": [
+        {
+          "name": "Stone Amulet",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Force",
+      "giver": "Torgon Blademaster",
+      "keyword": "force",
+      "reward": "Pauldrons of the Blue Sky",
+      "runes": [
+        "Wind Rune Beza"
+      ],
+      "items": [
+        {
+          "name": "Spiroc Air Totem",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Think",
+      "giver": "Torgon Blademaster",
+      "keyword": "think",
+      "reward": "Belt of the Four Winds",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Wind Tablet",
+          "tag": "6-BZ"
+        },
+        {
+          "name": "Efreeti Belt",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Smash",
+      "giver": "Torgon Blademaster",
+      "keyword": "smash",
+      "reward": "Dagas",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Djinni War Blade",
+          "tag": "7-SotS"
+        },
+        {
+          "name": "Gem of Invigoration",
+          "tag": "7-Trash"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Warrior",
+      "section": "Warrior Tests",
+      "quest": "Warrior Test of Bash",
+      "giver": "Torgon Blademaster",
+      "keyword": "bash",
+      "reward": "Fangol",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Ethereal Emerald",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti Battle Axe",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Concentration",
+      "giver": "Wizard Schrock",
+      "keyword": "concentration",
+      "reward": "Augmentor's Mask",
+      "runes": [
+        "Wind Rune Dena"
+      ],
+      "items": [
+        {
+          "name": "Grey Damask Cloak",
+          "tag": "3-Gorga"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Focus",
+      "giver": "Wizard Schrock",
+      "keyword": "focus",
+      "reward": "Al`Kabor's Cap of Binding",
+      "runes": [
+        "Wind Rune Fana"
+      ],
+      "items": [
+        {
+          "name": "Woven Skull Cap",
+          "tag": "4-KoS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Meditation",
+      "giver": "Wizard Schrock",
+      "keyword": "meditation",
+      "reward": "Raiment of Thunder",
+      "runes": [
+        "Wind Rune Geza"
+      ],
+      "items": [
+        {
+          "name": "High Quality Raiment",
+          "tag": "5-SL"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Conception",
+      "giver": "Wizard Schrock",
+      "keyword": "conception",
+      "reward": "Solidate Mithril Ring",
+      "runes": [
+        "Wind Rune Izah"
+      ],
+      "items": [
+        {
+          "name": "Box of Winds",
+          "tag": "6-BZ"
+        },
+        {
+          "name": "Efreeti Statuette",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Visualization",
+      "giver": "Wizard Schrock",
+      "keyword": "visualization",
+      "reward": "Amulet of the Void",
+      "runes": [
+        "Wind Rune Jaka"
+      ],
+      "items": [
+        {
+          "name": "Amethyst Amulet",
+          "tag": "7-SotS"
+        }
+      ],
+      "aliases": []
+    },
+    {
+      "class": "Wizard",
+      "section": "Wizard Tests",
+      "quest": "Wizard Test of Preparation",
+      "giver": "Wizard Schrock",
+      "keyword": "preparation",
+      "reward": "Nargon's Staff",
+      "runes": [
+        "Wind Rune Caza"
+      ],
+      "items": [
+        {
+          "name": "Large Sky Lapis",
+          "tag": "8-EoV"
+        },
+        {
+          "name": "Efreeti War Staff",
+          "tag": ""
+        }
+      ],
+      "aliases": []
+    }
+  ]
+}

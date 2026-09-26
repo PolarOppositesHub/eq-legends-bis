@@ -1,0 +1,373 @@
+{
+  "note": "Item Search still lists these related-quest labels, and they do not resolve to a Quest Hub entry. Each reason says why no quest record was added. The regression test fails if this set drifts.",
+  "entries": [
+    {
+      "name": "Cazic Thule Disciple",
+      "page": "Cazic Thule Disciple",
+      "item_count": 2,
+      "items": [
+        "Ichor",
+        "Kerran Doll"
+      ],
+      "reason": "Not an eqlwiki Category:Quests title and not a Plane of Sky class test. No Quest Hub row uses this name. Left unresolved."
+    },
+    {
+      "name": "Cazic Thule Initiate",
+      "page": "Cazic Thule Initiate",
+      "item_count": 1,
+      "items": [
+        "Infected Rat Livers"
+      ],
+      "reason": "Not an eqlwiki Category:Quests title and not a Plane of Sky class test. No Quest Hub row uses this name. Left unresolved."
+    },
+    {
+      "name": "Child of Innoruuk",
+      "page": "Child of Innoruuk",
+      "item_count": 2,
+      "items": [
+        "Blighted Mare Hide",
+        "Enchanted Platinum Bar"
+      ],
+      "reason": "Not in Category:Quests. Other Innoruuk quests are in the hub (Innoruuk Recommendation, Innoruuk Symbol Quests) but this title is not, so it was not aliased."
+    },
+    {
+      "name": "Dark One's Armor",
+      "page": "Dark One's Armor",
+      "item_count": 1,
+      "items": [
+        "An Alligator Tooth"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has Guild Summons - Dark Ones, which is a different title, so the armor name was not turned into a quest."
+    },
+    {
+      "name": "Faydark Champions Long Sword",
+      "page": "Faydark Champions Long Sword",
+      "item_count": 1,
+      "items": [
+        "Master Crushbone Cell Key"
+      ],
+      "reason": "The related-quest link points at an item page. Quest Hub has Guild Summons - Faydark's Champions, a different title, so this was not aliased."
+    },
+    {
+      "name": "Fishing",
+      "page": "Skill Fishing",
+      "item_count": 2,
+      "items": [
+        "Kerran Fishing Pole",
+        "Kerran Fishingpole"
+      ],
+      "reason": "The link target is the skill page Skill Fishing, not a quest. Left unresolved."
+    },
+    {
+      "name": "Fresh Baked Muffins",
+      "page": "Fresh Baked Muffins",
+      "item_count": 1,
+      "items": [
+        "Full Muffin Crate"
+      ],
+      "reason": "Ambiguous. Quest Hub has both Fresh Baked Muffins (Kaladim) and Fresh Baked Muffins (Qeynos). The link does not say which, so it was not guessed."
+    },
+    {
+      "name": "Guild Summons - Shrine of Bertoxxulous Cleric",
+      "page": "Guild Summons - Shrine of Bertoxxulous Cleric",
+      "item_count": 2,
+      "items": [
+        "A tattered note",
+        "Ruined Training Tunic*"
+      ],
+      "reason": "Not in Category:Quests. The closest hub title is Guild Summons - Temple of Bertoxxulous Cleric (Temple, not Shrine). Other Shrine of Bertoxxulous classes are listed, but not Cleric. Not aliased."
+    },
+    {
+      "name": "Illegible Scroll",
+      "page": "Illegible Scroll",
+      "item_count": 1,
+      "items": [
+        "Iron Ration"
+      ],
+      "reason": "The link points at an item page. Quest Hub has Illegible Scrolls and Illegible Scrolls (Felwithe), which are plural and two different pages. Not guessed."
+    },
+    {
+      "name": "Magician Spells (Good Version)",
+      "page": "Magician Spells (Good Version)",
+      "item_count": 4,
+      "items": [
+        "Spell: Boon of Immolation",
+        "Spell: Scintillation",
+        "Spell: Vocarate: Air",
+        "Spell: Vocarate: Fire"
+      ],
+      "reason": "Not in Category:Quests. Magician Spells (Good), Magician Spells (Evil), and Magician Spells (Evil Version) are separate hub pages, so dropping the word Version would be a guess."
+    },
+    {
+      "name": "McMannus Clan Dagger",
+      "page": "McMannus Clan Dagger",
+      "item_count": 1,
+      "items": [
+        "Broon's Eye"
+      ],
+      "reason": "The link points at an item page. McMannus Revenge and Ivan McMannus' Remains are different hub quests. Not aliased."
+    },
+    {
+      "name": "Nalla's Problem",
+      "page": "Nalla's Problem",
+      "item_count": 3,
+      "items": [
+        "Dusty Rusted Shackles",
+        "Jarsath Scale Boots",
+        "Rotbone Sleeves"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Necromancer Spells",
+      "page": "Necromancer Spells",
+      "item_count": 2,
+      "items": [
+        "Spell: Thrall of Bones",
+        "Spell: Minion of Shadows"
+      ],
+      "reason": "Ambiguous. Both Necromancer Spells (Cabilis) and Quest:Necromancer Spells fold to this label. Not guessed."
+    },
+    {
+      "name": "Necromancer Words",
+      "page": "Necromancer Words",
+      "item_count": 1,
+      "items": [
+        "Jasper"
+      ],
+      "reason": "Ambiguous. Quest Hub has Necromancer Words - X`Ta Tempi, X`Ta Timpi, and X`Ta Tompi. The link does not say which."
+    },
+    {
+      "name": "Purple Headband",
+      "page": "Purple Headband",
+      "item_count": 1,
+      "items": [
+        "Dagger of Marnek"
+      ],
+      "reason": "The related-quest link points at an item page, not a Category:Quests title. Left unresolved."
+    },
+    {
+      "name": "Scaled Curskins",
+      "page": "Scaled Curskins",
+      "item_count": 5,
+      "items": [
+        "Curscale Belt",
+        "Curscale Choker",
+        "Curscale Skullcap",
+        "Curscale Sleeves",
+        "Scaled Curskin"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Scarab Boots",
+      "page": "Scarab Boots",
+      "item_count": 1,
+      "items": [
+        "Cracked Giant Scarab Carapace"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Shackle of Bronze",
+      "page": "Shackle of Bronze",
+      "item_count": 1,
+      "items": [
+        "Empty Tin Box (Bronze Shackle)"
+      ],
+      "reason": "The related-quest link points at an item page, not a Category:Quests title. Left unresolved."
+    },
+    {
+      "name": "Shackle of Rock",
+      "page": "Shackle of Rock",
+      "item_count": 1,
+      "items": [
+        "Withered 3 Inch Finger"
+      ],
+      "reason": "The related-quest link points at an item page, not a Category:Quests title. Left unresolved."
+    },
+    {
+      "name": "Shackle of Scale",
+      "page": "Shackle of Scale",
+      "item_count": 1,
+      "items": [
+        "Gem of Yet to Come"
+      ],
+      "reason": "Not in Category:Quests. Monk Shackle Quests is a different hub title. Not aliased."
+    },
+    {
+      "name": "Spirit of Golin",
+      "page": "Spirit of Golin",
+      "item_count": 5,
+      "items": [
+        "Bone Chips (Golin's)",
+        "Crusader's Coffin",
+        "Iksar Skull with punctured cranium",
+        "Journal Entry",
+        "Shattered Crusader Khukri"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Spiritcharmer Final Job",
+      "page": "Spiritcharmer Final Job",
+      "item_count": 2,
+      "items": [
+        "An Alligator Tooth",
+        "Staff of the Spiritcharmer"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Taskmaster Earring - Dwarf Female",
+      "page": "Taskmaster Earring - Dwarf Female",
+      "item_count": 1,
+      "items": [
+        "Targ Shield"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "Taskmaster Earring - Dwarf Male",
+      "page": "Taskmaster Earring - Dwarf Male",
+      "item_count": 3,
+      "items": [
+        "A Worn Rune",
+        "Bronze Two Handed Battle Axe",
+        "Dwarven Axe"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "Taskmaster Earring - High Elf Female",
+      "page": "Taskmaster Earring - High Elf Female",
+      "item_count": 1,
+      "items": [
+        "Gossamer Robe"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "Taskmaster Earring - High Elf Male",
+      "page": "Taskmaster Earring - High Elf Male",
+      "item_count": 1,
+      "items": [
+        "Silver Amber Ring"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "Taskmaster Earring - Wood Elf Female",
+      "page": "Taskmaster Earring - Wood Elf Female",
+      "item_count": 4,
+      "items": [
+        "Leather Boots",
+        "Leather Cloak",
+        "Leather Leggings",
+        "Leather Shoulderpads"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "Taskmaster Earring - Wood Elf Male",
+      "page": "Taskmaster Earring - Wood Elf Male",
+      "item_count": 2,
+      "items": [
+        "Leather Belt",
+        "Leather Tunic"
+      ],
+      "reason": "Not in Category:Quests. Quest Hub has a single Taskmaster Earring page, not this race and gender title. The six earring links were not collapsed into that one page."
+    },
+    {
+      "name": "The Cracking of the Icestar",
+      "page": "The Cracking of the Icestar",
+      "item_count": 2,
+      "items": [
+        "10 Dose Ethiras Poison Antidote",
+        "10 Dose Kithars Disease Treatment"
+      ],
+      "reason": "Not in Category:Quests. The Icestar Dims, The Icestar Remembers, and Icestar's Eve Snowdrift Feast are different hub titles. Not aliased."
+    },
+    {
+      "name": "The Escaped Catman",
+      "page": "The Escaped Catman",
+      "item_count": 1,
+      "items": [
+        "Pen Key No. 7"
+      ],
+      "reason": "Not in Category:Quests. Catman Alliance is a different hub title. Not aliased."
+    },
+    {
+      "name": "The Pirate Ship",
+      "page": "The Pirate Ship",
+      "item_count": 4,
+      "items": [
+        "100' of Waterproofed Rope",
+        "Breezeboot's Frigid Gnasher",
+        "Huge Drake Wing",
+        "Seaworthy Planking"
+      ],
+      "reason": "Not in Category:Quests. Pirate Earrings is a different hub title. Not aliased."
+    },
+    {
+      "name": "The Summoning of Fear",
+      "page": "The Summoning of Fear",
+      "item_count": 3,
+      "items": [
+        "Charred Bone Chips",
+        "Embalming Dust",
+        "Zombie Skin"
+      ],
+      "reason": "Not in Category:Quests. The Summoning of Dread, Fright, and Terror are different quests. Fear was not aliased to any of them."
+    },
+    {
+      "name": "Trumpy's Skull",
+      "page": "Trumpy's Skull",
+      "item_count": 1,
+      "items": [
+        "Dwarf Skull"
+      ],
+      "reason": "Not in Category:Quests. Trumpy's Head, Trumpy Irontoe, and Honey Mead for Trumpy are different titles. Not aliased."
+    },
+    {
+      "name": "Tunarean Tasks",
+      "page": "Tunarean Tasks",
+      "item_count": 3,
+      "items": [
+        "Crystallized Sulfur",
+        "Kromrif Laborer Pick",
+        "Kromzek Architect Blueprints"
+      ],
+      "reason": "Not in Category:Quests. Tunare quests in the hub use other titles (Friend of the Tunarean Court, Tunare Symbol Quests, and others). Not aliased."
+    },
+    {
+      "name": "Upgraded Pelts",
+      "page": "Upgraded Pelts",
+      "item_count": 2,
+      "items": [
+        "Medium Quality Bear Skin",
+        "Medium Quality Cat Pelt"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "What Happened Here?",
+      "page": "What Happened Here?",
+      "item_count": 1,
+      "items": [
+        "New Sebilisian Bindings"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    },
+    {
+      "name": "Wolf Meat for Wista",
+      "page": "Wolf Meat for Wista",
+      "item_count": 2,
+      "items": [
+        "Large Bag",
+        "Wolf Meat"
+      ],
+      "reason": "Not in Category:Quests and not a Plane of Sky class test. No Quest Hub title matches this label. Left unresolved."
+    }
+  ]
+}

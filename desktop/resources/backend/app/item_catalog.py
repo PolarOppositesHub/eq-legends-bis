@@ -696,46 +696,58 @@ def _catalog_reward_quests_by_item() -> dict[str, list[str]]:
 def _quests_payload_for_item(
     item_name: str,
     *,
-    extra_names: list[str] | None = None,
+    extra_names: list[Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Deduped quest rows for an item, marked when present in Quest Hub."""
-    hub = _hub_quest_names()
+    """Deduped quest rows for an item, marked when present in Quest Hub.
+
+    Labels come from catalog rewards, the Plane of Sky class-test table, and
+    eqlwiki related-quest links (visible text, not the target page title).
+    """
+    from . import quest_links
+
     catalog_names = list(_catalog_reward_quests_by_item().get(_name_key(item_name), []) or [])
     seen: set[str] = set()
     rows: list[dict[str, Any]] = []
 
-    def add_row(raw: str, *, source: str) -> None:
+    def add_row(raw: str, *, source: str, page: str | None = None) -> None:
         name = (raw or "").strip()
-        if not name:
+        page_name = (page or "").strip()
+        if not name and not page_name:
             return
-        key = _name_key(name)
+        resolved = quest_links.resolve_quest_link(name, page_name)
+        shown = resolved or name or page_name
+        key = quest_links.quest_name_key(shown)
         if not key or key in seen:
             return
-        hub_name = hub.get(key)
-        # Soft match: "Foo Quests" wiki category → hub quest named "Foo" when present.
-        if not hub_name and key.endswith(" quests"):
-            base = name
-            for suffix in (" Quests", " Quest", " quests", " quest"):
-                if name.endswith(suffix):
-                    base = name[: -len(suffix)].strip()
-                    break
-            hub_name = hub.get(_name_key(base))
-        in_hub = bool(hub_name)
         seen.add(key)
-        if hub_name:
-            seen.add(_name_key(hub_name))
+        if name:
+            seen.add(quest_links.quest_name_key(name))
+        mentioned = None
+        if resolved and name and quest_links.quest_name_key(resolved) != quest_links.quest_name_key(name):
+            mentioned = name
         rows.append({
-            "name": hub_name or name,
-            "mentioned_as": name if hub_name and _name_key(hub_name) != key else None,
-            "in_hub": in_hub,
+            "name": shown,
+            "mentioned_as": mentioned,
+            "in_hub": bool(resolved),
             "source": source,
+            "page": page_name or None,
         })
 
     for q in catalog_names:
         add_row(q, source="catalog")
-    for q in extra_names or []:
-        if q:
-            add_row(str(q).strip(), source="eqlwiki")
+    for q in quest_links.pos_quests_for_item(item_name):
+        add_row(q, source="pos", page="Plane of Sky")
+    for link in quest_links.related_links_for_item(item_name):
+        add_row(link.get("name") or "", source="eqlwiki", page=link.get("page") or "")
+    for extra in extra_names or []:
+        if isinstance(extra, dict):
+            add_row(
+                str(extra.get("name") or ""),
+                source=str(extra.get("source") or "eqlwiki"),
+                page=str(extra.get("page") or ""),
+            )
+        elif extra:
+            add_row(str(extra).strip(), source="eqlwiki")
     return rows
 
 
@@ -862,9 +874,12 @@ def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None
         merged["zone"] = extra["zone"]
     if extra.get("url") and not merged.get("url"):
         merged["url"] = extra["url"]
+    live_links = extra.get("related_quest_links")
+    if not isinstance(live_links, list):
+        live_links = [{"name": q, "page": ""} for q in (extra.get("related_quests") or []) if q]
     merged["quests"] = _quests_payload_for_item(
         merged.get("name") or name,
-        extra_names=list(extra.get("related_quests") or []),
+        extra_names=live_links,
     )
     merged["has_stats"] = bool(merged.get("stats_plus0") or merged.get("stats_plus10") or merged.get("tooltipLines"))
     merged["catalog_source"] = merged.get("catalog_source") or extra.get("catalog_source") or "eqlwiki"
@@ -983,7 +998,11 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
     )
     if m2:
         desc_lines.extend(_html_fragment_to_lines(m2.group(1)))
-    if not tip_lines and not desc_lines:
+    from . import quest_links
+    related_links = quest_links.parse_related_quests_from_item_html(html)
+    related_quests = [link["name"] for link in related_links if link.get("name")]
+
+    if not tip_lines and not desc_lines and not related_links:
         return None
     stats0 = _parse_tip_stats(tip_lines)
     slots, classes = _slots_classes_from_lines(tip_lines)
@@ -997,29 +1016,6 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
         zlines = _html_fragment_to_lines(drops.group(1))
         if zlines:
             zone = zlines[0][:120]
-
-    related_quests: list[str] = []
-    m_q = re.search(
-        r'id="Related_quests"[^>]*>[\s\S]*?</h2>\s*</div>\s*(<ul[\s\S]*?</ul>)',
-        html,
-        re.I,
-    )
-    if not m_q:
-        m_q = re.search(
-            r'(?:Related quests|Related Quests)</(?:span|h2)>[\s\S]*?(<ul[\s\S]*?</ul>)',
-            html,
-            re.I,
-        )
-    if m_q:
-        for title in re.findall(r'title="([^"]+)"', m_q.group(1)):
-            try:
-                import html as _html
-                title = _html.unescape(title)
-            except Exception:
-                pass
-            title = title.strip()
-            if title and title not in related_quests:
-                related_quests.append(title)
 
     title = (name or "").replace(" ", "_")
     url = f"https://eqlwiki.com/{urllib.parse.quote(title)}"
@@ -1037,6 +1033,7 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
         "classes": classes,
         "zone": zone,
         "related_quests": related_quests,
+        "related_quest_links": related_links,
         "url": url,
         "sourceUrl": url,
         "catalog_source": "eqlwiki",
@@ -1047,9 +1044,10 @@ def _parse_eqlwiki_item_html(html: str, name: str) -> dict[str, Any] | None:
 def _enrich_item_from_eqlwiki(name: str) -> dict[str, Any] | None:
     """Load cached eqlwiki item parse or fetch the page once."""
     cached = _load_wiki_item_cache(name)
-    # Older caches lack related_quests — re-fetch so Item Search can list quests.
-    if cached and "related_quests" in cached and (
-        cached.get("tooltipLines") or cached.get("description") or cached.get("related_quests") is not None
+    # Caches from before the related-quest link fix stored the wiki page title
+    # ("Plane of Sky") instead of the visible quest name. Require the new key.
+    if cached and isinstance(cached.get("related_quest_links"), list) and (
+        cached.get("tooltipLines") or cached.get("description") or cached.get("related_quest_links") is not None
     ):
         return cached
     stub = {"name": name, "url": "", "sourceUrl": ""}
