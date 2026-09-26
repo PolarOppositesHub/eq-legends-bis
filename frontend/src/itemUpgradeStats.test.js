@@ -41,6 +41,18 @@ test('Cloak of Flames tooltip and chips are 36 haste and AC 10 at +0', () => {
   assert.equal(stats.HP, 50)
 })
 
+test('Cloak of Flames haste is the tooltip base plus the upgrade level', () => {
+  assert.equal(scaleTooltipLines(CLOAK_LINES, 5)[4], 'Haste: +41%')
+  const stats = itemStatsAtLevel(CLOAK, 5)
+  assert.equal(stats.Haste, 41)
+  assert.equal(stats.AC, 15)
+  assert.equal(stats.HP, 75)
+  assert.equal(stats.DEX, 14)
+  assert.equal(stats.SVF, 22)
+  assert.equal(itemStatsAtLevel(CLOAK, 0).Haste, 36)
+  assert.equal(itemStatsAtLevel(CLOAK, 10).Haste, 46)
+})
+
 test('Cloak of Flames tooltip and chips are 46 haste and AC 20 at +10', () => {
   const lines = scaleTooltipLines(CLOAK_LINES, 10)
   assert.equal(lines[0], 'Slot: BACK')

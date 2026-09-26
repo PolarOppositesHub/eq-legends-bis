@@ -1,0 +1,419 @@
+{
+  "assume_max_aas": true,
+  "cast_buffs": {
+    "active": [],
+    "active_ids": [],
+    "available": [],
+    "character_level": 50,
+    "effects": {},
+    "groups": [],
+    "mode": "off",
+    "note": null,
+    "source": {
+      "note": "Buff effects from the eqlegendstools char-sheet catalog (plus lower-rank eqlwiki lines). Cast levels from eqlwiki Classes lists. Quick Buff picks the highest stacking priority per group among buffs your selected classes can cast at the current Character Level. Icons from eqlegendstools spellicons.",
+      "title": "EQ Legends Tools spellBuffs + eqlwiki cast levels",
+      "url": "https://eqlegendstools.com/char-sheet/"
+    }
+  },
+  "character_level": 50,
+  "class_stats": [
+    {
+      "AGI": 10,
+      "CHA": 0,
+      "Class": "Monk",
+      "DEX": 10,
+      "INT": 0,
+      "STA": 5,
+      "STR": 5,
+      "Total": 30,
+      "WIS": 0
+    }
+  ],
+  "classes": [
+    "Monk"
+  ],
+  "equipment": [
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "HEAD",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FACE",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "EAR1",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "EAR2",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "NECK",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "SHOULDERS",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ARMS",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "WRIST",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "HANDS",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "CHEST",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 36.0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "Cloak of Flames",
+      "ratio": null,
+      "slot": "BACK",
+      "stats": {
+        "AC": 10.0,
+        "AGI": 9.0,
+        "DEX": 9.0,
+        "HP": 50.0,
+        "Haste": 36.0,
+        "SVF": 15.0
+      },
+      "upgrade": 0,
+      "url": "https://eqlegendstools.com/items/cloak-of-flames/"
+    },
+    {
+      "haste": 41.0,
+      "haste_applied": true,
+      "missing": false,
+      "name": "Runed Bolster Belt",
+      "ratio": null,
+      "slot": "WAIST",
+      "stats": {
+        "AC": 15.0,
+        "DEX": 20,
+        "Haste": 41.0,
+        "STA": 20,
+        "STR": 20
+      },
+      "upgrade": 10,
+      "url": "https://eqlegendstools.com/items/runed-bolster-belt/"
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "LEGS",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FEET",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FINGER1",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FINGER2",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "Blued Two-Handed Hammer",
+      "ratio": 0.9545,
+      "slot": "PRIMARY",
+      "stats": {
+        "DEX": 13.0,
+        "DLY": 44.0,
+        "DMG": 42,
+        "MANA": 60.0,
+        "STA": 13.0,
+        "SVF": 20.0
+      },
+      "upgrade": 10,
+      "url": "https://eqlegendstools.com/items/blued-two-handed-hammer/"
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "SECONDARY",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "RANGE",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "AMMO",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ANY1",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ANY2",
+      "stats": {},
+      "upgrade": 10,
+      "url": ""
+    }
+  ],
+  "haste": {
+    "applied": 41,
+    "applied_pct": 41,
+    "applied_slot": "WAIST",
+    "buff_pct": 0,
+    "candidates": [
+      {
+        "haste": 36.0,
+        "name": "Cloak of Flames",
+        "slot": "BACK"
+      },
+      {
+        "haste": 41.0,
+        "name": "Runed Bolster Belt",
+        "slot": "WAIST"
+      }
+    ],
+    "cap_pct": 185,
+    "capped": false,
+    "items": [
+      {
+        "haste": 36.0,
+        "name": "Cloak of Flames",
+        "slot": "BACK"
+      },
+      {
+        "haste": 41.0,
+        "name": "Runed Bolster Belt",
+        "slot": "WAIST"
+      }
+    ],
+    "raw_pct": 41,
+    "rule": "Worn haste: only ONE item (highest %). That item haste stacks with spell haste from Cast Buffs. Multiple haste spells use the highest spell haste. Combined haste caps at 185% (Monk).",
+    "worn_pct": 41
+  },
+  "haste_applied": 41,
+  "haste_pieces": [
+    {
+      "haste": 36.0,
+      "name": "Cloak of Flames",
+      "slot": "BACK"
+    },
+    {
+      "haste": 41.0,
+      "name": "Runed Bolster Belt",
+      "slot": "WAIST"
+    }
+  ],
+  "haste_warning": "Multiple haste items equipped; only highest counts (Runed Bolster Belt +41%). Ignored: BACK:Cloak of Flames (+36%)",
+  "hp_label": "pool HP (race+class+STA+gear+buffs)",
+  "note": "Pools from eqlegendstools char-sheet working model (race + class allotments + STA/INT/WIS formulas). Gear stats still from decoded JSON only. Cast Buffs off. Max AAs assumed for sheet AAs (Natural Durability, Eminence, etc.). Pool math matches EQLT L50 sheet formulas; gear still from decoded JSON only.",
+  "pool_breakdown": {
+    "buff_hp": 0.0,
+    "eminence": 10,
+    "endurance_from_attrs": 1696,
+    "familiar_mana": 0,
+    "gear_hp": 50.0,
+    "hp_base_from_sta": 3788,
+    "mana_from_int_wis": 0,
+    "natural_durability_rank": 4,
+    "resist_aa": 10
+  },
+  "race": "Barbarian",
+  "race_bases": {
+    "AGI": 82,
+    "CHA": 55,
+    "DEX": 70,
+    "INT": 60,
+    "STA": 95,
+    "STR": 103,
+    "SVC": 35,
+    "SVD": 15,
+    "SVF": 25,
+    "SVM": 25,
+    "SVP": 15,
+    "WIS": 70
+  },
+  "race_note": "Pools from eqlegendstools char-sheet working model (race + class allotments + STA/INT/WIS formulas). Gear stats still from decoded JSON only.",
+  "slot_upgrades": {
+    "BACK": 0,
+    "PRIMARY": 10,
+    "WAIST": 10
+  },
+  "totals": {
+    "AC": 25,
+    "AGI": 111,
+    "ATK": 0,
+    "CHA": 65,
+    "DEX": 132,
+    "END": 1696,
+    "END_REGEN": 0,
+    "HP": 4298,
+    "HP_REGEN": 0,
+    "Haste": 41,
+    "INT": 70,
+    "MANA": 0,
+    "MANA_REGEN": 0,
+    "STA": 143,
+    "STR": 138,
+    "SVC": 45,
+    "SVD": 25,
+    "SVF": 70,
+    "SVM": 35,
+    "SVP": 25,
+    "SVV": 0,
+    "WIS": 80
+  },
+  "upgrade": 10,
+  "warnings": [
+    "Multiple haste items equipped; only highest counts (Runed Bolster Belt +41%). Ignored: BACK:Cloak of Flames (+36%)"
+  ],
+  "weapons": [
+    {
+      "dly": 44.0,
+      "dmg": 42.0,
+      "name": "Blued Two-Handed Hammer",
+      "ratio": 0.9545,
+      "slot": "PRIMARY"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+name: protect-existing
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  harness:
+    name: harness (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Python dependencies
+        run: python -m pip install -r backend/requirements-test.txt
+
+      - name: Backend tests
+        run: python -m unittest discover -s backend/tests -v
+
+      - name: Frontend tests and vite build
+        working-directory: frontend
+        run: npm ci && npm test && npm run build
+
+      - name: Desktop tests
+        working-directory: desktop
+        run: npm test

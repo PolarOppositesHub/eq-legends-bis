@@ -1,0 +1,576 @@
+{
+  "assume_max_aas": true,
+  "cast_buffs": {
+    "active": [],
+    "active_ids": [],
+    "available": [
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 22,
+          "HP": 150,
+          "SVM": 20
+        },
+        "group_label": "Shielding",
+        "hover_text": "Arch Shielding adds +150 HP, +22 AC and +20 SV Magic.\n\nEffects:\n  HP +150\n  AC +22\n  SV Magic +20\n\nWizard, Magician, Enchanter, Necromancer · L40",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "arch-shielding",
+        "level": 40,
+        "name": "Arch Shielding",
+        "stacking": {
+          "excludes": [
+            "thorncoat",
+            "spikecoat"
+          ],
+          "group": "shielding",
+          "priority": 2
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Arch Shielding adds +150 HP, +22 AC and +20 SV Magic."
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician"
+        ],
+        "effects": {
+          "SVC": 30,
+          "SVF": 30
+        },
+        "group_label": "Other Buffs",
+        "hover_text": "Elemental Armor adds +30 SV Fire and +30 SV Cold.\n\nEffects:\n  SV Fire +30\n  SV Cold +30\n\nWizard, Magician · L41",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "elemental-armor",
+        "level": 41,
+        "name": "Elemental Armor",
+        "stacking": {},
+        "stacking_group": "other",
+        "tooltip": "Elemental Armor adds +30 SV Fire and +30 SV Cold."
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 28
+        },
+        "group_label": "Shielding",
+        "hover_text": "Greater Shielding (L31) AC +28\n\nEffects:\n  AC +28\n\nWizard, Magician, Enchanter, Necromancer · L31",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "greater-shielding",
+        "level": 31,
+        "name": "Greater Shielding",
+        "stacking": {
+          "group": "shielding",
+          "priority": 1
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Greater Shielding (L31) AC +28"
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 6
+        },
+        "group_label": "Shielding",
+        "hover_text": "Lesser Shielding (L5) AC +6\n\nEffects:\n  AC +6\n\nWizard, Magician, Enchanter, Necromancer · L5",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "lesser-shielding",
+        "level": 5,
+        "name": "Lesser Shielding",
+        "stacking": {
+          "group": "shielding",
+          "priority": 1
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Lesser Shielding (L5) AC +6"
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 16,
+          "SVM": 14
+        },
+        "group_label": "Shielding",
+        "hover_text": "Major Shielding (L23) AC +16, SVM +14\n\nEffects:\n  AC +16\n  SV Magic +14\n\nWizard, Magician, Enchanter, Necromancer · L23",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "major-shielding",
+        "level": 23,
+        "name": "Major Shielding",
+        "stacking": {
+          "group": "shielding",
+          "priority": 1
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Major Shielding (L23) AC +16, SVM +14"
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 10
+        },
+        "group_label": "Shielding",
+        "hover_text": "Minor Shielding (L1) AC +10\n\nEffects:\n  AC +10\n\nWizard, Magician, Enchanter, Necromancer · L1",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "minor-shielding",
+        "level": 1,
+        "name": "Minor Shielding",
+        "stacking": {
+          "group": "shielding",
+          "priority": 1
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Minor Shielding (L1) AC +10"
+      },
+      {
+        "classes": [
+          "Wizard",
+          "Magician",
+          "Enchanter",
+          "Necromancer"
+        ],
+        "effects": {
+          "AC": 15,
+          "SVM": 12
+        },
+        "group_label": "Shielding",
+        "hover_text": "Shielding (L15) AC +15, SVM +12\n\nEffects:\n  AC +15\n  SV Magic +12\n\nWizard, Magician, Enchanter, Necromancer · L15",
+        "icon": "ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "icon_url": "/api/spell-icon?name=ARMORCLASS_SHIELDING_HPBUFF_RESIST_ENDURE_JASINTH_SYMBOL_ELEMENTALARMOR_INFUSION.png",
+        "id": "shielding",
+        "level": 15,
+        "name": "Shielding",
+        "stacking": {
+          "group": "shielding",
+          "priority": 1
+        },
+        "stacking_group": "shielding",
+        "tooltip": "Shielding (L15) AC +15, SVM +12"
+      }
+    ],
+    "character_level": 50,
+    "effects": {},
+    "groups": [],
+    "mode": "off",
+    "note": null,
+    "source": {
+      "note": "Buff effects from the eqlegendstools char-sheet catalog (plus lower-rank eqlwiki lines). Cast levels from eqlwiki Classes lists. Quick Buff picks the highest stacking priority per group among buffs your selected classes can cast at the current Character Level. Icons from eqlegendstools spellicons.",
+      "title": "EQ Legends Tools spellBuffs + eqlwiki cast levels",
+      "url": "https://eqlegendstools.com/char-sheet/"
+    }
+  },
+  "character_level": 50,
+  "class_stats": [
+    {
+      "AGI": 0,
+      "CHA": 0,
+      "Class": "Wizard",
+      "DEX": 0,
+      "INT": 15,
+      "STA": 15,
+      "STR": 0,
+      "Total": 30,
+      "WIS": 0
+    }
+  ],
+  "classes": [
+    "Wizard"
+  ],
+  "equipment": [
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "HEAD",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FACE",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "EAR1",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "EAR2",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "NECK",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "SHOULDERS",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ARMS",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "WRIST",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "HANDS",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "CHEST",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 41.0,
+      "haste_applied": true,
+      "missing": false,
+      "name": "Cloak of Flames",
+      "ratio": null,
+      "slot": "BACK",
+      "stats": {
+        "AC": 15.0,
+        "AGI": 14.0,
+        "DEX": 14.0,
+        "HP": 75.0,
+        "Haste": 41.0,
+        "SVF": 22.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/cloak-of-flames/"
+    },
+    {
+      "haste": 36.0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "Runed Bolster Belt",
+      "ratio": null,
+      "slot": "WAIST",
+      "stats": {
+        "AC": 10.0,
+        "DEX": 15.0,
+        "Haste": 36.0,
+        "STA": 15.0,
+        "STR": 15.0
+      },
+      "upgrade": 5,
+      "url": "https://eqlegendstools.com/items/runed-bolster-belt/"
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "LEGS",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FEET",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FINGER1",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "FINGER2",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "PRIMARY",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "SECONDARY",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "RANGE",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "AMMO",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ANY1",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "ANY2",
+      "stats": {},
+      "upgrade": 5,
+      "url": ""
+    }
+  ],
+  "haste": {
+    "applied": 41,
+    "applied_pct": 41,
+    "applied_slot": "BACK",
+    "buff_pct": 0,
+    "candidates": [
+      {
+        "haste": 41.0,
+        "name": "Cloak of Flames",
+        "slot": "BACK"
+      },
+      {
+        "haste": 36.0,
+        "name": "Runed Bolster Belt",
+        "slot": "WAIST"
+      }
+    ],
+    "cap_pct": 175,
+    "capped": false,
+    "items": [
+      {
+        "haste": 41.0,
+        "name": "Cloak of Flames",
+        "slot": "BACK"
+      },
+      {
+        "haste": 36.0,
+        "name": "Runed Bolster Belt",
+        "slot": "WAIST"
+      }
+    ],
+    "raw_pct": 41,
+    "rule": "Worn haste: only ONE item (highest %). That item haste stacks with spell haste from Cast Buffs. Multiple haste spells use the highest spell haste. Combined haste caps at 175% (non-Monk classes).",
+    "worn_pct": 41
+  },
+  "haste_applied": 41,
+  "haste_pieces": [
+    {
+      "haste": 41.0,
+      "name": "Cloak of Flames",
+      "slot": "BACK"
+    },
+    {
+      "haste": 36.0,
+      "name": "Runed Bolster Belt",
+      "slot": "WAIST"
+    }
+  ],
+  "haste_warning": "Multiple haste items equipped; only highest counts (Cloak of Flames +41%). Ignored: WAIST:Runed Bolster Belt (+36%)",
+  "hp_label": "pool HP (race+class+STA+gear+buffs)",
+  "note": "Pools from eqlegendstools char-sheet working model (race + class allotments + STA/INT/WIS formulas). Gear stats still from decoded JSON only. Cast Buffs off. Max AAs assumed for sheet AAs (Natural Durability, Eminence, etc.). Pool math matches EQLT L50 sheet formulas; gear still from decoded JSON only.",
+  "pool_breakdown": {
+    "buff_hp": 0.0,
+    "eminence": 10,
+    "endurance_from_attrs": 398,
+    "familiar_mana": 200,
+    "gear_hp": 75.0,
+    "hp_base_from_sta": 3368,
+    "mana_from_int_wis": 1620,
+    "natural_durability_rank": 4,
+    "resist_aa": 35
+  },
+  "race": "Dark Elf",
+  "race_bases": {
+    "AGI": 90,
+    "CHA": 60,
+    "DEX": 75,
+    "INT": 99,
+    "STA": 65,
+    "STR": 60,
+    "SVC": 25,
+    "SVD": 15,
+    "SVF": 25,
+    "SVM": 25,
+    "SVP": 15,
+    "WIS": 83
+  },
+  "race_note": "Pools from eqlegendstools char-sheet working model (race + class allotments + STA/INT/WIS formulas). Gear stats still from decoded JSON only.",
+  "slot_upgrades": {
+    "BACK": 5,
+    "WAIST": 5
+  },
+  "totals": {
+    "AC": 25,
+    "AGI": 114,
+    "ATK": 0,
+    "CHA": 70,
+    "DEX": 114,
+    "END": 398,
+    "END_REGEN": 0,
+    "HP": 3856,
+    "HP_REGEN": 0,
+    "Haste": 41,
+    "INT": 124,
+    "MANA": 1820,
+    "MANA_REGEN": 0,
+    "STA": 105,
+    "STR": 85,
+    "SVC": 60,
+    "SVD": 50,
+    "SVF": 82,
+    "SVM": 60,
+    "SVP": 50,
+    "SVV": 0,
+    "WIS": 93
+  },
+  "upgrade": 5,
+  "warnings": [
+    "Multiple haste items equipped; only highest counts (Cloak of Flames +41%). Ignored: WAIST:Runed Bolster Belt (+36%)"
+  ],
+  "weapons": []
+}
