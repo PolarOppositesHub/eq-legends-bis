@@ -13,6 +13,12 @@ if not (DECODED / 'catalog.json').exists():
     DECODED = LEGENDS / 'decoded'
 REQUIRED_SEED = ROOT / 'packaging' / 'required-decoded'
 REQUIRED_DECODED = ('eqlwiki_item_names.json', 'eqlwiki_mob_names.json', 'catalog.json')
+# Quest linkage data. 1.0.23 crashed when a required JSON file was left out of resources.
+APP_DATA_FILES = (
+    'pos_class_tests.json',
+    'eqlwiki_quest_names.json',
+    'eqlwiki_item_related_quests.json',
+)
 
 def main():
     print('==> Bundling into', RES)
@@ -44,6 +50,15 @@ def main():
         if src_req.exists():
             shutil.copy2(src_req, dst_req)
             print('  required', req, '->', dst_req, f'({dst_req.stat().st_size} bytes)')
+
+    for name in APP_DATA_FILES:
+        src_data = ROOT / 'data' / name
+        if not src_data.is_file():
+            print('ERROR: required app data missing:', src_data)
+            return 1
+        dst_data = RES / 'data' / name
+        shutil.copy2(src_data, dst_data)
+        print('  required', name, '->', dst_data, f'({dst_data.stat().st_size} bytes)')
 
     races = ROOT / 'data' / 'races.json'
     if races.exists():

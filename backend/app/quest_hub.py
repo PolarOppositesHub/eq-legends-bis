@@ -129,6 +129,12 @@ def list_quests() -> list[dict[str, Any]]:
                     if qn:
                         _add_quest(by_key, qn, item=item)
 
+    # Plane of Sky class tests + eqlwiki Category:Quests (CC BY-SA). Aliases
+    # keep catalog spellings ("Shadowknight…", "Test of The Bear") resolvable.
+    from . import quest_links
+    quest_links.apply_sourced_quests(by_key, _name_key)
+    quest_links.clear_resolution_cache()
+
     return sorted(by_key.values(), key=lambda r: (r.get("name") or "").lower())
 
 
@@ -149,6 +155,9 @@ def search_quests(q: str = "", *, limit: int = 200, offset: int = 0) -> dict[str
     hits: list[dict[str, Any]] = []
     for row in pool:
         name = (row.get("name") or "").lower()
+        alias_blob = " ".join(str(a) for a in (row.get("aliases") or [])).lower()
+        if alias_blob:
+            name = f"{name} {alias_blob}"
         reward_blob = " ".join(row.get("reward_items") or row.get("sample_items") or []).lower()
         if tokens:
             if not all(t in name for t in tokens):
@@ -169,7 +178,11 @@ def search_quests(q: str = "", *, limit: int = 200, offset: int = 0) -> dict[str
         "catalog_size": len(pool),
         "note": (
             "Quest list is derived from decoded item rewardFromQuests / quest_source "
-            "fields — not a full EQ encyclopedia. Guides fetch from eqlwiki when opened."
+            "fields, plus Plane of Sky class tests and eqlwiki Category:Quests titles. "
+            "Wiki names and the Plane of Sky tables are from the EverQuest Legends Wiki "
+            "(eqlwiki.com) under CC BY-SA — https://eqlwiki.com/Plane_of_Sky and "
+            "https://eqlwiki.com/Category:Quests. Guides fetch from eqlwiki when opened. "
+            "Stats, steps, givers, and rewards are never invented."
         ),
     }
 
