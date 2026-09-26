@@ -117,6 +117,16 @@ def get_fights(
     return get_service().list_fights(character=character, limit=limit, offset=offset)
 
 
+@router.get("/loot")
+def get_loot(
+    character: str | None = None,
+    limit: int = Query(default=500, ge=1, le=5000),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    """Loot, give, and merge events already stored while the log is read."""
+    return get_service().list_economy(character=character, limit=limit, offset=offset)
+
+
 @router.get("/fights/{fight_id}")
 def get_fight(fight_id: int, merge_pets: bool = True) -> dict[str, Any]:
     detail = get_service().fight_detail(fight_id, merge_pets=merge_pets)

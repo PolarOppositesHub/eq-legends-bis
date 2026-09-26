@@ -51,7 +51,7 @@ export function openParserStream(handlers = {}) {
     return { close() {} }
   }
   const source = new EventSource('/api/parser/stream')
-  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'message']
+  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'message']
   for (const type of types) {
     source.addEventListener(type, (ev) => {
       let data = null

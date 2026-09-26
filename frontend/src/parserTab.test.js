@@ -153,6 +153,14 @@ test('merge-pets toggle nests pets when on and lists them separately when off', 
   assert.match(offHtml, />Group</)
 })
 
+test('an in-progress parser upgrade shows a short updating state', () => {
+  const html = markup(panel({ upgrading: true }))
+  assert.match(html, /data-testid="parser-upgrade"/)
+  assert.equal(html.includes('Updating parser data…'), true)
+  const idle = markup(panel())
+  assert.equal(idle.includes('data-testid="parser-upgrade"'), false)
+})
+
 test('load progress bar shows line count and percent', () => {
   const html = markup(panel({
     logs: [{

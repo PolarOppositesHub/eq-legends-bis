@@ -13,8 +13,26 @@ import threading
 from datetime import datetime
 from pathlib import Path
 
+from .breakdown import Breakdown
 from .fights import FightState, SourceAgg
 from .models import ParsedEvent
+
+# 1 is a 1.1.0 database: fights exist, fight breakdowns do not. Bump this when
+# derived aggregates change so the next launch rebuilds them from the logs.
+SCHEMA_VERSION = 2
+SCHEMA_VERSION_KEY = "schema_version"
+
+_DERIVED_TABLES = (
+    "events",
+    "fight_sources",
+    "fight_breakdown",
+    "fights",
+    "loot_events",
+    "give_events",
+    "merge_events",
+    "xp_events",
+    "level_events",
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS log_files (
@@ -64,6 +82,11 @@ CREATE TABLE IF NOT EXISTS fights (
     open INTEGER NOT NULL DEFAULT 1,
     player_died INTEGER NOT NULL DEFAULT 0,
     UNIQUE (file_id, generation, start_offset)
+);
+
+CREATE TABLE IF NOT EXISTS fight_breakdown (
+    fight_id INTEGER PRIMARY KEY,
+    payload TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS fight_sources (
@@ -249,6 +272,46 @@ class ParserDB:
                 (key, value),
             )
             self.conn.commit()
+
+    def stored_schema_version(self) -> int | None:
+        """Aggregate version stored with this database.
+
+        ``None`` means the key was never written (a 1.1.0 database).
+        """
+        raw = self.get_setting(SCHEMA_VERSION_KEY)
+        if raw is None or str(raw).strip() == "":
+            return None
+        try:
+            return int(raw)
+        except ValueError:
+            return None
+
+    def set_schema_version(self, version: int) -> None:
+        self.set_setting(SCHEMA_VERSION_KEY, str(int(version)))
+
+    def list_log_paths(self) -> list[str]:
+        with self.lock:
+            rows = self.conn.execute("SELECT path FROM log_files ORDER BY id").fetchall()
+        return [str(row["path"]) for row in rows]
+
+    def clear_derived(self) -> None:
+        """Drop rebuilt parser output and rewind known logs to offset 0.
+
+        Settings, the chosen log paths, group/player notes, and manual pet
+        bindings stay. Automatic pet bindings are removed so the replay can
+        derive them again.
+        """
+        with self.lock:
+            self.conn.execute("BEGIN IMMEDIATE")
+            try:
+                for table in _DERIVED_TABLES:
+                    self.conn.execute(f"DELETE FROM {table}")
+                self.conn.execute("UPDATE log_files SET last_offset=0")
+                self.conn.execute("DELETE FROM pet_bindings WHERE manual=0")
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+                raise
 
     def upsert_file(self, path: str, character: str, server: str, size: int, mtime: float) -> sqlite3.Row:
         with self.lock:
@@ -454,6 +517,13 @@ class ParserDB:
                     agg.melee, agg.spell_dmg, agg.dot, agg.ds, _iso(agg.first_ts), _iso(agg.last_ts),
                 ),
             )
+        self.conn.execute(
+            """
+            INSERT INTO fight_breakdown(fight_id, payload) VALUES(?, ?)
+            ON CONFLICT(fight_id) DO UPDATE SET payload=excluded.payload
+            """,
+            (fight_id, json.dumps(fight.breakdown.to_state())),
+        )
         return fight_id
 
     def load_open_fight(self, file_id: int, generation: int) -> FightState | None:
@@ -501,6 +571,7 @@ class ParserDB:
                 first_ts=_parse_iso(src["first_ts"]),
                 last_ts=_parse_iso(src["last_ts"]),
             )
+        fight.breakdown = Breakdown.from_state(self.breakdown_state(row["id"]))
         return fight
 
     def load_roster(self, character: str) -> tuple[dict[str, str], dict[str, str | None], set[str], set[str]]:
@@ -659,3 +730,72 @@ class ParserDB:
 
     def fight_source_rows(self, fight_id: int) -> list[sqlite3.Row]:
         return list(self.conn.execute("SELECT * FROM fight_sources WHERE fight_id=?", (fight_id,)))
+
+    def breakdown_state(self, fight_id: int) -> dict | None:
+        row = self.conn.execute(
+            "SELECT payload FROM fight_breakdown WHERE fight_id=?",
+            (fight_id,),
+        ).fetchone()
+        if row is None or not row["payload"]:
+            return None
+        try:
+            data = json.loads(row["payload"])
+        except json.JSONDecodeError:
+            return None
+        return data if isinstance(data, dict) else None
+
+    def _list_economy(self, table: str, character: str | None, limit: int, offset: int) -> list[sqlite3.Row]:
+        if table not in {"loot_events", "give_events", "merge_events"}:
+            raise ValueError(table)
+        sql = f"SELECT * FROM {table}"
+        args: list = []
+        if character:
+            sql += " WHERE character=?"
+            args.append(character)
+        sql += " ORDER BY COALESCE(ts, ''), offset LIMIT ? OFFSET ?"
+        args.extend([limit, offset])
+        return list(self.conn.execute(sql, args))
+
+    def list_loot(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        rows = []
+        for row in self._list_economy("loot_events", character, limit, offset):
+            rows.append({
+                "ts": row["ts"],
+                "character": row["character"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "from": row["from_name"],
+                "mode": row["mode"],
+                "coin_value": row["coin_copper"],
+                "coin_text": row["coin_text"],
+                "is_mote": bool(row["is_mote"]),
+                "is_wind_rune": bool(row["is_wind_rune"]),
+                "result_item": row["result_item"],
+                "result_tier": row["result_tier"],
+            })
+        return rows
+
+    def list_gives(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "npc": row["npc"],
+                "is_mote": bool(row["is_mote"]),
+                "is_wind_rune": bool(row["is_wind_rune"]),
+            }
+            for row in self._list_economy("give_events", character, limit, offset)
+        ]
+
+    def list_merges(self, character: str | None = None, limit: int = 500, offset: int = 0) -> list[dict]:
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "result_item": row["result_item"],
+                "result_tier": row["result_tier"],
+            }
+            for row in self._list_economy("merge_events", character, limit, offset)
+        ]
