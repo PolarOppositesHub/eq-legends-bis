@@ -22,6 +22,7 @@ from .fights import MIN_SECONDS, Segmenter, SourceAgg, merge_pet_rows, recompute
 from .sources import is_npc_pet_name
 from .store import SCHEMA_VERSION, ParserDB, _parse_iso
 from .tail import LogTail, TailBatch, backfill_offset
+from .timeline import build_timeline
 
 CHUNK_LINES = 50_000
 _TEXT_SUFFIXES = {".txt", ".log"}
@@ -655,6 +656,65 @@ class ParserService:
         result["lines"] = read_log_range(file_path, int(start), int(end))
         result["available"] = True
         return result
+
+    def fight_timeline(self, fight_id: int, ability: str | None = None) -> dict | None:
+        """DPS-over-time buckets re-read from the fight's log byte range."""
+        with self.db.lock:
+            fight = self.db.get_fight_row(fight_id)
+            if fight is None:
+                return None
+            source_rows = self.db.fight_source_rows(fight_id)
+            file_row = self.db.file_row(int(fight["file_id"]))
+            start = fight["start_offset"]
+            end = fight["end_offset"]
+            path = str(file_row["path"]) if file_row is not None else None
+            character = fight["character"]
+            start_ts = fight["start_ts"]
+            end_ts = fight["end_ts"]
+        payload = {
+            "id": int(fight["id"]),
+            "available": False,
+            "bin_seconds": 1,
+            "buckets": [],
+            "ability": ability.strip() if isinstance(ability, str) and ability.strip() else None,
+            "start_ts": start_ts,
+        }
+        if path is None or start is None or end is None:
+            payload["reason"] = "fight has no log byte range"
+            return payload
+        file_path = Path(path)
+        if not file_path.is_file():
+            payload["reason"] = "log file is missing"
+            return payload
+        size = file_path.stat().st_size
+        if int(start) >= size:
+            payload["reason"] = "log byte range is past the end of the file"
+            return payload
+        lines = read_log_range(file_path, int(start), int(end))
+        begin = _parse_iso(start_ts)
+        finish = _parse_iso(end_ts)
+        duration = None
+        if begin and finish:
+            duration = max(MIN_SECONDS, (finish - begin).total_seconds())
+        sources = [
+            {
+                "source": row["source"],
+                "kind": row["source_kind"] or "unknown",
+                "owner": row["owner"],
+            }
+            for row in source_rows
+        ]
+        curve = build_timeline(
+            lines,
+            character=character,
+            sources=sources,
+            start_ts=start_ts,
+            duration_seconds=duration,
+            ability=ability,
+        )
+        payload.update(curve)
+        payload["available"] = True
+        return payload
 
     def list_levels(self, character: str | None = None) -> dict:
         with self.db.lock:

@@ -33,9 +33,11 @@ export const postParserLoad = (path) =>
 export const postParserLive = (body) =>
   req('/api/parser/live', { method: 'POST', body: JSON.stringify(body) })
 
-export const getParserFights = (character) => {
+export const getParserFights = (character, options = {}) => {
   const q = new URLSearchParams()
   if (character) q.set('character', character)
+  if (options.limit) q.set('limit', String(options.limit))
+  if (options.offset) q.set('offset', String(options.offset))
   const qs = q.toString()
   return req(`/api/parser/fights${qs ? `?${qs}` : ''}`)
 }
@@ -43,6 +45,21 @@ export const getParserFights = (character) => {
 export const getParserFight = (id, mergePets) => {
   const q = new URLSearchParams({ merge_pets: mergePets ? 'true' : 'false' })
   return req(`/api/parser/fights/${encodeURIComponent(id)}?${q}`)
+}
+
+export const getParserTimeline = (id, ability) => {
+  const q = new URLSearchParams()
+  if (ability) q.set('ability', ability)
+  const qs = q.toString()
+  return req(`/api/parser/fights/${encodeURIComponent(id)}/timeline${qs ? `?${qs}` : ''}`)
+}
+
+export const getParserLoot = (character, options = {}) => {
+  const q = new URLSearchParams()
+  if (character) q.set('character', character)
+  q.set('limit', String(options.limit || 2000))
+  if (options.offset) q.set('offset', String(options.offset))
+  return req(`/api/parser/loot?${q}`)
 }
 
 export const getParserRoster = (character) => {

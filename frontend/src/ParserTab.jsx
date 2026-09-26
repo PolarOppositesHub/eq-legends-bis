@@ -3,8 +3,10 @@ import {
   getParserConfig,
   getParserFight,
   getParserFights,
+  getParserLoot,
   getParserLogs,
   getParserRoster,
+  getParserTimeline,
   openParserStream,
   postParserCandidate,
   postParserClearHistory,
@@ -14,6 +16,41 @@ import {
   postParserLoad,
   postParserPet,
 } from './parserApi.js'
+import {
+  AbilityList,
+  DeathsPanel,
+  FightTimeline,
+  HealingPanel,
+  LootPanel,
+  MultiAttackTable,
+  ProcsTable,
+  ResistsPanel,
+  SpellPage,
+  TankingPanel,
+} from './parserDepth.jsx'
+import {
+  FIGHT_PAGE_SIZE,
+  LOOT_PAGE_SIZE,
+  MERGE_LIMIT,
+  PARSER_DETAIL_TABS,
+  capIds,
+  copyText,
+  downloadText,
+  filterFights,
+  formatParseCsv,
+  formatParseHtml,
+  formatParseText,
+  formatParseTsv,
+  lootInWindow,
+  markStorageKey,
+  mergeFightDetails,
+  pageSlice,
+  scopeNames,
+  sliceFromMark,
+  stitchTimelines,
+  upsertFights,
+  zoneSession,
+} from './parserDepth.js'
 import {
   LEVEL_LOADOUT_NOTE,
   PARSER_EMPTY,
@@ -105,6 +142,49 @@ function progressFromUpgrade(data) {
 
 export const emptyRoster = { group: [], allowlist: [], candidates: [], loadouts: [], pets: [] }
 
+const FIGHT_FETCH = 2000
+
+async function fetchFightHistory(character) {
+  const all = []
+  let offset = 0
+  while (offset < 20000) {
+    const body = await getParserFights(character, { limit: FIGHT_FETCH, offset })
+    const rows = Array.isArray(body?.fights) ? body.fights : []
+    all.push(...rows)
+    if (rows.length < FIGHT_FETCH) return { fights: all, truncated: false }
+    offset += rows.length
+  }
+  return { fights: all, truncated: true }
+}
+
+async function loadMergedDetails(ids, mergePets) {
+  const parts = []
+  for (let i = 0; i < ids.length; i += 4) {
+    const chunk = ids.slice(i, i + 4)
+    const loaded = await Promise.all(chunk.map((id) => getParserFight(id, mergePets)))
+    parts.push(...loaded)
+  }
+  return mergeFightDetails(parts)
+}
+
+async function loadCurve(current, ability) {
+  if (!current?.id) return null
+  const ids = Array.isArray(current.merged_ids) && current.merged_ids.length > 1
+    ? current.merged_ids.slice(0, 8)
+    : [current.id]
+  const parts = []
+  for (let i = 0; i < ids.length; i += 4) {
+    const chunk = await Promise.all(ids.slice(i, i + 4).map((id) => getParserTimeline(id, ability)))
+    parts.push(...chunk)
+  }
+  if (parts.length === 1) return parts[0]
+  const curve = stitchTimelines(parts)
+  curve.available = parts.some((part) => part?.available)
+  const missing = parts.find((part) => part && part.available === false && part.reason)
+  if (missing) curve.reason = missing.reason
+  return curve
+}
+
 function ownerOptions(character, members, allowNames) {
   const names = []
   const seen = new Set()
@@ -120,6 +200,124 @@ function ownerOptions(character, members, allowNames) {
   for (const row of members) push(row?.name || row)
   for (const name of allowNames) push(name)
   return names
+}
+
+function FragmentRow({
+  row,
+  open,
+  abilities,
+  binding,
+  evidence,
+  classesFor,
+  character,
+  ownerChoices,
+  assignPet,
+  assignOwner,
+  setAssignPet,
+  setAssignOwner,
+  onSetPet,
+  onUnassignPet,
+  onToggle,
+  onOpenSpell,
+}) {
+  const swings = (Number(row.hits) || 0)
+  const critPct = swings ? ((Number(row.crits) || 0) / swings) * 100 : 0
+  return (
+    <>
+      <tr
+        className={row.nested ? 'parser-pet-row' : undefined}
+        data-source={row.source}
+        data-nested={row.nested ? '1' : '0'}
+        title={evidence || undefined}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setAssignPet(row.source)
+          setAssignOwner(binding?.owner || character || '')
+        }}
+      >
+        <td>
+          {abilities.length ? (
+            <button
+              type="button"
+              data-testid="parser-expand"
+              data-source={row.source}
+              aria-expanded={open}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggle()
+              }}
+            >
+              {open ? 'Hide' : 'Attacks'}
+            </button>
+          ) : null}
+          {' '}
+          {row.nested ? `↳ ${row.source}` : row.source}
+          {classesFor ? <span className="parser-classes">{classesFor}</span> : null}
+        </td>
+        <td>{sourceKindLabel(row.kind)}{binding?.owner ? ` of ${binding.owner}` : ''}</td>
+        <td>{formatDamage(row.damage)}</td>
+        <td>{formatRate(row.dps)}</td>
+        <td>{formatRate(row.sdps)}</td>
+        <td>{formatDamage(row.hits)}</td>
+        <td>{formatRate(critPct)}%</td>
+        <td>{formatDamage(row.max_hit)}</td>
+        <td className="parser-actions">
+          <button
+            type="button"
+            data-testid="parser-set-pet"
+            data-pet={row.source}
+            onClick={() => {
+              setAssignPet(row.source)
+              setAssignOwner(binding?.owner || character || '')
+            }}
+          >
+            Set as pet of…
+          </button>
+          <button
+            type="button"
+            data-testid="parser-unassign"
+            data-pet={row.source}
+            onClick={() => onUnassignPet && onUnassignPet(row.source)}
+          >
+            Unassign
+          </button>
+          {assignPet === row.source ? (
+            <form
+              className="parser-assign"
+              data-testid="parser-assign"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (assignOwner && onSetPet) onSetPet(row.source, assignOwner)
+                setAssignPet('')
+              }}
+            >
+              <label>
+                Owner
+                <select
+                  value={assignOwner}
+                  onChange={(e) => setAssignOwner(e.target.value)}
+                  data-testid="parser-assign-owner"
+                >
+                  <option value="">Choose</option>
+                  {ownerChoices.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">Save</button>
+            </form>
+          ) : null}
+        </td>
+      </tr>
+      {open ? (
+        <tr className="parser-ability-row" data-testid="parser-ability-row">
+          <td colSpan={9}>
+            <AbilityList abilities={abilities} onOpenSpell={onOpenSpell} />
+          </td>
+        </tr>
+      ) : null}
+    </>
+  )
 }
 
 export function ParserPanel({
@@ -166,6 +364,18 @@ export function ParserPanel({
   onRetentionDays,
   onClearHistory,
   historyBusy,
+  timeline = null,
+  timelineStatus = 'idle',
+  loot = null,
+  lootStatus = 'idle',
+  onDetailTab,
+  onMergeFights,
+  mergeBusy = false,
+  mergeNote = '',
+  onRequestSpell,
+  spellTimeline = null,
+  fightsTruncated = false,
+  itemNameProps = null,
 }) {
   const [assignPet, setAssignPet] = useState('')
   const [assignOwner, setAssignOwner] = useState('')
@@ -181,6 +391,85 @@ export function ParserPanel({
   const empty = logsStatus === 'ready' && list.length === 0
   const selected = list.find((log) => log.path === selectedPath) || null
   const pct = progress && progress.pct != null ? progress.pct : null
+  const [detailTab, setDetailTab] = useState('damage')
+  const [fightQuery, setFightQuery] = useState('')
+  const [fightPage, setFightPage] = useState(1)
+  const [openSources, setOpenSources] = useState({})
+  const [spell, setSpell] = useState(null)
+  const [checked, setChecked] = useState({})
+  const [copyPreview, setCopyPreview] = useState('')
+  const [sliceOn, setSliceOn] = useState(false)
+  const [sessionMark, setSessionMark] = useState(null)
+  const [lootFightOnly, setLootFightOnly] = useState(true)
+  const [lootPage, setLootPage] = useState(1)
+  const detailKey = detail?.merged_ids ? detail.merged_ids.join(',') : detail?.id
+  useEffect(() => {
+    setOpenSources({})
+    setSpell(null)
+    setCopyPreview('')
+  }, [detailKey])
+  useEffect(() => {
+    if (!character || typeof localStorage === 'undefined') return undefined
+    try {
+      const raw = localStorage.getItem(markStorageKey(character))
+      setSessionMark(raw ? JSON.parse(raw) : null)
+    } catch {
+      setSessionMark(null)
+    }
+    return undefined
+  }, [character])
+  const markedRows = sliceOn && sessionMark?.ts ? sliceFromMark(fightRows, sessionMark.ts) : fightRows
+  const filteredFights = filterFights(markedRows, fightQuery)
+  const fightPageView = pageSlice(filteredFights, fightPage, FIGHT_PAGE_SIZE)
+  const checkedIds = fightRows.filter((fight) => checked[fight.id]).map((fight) => fight.id)
+  const scoped = scopeNames(sources)
+  const rememberMark = (mark) => {
+    setSessionMark(mark)
+    try {
+      if (character && typeof localStorage !== 'undefined') {
+        if (mark) localStorage.setItem(markStorageKey(character), JSON.stringify(mark))
+        else localStorage.removeItem(markStorageKey(character))
+      }
+    } catch {
+      /* the mark still applies for this view */
+    }
+  }
+  const selectTab = (id) => {
+    setDetailTab(id)
+    if (onDetailTab) onDetailTab(id)
+  }
+  const openSpell = (row) => {
+    setSpell(row)
+    if (onRequestSpell) onRequestSpell(row)
+  }
+  const writeCopy = async (kind) => {
+    if (!detail) return
+    const text = kind === 'tsv'
+      ? formatParseTsv(detail, sources)
+      : (kind === 'csv'
+        ? formatParseCsv(detail, sources)
+        : (kind === 'html' ? formatParseHtml(detail, sources) : formatParseText(detail, sources)))
+    if (kind === 'csv') downloadText('parse.csv', text, 'text/csv;charset=utf-8')
+    else if (kind === 'html') downloadText('parse.html', text, 'text/html;charset=utf-8')
+    else {
+      setCopyPreview(text)
+      try {
+        await copyText(text)
+      } catch {
+        /* the preview is the same text that would have been copied */
+      }
+    }
+  }
+  const lootRows = lootFightOnly && detail?.start_ts
+    ? lootInWindow(loot?.loot, detail.start_ts, detail.end_ts)
+    : (loot?.loot || [])
+  const lootGives = lootFightOnly && detail?.start_ts
+    ? lootInWindow(loot?.gives, detail.start_ts, detail.end_ts)
+    : (loot?.gives || [])
+  const lootMerges = lootFightOnly && detail?.start_ts
+    ? lootInWindow(loot?.merges, detail.start_ts, detail.end_ts)
+    : (loot?.merges || [])
+  const lootView = pageSlice(lootRows, lootPage, LOOT_PAGE_SIZE)
 
   return (
     <div className="panel parser-panel" data-testid="parser-tab">
@@ -356,7 +645,100 @@ export function ParserPanel({
       {!empty && logsStatus === 'ready' ? (
         <div className="parser-split">
           <div>
-            <h3 className="parser-subhead">Fights</h3>
+            <div className="parser-detail-head">
+              <h3 className="parser-subhead">Saved fights</h3>
+              <span className="muted" data-testid="parser-history-count">{fightRows.length} saved</span>
+            </div>
+            {fightRows.length ? (
+              <div className="parser-toolbar">
+                <input
+                  type="search"
+                  data-testid="parser-fight-search"
+                  placeholder="Zone or target"
+                  value={fightQuery}
+                  aria-label="Filter saved fights"
+                  onChange={(e) => {
+                    setFightQuery(e.target.value)
+                    setFightPage(1)
+                  }}
+                />
+                <button
+                  type="button"
+                  data-testid="parser-merge-fights"
+                  disabled={checkedIds.length < 2 || mergeBusy}
+                  onClick={() => onMergeFights && onMergeFights(checkedIds)}
+                >
+                  Merge selected
+                </button>
+                <button
+                  type="button"
+                  data-testid="parser-zone-session"
+                  disabled={!selectedFightId || mergeBusy}
+                  onClick={() => {
+                    const ids = zoneSession(fightRows, selectedFightId).map((fight) => fight.id)
+                    if (onMergeFights) onMergeFights(capIds(ids))
+                  }}
+                >
+                  Zone session
+                </button>
+                <button
+                  type="button"
+                  data-testid="parser-set-mark"
+                  disabled={!selectedFightId}
+                  onClick={() => {
+                    const fight = fightRows.find((row) => row.id === selectedFightId)
+                    if (!fight?.start_ts) return
+                    rememberMark({ fightId: fight.id, ts: fight.start_ts })
+                    setSliceOn(true)
+                    setFightPage(1)
+                  }}
+                >
+                  Set session mark
+                </button>
+                {sessionMark ? (
+                  <button
+                    type="button"
+                    data-testid="parser-clear-mark"
+                    onClick={() => {
+                      rememberMark(null)
+                      setSliceOn(false)
+                    }}
+                  >
+                    Clear mark
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {sessionMark ? (
+              <p className="note" data-testid="parser-session-mark">
+                Session mark at {formatFightTime(sessionMark.ts)}. Fights from the mark can be merged.
+                {' '}
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={sliceOn}
+                    onChange={(e) => {
+                      setSliceOn(e.target.checked)
+                      setFightPage(1)
+                    }}
+                  />
+                  Show fights from the mark
+                </label>
+                {' '}
+                <button
+                  type="button"
+                  data-testid="parser-merge-slice"
+                  disabled={mergeBusy}
+                  onClick={() => {
+                    const ids = sliceFromMark(fightRows, sessionMark.ts).map((fight) => fight.id)
+                    if (onMergeFights) onMergeFights(capIds(ids))
+                  }}
+                >
+                  Merge from mark
+                </button>
+              </p>
+            ) : null}
+            {mergeNote ? <p className="note" data-testid="parser-merge-note">{mergeNote}</p> : null}
             {selected && !fightRows.length ? (
               <p className="muted" data-testid="parser-no-fights">
                 No fights in this log yet. Load old log to replay the file, or turn Live on and fight something.
@@ -367,15 +749,17 @@ export function ParserPanel({
                 <table className="parser-table" data-testid="parser-fights">
                   <thead>
                     <tr>
+                      <th>Pick</th>
                       <th>Time</th>
                       <th>Zone</th>
                       <th>Targets</th>
                       <th>Duration</th>
                       <th>Total damage</th>
+                      <th>Your DPS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {fightRows.map((fight) => (
+                    {fightPageView.rows.map((fight) => (
                       <tr
                         key={fight.id}
                         data-fight-id={fight.id}
@@ -390,8 +774,19 @@ export function ParserPanel({
                         }}
                       >
                         <td>
+                          <input
+                            type="checkbox"
+                            data-testid="parser-fight-check"
+                            checked={!!checked[fight.id]}
+                            aria-label={`Select fight ${fight.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => setChecked((prev) => ({ ...prev, [fight.id]: !prev[fight.id] }))}
+                          />
+                        </td>
+                        <td>
                           {formatFightTime(fight.start_ts)}
                           {fight.open ? <span className="parser-chip">open</span> : null}
+                          {sessionMark?.fightId === fight.id ? <span className="parser-chip">mark</span> : null}
                         </td>
                         <td>{formatZone(fight)}</td>
                         <td>
@@ -400,14 +795,24 @@ export function ParserPanel({
                         </td>
                         <td>{formatDuration(fight.duration_seconds)}</td>
                         <td>{formatDamage(fight.damage)}</td>
+                        <td>{formatRate(fight.your_dps)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : null}
-            {fightRows.length >= 200 ? (
-              <p className="note">Showing the latest 200 fights.</p>
+            {fightRows.length ? (
+              <p className="note" data-testid="parser-fight-page">
+                {fightPageView.start}–{fightPageView.end} of {fightPageView.total}
+                {' '}
+                <button type="button" disabled={fightPageView.page <= 1} onClick={() => setFightPage(fightPageView.page - 1)}>Previous</button>
+                {' '}
+                <button type="button" disabled={fightPageView.page >= fightPageView.pages} onClick={() => setFightPage(fightPageView.page + 1)}>Next</button>
+              </p>
+            ) : null}
+            {fightsTruncated ? (
+              <p className="note">Showing the newest saved fights. Older fights are still in the history store.</p>
             ) : null}
           </div>
 
@@ -458,14 +863,49 @@ export function ParserPanel({
                 : 'Pets stay on their own rows.'}
               {' '}DPS uses that source’s active time. SDPS uses the whole fight.
             </p>
-            {!selectedFightId ? (
+            {!selectedFightId && !detail ? (
               <p className="muted">Select a fight to see you, your pet, and your group.</p>
             ) : null}
             {selectedFightId && detailStatus === 'loading' ? <p className="muted">Loading fight…</p> : null}
             {selectedFightId && detailStatus === 'missing' ? (
               <p className="muted">That fight is not in the saved history.</p>
             ) : null}
-            {detail && sources.length ? (
+            {detail ? (
+              <div className="parser-actions" data-testid="parser-export">
+                <button type="button" data-testid="parser-copy-text" onClick={() => writeCopy('text')}>Copy text</button>
+                <button type="button" data-testid="parser-copy-tsv" onClick={() => writeCopy('tsv')}>Copy TSV</button>
+                <button type="button" data-testid="parser-export-csv" onClick={() => writeCopy('csv')}>Export CSV</button>
+                <button type="button" data-testid="parser-export-html" onClick={() => writeCopy('html')}>Export HTML</button>
+                <span className="muted">Copy puts text on the clipboard. Paste it into EQ yourself.</span>
+              </div>
+            ) : null}
+            {copyPreview ? (
+              <pre className="parser-copy-out" data-testid="parser-copy-output">{copyPreview}</pre>
+            ) : null}
+            {detail && detail.merged_count > 1 ? (
+              <p className="note" data-testid="parser-merged-banner">
+                Merged {detail.merged_count} fights. Duration is the sum of each fight. Gaps between fights are left out.
+              </p>
+            ) : null}
+            {detail ? (
+              <div className="parser-tabs" data-testid="parser-detail-tabs" role="tablist">
+                {PARSER_DETAIL_TABS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    className={detailTab === item.id ? 'on' : undefined}
+                    aria-selected={detailTab === item.id}
+                    data-testid={`parser-tab-${item.id}`}
+                    onClick={() => selectTab(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {spell ? <SpellPage row={spell} timeline={spellTimeline} onClose={() => setSpell(null)} /> : null}
+            {detail && detailTab === 'damage' && sources.length ? (
               <>
                 <p className="parser-totals" data-testid="parser-totals">
                   Total damage {formatDamage(visibleDamage(sources))}
@@ -483,6 +923,9 @@ export function ParserPanel({
                         <th>Damage</th>
                         <th>DPS</th>
                         <th>SDPS</th>
+                        <th>Hits</th>
+                        <th>Crit %</th>
+                        <th>Max</th>
                         <th>Pet</th>
                       </tr>
                     </thead>
@@ -491,84 +934,73 @@ export function ParserPanel({
                         const binding = (Array.isArray(petBindings) ? petBindings : []).find((pet) => pet.pet === row.source)
                         const evidence = petEvidenceLabel(binding?.evidence)
                         const classesFor = loadoutText(loadoutsFor(row.source, classes))
+                        const open = !!openSources[row.source]
+                        const abilities = Array.isArray(row.abilities) ? row.abilities : []
                         return (
-                        <tr
+                        <FragmentRow
                           key={`${row.nested ? 'pet' : 'src'}:${row.source}`}
-                          className={row.nested ? 'parser-pet-row' : undefined}
-                          data-source={row.source}
-                          data-nested={row.nested ? '1' : '0'}
-                          title={evidence || undefined}
-                          onContextMenu={(e) => {
-                            e.preventDefault()
-                            setAssignPet(row.source)
-                            setAssignOwner(binding?.owner || character || '')
-                          }}
-                        >
-                          <td>
-                            {row.nested ? `↳ ${row.source}` : row.source}
-                            {classesFor ? <span className="parser-classes">{classesFor}</span> : null}
-                          </td>
-                          <td>{sourceKindLabel(row.kind)}{binding?.owner ? ` of ${binding.owner}` : ''}</td>
-                          <td>{formatDamage(row.damage)}</td>
-                          <td>{formatRate(row.dps)}</td>
-                          <td>{formatRate(row.sdps)}</td>
-                          <td className="parser-actions">
-                            <button
-                              type="button"
-                              data-testid="parser-set-pet"
-                              data-pet={row.source}
-                              onClick={() => {
-                                setAssignPet(row.source)
-                                setAssignOwner(binding?.owner || character || '')
-                              }}
-                            >
-                              Set as pet of…
-                            </button>
-                            <button
-                              type="button"
-                              data-testid="parser-unassign"
-                              data-pet={row.source}
-                              onClick={() => onUnassignPet && onUnassignPet(row.source)}
-                            >
-                              Unassign
-                            </button>
-                            {assignPet === row.source ? (
-                              <form
-                                className="parser-assign"
-                                data-testid="parser-assign"
-                                onSubmit={(e) => {
-                                  e.preventDefault()
-                                  if (assignOwner && onSetPet) onSetPet(row.source, assignOwner)
-                                  setAssignPet('')
-                                }}
-                              >
-                                <label>
-                                  Owner
-                                  <select
-                                    value={assignOwner}
-                                    onChange={(e) => setAssignOwner(e.target.value)}
-                                    data-testid="parser-assign-owner"
-                                  >
-                                    <option value="">Choose</option>
-                                    {ownerChoices.map((name) => (
-                                      <option key={name} value={name}>{name}</option>
-                                    ))}
-                                  </select>
-                                </label>
-                                <button type="submit">Save</button>
-                              </form>
-                            ) : null}
-                          </td>
-                        </tr>
+                          row={row}
+                          open={open}
+                          abilities={abilities}
+                          binding={binding}
+                          evidence={evidence}
+                          classesFor={classesFor}
+                          character={character}
+                          ownerChoices={ownerChoices}
+                          assignPet={assignPet}
+                          assignOwner={assignOwner}
+                          setAssignPet={setAssignPet}
+                          setAssignOwner={setAssignOwner}
+                          onSetPet={onSetPet}
+                          onUnassignPet={onUnassignPet}
+                          onToggle={() => setOpenSources((prev) => ({ ...prev, [row.source]: !prev[row.source] }))}
+                          onOpenSpell={openSpell}
+                        />
                         )
                       })}
                     </tbody>
                   </table>
                 </div>
+                <MultiAttackTable multi={detail.multi_attack} names={scoped} />
+                <ProcsTable procs={detail.procs} names={scoped} itemNameProps={itemNameProps} />
               </>
             ) : null}
-            {detail && !sources.length && detailStatus === 'ready' ? (
+            {detail && detailTab === 'damage' && !sources.length && detailStatus === 'ready' ? (
               <p className="muted">No damage from you, your pet, or your group in this fight.</p>
+            ) : null}
+            {detail && detailTab === 'healing' ? (
+              <HealingPanel healing={detail.healing} names={scoped} onOpenSpell={openSpell} />
+            ) : null}
+            {detail && detailTab === 'tanking' ? (
+              <TankingPanel tanking={detail.tanking} names={scoped} />
+            ) : null}
+            {detail && detailTab === 'deaths' ? (
+              <DeathsPanel deaths={detail.deaths} names={scoped} />
+            ) : null}
+            {detail && detailTab === 'resists' ? (
+              <ResistsPanel resists={detail.resists} names={scoped} />
+            ) : null}
+            {detail && detailTab === 'timeline' ? (
+              <FightTimeline timeline={timeline} scope={scope} status={timelineStatus} />
+            ) : null}
+            {detail && detailTab === 'loot' ? (
+              <LootPanel
+                loot={{
+                  rows: lootView.rows,
+                  gives: lootGives.slice(0, LOOT_PAGE_SIZE),
+                  merges: lootMerges.slice(0, LOOT_PAGE_SIZE),
+                }}
+                status={lootStatus}
+                page={lootView.page}
+                pages={lootView.pages}
+                onPage={setLootPage}
+                fightOnly={lootFightOnly}
+                onFightOnly={(next) => {
+                  setLootFightOnly(next)
+                  setLootPage(1)
+                }}
+                itemNameProps={itemNameProps}
+              />
             ) : null}
           </div>
         </div>
@@ -594,6 +1026,7 @@ export default function ParserTab({
   onSetEqFolder,
   canSetFolder,
   onOpenCredits,
+  itemNameProps,
 }) {
   const [folder, setFolder] = useState('')
   const [logs, setLogs] = useState([])
@@ -613,6 +1046,16 @@ export default function ParserTab({
   const [roster, setRoster] = useState(emptyRoster)
   const [retentionDays, setRetentionDays] = useState(0)
   const [historyBusy, setHistoryBusy] = useState(false)
+  const [fightsTruncated, setFightsTruncated] = useState(false)
+  const [timeline, setTimeline] = useState(null)
+  const [timelineStatus, setTimelineStatus] = useState('idle')
+  const [spellTimeline, setSpellTimeline] = useState(null)
+  const [loot, setLoot] = useState(null)
+  const [lootStatus, setLootStatus] = useState('idle')
+  const [mergeBusy, setMergeBusy] = useState(false)
+  const [mergeNote, setMergeNote] = useState('')
+  const mergeKeyRef = useRef('')
+  const detailRef = useRef(null)
   const sizeRef = useRef(0)
   const fightIdRef = useRef(fightId)
   const characterRef = useRef('')
@@ -620,6 +1063,7 @@ export default function ParserTab({
   const upgradingRef = useRef(false)
   const mergeRef = useRef(mergePets)
   fightIdRef.current = fightId
+  detailRef.current = detail
   loadingRef.current = loadingLog
   upgradingRef.current = upgrading
   mergeRef.current = mergePets
@@ -691,9 +1135,11 @@ export default function ParserTab({
       return undefined
     }
     let cancelled = false
-    getParserFights(selected.character)
+    fetchFightHistory(selected.character)
       .then((body) => {
-        if (!cancelled) setFights(Array.isArray(body?.fights) ? body.fights : [])
+        if (cancelled) return
+        setFights(body.fights)
+        setFightsTruncated(body.truncated)
       })
       .catch((err) => {
         if (!cancelled) setNotice(String(err?.message || err))
@@ -709,6 +1155,24 @@ export default function ParserTab({
   }, [selected?.character, selected?.path, refreshNonce])
 
   useEffect(() => {
+    if (mergeKeyRef.current) {
+      const ids = mergeKeyRef.current.split(',').filter(Boolean)
+      let cancelled = false
+      setDetailStatus('loading')
+      loadMergedDetails(ids, mergePets)
+        .then((merged) => {
+          if (cancelled || !merged) return
+          detailRef.current = merged
+          setDetail(merged)
+          setDetailStatus('ready')
+          setTimeline(null)
+          setTimelineStatus('idle')
+        })
+        .catch((err) => {
+          if (!cancelled) setNotice(String(err?.message || err))
+        })
+      return () => { cancelled = true }
+    }
     if (!fightId) {
       setDetail(null)
       setDetailStatus('idle')
@@ -718,9 +1182,12 @@ export default function ParserTab({
     setDetailStatus('loading')
     getParserFight(fightId, mergePets)
       .then((body) => {
-        if (cancelled) return
+        if (cancelled || mergeKeyRef.current) return
+        detailRef.current = body
         setDetail(body)
         setDetailStatus('ready')
+        setTimeline(null)
+        setTimelineStatus('idle')
       })
       .catch((err) => {
         if (cancelled) return
@@ -739,16 +1206,18 @@ export default function ParserTab({
       refreshTimer = setTimeout(() => {
         const character = characterRef.current
         if (!character) return
-        getParserFights(character)
-          .then((body) => setFights(Array.isArray(body?.fights) ? body.fights : []))
+        getParserFights(character, { limit: 200 })
+          .then((body) => setFights((prev) => upsertFights(prev, body?.fights)))
           .catch(() => {})
         getParserRoster(character)
           .then((body) => setRoster(body || emptyRoster))
           .catch(() => {})
         const currentFight = fightIdRef.current
-        if (currentFight) {
+        if (currentFight && !mergeKeyRef.current) {
           getParserFight(currentFight, mergeRef.current)
             .then((body) => {
+              if (mergeKeyRef.current) return
+              detailRef.current = body
               setDetail(body)
               setDetailStatus('ready')
             })
@@ -856,9 +1325,10 @@ export default function ParserTab({
         pct: 100,
         lines: Number(result?.lines) || 0,
       })
-      const body = await getParserFights(selected.character)
-      const nextFights = Array.isArray(body?.fights) ? body.fights : []
+      const body = await fetchFightHistory(selected.character)
+      const nextFights = body.fights
       setFights(nextFights)
+      setFightsTruncated(body.truncated)
       const nextRoster = await getParserRoster(selected.character)
       setRoster(nextRoster || emptyRoster)
       if (nextFights[0]) onFightId(nextFights[0].id)
@@ -878,8 +1348,9 @@ export default function ParserTab({
       const saved = Number(cfg?.fight_retention_days)
       setRetentionDays(Number.isFinite(saved) && saved > 0 ? Math.floor(saved) : 0)
       if (selected?.character) {
-        const body = await getParserFights(selected.character)
-        setFights(Array.isArray(body?.fights) ? body.fights : [])
+        const body = await fetchFightHistory(selected.character)
+        setFights(body.fights)
+        setFightsTruncated(body.truncated)
       }
     } catch (err) {
       setNotice(String(err?.message || err))
@@ -904,8 +1375,9 @@ export default function ParserTab({
       onFightId(null)
       setDetail(null)
       setDetailStatus('idle')
-      const body = await getParserFights(label)
-      setFights(Array.isArray(body?.fights) ? body.fights : [])
+      const body = await fetchFightHistory(label)
+      setFights(body.fights)
+      setFightsTruncated(body.truncated)
     } catch (err) {
       setNotice(String(err?.message || err))
     } finally {
@@ -943,8 +1415,82 @@ export default function ParserTab({
       fights={fights}
       selectedFightId={fightId}
       onSelectFight={(id) => {
+        mergeKeyRef.current = ''
+        setMergeNote('')
         setNotice('')
         onFightId(id)
+      }}
+      timeline={timeline}
+      timelineStatus={timelineStatus}
+      spellTimeline={spellTimeline}
+      loot={loot}
+      lootStatus={lootStatus}
+      fightsTruncated={fightsTruncated}
+      mergeBusy={mergeBusy}
+      mergeNote={mergeNote}
+      itemNameProps={itemNameProps}
+      onDetailTab={(id) => {
+        const current = detailRef.current
+        if (!current) return
+        if (id === 'timeline') {
+          setTimelineStatus('loading')
+          loadCurve(current)
+            .then((curve) => {
+              setTimeline(curve)
+              setTimelineStatus(curve?.available === false ? 'missing' : 'ready')
+            })
+            .catch((err) => {
+              setTimelineStatus('missing')
+              setNotice(String(err?.message || err))
+            })
+        }
+        if (id === 'loot' && selected?.character && lootStatus !== 'ready' && lootStatus !== 'loading') {
+          setLootStatus('loading')
+          getParserLoot(selected.character, { limit: 2000 })
+            .then((body) => {
+              setLoot(body)
+              setLootStatus('ready')
+            })
+            .catch((err) => {
+              setLootStatus('idle')
+              setNotice(String(err?.message || err))
+            })
+        }
+      }}
+      onRequestSpell={(row) => {
+        const current = detailRef.current
+        const name = row?.ability || row?.spell
+        if (!current || !name) return
+        setSpellTimeline(null)
+        loadCurve(current, name)
+          .then((curve) => setSpellTimeline(curve))
+          .catch(() => setSpellTimeline(null))
+      }}
+      onMergeFights={async (ids) => {
+        const capped = capIds(ids)
+        if (capped.length < 2) {
+          setMergeNote(ids.length ? 'Select at least two fights to merge.' : 'That slice has fewer than two fights.')
+          return
+        }
+        const dropped = ids.length - capped.length
+        setMergeNote(dropped > 0
+          ? `Merged the first ${MERGE_LIMIT} of ${ids.length} fights. Duration is the sum of each fight.`
+          : `Merged ${capped.length} fights. Duration is the sum of each fight.`)
+        setMergeBusy(true)
+        mergeKeyRef.current = capped.join(',')
+        try {
+          const merged = await loadMergedDetails(capped, mergePets)
+          detailRef.current = merged
+          setDetail(merged)
+          setDetailStatus('ready')
+          setTimeline(null)
+          setTimelineStatus('idle')
+        } catch (err) {
+          mergeKeyRef.current = ''
+          setMergeNote(String(err?.message || err))
+        } finally {
+          setMergeBusy(false)
+        }
       }}
       detail={detail}
       detailStatus={detailStatus}
@@ -969,7 +1515,8 @@ export default function ParserTab({
             return null
           })
           .then((body) => {
-            if (body) {
+            if (body && !mergeKeyRef.current) {
+              detailRef.current = body
               setDetail(body)
               setDetailStatus('ready')
             }
@@ -995,7 +1542,8 @@ export default function ParserTab({
             return null
           })
           .then((body) => {
-            if (body) {
+            if (body && !mergeKeyRef.current) {
+              detailRef.current = body
               setDetail(body)
               setDetailStatus('ready')
             }
@@ -1013,7 +1561,8 @@ export default function ParserTab({
             return null
           })
           .then((body) => {
-            if (body) {
+            if (body && !mergeKeyRef.current) {
+              detailRef.current = body
               setDetail(body)
               setDetailStatus('ready')
             }

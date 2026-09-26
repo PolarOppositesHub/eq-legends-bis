@@ -305,6 +305,61 @@ test('scope filter keeps a candidate out of group and raid players who hit the s
   assert.equal(visibleRate(sourcesForScope(detail, 'all', ['Cara']), 2), 35.5)
 })
 
+test('parser depth shows one page of fights, detail tabs, and copy actions', () => {
+  const fights = Array.from({ length: 80 }, (_, i) => ({
+    id: i + 1,
+    start_ts: '2026-08-04T22:00:01',
+    zone: 'Befallen',
+    targets: ['a rat'],
+    duration_seconds: 12,
+    damage: 10,
+    your_dps: 2,
+  }))
+  const html = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    fights,
+    selectedFightId: 1,
+    detailStatus: 'ready',
+    character: 'Zasariz',
+    detail: {
+      id: 1,
+      duration_seconds: 12,
+      targets: ['a rat'],
+      zone: 'Befallen',
+      sources: [{
+        source: 'Zasariz',
+        kind: 'self',
+        damage: 10,
+        dps: 2,
+        sdps: 1,
+        hits: 2,
+        crits: 1,
+        max_hit: 8,
+        pets: [],
+        abilities: [
+          { source: 'Zasariz', category: 'melee', ability: 'slash', damage: 10, hits: 2, crits: 1, misses: 0, max_hit: 8 },
+        ],
+      }],
+      healing: { rows: [] },
+      multi_attack: { estimate: true, note: 'Estimate from swings that share a timestamp second.', sources: [] },
+      procs: { count: 0, per_minute: 0, items: [] },
+    },
+  }))
+  assert.equal((html.match(/data-fight-id=/g) || []).length, 40)
+  assert.match(html, /of 80/)
+  assert.match(html, /data-testid="parser-merge-fights"/)
+  assert.match(html, /data-testid="parser-set-mark"/)
+  assert.match(html, /data-testid="parser-tab-healing"/)
+  assert.match(html, /data-testid="parser-tab-timeline"/)
+  assert.match(html, /data-testid="parser-tab-loot"/)
+  assert.match(html, /data-testid="parser-copy-text"/)
+  assert.match(html, /data-testid="parser-expand"/)
+  assert.match(html, /data-source="Zasariz"/)
+  assert.equal(html.includes('data-testid="parser-abilities"'), false)
+})
+
 test('credits name eqlwiki CC BY-SA and eqlegendstools.com', () => {
   const html = markup(React.createElement(CreditsDialog, { onClose: noop }))
   assert.match(html, /data-testid="credits-dialog"/)

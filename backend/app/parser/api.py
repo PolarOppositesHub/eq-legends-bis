@@ -156,6 +156,15 @@ def get_fight(fight_id: int, merge_pets: bool = True) -> dict[str, Any]:
     return detail
 
 
+@router.get("/fights/{fight_id}/timeline")
+def get_fight_timeline(fight_id: int, ability: str | None = None) -> dict[str, Any]:
+    """Per-second damage and healing, re-read from the fight's log byte range."""
+    detail = get_service().fight_timeline(fight_id, ability=ability)
+    if detail is None:
+        raise HTTPException(404, "Fight not found")
+    return detail
+
+
 @router.get("/fights/{fight_id}/lines")
 def get_fight_lines(fight_id: int) -> dict[str, Any]:
     """Drill-down text re-read from the fight's log byte range."""

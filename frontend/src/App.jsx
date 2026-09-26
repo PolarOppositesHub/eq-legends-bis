@@ -3532,6 +3532,7 @@ export default function App() {
               onSetEqFolder={pickEqInstallFolder}
               canSetFolder={isDesktopApp}
               onOpenCredits={() => setCreditsOpen(true)}
+              itemNameProps={catalogItemNameProps}
             />
           )}
 
