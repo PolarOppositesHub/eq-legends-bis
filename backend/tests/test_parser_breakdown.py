@@ -6,15 +6,20 @@ parser's own output. The heal line ``204 (216)`` is 12 overheal.
 
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.parser.service import ParserService  # noqa: E402
+from app.parser.store import SCHEMA_VERSION  # noqa: E402
 
 # One encounter. Comments are the hand count, not parsed text.
 LINES = [
@@ -414,6 +419,132 @@ class BreakdownTests(unittest.TestCase):
         detail = resumed.fight_detail(fight_id, merge_pets=False)
         self._assert_closed_fight(detail)
         self.assertEqual(resumed.list_fights("Zasariz")["count"], 1)
+
+    def _write_log(self, root: Path) -> Path:
+        path = root / "eqlog_Zasariz_qeynos.txt"
+        path.write_text("\n".join(LINES) + "\n", encoding="utf-8")
+        return path
+
+    def _legacy_database(self) -> tuple[Path, Path, int]:
+        """A 1.1.0-shaped database: the log was read, breakdowns were not stored."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        service, _root = self._service(root)
+        path = self._write_log(root)
+        replayed = service.replay(path)
+        self.assertGreater(replayed["events_inserted"], 0)
+        event_count = service.db.count_events()
+        fight_id = service.list_fights("Zasariz")["fights"][0]["id"]
+        self.assertEqual(_heal(service.fight_detail(fight_id), "Amop", "Valor")["overheal"], 12)
+        # Drop the aggregate version and the breakdowns a 1.1.0 file never had.
+        # Leave events in place so a naive reread would skip observe().
+        with service.db.lock:
+            service.db.conn.execute("DELETE FROM settings WHERE key='schema_version'")
+            service.db.conn.execute("DELETE FROM fight_breakdown")
+            service.db.commit()
+        service.set_idle(45)
+        service.set_eq_folder(str(root / "EverQuest Legends"))
+        service.db.set_setting("custom_note", "keep-me")
+        service.set_pet_owner("Zasariz", "Zasariz`s warder", "Amop")
+        service.close()
+        return root, path, event_count
+
+    def test_old_database_upgrades_and_gains_breakdowns(self):
+        root, _path, event_count = self._legacy_database()
+        service, _root = self._service(root)
+        self.assertTrue(service.config()["upgrading"] or service.config()["schema_version"] == SCHEMA_VERSION)
+        self.assertTrue(service.wait_for_upgrade(30))
+        self.assertFalse(service.config()["upgrading"])
+        self.assertEqual(service.db.stored_schema_version(), SCHEMA_VERSION)
+        self.assertIsNone(service.config()["upgrade_error"])
+        fights = service.list_fights("Zasariz")["fights"]
+        self.assertEqual(len(fights), 1)
+        detail = service.fight_detail(fights[0]["id"])
+        self.assertEqual(_heal(detail, "Amop", "Valor")["overheal"], 12)
+        self.assertGreaterEqual(len(detail["abilities"]), 1)
+        # Rebuilt once from the log. The old events were replaced, not appended.
+        self.assertEqual(service.db.count_events(), event_count)
+        self.assertEqual(service.db.count_where("fights"), 1)
+
+    def test_second_load_does_not_rebuild(self):
+        root, _path, event_count = self._legacy_database()
+        first, _root = self._service(root)
+        self.assertTrue(first.wait_for_upgrade(30))
+        self.assertEqual(first.db.stored_schema_version(), SCHEMA_VERSION)
+        with first.db.lock:
+            row = first.db.conn.execute("SELECT id, generation FROM log_files").fetchone()
+            first.db.conn.execute(
+                "INSERT INTO events(file_id, generation, offset, kind) VALUES(?, ?, ?, ?)",
+                (row["id"], row["generation"], 9_999_999, "sentinel"),
+            )
+            first.db.commit()
+        first.close()
+
+        second, _root = self._service(root)
+        self.assertFalse(second.config()["upgrading"])
+        self.assertIsNone(second._upgrade_thread)
+        self.assertTrue(second.wait_for_upgrade(5))
+        with second.db.lock:
+            kept = second.db.conn.execute(
+                "SELECT kind FROM events WHERE offset=?",
+                (9_999_999,),
+            ).fetchone()
+        self.assertIsNotNone(kept)
+        self.assertEqual(kept["kind"], "sentinel")
+        self.assertEqual(second.db.count_events(), event_count + 1)
+        self.assertEqual(second.db.stored_schema_version(), SCHEMA_VERSION)
+        fight_id = second.list_fights("Zasariz")["fights"][0]["id"]
+        self.assertEqual(_heal(second.fight_detail(fight_id), "Amop", "Valor")["overheal"], 12)
+
+    def test_user_settings_survive_rebuild(self):
+        root, _path, _event_count = self._legacy_database()
+        service, _root = self._service(root)
+        self.assertTrue(service.wait_for_upgrade(30))
+        self.assertEqual(service.idle, 45.0)
+        self.assertEqual(service.db.get_setting("idle_seconds"), "45.0")
+        self.assertEqual(service.db.get_setting("custom_note"), "keep-me")
+        folder = str(root / "EverQuest Legends")
+        self.assertEqual(service.eq_folder(), folder)
+        self.assertEqual(service.db.get_setting("eq_install_folder"), folder)
+        settings = json.loads((root / "user" / "settings.json").read_text(encoding="utf-8"))
+        self.assertEqual(settings["eqInstallFolder"], folder)
+        pets = service.list_pets("Zasariz")
+        manual = [pet for pet in pets if pet["pet"] == "Zasariz`s warder"]
+        self.assertEqual(len(manual), 1)
+        self.assertTrue(manual[0]["manual"])
+        self.assertEqual(manual[0]["owner"], "Amop")
+
+    def test_upgrade_does_not_block_startup(self):
+        root, path, _event_count = self._legacy_database()
+        started = threading.Event()
+        release = threading.Event()
+        original = ParserService._consume
+
+        def blocked(self, log_path, finalize=True):
+            started.set()
+            if not release.wait(5):
+                raise TimeoutError("upgrade gate")
+            return original(self, log_path, finalize=finalize)
+
+        with patch.object(ParserService, "_consume", blocked):
+            began = time.perf_counter()
+            service = ParserService(user_data=root / "user", db_path=root / "parser.db", idle_seconds=30)
+            self.addCleanup(service.close)
+            self.addCleanup(release.set)
+            self.assertLess(time.perf_counter() - began, 2.0)
+            self.assertTrue(service.config()["upgrading"])
+            self.assertTrue(started.wait(2))
+            config_began = time.perf_counter()
+            cfg = service.config()
+            self.assertLess(time.perf_counter() - config_began, 1.0)
+            self.assertTrue(cfg["upgrading"])
+            self.assertEqual(cfg["schema_version"], None)
+            release.set()
+            self.assertTrue(service.wait_for_upgrade(10))
+        self.assertFalse(service.config()["upgrading"])
+        self.assertEqual(service.db.stored_schema_version(), SCHEMA_VERSION)
+        self.assertTrue(path.is_file())
 
     def test_packaging_includes_breakdown_module(self):
         module = ROOT / "backend" / "app" / "parser" / "breakdown.py"

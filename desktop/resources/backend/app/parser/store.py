@@ -17,6 +17,23 @@ from .breakdown import Breakdown
 from .fights import FightState, SourceAgg
 from .models import ParsedEvent
 
+# 1 is a 1.1.0 database: fights exist, fight breakdowns do not. Bump this when
+# derived aggregates change so the next launch rebuilds them from the logs.
+SCHEMA_VERSION = 2
+SCHEMA_VERSION_KEY = "schema_version"
+
+_DERIVED_TABLES = (
+    "events",
+    "fight_sources",
+    "fight_breakdown",
+    "fights",
+    "loot_events",
+    "give_events",
+    "merge_events",
+    "xp_events",
+    "level_events",
+)
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS log_files (
     id INTEGER PRIMARY KEY,
@@ -255,6 +272,46 @@ class ParserDB:
                 (key, value),
             )
             self.conn.commit()
+
+    def stored_schema_version(self) -> int | None:
+        """Aggregate version stored with this database.
+
+        ``None`` means the key was never written (a 1.1.0 database).
+        """
+        raw = self.get_setting(SCHEMA_VERSION_KEY)
+        if raw is None or str(raw).strip() == "":
+            return None
+        try:
+            return int(raw)
+        except ValueError:
+            return None
+
+    def set_schema_version(self, version: int) -> None:
+        self.set_setting(SCHEMA_VERSION_KEY, str(int(version)))
+
+    def list_log_paths(self) -> list[str]:
+        with self.lock:
+            rows = self.conn.execute("SELECT path FROM log_files ORDER BY id").fetchall()
+        return [str(row["path"]) for row in rows]
+
+    def clear_derived(self) -> None:
+        """Drop rebuilt parser output and rewind known logs to offset 0.
+
+        Settings, the chosen log paths, group/player notes, and manual pet
+        bindings stay. Automatic pet bindings are removed so the replay can
+        derive them again.
+        """
+        with self.lock:
+            self.conn.execute("BEGIN IMMEDIATE")
+            try:
+                for table in _DERIVED_TABLES:
+                    self.conn.execute(f"DELETE FROM {table}")
+                self.conn.execute("UPDATE log_files SET last_offset=0")
+                self.conn.execute("DELETE FROM pet_bindings WHERE manual=0")
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+                raise
 
     def upsert_file(self, path: str, character: str, server: str, size: int, mtime: float) -> sqlite3.Row:
         with self.lock:

@@ -18,7 +18,7 @@ from .discover import (
     write_settings,
 )
 from .fights import MIN_SECONDS, Segmenter, SourceAgg, merge_pet_rows, recompute_sdps
-from .store import ParserDB, _parse_iso
+from .store import SCHEMA_VERSION, ParserDB, _parse_iso
 from .tail import LogTail, TailBatch, backfill_offset
 
 CHUNK_LINES = 50_000
@@ -62,6 +62,10 @@ class ParserService:
         self.db = ParserDB(db_path or (self.user_data / "parser.db"))
         stored_idle = self.db.get_setting("idle_seconds")
         self.idle = float(stored_idle) if stored_idle else idle_seconds
+        saved_folder = read_eq_install(self.user_data)
+        stored_folder = self.db.get_setting("eq_install_folder") or ""
+        # Cached so /config stays responsive while a rebuild holds the DB lock.
+        self._eq_folder = saved_folder or stored_folder or DEFAULT_EQ_INSTALL
         self.hub = EventHub()
         self._segs: dict[tuple[int, int], Segmenter] = {}
         self._stop = threading.Event()
@@ -71,23 +75,40 @@ class ParserService:
         self._replay_lock = threading.Lock()
         self._replaying = False
         self._last_fight_emit = 0.0
+        self._upgrade_thread: threading.Thread | None = None
+        self._upgrading = False
+        self._upgrade_error: str | None = None
+        self._upgrade_progress: dict | None = None
+        self._schema_version = self.db.stored_schema_version()
+        # Returns immediately. A full-log rebuild takes long enough that it
+        # must not sit on the process or the first /config request.
+        self._maybe_start_upgrade()
 
     def close(self) -> None:
         """Stop a live tail and release the SQLite file so Windows can delete the temp dir."""
         self.stop_live()
+        thread = self._upgrade_thread
+        if thread is not None and thread is not threading.current_thread() and thread.is_alive():
+            thread.join(timeout=120)
         self.db.close()
 
+    def wait_for_upgrade(self, timeout: float = 120) -> bool:
+        """Block until a background rebuild finishes. Tests use this."""
+        thread = self._upgrade_thread
+        if thread is not None and thread is not threading.current_thread() and thread.is_alive():
+            thread.join(timeout)
+        return not self._upgrading
+
     def eq_folder(self) -> str:
-        saved = read_eq_install(self.user_data)
-        if saved:
-            return saved
-        stored = self.db.get_setting("eq_install_folder") or ""
-        return stored or DEFAULT_EQ_INSTALL
+        if self._eq_folder:
+            return self._eq_folder
+        return DEFAULT_EQ_INSTALL
 
     def set_eq_folder(self, folder: str) -> str:
         folder = folder.strip()
         write_settings(self.user_data, {"eqInstallFolder": folder})
         self.db.set_setting("eq_install_folder", folder)
+        self._eq_folder = folder or DEFAULT_EQ_INSTALL
         return folder
 
     def set_idle(self, seconds: float) -> float:
@@ -100,6 +121,7 @@ class ParserService:
         return {"folder": folder, "logs": discover_logs(folder)}
 
     def config(self) -> dict:
+        progress = self._upgrade_progress
         return {
             "eq_install_folder": self.eq_folder(),
             "default_eq_install_folder": DEFAULT_EQ_INSTALL,
@@ -108,7 +130,104 @@ class ParserService:
             "user_data": str(self.user_data),
             "live": self._thread is not None and self._thread.is_alive(),
             "live_path": self._live_path,
+            "upgrading": self._upgrading,
+            "schema_version": self._schema_version,
+            "upgrade_error": self._upgrade_error,
+            "upgrade_progress": dict(progress) if progress else None,
         }
+
+    def _maybe_start_upgrade(self) -> None:
+        """Replay known logs when this database predates the current aggregates."""
+        stored = self._schema_version
+        paths = self.db.list_log_paths()
+        if stored is None and not paths:
+            self.db.set_schema_version(SCHEMA_VERSION)
+            self._schema_version = SCHEMA_VERSION
+            return
+        effective = 1 if stored is None else stored
+        if effective >= SCHEMA_VERSION:
+            return
+        self._upgrading = True
+        self._upgrade_thread = threading.Thread(
+            target=self._upgrade_worker,
+            name="parser-upgrade",
+            daemon=True,
+        )
+        self._upgrade_thread.start()
+
+    def _upgrade_worker(self) -> None:
+        error = None
+        try:
+            with self._replay_lock:
+                self._replaying = True
+                try:
+                    self.stop_live()
+                    self._segs.clear()
+                    paths = self.db.list_log_paths()
+                    self._upgrade_progress = {
+                        "lines": 0,
+                        "offset": 0,
+                        "size": 0,
+                        "path": paths[0] if paths else "",
+                        "file_index": 0,
+                        "file_count": len(paths),
+                        "done": False,
+                    }
+                    self.hub.publish({
+                        "type": "upgrade",
+                        "active": True,
+                        "done": False,
+                        "file_count": len(paths),
+                    })
+                    self.db.clear_derived()
+                    for index, path in enumerate(paths):
+                        self._upgrade_one(index, len(paths), path)
+                    self.db.set_schema_version(SCHEMA_VERSION)
+                    self._schema_version = SCHEMA_VERSION
+                finally:
+                    self._replaying = False
+        except Exception as exc:
+            error = str(exc)
+            self._upgrade_error = error
+        finally:
+            self._upgrading = False
+            finished = dict(self._upgrade_progress or {})
+            finished["done"] = True
+            self._upgrade_progress = finished
+            self.hub.publish({
+                "type": "upgrade",
+                "active": False,
+                "done": True,
+                "error": error,
+                "schema_version": self._schema_version,
+            })
+
+    def _upgrade_one(self, index: int, total: int, path: str) -> None:
+        file_path = Path(path)
+        size = file_path.stat().st_size if file_path.is_file() else 0
+        self._upgrade_progress = {
+            "lines": 0,
+            "offset": 0,
+            "size": size,
+            "path": path,
+            "file_index": index,
+            "file_count": total,
+            "done": False,
+        }
+        self.hub.publish({
+            "type": "upgrade",
+            "active": True,
+            "done": False,
+            "path": path,
+            "file_index": index,
+            "file_count": total,
+        })
+        if not file_path.is_file():
+            return
+        try:
+            self._consume(file_path, finalize=True)
+        except (LogRejected, OSError):
+            return
 
     def replay(self, path: str | Path, *, idle_seconds: float | None = None, finalize: bool = True) -> dict:
         self.stop_live()
@@ -122,6 +241,10 @@ class ParserService:
                 self._replaying = False
 
     def start_live(self, path: str | Path, *, from_end: bool = True, backfill_seconds: float | None = None) -> dict:
+        # A rebuild holds this lock for the whole replay. Wait it out so a live
+        # tail cannot insert rows the rebuild is about to replace.
+        with self._replay_lock:
+            pass
         self.stop_live()
         path = Path(path).resolve()
         _check_log(path)
@@ -272,14 +395,14 @@ class ParserService:
                             self.db.save_fight(file_id, generation, seg.fight)
                         self.db.mark_offset(file_id, offset, st.st_size)
                         self.db.commit()
-                        self.hub.publish({
-                            "type": "progress",
-                            "lines": lines,
-                            "classified": classified,
-                            "unclassified": unclassified,
-                            "offset": offset,
-                            "path": str(path),
-                        })
+                        self._publish_progress(
+                            lines=lines,
+                            classified=classified,
+                            unclassified=unclassified,
+                            offset=offset,
+                            path=path,
+                            size=st.st_size,
+                        )
                         self.db.begin()
                 if finalize:
                     seg.finish()
@@ -292,15 +415,15 @@ class ParserService:
                 raise
             fight_count = self.db.count_where("fights", file_id)
         elapsed = time.perf_counter() - started
-        self.hub.publish({
-            "type": "progress",
-            "lines": lines,
-            "classified": classified,
-            "unclassified": unclassified,
-            "offset": st.st_size,
-            "path": str(path),
-            "done": True,
-        })
+        self._publish_progress(
+            lines=lines,
+            classified=classified,
+            unclassified=unclassified,
+            offset=st.st_size,
+            path=path,
+            size=st.st_size,
+            done=True,
+        )
         top = []
         for shape, count in shapes.most_common(12):
             top.append({"count": count, "shape": shape, "example": examples.get(shape, "")})
@@ -360,6 +483,42 @@ class ParserService:
         seg.load_open(self.db.load_open_fight(file_id, generation))
         self._segs[key] = seg
         return seg
+
+    def _publish_progress(
+        self,
+        *,
+        lines: int,
+        classified: int,
+        unclassified: int,
+        offset: int,
+        path: Path,
+        size: int,
+        done: bool = False,
+    ) -> None:
+        payload = {
+            "type": "progress",
+            "lines": lines,
+            "classified": classified,
+            "unclassified": unclassified,
+            "offset": offset,
+            "size": size,
+            "path": str(path),
+        }
+        if done:
+            payload["done"] = True
+        if self._upgrading:
+            payload["upgrade"] = True
+            previous = self._upgrade_progress or {}
+            self._upgrade_progress = {
+                "lines": lines,
+                "offset": offset,
+                "size": size,
+                "path": str(path),
+                "file_index": previous.get("file_index", 0),
+                "file_count": previous.get("file_count", 1),
+                "done": False,
+            }
+        self.hub.publish(payload)
 
     def _emit_fight(self, summary: dict) -> None:
         now = time.monotonic()

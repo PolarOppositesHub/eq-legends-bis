@@ -23,6 +23,20 @@ import {
   sourceKindLabel,
 } from './parserView.js'
 
+function progressFromUpgrade(data) {
+  const size = Number(data?.size) || 0
+  const offset = Number(data?.offset) || 0
+  const lines = Number(data?.lines) || 0
+  let pct = null
+  if (size > 0) pct = Math.max(0, Math.min(100, Math.round((offset / size) * 100)))
+  return {
+    active: !data?.done,
+    done: !!data?.done,
+    pct: data?.done ? 100 : pct,
+    lines,
+  }
+}
+
 export function ParserPanel({
   folder,
   logs,
@@ -48,6 +62,7 @@ export function ParserPanel({
   canSetFolder,
   onOpenCredits,
   notice,
+  upgrading,
 }) {
   const list = Array.isArray(logs) ? logs : []
   const fightRows = Array.isArray(fights) ? fights : []
@@ -83,7 +98,7 @@ export function ParserPanel({
           type="button"
           className={live ? 'parser-live on' : 'parser-live'}
           aria-pressed={!!live}
-          disabled={!selected || liveBusy || loadingLog}
+          disabled={!selected || liveBusy || loadingLog || upgrading}
           onClick={onToggleLive}
         >
           {live ? 'Live on' : 'Live'}
@@ -91,7 +106,7 @@ export function ParserPanel({
         <button
           type="button"
           className="primary"
-          disabled={!selected || loadingLog}
+          disabled={!selected || loadingLog || upgrading}
           onClick={onLoadLog}
         >
           {loadingLog ? 'Loading log…' : 'Load old log'}
@@ -117,6 +132,10 @@ export function ParserPanel({
       {logsStatus === 'loading' ? <p className="muted">Looking for logs…</p> : null}
       {logsError ? <p className="warn-box" role="alert">{logsError}</p> : null}
       {notice ? <p className="warn-box" role="alert">{notice}</p> : null}
+
+      {upgrading ? (
+        <p className="note" data-testid="parser-upgrade" role="status">Updating parser data…</p>
+      ) : null}
 
       {progress && (progress.active || progress.done) ? (
         <div data-testid="parser-progress-wrap">
@@ -316,6 +335,7 @@ export default function ParserTab({
   const [live, setLive] = useState(false)
   const [liveBusy, setLiveBusy] = useState(false)
   const [loadingLog, setLoadingLog] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
   const [progress, setProgress] = useState(null)
   const [fights, setFights] = useState([])
   const [detail, setDetail] = useState(null)
@@ -326,9 +346,11 @@ export default function ParserTab({
   const fightIdRef = useRef(fightId)
   const characterRef = useRef('')
   const loadingRef = useRef(false)
+  const upgradingRef = useRef(false)
   const mergeRef = useRef(mergePets)
   fightIdRef.current = fightId
   loadingRef.current = loadingLog
+  upgradingRef.current = upgrading
   mergeRef.current = mergePets
 
   const selected = useMemo(
@@ -349,6 +371,10 @@ export default function ParserTab({
         setLogs(nextLogs)
         setLogsStatus('ready')
         setLive(!!cfg?.live)
+        const rebuild = !!cfg?.upgrading
+        upgradingRef.current = rebuild
+        setUpgrading(rebuild)
+        if (rebuild && cfg.upgrade_progress) setProgress(progressFromUpgrade(cfg.upgrade_progress))
         if (cfg?.live && cfg.live_path && nextLogs.some((log) => log.path === cfg.live_path)) {
           onLogPath(cfg.live_path)
         }
@@ -361,6 +387,23 @@ export default function ParserTab({
       })
     return () => { cancelled = true }
   }, [eqInstallFolder, refreshNonce, onLogPath])
+
+  useEffect(() => {
+    if (!upgrading) return undefined
+    const timer = setInterval(() => {
+      getParserConfig()
+        .then((cfg) => {
+          if (cfg?.upgrade_progress) setProgress(progressFromUpgrade(cfg.upgrade_progress))
+          if (!cfg?.upgrading) {
+            upgradingRef.current = false
+            setUpgrading(false)
+            setRefreshNonce((n) => n + 1)
+          }
+        })
+        .catch(() => {})
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [upgrading])
 
   useEffect(() => {
     if (!logs.length) return
@@ -430,9 +473,26 @@ export default function ParserTab({
       }, 300)
     }
     const stream = openParserStream({
+      upgrade: (data) => {
+        const active = !!(data && data.active && !data.done)
+        upgradingRef.current = active
+        setUpgrading(active)
+        if (data?.error) setNotice(String(data.error))
+        if (data?.done) {
+          setProgress((prev) => (
+            prev ? { ...prev, active: false, done: true, pct: prev.pct == null ? 100 : prev.pct } : prev
+          ))
+          scheduleFights()
+        }
+      },
       progress: (data) => {
-        if (!loadingRef.current && !data?.done) return
-        const size = sizeRef.current
+        const fromUpgrade = !!data?.upgrade
+        if (fromUpgrade && !data?.done) {
+          upgradingRef.current = true
+          setUpgrading(true)
+        }
+        if (!loadingRef.current && !fromUpgrade && !data?.done) return
+        const size = Number(data?.size) || sizeRef.current
         const offset = Number(data?.offset) || 0
         const lines = Number(data?.lines) || 0
         let nextPct = null
@@ -440,9 +500,11 @@ export default function ParserTab({
           nextPct = Math.max(0, Math.min(100, Math.round((offset / size) * 100)))
         }
         if (data?.done) nextPct = 100
+        // A per-file "done" during a rebuild is not the end of the update.
+        const stillUpdating = fromUpgrade && upgradingRef.current
         setProgress({
-          active: !data?.done,
-          done: !!data?.done,
+          active: stillUpdating || !data?.done,
+          done: stillUpdating ? false : !!data?.done,
           pct: nextPct,
           lines,
         })
@@ -546,6 +608,7 @@ export default function ParserTab({
       liveBusy={liveBusy}
       onToggleLive={onToggleLive}
       loadingLog={loadingLog}
+      upgrading={upgrading}
       progress={progress}
       fights={fights}
       selectedFightId={fightId}
