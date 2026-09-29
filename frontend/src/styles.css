@@ -1339,3 +1339,42 @@ input[type="text"], select, input[type="range"] {
   pointer-events: none;
 }
 .inventory-watch-status { margin-bottom: 0.75rem; }
+.owned-badge {
+  color: var(--gold);
+  border-color: var(--gold);
+  margin-left: 0.35rem;
+}
+.unknown-badge { color: var(--muted); }
+.character-section { margin-top: 1rem; }
+.character-section h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+}
+.character-section h4 {
+  margin: 0.65rem 0 0.25rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.character-hide-empty {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.8rem;
+}
+.character-item { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.25rem; }
+.character-item-name { font-weight: 600; }
+.character-place { margin-right: 0.35rem; }
+.character-tree, .character-sockets {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+}
+.character-tree ul, .character-sockets ul { list-style: none; padding-left: 1rem; }
+.character-other { margin-top: 1rem; }
+.character-other summary { cursor: pointer; color: var(--muted); }
+.character-other pre {
+  white-space: pre-wrap;
+  font-size: 0.75rem;
+  margin: 0.35rem 0 0.75rem;
+}
+.character-other-header { margin-top: 0.65rem; font-size: 0.78rem; }

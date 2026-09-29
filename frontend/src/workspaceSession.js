@@ -9,7 +9,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'bags', 'quests', 'mobs', 'search', 'parser']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'bags', 'quests', 'mobs', 'search', 'parser']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -132,6 +132,7 @@ export function defaultWorkspace(catalog) {
     searchItemUpgrade: 0,
     buildName: '',
     selectedBuildId: '',
+    ownedOnly: false,
     importMeta: null,
     uiSettings: null,
     parserLogPath: '',
@@ -293,6 +294,117 @@ function sanitizeImportRow(row) {
   }
 }
 
+const TREE_KINDS = ['worn', 'general', 'bank', 'sharedbank', 'depot', 'unknown']
+
+function pickOptionalInt(value, max) {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n)) return null
+  const v = Math.trunc(n)
+  if (v < 0 || v > max) return null
+  return v
+}
+
+function pickTier(value) {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n)) return null
+  return Math.max(0, Math.min(10, Math.trunc(n)))
+}
+
+function sanitizeTreeRow(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) {
+    return {
+      location_raw: '',
+      container_kind: 'unknown',
+      parent_idx: null,
+      depth: 0,
+      socket_index: null,
+      socket_label: null,
+      name_raw: '',
+      name: '',
+      tier: null,
+      flag_star: false,
+      id: '',
+      count: null,
+      slots: null,
+      line: null,
+    }
+  }
+  const kind = typeof row.container_kind === 'string' && TREE_KINDS.includes(row.container_kind)
+    ? row.container_kind
+    : 'unknown'
+  const parent = pickOptionalInt(row.parent_idx, 20000)
+  return {
+    location_raw: pickText(row.location_raw, 200),
+    container_kind: kind,
+    parent_idx: parent,
+    depth: pickOptionalInt(row.depth, 20) ?? 0,
+    socket_index: pickOptionalInt(row.socket_index, 99),
+    socket_label: row.socket_label ? pickText(String(row.socket_label), 80) : null,
+    name_raw: pickText(row.name_raw, 300),
+    name: pickText(row.name, 300),
+    tier: pickTier(row.tier),
+    flag_star: !!row.flag_star,
+    id: pickText(row.id == null ? '' : String(row.id), 64),
+    count: pickOptionalInt(row.count, 1000000),
+    slots: pickOptionalInt(row.slots, 1000000),
+    line: pickOptionalInt(row.line, 1000000),
+  }
+}
+
+function sanitizeTreeRows(raw) {
+  if (!Array.isArray(raw)) return []
+  const out = []
+  for (const row of raw) {
+    if (out.length >= 8000) break
+    out.push(sanitizeTreeRow(row))
+  }
+  for (const row of out) {
+    if (row.parent_idx != null && row.parent_idx >= out.length) row.parent_idx = null
+  }
+  return out
+}
+
+function sanitizeKeyring(raw) {
+  if (!Array.isArray(raw)) return []
+  const out = []
+  for (const entry of raw) {
+    if (out.length >= 2000) break
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue
+    const ring = pickText(entry.ring, 80)
+    const name = pickText(entry.name, 300)
+    if (!ring || !name || name.toLowerCase() === 'empty') continue
+    const count = pickOptionalInt(entry.count, 1000000)
+    out.push({
+      ring,
+      name,
+      id: pickText(entry.id == null ? '' : String(entry.id), 64),
+      count: count == null || count < 1 ? 1 : count,
+    })
+  }
+  return out
+}
+
+function sanitizeUnknownRows(raw) {
+  if (!Array.isArray(raw)) return []
+  const out = []
+  for (const entry of raw) {
+    if (out.length >= 2000) break
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue
+    const rawText = pickText(entry.raw, 4000)
+    const header = pickText(entry.header, 500)
+    if (!rawText && !header) continue
+    out.push({
+      line: pickOptionalInt(entry.line, 1000000),
+      header,
+      header_line: pickOptionalInt(entry.header_line, 1000000),
+      raw: rawText,
+    })
+  }
+  return out
+}
+
 function sanitizeImportMeta(raw, slots, itemExists) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const equipment = pickNameMap(raw.equipment, slots, null)
@@ -318,7 +430,18 @@ function sanitizeImportMeta(raw, slots, itemExists) {
     }
   }
   const source = pickText(raw.source, 240)
-  if (!Object.keys(equipment).length && !allItems.length && !unmatched.length && !source) {
+  const rows = sanitizeTreeRows(raw.rows)
+  const keyring = sanitizeKeyring(raw.keyring)
+  const unknownRows = sanitizeUnknownRows(raw.unknown_rows)
+  if (
+    !Object.keys(equipment).length
+    && !allItems.length
+    && !unmatched.length
+    && !source
+    && !rows.length
+    && !keyring.length
+    && !unknownRows.length
+  ) {
     return null
   }
   return {
@@ -334,6 +457,9 @@ function sanitizeImportMeta(raw, slots, itemExists) {
       : 0,
     source,
     upgrade_hints: pickUpgradeMap(raw.upgrade_hints, slots),
+    rows,
+    keyring,
+    unknown_rows: unknownRows,
   }
 }
 
@@ -394,6 +520,7 @@ export function sanitizeWorkspace(raw, catalog) {
       searchItemUpgrade: searchSelectedName ? clampUpgrade(raw.searchItemUpgrade) : 0,
       buildName: pickText(raw.buildName, 80),
       selectedBuildId: pickText(raw.selectedBuildId, 80),
+      ownedOnly: pickBool(raw.ownedOnly, false),
       importMeta: sanitizeImportMeta(raw.importMeta, slots, itemExists),
       uiSettings: sanitizeUiSettings(raw.uiSettings),
       parserLogPath: pickParserLogPath(raw.parserLogPath),

@@ -59,6 +59,13 @@ import {
   shouldAutoImport,
   withChangedFile,
 } from './inventoryImport.js'
+import { CharacterPanel, OwnedBadge } from './characterView.jsx'
+import {
+  isOwnedName,
+  ownedNameSet,
+  visibleBisSlots,
+  visibleSearchItems,
+} from './characterView.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -765,7 +772,7 @@ function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
   )
 }
 
-function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip, onConfirmWiki }) {
+function AltRow({ a, upgrade, owned, onShowTip, onMoveTip, onHideTip, onConfirmWiki }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
     const { x, y } = tipCoordsFromPointer(e)
@@ -798,6 +805,7 @@ function AltRow({ a, upgrade, onShowTip, onMoveTip, onHideTip, onConfirmWiki }) 
             a.name
           )}
         </span>
+        <OwnedBadge owned={owned} />
       </span>
       {a.haste ? <span className="muted"> (haste +{a.haste}%)</span> : null}
       {(a.ratio_at_upgrade != null || a.ratio_plus10 != null) ? (
@@ -1027,6 +1035,7 @@ export default function App() {
   const [suggestions, setSuggestions] = useState(null)
   const [importMsg, setImportMsg] = useState('')
   const [importMeta, setImportMeta] = useState(null)
+  const [ownedOnly, setOwnedOnly] = useState(false)
   const [uiSettings, setUiSettings] = useState(() => loadUiSettings())
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appHelpOpen, setAppHelpOpen] = useState(false)
@@ -1367,6 +1376,7 @@ export default function App() {
     setSearchItemUpgrade(state.searchItemUpgrade || 0)
     setBuildName(state.buildName || '')
     setSelectedBuildId(state.selectedBuildId || '')
+    setOwnedOnly(!!state.ownedOnly)
     setImportMeta(state.importMeta || null)
     setParserLogPath(state.parserLogPath || '')
     setParserMergePets(state.parserMergePets !== false)
@@ -1794,6 +1804,9 @@ export default function App() {
         upgrade_hints: parsed.upgrade_hints || {},
         skipped_count: parsed.skipped_count || 0,
         source: sourceLabel || '',
+        rows: parsed.rows || [],
+        keyring: parsed.keyring || [],
+        unknown_rows: parsed.unknown_rows || [],
       })
       const wornN = Object.keys(eq).length
       const hinted = Object.values(wornUpg).filter((n) => n > 0).length
@@ -2338,6 +2351,17 @@ export default function App() {
     }
   }, [wikiConfirm])
 
+  const ownedNames = useMemo(() => ownedNameSet(importMeta), [importMeta])
+  const ownedFilterOn = ownedOnly && ownedNames.size > 0
+  const bisSlots = useMemo(
+    () => visibleBisSlots(bis?.slots, ownedNames, ownedFilterOn),
+    [bis, ownedNames, ownedFilterOn],
+  )
+  const ownedSearchItems = useMemo(
+    () => visibleSearchItems(searchResults?.items, ownedNames, ownedFilterOn),
+    [searchResults, ownedNames, ownedFilterOn],
+  )
+
   // Load full catalog size (and empty-query page) when opening Item Search.
   useEffect(() => {
     if (tab !== 'search') return undefined
@@ -2345,7 +2369,7 @@ export default function App() {
     const t = setTimeout(async () => {
       setSearchLoading(true)
       try {
-        const params = { q: searchQ || '', limit: 80 }
+        const params = { q: searchQ || '', limit: ownedFilterOn ? 200 : 80 }
         if (searchSlot) params.slot = searchSlot
         const res = await searchItems(params)
         if (!cancelled) {
@@ -2365,7 +2389,7 @@ export default function App() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [tab, searchQ, searchSlot])
+  }, [tab, searchQ, searchSlot, ownedFilterOn])
 
   useEffect(() => {
     const name = itemDetail?.name || ''
@@ -2457,6 +2481,7 @@ export default function App() {
       searchItemUpgrade,
       buildName,
       selectedBuildId,
+      ownedOnly,
       importMeta,
       uiSettings,
       parserLogPath,
@@ -2470,7 +2495,7 @@ export default function App() {
     castBuffsMode, assumeMaxAas, equipment, bisOverrides, bagsQ, bagsLoc, questQ,
     selectedQuestName, questListCollapsed, questRewardUpgrade, mobQ, mobKind, mobEra,
     selectedMobName, mobListCollapsed, searchQ, searchSlot, itemDetail, searchItemUpgrade,
-    buildName, selectedBuildId, importMeta, uiSettings, parserLogPath, parserMergePets,
+    buildName, selectedBuildId, ownedOnly, importMeta, uiSettings, parserLogPath, parserMergePets,
     parserFightId, whatsNewSeenId,
   ])
   workspaceSnapshotRef.current = workspaceSnapshot
@@ -2767,6 +2792,7 @@ export default function App() {
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
+    { id: 'character', label: 'Character' },
     { id: 'bags', label: 'Search My Bags' },
     { id: 'quests', label: 'Quest Hub' },
     { id: 'mobs', label: 'Mobs' },
@@ -3155,13 +3181,28 @@ export default function App() {
                 ANY1/ANY2 are the two worn Any Slots — BiS scored on stats only (weapon damage ignored);
                 filled after dedicated slots from leftover gear.
               </p>
+              <label className="muted" style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={ownedOnly}
+                  onChange={(event) => setOwnedOnly(event.target.checked)}
+                />
+                Owned only
+              </label>
+              <p className="note" style={{ marginTop: '0.35rem' }}>
+                An Owned badge marks a name from the last import. Owned only hides picks you do not have. Scores and order stay the same.
+              </p>
+              {ownedFilterOn && bis?.slots?.length && !bisSlots.length ? (
+                <p className="muted">None of these BiS picks are in the imported inventory.</p>
+              ) : null}
               <div className="grid-slots">
-                {bis.slots.map((s) => (
+                {bisSlots.map((s) => (
                   <div className="slot-card" key={s.slot}>
                     <h3>{slotLabel(s.slot)}{s.haste ? ` · Haste +${s.haste}%` : ''}</h3>
                     <div className="item-name">
                       {s.name ? <ItemIcon name={s.name} /> : null}
                       {s.name ? (
+                        <>
                         <span
                           className="bis-item-name"
                           tabIndex={0}
@@ -3197,6 +3238,8 @@ export default function App() {
                             s.name
                           )}
                         </span>
+                        <OwnedBadge owned={isOwnedName(s.name, ownedNames)} />
+                        </>
                       ) : (
                         '—'
                       )}
@@ -3232,6 +3275,7 @@ export default function App() {
                               key={a.name}
                               a={a}
                               upgrade={upgrade}
+                              owned={isOwnedName(a.name, ownedNames)}
                               onShowTip={showHoverTip}
                               onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
@@ -3244,6 +3288,64 @@ export default function App() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {tab === 'character' && (
+            <div className="panel item-search">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Character</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                Worn gear with the tier and sockets from the inventory file, then bags, bank, shared bank, and depot.
+                Names missing from the catalog are marked unknown. Stats are not added.
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
+                {isDesktopApp && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={pickEqInstallFolder}
+                      title="Point once at your EverQuest Legends install folder"
+                    >
+                      {eqInstallFolder ? 'Change EQ folder' : 'Set EQ folder'}
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => updateInventoryFromEqFolder({ switchTab: 'character' })}
+                      title="Find the newest *-Inventory.txt in your EQ install folder and import it"
+                    >
+                      Update from EQ folder
+                    </button>
+                  </>
+                )}
+                <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
+                  Import Inventory.txt
+                  <input
+                    type="file"
+                    accept=".txt,text/plain"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const f = e.target.files && e.target.files[0]
+                      e.target.value = ''
+                      if (f) onImportFile(f, { switchTab: 'character' })
+                    }}
+                  />
+                </label>
+              </div>
+              {isDesktopApp && (
+                <InventoryWatchStatus
+                  folder={eqInstallFolder}
+                  files={inventoryFiles}
+                  selectedName={inventoryCharacterName}
+                  onSelect={onInventoryCharacter}
+                  autoImport={autoImport}
+                  onAutoImport={onAutoImportChange}
+                  importedName={importMeta?.source || ''}
+                  importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
+                  now={nowTick}
+                />
+              )}
+              <CharacterPanel importMeta={importMeta} />
             </div>
           )}
 
@@ -3847,6 +3949,14 @@ export default function App() {
                 <button type="button" className="primary" disabled={searchLoading} onClick={runSearch}>
                   {searchLoading ? 'Searching…' : 'Search'}
                 </button>
+                <label className="muted" style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={ownedOnly}
+                    onChange={(event) => setOwnedOnly(event.target.checked)}
+                  />
+                  Owned only
+                </label>
               </div>
               {searchResults && (
                 <p className="muted" style={{ marginTop: '0.65rem' }}>
@@ -3854,11 +3964,12 @@ export default function App() {
                   {searchResults.catalog_size != null ? ` · catalog ${searchResults.catalog_size}` : ''}
                   {searchResults.tools_items != null ? ` · tools ${searchResults.tools_items}` : ''}
                   {searchResults.eqlwiki_names != null ? ` · eqlwiki ${searchResults.eqlwiki_names}` : ''}
+                  {ownedFilterOn ? ` · ${ownedSearchItems.length} owned shown, search order unchanged` : ''}
                 </p>
               )}
               <div className="item-search-layout">
                 <ul className="item-search-list">
-                  {(searchResults?.items || []).map((it, searchIdx) => {
+                  {ownedSearchItems.map((it, searchIdx) => {
                     const rowSelected = !!(itemDetail && sameItemName(itemDetail.name, it.name))
                     const rowStatItem = rowSelected ? (itemDetail._loading ? it : itemDetail) : null
                     const collapsedPreview = fmtStats(previewStatsPlus10(it), SHOW_UP)
@@ -3885,6 +3996,7 @@ export default function App() {
                             >
                               {it.name}
                             </span>
+                            <OwnedBadge owned={isOwnedName(it.name, ownedNames)} />
                             {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
                               <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
                             ) : null}
@@ -3953,6 +4065,7 @@ export default function App() {
                       >
                         {itemDetail.name}
                       </button>
+                      <OwnedBadge owned={isOwnedName(itemDetail.name, ownedNames)} />
                     </div>
                     <div className="meta">
                       {(panelMeta.slots || []).join(', ') || panelMeta.slot || (panelMeta.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
