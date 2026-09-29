@@ -13,7 +13,16 @@ contextBridge.exposeInMainWorld('eqDesktop', {
   clearWorkspace: () => ipcRenderer.invoke('eq:workspace-clear'),
   pickEqInstallFolder: () => ipcRenderer.invoke('eq:pick-eq-install-folder'),
   findLatestInventory: (folder) => ipcRenderer.invoke('eq:find-latest-inventory', folder),
+  listInventoryFiles: (folder) => ipcRenderer.invoke('eq:list-inventory-files', folder),
   readInventoryFile: (filePath) => ipcRenderer.invoke('eq:read-inventory-file', filePath),
+  watchInventory: (args) => ipcRenderer.invoke('eq:watch-inventory', args),
+  onInventoryReady: (cb) => {
+    const listener = (_event, info) => {
+      try { cb(info); } catch (_) { /* ignore */ }
+    };
+    ipcRenderer.on('eq:inventory-ready', listener);
+    return () => ipcRenderer.removeListener('eq:inventory-ready', listener);
+  },
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

@@ -51,6 +51,13 @@ import {
 import ParserTab from './ParserTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
+import { InventoryWatchStatus } from './inventoryImport.jsx'
+import {
+  acceptInventoryDrop,
+  defaultInventorySelection,
+  shouldAutoImport,
+  withChangedFile,
+} from './inventoryImport.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -976,6 +983,18 @@ export default function App() {
   const loadJobsRef = useRef([])
   const [eqInstallFolder, setEqInstallFolder] = useState('')
   const [eqInventoryInfo, setEqInventoryInfo] = useState(null)
+  const [autoImport, setAutoImport] = useState(true)
+  const [inventoryFiles, setInventoryFiles] = useState([])
+  const [inventoryCharacterName, setInventoryCharacterName] = useState('')
+  const [importedAt, setImportedAt] = useState(null)
+  const [nowTick, setNowTick] = useState(() => Date.now())
+  const [inventoryDropActive, setInventoryDropActive] = useState(false)
+  const autoImportRef = useRef(true)
+  const inventoryCharacterRef = useRef('')
+  const inventoryFilesRef = useRef([])
+  const eqInstallFolderRef = useRef('')
+  const importingPathRef = useRef('')
+  const applyInventoryTextRef = useRef(null)
   const [bagsQ, setBagsQ] = useState('')
   const [bagsLoc, setBagsLoc] = useState('')
   const [questQ, setQuestQ] = useState('')
@@ -1679,6 +1698,9 @@ export default function App() {
     window.eqDesktop.getSettings().then((s) => {
       if (cancelled || !s) return
       if (s.eqInstallFolder) setEqInstallFolder(s.eqInstallFolder)
+      if (s.autoImportInventory === false) setAutoImport(false)
+      if (s.inventoryCharacterName) setInventoryCharacterName(s.inventoryCharacterName)
+      if (s.lastInventoryImportedAt) setImportedAt(s.lastInventoryImportedAt)
       if (s.lastInventoryName) {
         setEqInventoryInfo({
           name: s.lastInventoryName,
@@ -1743,20 +1765,190 @@ export default function App() {
     }
   }, [classes, suggestionBody, runSim, beginLoad, endLoad])
 
-  const onImportFile = async (file) => {
+  applyInventoryTextRef.current = applyInventoryText
+  autoImportRef.current = autoImport
+  inventoryCharacterRef.current = inventoryCharacterName
+  inventoryFilesRef.current = inventoryFiles
+  eqInstallFolderRef.current = eqInstallFolder
+
+  const noteImported = useCallback((info) => {
+    const when = Date.now()
+    setImportedAt(when)
+    setNowTick(when)
+    if (info?.name) {
+      setEqInventoryInfo({
+        name: info.name,
+        path: info.path || '',
+        mtimeMs: info.mtimeMs ?? null,
+        count: info.count,
+      })
+      if (window.eqDesktop?.setSettings) {
+        window.eqDesktop.setSettings({
+          lastInventoryName: info.name,
+          lastInventoryPath: info.path || '',
+          lastInventoryMtimeMs: info.mtimeMs ?? null,
+          lastInventoryImportedAt: when,
+        }).catch(() => {})
+      }
+    }
+  }, [])
+
+  const refreshInventoryFiles = useCallback(async (folder) => {
+    if (!window.eqDesktop?.listInventoryFiles) return inventoryFilesRef.current
+    const target = String(folder || eqInstallFolderRef.current || '').trim()
+    if (!target) return []
+    try {
+      const res = await window.eqDesktop.listInventoryFiles(target)
+      const files = res?.ok ? (res.files || []) : []
+      inventoryFilesRef.current = files
+      setInventoryFiles(files)
+      return files
+    } catch (_) {
+      return inventoryFilesRef.current
+    }
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 15000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (!eqInstallFolder || !window.eqDesktop?.listInventoryFiles) return undefined
+    refreshInventoryFiles(eqInstallFolder)
+    return undefined
+  }, [eqInstallFolder, refreshInventoryFiles])
+
+  useEffect(() => {
+    if (!window.eqDesktop?.watchInventory) return undefined
+    const folder = (eqInstallFolder || '').trim()
+    if (!folder || !autoImport) {
+      window.eqDesktop.watchInventory({ enabled: false }).catch(() => {})
+      return undefined
+    }
+    window.eqDesktop.watchInventory({ enabled: true, folder }).catch(() => {})
+    return undefined
+  }, [eqInstallFolder, autoImport])
+
+  useEffect(() => {
+    if (!window.eqDesktop?.onInventoryReady) return undefined
+    return window.eqDesktop.onInventoryReady(async (info) => {
+      if (!info?.name || !info?.path || !autoImportRef.current) return
+      const files = await refreshInventoryFiles(eqInstallFolderRef.current)
+      const merged = withChangedFile(files, info)
+      inventoryFilesRef.current = merged
+      setInventoryFiles(merged)
+      if (!shouldAutoImport({
+        enabled: true,
+        selectedName: inventoryCharacterRef.current,
+        changedName: info.name,
+        files: merged,
+      })) return
+      if (importingPathRef.current === info.path) return
+      importingPathRef.current = info.path
+      try {
+        const read = await window.eqDesktop.readInventoryFile(info.path)
+        if (!read?.ok) {
+          setError(read?.message || 'Could not read Inventory.txt.')
+          return
+        }
+        setError('')
+        const ok = await applyInventoryTextRef.current(read.text, info.name, {})
+        if (ok) noteImported(info)
+      } catch (err) {
+        setError(String(err && err.message ? err.message : err))
+      } finally {
+        importingPathRef.current = ''
+      }
+    })
+  }, [noteImported, refreshInventoryFiles])
+
+  useEffect(() => {
+    let depth = 0
+    const hasFiles = (event) => {
+      const types = event.dataTransfer && event.dataTransfer.types
+      if (!types) return false
+      return Array.from(types).includes('Files')
+    }
+    const onDragEnter = (event) => {
+      if (!hasFiles(event)) return
+      depth += 1
+      setInventoryDropActive(true)
+    }
+    const onDragOver = (event) => {
+      if (!hasFiles(event)) return
+      event.preventDefault()
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+    }
+    const onDragLeave = () => {
+      depth = Math.max(0, depth - 1)
+      if (depth === 0) setInventoryDropActive(false)
+    }
+    const onDrop = async (event) => {
+      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]
+      depth = 0
+      setInventoryDropActive(false)
+      if (!file) return
+      event.preventDefault()
+      const result = await acceptInventoryDrop(file)
+      if (!result.ok) {
+        setImportMsg('')
+        setError(result.message)
+        return
+      }
+      setError('')
+      try {
+        const ok = await applyInventoryTextRef.current(result.text, result.name, {})
+        if (ok) noteImported({ name: result.name })
+      } catch (err) {
+        setImportMsg('')
+        setError(String(err && err.message ? err.message : err))
+      }
+    }
+    window.addEventListener('dragenter', onDragEnter)
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('dragleave', onDragLeave)
+    window.addEventListener('drop', onDrop)
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter)
+      window.removeEventListener('dragover', onDragOver)
+      window.removeEventListener('dragleave', onDragLeave)
+      window.removeEventListener('drop', onDrop)
+    }
+  }, [noteImported])
+
+  const onAutoImportChange = async (next) => {
+    setAutoImport(!!next)
+    if (window.eqDesktop?.setSettings) {
+      try {
+        await window.eqDesktop.setSettings({ autoImportInventory: !!next })
+      } catch (_) { /* settings are best effort */ }
+    }
+  }
+
+  const onInventoryCharacter = async (name) => {
+    const next = name || ''
+    setInventoryCharacterName(next)
+    if (window.eqDesktop?.setSettings) {
+      try {
+        await window.eqDesktop.setSettings({ inventoryCharacterName: next })
+      } catch (_) { /* settings are best effort */ }
+    }
+  }
+
+  const onImportFile = async (file, opts = {}) => {
     if (!file) return
-    const lower = (file.name || '').toLowerCase()
-    if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.bin')) {
+    setImportMsg('Reading…')
+    const result = await acceptInventoryDrop(file)
+    if (!result.ok) {
       setImportMsg('')
-      setError(
-        'Pick Inventory.txt from in-game /outputfile inventory — not inventory.exe or other binaries.'
-      )
+      setError(result.message)
       return
     }
-    setImportMsg('Reading…')
+    setError('')
     try {
-      const text = await file.text()
-      await applyInventoryText(text, file.name, { switchTab: 'sim' })
+      const ok = await applyInventoryText(result.text, result.name, { switchTab: opts.switchTab || 'sim' })
+      if (ok) noteImported({ name: result.name })
     } catch (e) {
       setImportMsg('')
       setError(String(e.message || e))
@@ -1780,7 +1972,7 @@ export default function App() {
   }
 
   const updateInventoryFromEqFolder = async (opts = {}) => {
-    if (!window.eqDesktop?.findLatestInventory || !window.eqDesktop?.readInventoryFile) {
+    if (!window.eqDesktop?.readInventoryFile || !(window.eqDesktop.listInventoryFiles || window.eqDesktop.findLatestInventory)) {
       setError('Auto-update from EQ folder requires the desktop app. Use Import Inventory.txt instead.')
       return
     }
@@ -1795,25 +1987,36 @@ export default function App() {
           return
         }
       }
-      const found = await window.eqDesktop.findLatestInventory(folder)
-      if (!found?.ok) {
-        setImportMsg('')
-        setError(found?.message || 'No Inventory.txt found in the EQ install folder.')
-        return
+      let chosen = null
+      if (window.eqDesktop.listInventoryFiles) {
+        const listed = await window.eqDesktop.listInventoryFiles(folder)
+        const files = listed?.ok ? (listed.files || []) : []
+        inventoryFilesRef.current = files
+        setInventoryFiles(files)
+        if (!files.length) {
+          setImportMsg('')
+          setError(listed?.message || 'No Inventory.txt found in the EQ install folder.')
+          return
+        }
+        const name = defaultInventorySelection(files, inventoryCharacterName)
+        chosen = files.find((file) => file.name === name) || files[0]
+      } else {
+        const found = await window.eqDesktop.findLatestInventory(folder)
+        if (!found?.ok) {
+          setImportMsg('')
+          setError(found?.message || 'No Inventory.txt found in the EQ install folder.')
+          return
+        }
+        chosen = found
       }
-      const read = await window.eqDesktop.readInventoryFile(found.path)
+      const read = await window.eqDesktop.readInventoryFile(chosen.path)
       if (!read?.ok) {
         setImportMsg('')
         setError(read?.message || 'Could not read Inventory.txt.')
         return
       }
-      setEqInventoryInfo({
-        name: found.name,
-        path: found.path,
-        mtimeMs: found.mtimeMs,
-        count: found.count,
-      })
-      await applyInventoryText(read.text, found.name, { switchTab: opts.switchTab })
+      const ok = await applyInventoryText(read.text, chosen.name, { switchTab: opts.switchTab })
+      if (ok) noteImported(chosen)
     } catch (e) {
       setImportMsg('')
       setError(String(e.message || e))
@@ -2490,6 +2693,11 @@ export default function App() {
         jobs={loadJobs}
         funnyTips={uiSettings.funnyLoadingTips !== false}
       />
+      {inventoryDropActive && (
+        <div className="inventory-drop-overlay" role="status">
+          Drop Inventory.txt to import
+        </div>
+      )}
       <header className="app-header">
         <div>
           <h1>EQ Legends — BiS + Build Simulator</h1>
@@ -2954,35 +3162,26 @@ export default function App() {
                     type="file"
                     accept=".txt,text/plain"
                     style={{ display: 'none' }}
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       const f = e.target.files && e.target.files[0]
                       e.target.value = ''
-                      if (!f) return
-                      const lower = (f.name || '').toLowerCase()
-                      if (lower.endsWith('.exe') || lower.endsWith('.dll') || lower.endsWith('.bin')) {
-                        setError('Pick Inventory.txt — not a binary.')
-                        return
-                      }
-                      setImportMsg('Reading…')
-                      try {
-                        const text = await f.text()
-                        await applyInventoryText(text, f.name, { switchTab: 'bags' })
-                      } catch (err) {
-                        setImportMsg('')
-                        setError(String(err.message || err))
-                      }
+                      if (f) onImportFile(f, { switchTab: 'bags' })
                     }}
                   />
                 </label>
               </div>
               {isDesktopApp && (
-                <p className="muted" style={{ marginTop: 0, fontSize: '0.8rem' }}>
-                  {eqInstallFolder
-                    ? <>EQ folder: <code>{eqInstallFolder}</code>
-                      {eqInventoryInfo?.name ? <> · last dump <code>{eqInventoryInfo.name}</code></> : null}
-                      </>
-                    : 'Set EQ folder once, then Update pulls the newest *-Inventory.txt after /outputfile inventory.'}
-                </p>
+                <InventoryWatchStatus
+                  folder={eqInstallFolder}
+                  files={inventoryFiles}
+                  selectedName={inventoryCharacterName}
+                  onSelect={onInventoryCharacter}
+                  autoImport={autoImport}
+                  onAutoImport={onAutoImportChange}
+                  importedName={eqInventoryInfo?.name || ''}
+                  importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
+                  now={nowTick}
+                />
               )}
               {!allImportedItems.length ? (
                 <p className="muted">
@@ -3838,13 +4037,17 @@ export default function App() {
                   <button type="button" onClick={openHelp}>Help</button>
                 </div>
                 {isDesktopApp && (
-                  <p className="muted" style={{ marginTop: '-0.35rem', marginBottom: '0.75rem', fontSize: '0.8rem' }}>
-                    {eqInstallFolder
-                      ? <>EQ folder: <code>{eqInstallFolder}</code>
-                        {eqInventoryInfo?.name ? <> · last dump <code>{eqInventoryInfo.name}</code></> : null}
-                        </>
-                      : 'Set EQ folder once, then Update pulls the newest *-Inventory.txt after /outputfile inventory.'}
-                  </p>
+                  <InventoryWatchStatus
+                    folder={eqInstallFolder}
+                    files={inventoryFiles}
+                    selectedName={inventoryCharacterName}
+                    onSelect={onInventoryCharacter}
+                    autoImport={autoImport}
+                    onAutoImport={onAutoImportChange}
+                    importedName={eqInventoryInfo?.name || ''}
+                    importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
+                    now={nowTick}
+                  />
                 )}
 
                 {importMeta && (

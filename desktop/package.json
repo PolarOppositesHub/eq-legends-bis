@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node --test workspaceSessionStore.test.js packagingConfig.test.js singleInstance.test.js",
+    "test": "node --test workspaceSessionStore.test.js packagingConfig.test.js singleInstance.test.js inventoryWatcher.test.js",
     "test:e2e": "node rebuildIcons.e2e.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
@@ -36,6 +36,7 @@
       "main.js",
       "preload.js",
       "workspaceSessionStore.js",
+      "inventoryWatcher.js",
       "splash.html",
       "package.json",
       "build/icon.ico",
