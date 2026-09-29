@@ -2,14 +2,22 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { InventoryWatchStatus } from './inventoryImport.jsx'
+import { InventoryBagsSummary, InventoryWatchStatus } from './inventoryImport.jsx'
 import {
   acceptInventoryDrop,
   defaultInventorySelection,
   freshnessLine,
+  inventoryPanelState,
   shouldAutoImport,
   withChangedFile,
 } from './inventoryImport.js'
+
+function selectedOptionValue(html) {
+  const tags = html.match(/<option\b[^>]*>/g) || []
+  const selected = tags.find((tag) => /\bselected\b/.test(tag))
+  const value = selected && selected.match(/value="([^"]*)"/)
+  return value ? value[1] : ''
+}
 
 const LOCATION = 'Location\tName\tID\tCount\tSlots\nHead\tSynthetic Cap\t1\t1\t10\n'
 const KEYRING = 'KeyRing\tName\tID\t\nEquipment\tSynthetic Spare\t9\n'
@@ -144,6 +152,70 @@ test('watch status shows the freshness line, auto-import toggle, and character s
     now: 2 * 60 * 1000,
   }))
   assert.match(html, /Auto-import/)
-  assert.match(html, /Newest file/)
+  assert.doesNotMatch(html, /Newest file/)
+  assert.equal(selectedOptionValue(html), 'Dranak_freeport-Inventory.txt')
   assert.match(html, /Imported Dranak_freeport-Inventory\.txt · 2 min ago/)
+})
+
+test('freshness, character, and bag list describe the same import', () => {
+  const now = Date.parse('2026-09-29T18:00:00Z')
+  const files = [
+    { name: 'Dranak_freeport-Inventory.txt', path: 'a', mtimeMs: 300 },
+    { name: 'Other_freeport-Inventory.txt', path: 'b', mtimeMs: 100 },
+  ]
+  const items = [
+    { name: 'Empty', location: 'General 1' },
+    { base_name: 'Synthetic Cap', location: 'Head' },
+    { name: 'Mote of Minor Potential', location: 'General 2' },
+  ]
+  const props = {
+    folder: 'C:\\EQ',
+    files,
+    selectedName: '',
+    onSelect: () => {},
+    autoImport: true,
+    onAutoImport: () => {},
+    importedName: 'Dranak_freeport-Inventory.txt',
+    importedAt: now - 2 * 60 * 1000,
+    now,
+    items,
+  }
+  const view = inventoryPanelState(props)
+  assert.equal(view.character, 'Dranak_freeport-Inventory.txt')
+  assert.equal(view.freshness, 'Imported Dranak_freeport-Inventory.txt · 2 min ago')
+  assert.equal(view.showEmpty, false)
+  assert.deepEqual(view.occupied.map((row) => row.base_name || row.name), [
+    'Synthetic Cap',
+    'Mote of Minor Potential',
+  ])
+
+  const html = renderToStaticMarkup(React.createElement(InventoryBagsSummary, props))
+  assert.match(html, /Imported Dranak_freeport-Inventory\.txt · 2 min ago/)
+  assert.equal(selectedOptionValue(html), 'Dranak_freeport-Inventory.txt')
+  assert.match(html, /Synthetic Cap/)
+  assert.match(html, /Mote of Minor Potential/)
+  assert.doesNotMatch(html, /No inventory imported yet/)
+  assert.doesNotMatch(html, /Newest file/)
+  assert.doesNotMatch(html, />Empty</)
+
+  // A remembered filename with no rows is not an import: empty state, no freshness line.
+  const stale = renderToStaticMarkup(React.createElement(InventoryBagsSummary, {
+    ...props,
+    items: [],
+  }))
+  assert.match(stale, /No inventory imported yet/)
+  assert.doesNotMatch(stale, /Imported Dranak/)
+  assert.doesNotMatch(stale, /Synthetic Cap/)
+  assert.doesNotMatch(stale, /Newest file/)
+  assert.equal(selectedOptionValue(stale), 'Dranak_freeport-Inventory.txt')
+
+  // A pin for a file that is not the loaded dump does not blank that dump.
+  const pinnedElsewhere = renderToStaticMarkup(React.createElement(InventoryBagsSummary, {
+    ...props,
+    selectedName: 'Other_freeport-Inventory.txt',
+  }))
+  assert.equal(selectedOptionValue(pinnedElsewhere), 'Dranak_freeport-Inventory.txt')
+  assert.match(pinnedElsewhere, /Imported Dranak_freeport-Inventory\.txt · 2 min ago/)
+  assert.match(pinnedElsewhere, /Synthetic Cap/)
+  assert.doesNotMatch(pinnedElsewhere, /No inventory imported yet/)
 })

@@ -91,6 +91,57 @@ export function defaultInventorySelection(files, preferredName) {
   return '';
 }
 
+export const NO_INVENTORY_YET =
+  'No inventory imported yet — use Update from EQ folder or Import Inventory.txt.';
+
+export function occupiedInventoryRows(items) {
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    const name = String(row?.base_name || row?.name || '').trim();
+    return name && name.toLowerCase() !== 'empty';
+  });
+}
+
+/**
+ * The freshness line, the character selector, and the bag list have to name
+ * one import. A filename remembered in settings is not an import until its
+ * rows are loaded. With no pin, the default character is that import, which
+ * is the newest dump.
+ */
+export function inventoryPanelState({
+  files,
+  selectedName,
+  importedName,
+  importedAt,
+  items,
+  now,
+}) {
+  const list = Array.isArray(files) ? files : [];
+  const name = String(importedName || '').trim();
+  const rows = Array.isArray(items) ? items : [];
+  const occupied = occupiedInventoryRows(rows);
+  const hasImport = Boolean(name) && rows.length > 0;
+  const pinned = selectedName && list.some((file) => file && file.name === selectedName)
+    ? selectedName
+    : '';
+  // A filename in settings is not an import until its rows are loaded.
+  // Once they are, the line, the selector, and the slots all name that file
+  // (the one just imported, which is the newest dump when nothing is pinned).
+  if (!hasImport) {
+    return {
+      character: pinned,
+      freshness: '',
+      occupied: [],
+      showEmpty: true,
+    };
+  }
+  return {
+    character: name,
+    freshness: freshnessLine(name, importedAt, now),
+    occupied,
+    showEmpty: false,
+  };
+}
+
 export function withChangedFile(files, info) {
   const list = Array.isArray(files) ? files.slice() : [];
   if (!info || !info.name) return list;

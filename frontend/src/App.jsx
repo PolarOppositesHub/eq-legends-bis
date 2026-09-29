@@ -51,10 +51,11 @@ import {
 import ParserTab from './ParserTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
-import { InventoryWatchStatus } from './inventoryImport.jsx'
+import { InventoryBagsSummary, InventoryWatchStatus } from './inventoryImport.jsx'
 import {
   acceptInventoryDrop,
   defaultInventorySelection,
+  inventoryPanelState,
   shouldAutoImport,
   withChangedFile,
 } from './inventoryImport.js'
@@ -915,6 +916,62 @@ function HelpModal({ markdown, onClose }) {
   )
 }
 
+function BagSearchResults({ bagsQ, setBagsQ, bagsLoc, setBagsLoc, bagHits, allImportedItems }) {
+  return (
+    <>
+      <div className="item-search-bar">
+        <input
+          type="text"
+          placeholder="Find an item in your bags…"
+          value={bagsQ}
+          onChange={(e) => setBagsQ(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Location filter (e.g. General, Bank)"
+          value={bagsLoc}
+          onChange={(e) => setBagsLoc(e.target.value)}
+          style={{ maxWidth: 220 }}
+        />
+      </div>
+      <p className="muted" style={{ marginTop: '0.65rem' }}>
+        {bagHits.length} match{bagHits.length === 1 ? '' : 'es'}
+        {' · '}
+        {allImportedItems.filter((r) => {
+          const n = String(r?.base_name || r?.name || '').trim().toLowerCase()
+          return n && n !== 'empty'
+        }).length}{' '}
+        items with contents
+      </p>
+      <ul className="item-search-list">
+        {bagHits.slice(0, 500).map((row, i) => {
+          const name = row?.base_name || row?.name || String(row)
+          const loc = row?.location || '—'
+          const count = row?.count || ''
+          return (
+            <li key={`${loc}-${name}-${i}`}>
+              <div className="item-search-result" style={{ cursor: 'default' }}>
+                <div>
+                  <div className="item-search-name">{name}</div>
+                  <div className="muted" style={{ fontSize: '0.78rem' }}>
+                    {loc}{count ? ` · ×${count}` : ''}
+                    {row?.in_catalog === false
+                      ? ' · not in item catalog'
+                      : (row?.catalog_source === 'eqlwiki' && !row?.has_stats
+                        ? ' · eqlwiki name (no stats yet)'
+                        : '')}
+                    {row?.planner_slot ? ` · worn ${row.planner_slot}` : ''}
+                  </div>
+                </div>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+}
+
 function TierSelects({ label, values, options, onChange }) {
   const vals = padTier(values)
   return (
@@ -995,6 +1052,8 @@ export default function App() {
   const eqInstallFolderRef = useRef('')
   const importingPathRef = useRef('')
   const applyInventoryTextRef = useRef(null)
+  const importMetaRef = useRef(null)
+  const inventoryLoadRef = useRef('')
   const [bagsQ, setBagsQ] = useState('')
   const [bagsLoc, setBagsLoc] = useState('')
   const [questQ, setQuestQ] = useState('')
@@ -1766,6 +1825,7 @@ export default function App() {
   }, [classes, suggestionBody, runSim, beginLoad, endLoad])
 
   applyInventoryTextRef.current = applyInventoryText
+  importMetaRef.current = importMeta
   autoImportRef.current = autoImport
   inventoryCharacterRef.current = inventoryCharacterName
   inventoryFilesRef.current = inventoryFiles
@@ -1818,6 +1878,36 @@ export default function App() {
     refreshInventoryFiles(eqInstallFolder)
     return undefined
   }, [eqInstallFolder, refreshInventoryFiles])
+
+  useEffect(() => {
+    if (!sessionReady || importMetaRef.current?.source) return undefined
+    if (!window.eqDesktop?.readInventoryFile) return undefined
+    if (!inventoryFiles.length) return undefined
+    const name = defaultInventorySelection(inventoryFiles, inventoryCharacterName)
+    const chosen = inventoryFiles.find((file) => file && file.name === name)
+    if (!chosen?.path || inventoryLoadRef.current === chosen.path) return undefined
+    inventoryLoadRef.current = chosen.path
+    let cancelled = false
+    ;(async () => {
+      try {
+        const read = await window.eqDesktop.readInventoryFile(chosen.path)
+        if (cancelled || importMetaRef.current?.source) return
+        if (!read?.ok) {
+          if (inventoryLoadRef.current === chosen.path) inventoryLoadRef.current = ''
+          return
+        }
+        setError('')
+        const ok = await applyInventoryTextRef.current(read.text, chosen.name, {})
+        if (ok && !cancelled) noteImported(chosen)
+      } catch (_) {
+        if (inventoryLoadRef.current === chosen.path) inventoryLoadRef.current = ''
+      }
+    })()
+    return () => {
+      cancelled = true
+      if (inventoryLoadRef.current === chosen.path) inventoryLoadRef.current = ''
+    }
+  }, [sessionReady, inventoryFiles, inventoryCharacterName, noteImported])
 
   useEffect(() => {
     if (!window.eqDesktop?.watchInventory) return undefined
@@ -1928,6 +2018,25 @@ export default function App() {
 
   const onInventoryCharacter = async (name) => {
     const next = name || ''
+    const files = inventoryFilesRef.current || []
+    const resolved = defaultInventorySelection(files, next)
+    const chosen = files.find((file) => file && file.name === resolved)
+    if (chosen?.path && window.eqDesktop?.readInventoryFile) {
+      try {
+        const read = await window.eqDesktop.readInventoryFile(chosen.path)
+        if (!read?.ok) {
+          setError(read?.message || 'Could not read Inventory.txt.')
+          return
+        }
+        setError('')
+        const ok = await applyInventoryTextRef.current(read.text, chosen.name, {})
+        if (!ok) return
+        noteImported(chosen)
+      } catch (err) {
+        setError(String(err && err.message ? err.message : err))
+        return
+      }
+    }
     setInventoryCharacterName(next)
     if (window.eqDesktop?.setSettings) {
       try {
@@ -2670,6 +2779,14 @@ export default function App() {
     .filter(Boolean)
   const allImportedItems = importMeta?.all_items || []
   const wornSlotCount = Object.keys(importMeta?.equipment || equipment || {}).length
+  const inventoryView = inventoryPanelState({
+    files: inventoryFiles,
+    selectedName: inventoryCharacterName,
+    importedName: importMeta?.source || '',
+    importedAt: importedAt || eqInventoryInfo?.mtimeMs || null,
+    items: allImportedItems,
+    now: nowTick,
+  })
 
   const bagHits = useMemo(() => {
     const q = (bagsQ || '').trim().toLowerCase()
@@ -3171,75 +3288,43 @@ export default function App() {
                 </label>
               </div>
               {isDesktopApp && (
-                <InventoryWatchStatus
+                <InventoryBagsSummary
                   folder={eqInstallFolder}
                   files={inventoryFiles}
                   selectedName={inventoryCharacterName}
                   onSelect={onInventoryCharacter}
                   autoImport={autoImport}
                   onAutoImport={onAutoImportChange}
-                  importedName={eqInventoryInfo?.name || ''}
+                  importedName={importMeta?.source || ''}
                   importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
                   now={nowTick}
-                />
+                  items={allImportedItems}
+                >
+                  <BagSearchResults
+                    bagsQ={bagsQ}
+                    setBagsQ={setBagsQ}
+                    bagsLoc={bagsLoc}
+                    setBagsLoc={setBagsLoc}
+                    bagHits={bagHits}
+                    allImportedItems={allImportedItems}
+                  />
+                </InventoryBagsSummary>
               )}
-              {!allImportedItems.length ? (
+              {!isDesktopApp && !allImportedItems.length ? (
                 <p className="muted">
                   No inventory imported yet — use Update from EQ folder or Import Inventory.txt.
                 </p>
-              ) : (
-                <>
-                  <div className="item-search-bar">
-                    <input
-                      type="text"
-                      placeholder="Find an item in your bags…"
-                      value={bagsQ}
-                      onChange={(e) => setBagsQ(e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Location filter (e.g. General, Bank)"
-                      value={bagsLoc}
-                      onChange={(e) => setBagsLoc(e.target.value)}
-                      style={{ maxWidth: 220 }}
-                    />
-                  </div>
-                  <p className="muted" style={{ marginTop: '0.65rem' }}>
-                    {bagHits.length} match{bagHits.length === 1 ? '' : 'es'}
-                    {' · '}
-                    {allImportedItems.filter((r) => {
-                      const n = String(r?.base_name || r?.name || '').trim().toLowerCase()
-                      return n && n !== 'empty'
-                    }).length}{' '}
-                    items with contents
-                  </p>
-                  <ul className="item-search-list">
-                    {bagHits.slice(0, 500).map((row, i) => {
-                      const name = row?.base_name || row?.name || String(row)
-                      const loc = row?.location || '—'
-                      const count = row?.count || ''
-                      return (
-                        <li key={`${loc}-${name}-${i}`}>
-                          <div className="item-search-result" style={{ cursor: 'default' }}>
-                            <div>
-                              <div className="item-search-name">{name}</div>
-                              <div className="muted" style={{ fontSize: '0.78rem' }}>
-                                {loc}{count ? ` · ×${count}` : ''}
-                                {row?.in_catalog === false
-                                  ? ' · not in item catalog'
-                                  : (row?.catalog_source === 'eqlwiki' && !row?.has_stats
-                                    ? ' · eqlwiki name (no stats yet)'
-                                    : '')}
-                                {row?.planner_slot ? ` · worn ${row.planner_slot}` : ''}
-                              </div>
-                            </div>
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </>
-              )}
+              ) : null}
+              {!isDesktopApp && allImportedItems.length > 0 ? (
+                <BagSearchResults
+                  bagsQ={bagsQ}
+                  setBagsQ={setBagsQ}
+                  bagsLoc={bagsLoc}
+                  setBagsLoc={setBagsLoc}
+                  bagHits={bagHits}
+                  allImportedItems={allImportedItems}
+                />
+              ) : null}
             </div>
           )}
 
@@ -4040,12 +4125,12 @@ export default function App() {
                   <InventoryWatchStatus
                     folder={eqInstallFolder}
                     files={inventoryFiles}
-                    selectedName={inventoryCharacterName}
+                    selectedName={inventoryView.character || inventoryCharacterName}
                     onSelect={onInventoryCharacter}
                     autoImport={autoImport}
                     onAutoImport={onAutoImportChange}
-                    importedName={eqInventoryInfo?.name || ''}
-                    importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
+                    importedName={inventoryView.freshness ? (importMeta?.source || '') : ''}
+                    importedAt={inventoryView.freshness ? (importedAt || eqInventoryInfo?.mtimeMs || null) : null}
                     now={nowTick}
                   />
                 )}
