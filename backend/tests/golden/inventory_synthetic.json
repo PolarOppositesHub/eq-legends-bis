@@ -205,7 +205,7 @@
       "location": "SharedBank1",
       "name": "Shared Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "shared bank",
       "slots": "10",
       "unmatched": true,
       "upgrade_from_name": null
@@ -220,7 +220,7 @@
       "location": "Personal-Depot1",
       "name": "Depot Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "depot",
       "slots": "10",
       "unmatched": true,
       "upgrade_from_name": null
@@ -241,21 +241,6 @@
       "upgrade_from_name": null
     },
     {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "KeyRing",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "non-planner worn",
-      "slots": "",
-      "unmatched": true,
-      "upgrade_from_name": null
-    },
-    {
       "base_name": "Synthetic Spare Cap",
       "catalog_source": null,
       "count": "",
@@ -265,7 +250,7 @@
       "location": "Equipment",
       "name": "Synthetic Spare Cap",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -280,7 +265,7 @@
       "location": "Augmentation",
       "name": "Synthetic Stone (Exaltation)",
       "planner_slot": null,
-      "reason": "non-planner worn",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -295,7 +280,7 @@
       "location": "Activated",
       "name": "Synthetic Guise +4",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": 4
@@ -308,6 +293,7 @@
     "search_catalog": 11828,
     "tools_items": 940
   },
+  "character": null,
   "equipment": {
     "ANY1": "Charm of the Fixture",
     "BACK": "Cloak of Flames",
@@ -319,7 +305,315 @@
     "PRIMARY": "Blued Two-Handed Hammer",
     "WAIST": "Flowing Black Silk Sash"
   },
+  "file_mtime": null,
+  "file_name": null,
+  "imported_at": null,
+  "keyring": [
+    {
+      "count": 1,
+      "id": "1001",
+      "name": "Synthetic Spare Cap",
+      "ring": "Equipment"
+    },
+    {
+      "count": 1,
+      "id": "90001",
+      "name": "Synthetic Stone (Exaltation)",
+      "ring": "Augmentation"
+    },
+    {
+      "count": 1,
+      "id": "90002",
+      "name": "Synthetic Guise +4",
+      "ring": "Activated"
+    }
+  ],
+  "motes": [
+    {
+      "count": 5,
+      "grade": 1,
+      "locations": [
+        "General 1-Slot1"
+      ],
+      "name": "Mote of Infinitesimal Potential"
+    }
+  ],
   "note": "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). Every line is retained in all_items. Names match eqlegendstools BiS data and/or eqlwiki Category:Items (wiki matches do not invent stats). Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items.",
+  "rows": [
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "1001",
+      "line": 2,
+      "location_raw": "Head",
+      "name": "Midnight Clad Headband",
+      "name_raw": "Midnight Clad Headband",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "1002",
+      "line": 3,
+      "location_raw": "Ear",
+      "name": "Left Ear Stud",
+      "name_raw": "Left Ear Stud +2",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": 2
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "1003",
+      "line": 4,
+      "location_raw": "Ear",
+      "name": "Right Ear Stud",
+      "name_raw": "Right Ear Stud",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 1,
+      "flag_star": false,
+      "id": "2001",
+      "line": 5,
+      "location_raw": "Ear-Slot7",
+      "name": "Focus Stone",
+      "name_raw": "Focus Stone",
+      "parent_idx": 2,
+      "slots": 10,
+      "socket_index": 7,
+      "socket_label": "Slot7 (Focus?)",
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 0,
+      "depth": 0,
+      "flag_star": false,
+      "id": "0",
+      "line": 6,
+      "location_raw": "Chest",
+      "name": "Empty",
+      "name_raw": "Empty",
+      "parent_idx": null,
+      "slots": 0,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "3001",
+      "line": 7,
+      "location_raw": "Back",
+      "name": "Cloak of Flames",
+      "name_raw": "Cloak of Flames +0",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": 0
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "3002",
+      "line": 8,
+      "location_raw": "Waist",
+      "name": "Flowing Black Silk Sash",
+      "name_raw": "Flowing Black Silk Sash +10",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": 10
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": true,
+      "id": "4001",
+      "line": 9,
+      "location_raw": "Primary",
+      "name": "Blued Two-Handed Hammer",
+      "name_raw": "Blued Two-Handed Hammer +5*",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": 5
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "5001",
+      "line": 10,
+      "location_raw": "Fingers",
+      "name": "Ring of the Test Fixture",
+      "name_raw": "Ring of the Test Fixture",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "5002",
+      "line": 11,
+      "location_raw": "Fingers",
+      "name": "Ring of the Test Fixture Two",
+      "name_raw": "Ring of the Test Fixture Two",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "6001",
+      "line": 12,
+      "location_raw": "Any Slot",
+      "name": "Charm of the Fixture",
+      "name_raw": "Charm of the Fixture",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "general",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "7001",
+      "line": 13,
+      "location_raw": "General 1",
+      "name": "Bag of Samples",
+      "name_raw": "Bag of Samples",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "general",
+      "count": 5,
+      "depth": 1,
+      "flag_star": false,
+      "id": "148590",
+      "line": 14,
+      "location_raw": "General 1-Slot1",
+      "name": "Mote of Infinitesimal Potential",
+      "name_raw": "Mote of Infinitesimal Potential",
+      "parent_idx": 11,
+      "slots": 10,
+      "socket_index": 1,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "bank",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "8001",
+      "line": 15,
+      "location_raw": "Bank1",
+      "name": "Banked Sample",
+      "name_raw": "Banked Sample",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "sharedbank",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "9001",
+      "line": 16,
+      "location_raw": "SharedBank1",
+      "name": "Shared Sample",
+      "name_raw": "Shared Sample",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "depot",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "9002",
+      "line": 17,
+      "location_raw": "Personal-Depot1",
+      "name": "Depot Sample",
+      "name_raw": "Depot Sample",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
+    },
+    {
+      "container_kind": "depot",
+      "count": 1,
+      "depth": 1,
+      "flag_star": false,
+      "id": "9003",
+      "line": 18,
+      "location_raw": "Personal-Depot1-Slot3",
+      "name": "Depot Child",
+      "name_raw": "Depot Child",
+      "parent_idx": 15,
+      "slots": 10,
+      "socket_index": 3,
+      "socket_label": null,
+      "tier": null
+    }
+  ],
+  "server": null,
   "skipped": [
     {
       "base_name": "Focus Stone",
@@ -391,7 +685,7 @@
       "location": "SharedBank1",
       "name": "Shared Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "shared bank",
       "slots": "10",
       "unmatched": true,
       "upgrade_from_name": null
@@ -406,7 +700,7 @@
       "location": "Personal-Depot1",
       "name": "Depot Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "depot",
       "slots": "10",
       "unmatched": true,
       "upgrade_from_name": null
@@ -427,21 +721,6 @@
       "upgrade_from_name": null
     },
     {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "KeyRing",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "non-planner worn",
-      "slots": "",
-      "unmatched": true,
-      "upgrade_from_name": null
-    },
-    {
       "base_name": "Synthetic Spare Cap",
       "catalog_source": null,
       "count": "",
@@ -451,7 +730,7 @@
       "location": "Equipment",
       "name": "Synthetic Spare Cap",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -466,7 +745,7 @@
       "location": "Augmentation",
       "name": "Synthetic Stone (Exaltation)",
       "planner_slot": null,
-      "reason": "non-planner worn",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -481,13 +760,14 @@
       "location": "Activated",
       "name": "Synthetic Guise +4",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": 4
     }
   ],
-  "skipped_count": 11,
+  "skipped_count": 10,
+  "unknown_rows": [],
   "unmatched": [
     {
       "base_name": "Left Ear Stud",
@@ -604,7 +884,7 @@
       "location": "SharedBank1",
       "name": "Shared Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "shared bank",
       "slots": "10",
       "unmatched": true,
       "upgrade_from_name": null
@@ -619,23 +899,8 @@
       "location": "Personal-Depot1",
       "name": "Depot Sample",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "depot",
       "slots": "10",
-      "unmatched": true,
-      "upgrade_from_name": null
-    },
-    {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "KeyRing",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "non-planner worn",
-      "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
     },
@@ -649,7 +914,7 @@
       "location": "Equipment",
       "name": "Synthetic Spare Cap",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -664,7 +929,7 @@
       "location": "Augmentation",
       "name": "Synthetic Stone (Exaltation)",
       "planner_slot": null,
-      "reason": "non-planner worn",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": null
@@ -679,20 +944,26 @@
       "location": "Activated",
       "name": "Synthetic Guise +4",
       "planner_slot": null,
-      "reason": "unknown location",
+      "reason": "owned",
       "slots": "",
       "unmatched": true,
       "upgrade_from_name": 4
     }
   ],
-  "unmatched_count": 13,
+  "unmatched_count": 12,
   "upgrade_hints": {
     "BACK": 0,
     "EAR1": 2,
     "PRIMARY": 5,
     "WAIST": 10
   },
+  "void_touched": {
+    "count": 0,
+    "locations": [],
+    "name": "Void-Touched Potential"
+  },
   "warnings": [],
+  "wind_runes": [],
   "worn": [
     {
       "base_name": "Midnight Clad Headband",

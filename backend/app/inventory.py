@@ -1,4 +1,10 @@
-"""Parse EQ Legends Inventory.txt (/outputfile inventory) TSV — Location/Name/ID/Count/Slots."""
+"""Parse EQ Legends Inventory.txt (/outputfile inventory) TSV.
+
+Table 1 is Location/Name/ID/Count/Slots. Table 2 is KeyRing/Name/ID.
+Header rows are recognised by those column names anywhere in the file.
+A location splits only on a trailing -SlotN suffix, so Personal-Depot1
+stays one token. Children attach to the most recent parent row.
+"""
 from __future__ import annotations
 
 import re
@@ -38,16 +44,287 @@ LOCATION_TO_SLOTS: dict[str, list[str]] = {
     "CHARM": ["ANY1", "ANY2"],
 }
 
+# Worn location tokens observed in Inventory.txt dumps (SPEC §4.1).
+# Planner mapping still goes through LOCATION_TO_SLOTS, which also keeps
+# the older aliases (FINGER, RANGED, ANY, CHARM).
+_OBSERVED_WORN = {
+    "ANY SLOT", "AMMO", "ARMS", "BACK", "CHEST", "EAR", "FACE", "FEET",
+    "FINGERS", "HANDS", "HEAD", "HELD", "LEGS", "NECK", "PRIMARY", "RANGE",
+    "SECONDARY", "SHOULDERS", "WAIST", "WRIST",
+}
 
-def _strip_upgrade_suffix(name: str) -> tuple[str, int | None]:
-    """'Raw-Hide Skullcap +2' / 'Cap+2' / 'Cap + 2' → base name + level. Trailing * stripped."""
+# Exact eqlwiki mote names (SPEC §8.1). Match the name only — item IDs seen
+# in dumps are not a key. Void-Touched 148600 is unverified (SPEC §14).
+MOTE_GRADES: tuple[tuple[int, str], ...] = (
+    (1, "Mote of Infinitesimal Potential"),
+    (2, "Mote of Minor Potential"),
+    (3, "Mote of Lesser Potential"),
+    (4, "Mote of Potential"),
+    (5, "Mote of Major Potential"),
+    (6, "Mote of Greater Potential"),
+    (7, "Mote of Superior Potential"),
+    (8, "Mote of Grand Potential"),
+    (9, "Mote of Ascendant Potential"),
+    (10, "Mote of Infinite Potential"),
+)
+_MOTE_GRADE_BY_NAME = {name: grade for grade, name in MOTE_GRADES}
+VOID_TOUCHED_NAME = "Void-Touched Potential"
+WIND_RUNE_NAMES: tuple[str, ...] = tuple(
+    f"Wind Rune {suffix}"
+    for suffix in (
+        "Azia", "Beza", "Caza", "Dena", "Ena", "Fana", "Geza", "Heda",
+        "Izah", "Jaka", "Kala", "Lena", "Meda", "Neza", "Ozah",
+    )
+)
+_WIND_RUNE_NAMES = set(WIND_RUNE_NAMES)
+
+# Table 2 ring values observed in dumps. Anything else stays unknown_rows.
+_KNOWN_RINGS = {"equipment", "augmentation", "activated"}
+
+# Slot7–10 labels are inferred and unconfirmed (SPEC §4.1). The "?" stays
+# until those roles are checked in game. Slot1 and Slot2 have no role name.
+EXALTATION_SOCKET_LABELS = {
+    7: "Slot7 (Focus?)",
+    8: "Slot8 (Click?)",
+    9: "Slot9 (Worn?)",
+    10: "Slot10 (Proc?)",
+}
+
+_TRAILING_SLOTS = re.compile(r"(?i)(?:-Slot\d+)+$")
+_SLOT_NUMBER = re.compile(r"(?i)-Slot(\d+)")
+_LAST_SLOT = re.compile(r"(?i)-Slot\d+$")
+_GENERAL_TOKEN = re.compile(r"(?i)^general \d+$")
+_INT_TOKEN = re.compile(r"^-?\d+$")
+
+
+def _parse_item_name(name: str) -> tuple[str, int | None, bool]:
+    """Split a trailing '*' flag and a trailing +N tier. Neither is invented."""
     n = (name or "").strip()
+    flag_star = False
     if n.endswith("*"):
+        flag_star = True
         n = n[:-1].strip()
-    m = re.search(r"(?:\s*\+\s*(\d+))\s*$", n)
-    if not m:
-        return n, None
-    return n[: m.start()].strip(), int(m.group(1))
+    match = re.search(r"(?:\s*\+\s*(\d+))\s*$", n)
+    if not match:
+        return n, None, flag_star
+    return n[: match.start()].strip(), int(match.group(1)), flag_star
+
+
+def _parse_int(text: str) -> int | None:
+    raw = (text or "").strip()
+    if not raw or not _INT_TOKEN.fullmatch(raw):
+        return None
+    return int(raw)
+
+
+def _split_location(location: str) -> tuple[str, list[int]]:
+    """Split only a trailing (-SlotN)+ suffix. Hyphens inside the token stay."""
+    match = _TRAILING_SLOTS.search(location)
+    if not match:
+        return location, []
+    slots = [int(n) for n in _SLOT_NUMBER.findall(match.group(0))]
+    return location[: match.start()], slots
+
+
+def _parent_location(location: str) -> str | None:
+    match = _LAST_SLOT.search(location)
+    if not match:
+        return None
+    parent = location[: match.start()]
+    return parent or None
+
+
+def _numbered_token(token: str, prefix: str, low: int, high: int | None) -> bool:
+    if len(token) <= len(prefix) or not token.lower().startswith(prefix.lower()):
+        return False
+    rest = token[len(prefix):]
+    if not rest.isdigit():
+        return False
+    number = int(rest)
+    if number < low:
+        return False
+    return high is None or number <= high
+
+
+def _container_kind(base: str) -> str:
+    """Kinds follow the closed lists in SPEC §4.1. Unseen indexes stay unknown."""
+    token = (base or "").strip()
+    # "General N" has no observed upper bound. Bank is 1–24, SharedBank is 1–6.
+    if _GENERAL_TOKEN.fullmatch(token) and _numbered_token(token, "general ", 1, None):
+        return "general"
+    if _numbered_token(token, "sharedbank", 1, 6):
+        return "sharedbank"
+    if _numbered_token(token, "bank", 1, 24):
+        return "bank"
+    # Only Personal-Depot1 was in a dump. The hyphen stays part of the token.
+    if token.casefold() == "personal-depot1":
+        return "depot"
+    upper = token.upper()
+    if upper in _OBSERVED_WORN or upper in LOCATION_TO_SLOTS:
+        return "worn"
+    return "unknown"
+
+
+def _classify_header(line: str) -> tuple[str, dict[str, int]] | None:
+    """Known headers, matched by column name. Order does not matter."""
+    index: dict[str, int] = {}
+    for i, part in enumerate(line.split("\t")):
+        key = part.strip().lower()
+        if not key or key in index:
+            continue
+        index[key] = i
+    names = set(index)
+    if {"location", "name", "id", "count", "slots"} <= names:
+        return "location", index
+    if {"keyring", "name", "id"} <= names and "location" not in names:
+        return "keyring", index
+    return None
+
+
+def _cell(cols: list[str], index: dict[str, int], key: str) -> str:
+    pos = index.get(key)
+    if pos is None or pos >= len(cols):
+        return ""
+    return cols[pos].strip()
+
+
+def _scan_sections(lines: list[str]) -> list[dict[str, Any]]:
+    """Walk the whole file. A section ends at a blank line or the next header."""
+    sections: list[dict[str, Any]] = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        if not line.strip():
+            i += 1
+            continue
+        classified = _classify_header(line)
+        if classified is None:
+            if "\t" not in line:
+                i += 1
+                continue
+            kind = "unknown"
+            columns: dict[str, int] | None = None
+        else:
+            kind, columns = classified
+        header_line = line
+        header_line_no = i + 1
+        i += 1
+        records: list[tuple[str, int]] = []
+        while i < n:
+            row_line = lines[i]
+            if not row_line.strip():
+                break
+            if _classify_header(row_line) is not None:
+                break
+            records.append((row_line, i + 1))
+            i += 1
+        sections.append({
+            "kind": kind,
+            "header": header_line,
+            "header_line": header_line_no,
+            "columns": columns,
+            "records": records,
+        })
+    return sections
+
+
+def _link_parents(rows: list[dict[str, Any]]) -> list[str]:
+    """Most recent preceding row whose location token is the parent token."""
+    warnings: list[str] = []
+    seen: dict[str, int] = {}
+    for i, row in enumerate(rows):
+        parent = _parent_location(row["location_raw"])
+        if parent is None:
+            row["parent_idx"] = None
+        else:
+            row["parent_idx"] = seen.get(parent.casefold())
+            if row["parent_idx"] is None:
+                warnings.append(
+                    f"No parent row for {row['location_raw']} (line {row['line']})"
+                )
+        seen[row["location_raw"].casefold()] = i
+    return warnings
+
+
+def _collapse_keyring(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Duplicate Table 2 rows become one entry. Count is how many were seen."""
+    collapsed: dict[tuple[str, str, str], dict[str, Any]] = {}
+    order: list[tuple[str, str, str]] = []
+    for entry in entries:
+        key = (entry["ring"].casefold(), entry["name"], entry["id"])
+        found = collapsed.get(key)
+        if found is None:
+            collapsed[key] = {
+                "ring": entry["ring"],
+                "name": entry["name"],
+                "id": entry["id"],
+                "count": 1,
+            }
+            order.append(key)
+        else:
+            found["count"] += 1
+    return [collapsed[key] for key in order]
+
+
+def _empty_void_touched() -> dict[str, Any]:
+    return {"name": VOID_TOUCHED_NAME, "count": 0, "locations": []}
+
+
+def _extract_currencies(
+    rows: list[dict[str, Any]],
+    keyring: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any], list[dict[str, Any]]]:
+    """Bag and key-ring counts for the 10 mote grades, Void-Touched, and Wind Runes."""
+    motes: dict[int, dict[str, Any]] = {}
+    void_touched = _empty_void_touched()
+    runes: dict[str, dict[str, Any]] = {}
+
+    def observe(raw_name: str, count: int | None, location: str) -> None:
+        if not isinstance(count, int) or count <= 0:
+            return
+        base, _tier, _star = _parse_item_name(raw_name)
+        if not base or base.lower() == "empty":
+            return
+        grade = _MOTE_GRADE_BY_NAME.get(base)
+        if grade is not None:
+            slot = motes.get(grade)
+            if slot is None:
+                slot = {"grade": grade, "name": base, "count": 0, "locations": []}
+                motes[grade] = slot
+            slot["count"] += count
+            slot["locations"].append(location)
+            return
+        if base == VOID_TOUCHED_NAME:
+            void_touched["count"] += count
+            void_touched["locations"].append(location)
+            return
+        if base in _WIND_RUNE_NAMES:
+            slot = runes.get(base)
+            if slot is None:
+                slot = {"name": base, "count": 0, "locations": []}
+                runes[base] = slot
+            slot["count"] += count
+            slot["locations"].append(location)
+
+    for row in rows:
+        observe(row.get("name_raw") or "", row.get("count"), row.get("location_raw") or "")
+    for entry in keyring:
+        observe(entry.get("name") or "", entry.get("count"), entry.get("ring") or "")
+    return (
+        [motes[grade] for grade in sorted(motes)],
+        void_touched,
+        list(runes.values()),
+    )
+
+
+def _unknown_row(section: dict[str, Any], raw: str, line: int) -> dict[str, Any]:
+    return {
+        "line": line,
+        "header": section["header"],
+        "header_line": section["header_line"],
+        "raw": raw,
+    }
 
 
 def _catalog_match(name: str, item_id: str | None = None) -> dict[str, Any]:
@@ -97,134 +374,332 @@ def looks_like_binary_inventory(text: str) -> bool:
     return False
 
 
-def parse_inventory_tsv(text: str) -> dict[str, Any]:
-    """Parse Inventory.txt body. Returns worn equipment mapped to planner slots.
+def _is_empty_item(name: str, base_name: str) -> bool:
+    # Empty inventory lines are noise for Search My Bags — drop them from all_items.
+    return (
+        not name
+        or name.strip().lower() == "empty"
+        or not base_name
+        or base_name.lower() == "empty"
+    )
 
-    Every inventory line with an actual item is retained in `all_items` even when not in the
-    catalog or not mappable to a planner slot (flagged unmatched / skipped). Empty slots
-    (name ``Empty`` / blank) are omitted.
+
+def _legacy_entry(
+    *,
+    location: str,
+    name: str,
+    base_name: str,
+    upgrade: int | None,
+    item_id: str,
+    count: str,
+    slots_col: str,
+) -> dict[str, Any]:
+    match = _catalog_match(base_name, item_id=item_id or None)
+    in_catalog = bool(match.get("matched"))
+    return {
+        "location": location,
+        "name": name,
+        "base_name": base_name,
+        "upgrade_from_name": upgrade,
+        "id": item_id,
+        "count": count,
+        "slots": slots_col,
+        "in_catalog": in_catalog,
+        "catalog_source": match.get("source"),
+        "has_stats": bool(match.get("has_stats")),
+        "unmatched": not in_catalog and bool(base_name),
+        "planner_slot": None,
+        "reason": None,
+    }
+
+
+def _keep_legacy(
+    entry: dict[str, Any],
+    *,
+    reason: str | None,
+    all_items: list[dict[str, Any]],
+    skipped: list[dict[str, Any]],
+    unmatched: list[dict[str, Any]],
+    worn: list[dict[str, Any]] | None = None,
+    count_unmatched: bool = True,
+) -> None:
+    entry["reason"] = reason
+    if worn is not None:
+        worn.append(entry)
+    else:
+        skipped.append(entry)
+    all_items.append(entry)
+    if count_unmatched and entry["unmatched"]:
+        unmatched.append(entry)
+
+
+def _tree_row(
+    *,
+    location: str,
+    base: str,
+    slot_nums: list[int],
+    name: str,
+    base_name: str,
+    tier: int | None,
+    flag_star: bool,
+    item_id: str,
+    count: str,
+    slots_col: str,
+    line: int,
+) -> dict[str, Any]:
+    socket_index = slot_nums[-1] if slot_nums else None
+    kind = _container_kind(base)
+    # Slot7–10 role names apply to worn gear only. A bag's Slot9 is not "Worn?".
+    label = EXALTATION_SOCKET_LABELS.get(socket_index) if kind == "worn" and socket_index is not None else None
+    return {
+        "location_raw": location,
+        "container_kind": kind,
+        "parent_idx": None,
+        "depth": len(slot_nums),
+        "socket_index": socket_index,
+        "socket_label": label,
+        "name_raw": name,
+        "name": base_name,
+        "tier": tier,
+        "flag_star": flag_star,
+        "id": item_id,
+        "count": _parse_int(count),
+        "slots": _parse_int(slots_col),
+        "line": line,
+    }
+
+
+def parse_inventory_tsv(
+    text: str,
+    *,
+    character: str | None = None,
+    server: str | None = None,
+    file_name: str | None = None,
+    file_mtime: str | None = None,
+    imported_at: str | None = None,
+) -> dict[str, Any]:
+    """Parse Inventory.txt. Worn gear still maps through LOCATION_TO_SLOTS.
+
+    Also returns the §4.3 snapshot pieces: rows (with parent links), keyring,
+    unknown_rows, and mote / currency counts. Header rows are never items.
     Raises ValueError when the payload looks like a binary/.exe file.
     """
     if looks_like_binary_inventory(text or ""):
         raise ValueError(_INVENTORY_HELP)
 
-    lines = (text or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
-    if not lines:
-        return {
-            "equipment": {}, "rows": [], "worn": [], "all_items": [],
-            "unmatched": [], "skipped": [], "warnings": ["Empty file"],
-        }
-
-    # Find header
-    start = 0
-    for i, line in enumerate(lines[:20]):
-        cols = line.split("\t")
-        if cols and cols[0].strip().lower() == "location" and any(
-            c.strip().lower() == "name" for c in cols
-        ):
-            start = i + 1
-            break
+    normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    if normalized.startswith("\ufeff"):
+        normalized = normalized[1:]
+    lines = normalized.split("\n")
 
     worn: list[dict[str, Any]] = []
     all_items: list[dict[str, Any]] = []
     unmatched: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
-    slot_counts: dict[str, int] = {}
     equipment: dict[str, str] = {}
     upgrade_hints: dict[str, int] = {}
+    rows: list[dict[str, Any]] = []
+    keyring_raw: list[dict[str, Any]] = []
+    unknown_rows: list[dict[str, Any]] = []
+    saw_known_header = False
 
-    for line in lines[start:]:
-        if not line.strip():
-            continue
-        cols = line.split("\t")
-        if len(cols) < 2:
-            continue
-        location = (cols[0] or "").strip()
-        name = (cols[1] or "").strip() if len(cols) > 1 else ""
-        item_id = (cols[2] or "").strip() if len(cols) > 2 else ""
-        count = (cols[3] or "").strip() if len(cols) > 3 else ""
-        slots_col = (cols[4] or "").strip() if len(cols) > 4 else ""
-
-        base_name, upg = _strip_upgrade_suffix(name)
-        # Empty inventory lines are noise for Search My Bags — drop them entirely.
-        if not name or name.strip().lower() == "empty" or not base_name or base_name.lower() == "empty":
-            continue
-        match = _catalog_match(base_name, item_id=item_id or None)
-        in_catalog = bool(match.get("matched"))
-        entry = {
-            "location": location,
-            "name": name,
-            "base_name": base_name,
-            "upgrade_from_name": upg,
-            "id": item_id,
-            "count": count,
-            "slots": slots_col,
-            "in_catalog": in_catalog,
-            "catalog_source": match.get("source"),
-            "has_stats": bool(match.get("has_stats")),
-            "unmatched": not in_catalog and bool(base_name),
-        }
-
-        # Nested aug/bag slots: Head-Slot2, General 1-Slot1, Any Slot-Slot7
-        if "-" in location and re.search(r"-Slot\d+$", location, re.I):
-            entry["reason"] = "nested/aug slot"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
-            continue
-        if location.lower().startswith("general ") or location.lower().startswith("bank"):
-            entry["reason"] = "bag/bank"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
-            if entry["unmatched"]:
-                unmatched.append(entry)
-            continue
-        if location.lower() in ("keyring", "augmentation"):
-            entry["reason"] = "non-planner worn"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
-            if entry["unmatched"]:
-                unmatched.append(entry)
+    for section in _scan_sections(lines):
+        kind = section["kind"]
+        if kind == "unknown":
+            records = section["records"]
+            if not records:
+                unknown_rows.append(_unknown_row(section, section["header"], section["header_line"]))
+                continue
+            for raw, line_no in records:
+                unknown_rows.append(_unknown_row(section, raw, line_no))
             continue
 
-        loc_key = location.upper().strip()
-        targets = LOCATION_TO_SLOTS.get(loc_key)
-        if not targets:
-            entry["reason"] = "unknown location"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
-            if entry["unmatched"]:
-                unmatched.append(entry)
+        saw_known_header = True
+        columns = section["columns"] or {}
+        if kind == "keyring":
+            for raw, line_no in section["records"]:
+                cols = raw.split("\t")
+                ring = _cell(cols, columns, "keyring")
+                name = _cell(cols, columns, "name")
+                item_id = _cell(cols, columns, "id")
+                base_name, _tier, _star = _parse_item_name(name)
+                if ring.casefold() not in _KNOWN_RINGS:
+                    unknown_rows.append(_unknown_row(section, raw, line_no))
+                    if _is_empty_item(name, base_name):
+                        continue
+                    entry = _legacy_entry(
+                        location=ring,
+                        name=name,
+                        base_name=base_name,
+                        upgrade=_tier,
+                        item_id=item_id,
+                        count="",
+                        slots_col="",
+                    )
+                    _keep_legacy(
+                        entry,
+                        reason="unknown location",
+                        all_items=all_items,
+                        skipped=skipped,
+                        unmatched=unmatched,
+                    )
+                    continue
+                if _is_empty_item(name, base_name):
+                    continue
+                keyring_raw.append({
+                    "ring": ring,
+                    "name": name,
+                    "id": item_id,
+                    "count": 1,
+                })
+                entry = _legacy_entry(
+                    location=ring,
+                    name=name,
+                    base_name=base_name,
+                    upgrade=_tier,
+                    item_id=item_id,
+                    count="",
+                    slots_col="",
+                )
+                _keep_legacy(
+                    entry,
+                    reason="owned",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
             continue
 
-        # Prefer next free planner target (shared across aliases e.g. Any Slot / Charm).
-        planner_slot = None
-        for cand in targets:
-            if cand not in equipment:
-                planner_slot = cand
-                break
-        if planner_slot is None:
-            entry["reason"] = "extra duplicate location"
-            entry["planner_slot"] = None
-            skipped.append(entry)
-            all_items.append(entry)
-            if entry["unmatched"]:
-                unmatched.append(entry)
-            continue
-        slot_counts[loc_key] = slot_counts.get(loc_key, 0) + 1
+        for raw, line_no in section["records"]:
+            cols = raw.split("\t")
+            location = _cell(cols, columns, "location")
+            name = _cell(cols, columns, "name")
+            item_id = _cell(cols, columns, "id")
+            count = _cell(cols, columns, "count")
+            slots_col = _cell(cols, columns, "slots")
+            if not location and not name:
+                continue
+            base, slot_nums = _split_location(location)
+            base_name, tier, flag_star = _parse_item_name(name)
+            row = _tree_row(
+                location=location,
+                base=base,
+                slot_nums=slot_nums,
+                name=name,
+                base_name=base_name,
+                tier=tier,
+                flag_star=flag_star,
+                item_id=item_id,
+                count=count,
+                slots_col=slots_col,
+                line=line_no,
+            )
+            container = row["container_kind"]
+            if container == "unknown":
+                unknown_rows.append(_unknown_row(section, raw, line_no))
+            rows.append(row)
+            if _is_empty_item(name, base_name):
+                continue
+            entry = _legacy_entry(
+                location=location,
+                name=name,
+                base_name=base_name,
+                upgrade=tier,
+                item_id=item_id,
+                count=count,
+                slots_col=slots_col,
+            )
+            if container == "unknown":
+                _keep_legacy(
+                    entry,
+                    reason="unknown location",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            if slot_nums:
+                # Nested unmatched rows stay out of `unmatched`, as before.
+                _keep_legacy(
+                    entry,
+                    reason="nested/aug slot",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                    count_unmatched=False,
+                )
+                continue
+            if container in ("general", "bank"):
+                _keep_legacy(
+                    entry,
+                    reason="bag/bank",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            if container == "sharedbank":
+                _keep_legacy(
+                    entry,
+                    reason="shared bank",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            if container == "depot":
+                _keep_legacy(
+                    entry,
+                    reason="depot",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
 
-        entry["planner_slot"] = planner_slot
-        entry["reason"] = None if in_catalog else "not in item catalog (shown anyway)"
-        worn.append(entry)
-        all_items.append(entry)
-        equipment[planner_slot] = base_name  # catalog/pool match without +N
-        if upg is not None:
-            upgrade_hints[planner_slot] = upg
-        if entry["unmatched"]:
-            unmatched.append(entry)
+            targets = LOCATION_TO_SLOTS.get(base.upper())
+            if not targets:
+                _keep_legacy(
+                    entry,
+                    reason="unknown location",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            planner_slot = None
+            for cand in targets:
+                if cand not in equipment:
+                    planner_slot = cand
+                    break
+            if planner_slot is None:
+                _keep_legacy(
+                    entry,
+                    reason="extra duplicate location",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            entry["planner_slot"] = planner_slot
+            reason = None if entry["in_catalog"] else "not in item catalog (shown anyway)"
+            _keep_legacy(
+                entry,
+                reason=reason,
+                all_items=all_items,
+                skipped=skipped,
+                unmatched=unmatched,
+                worn=worn,
+            )
+            equipment[planner_slot] = base_name
+            if tier is not None:
+                upgrade_hints[planner_slot] = tier
+
+    warnings = _link_parents(rows)
+    if not saw_known_header and any(line.strip() for line in lines):
+        warnings.append("No inventory header found")
+    keyring = _collapse_keyring(keyring_raw)
+    motes, void_touched, wind_runes = _extract_currencies(rows, keyring)
 
     try:
         coverage = item_catalog_mod.catalog_coverage()
@@ -232,16 +707,27 @@ def parse_inventory_tsv(text: str) -> dict[str, Any]:
         coverage = {}
 
     return {
+        "character": character,
+        "server": server,
+        "file_name": file_name,
+        "file_mtime": file_mtime,
+        "imported_at": imported_at,
         "equipment": equipment,
         "upgrade_hints": upgrade_hints,
         "worn": worn,
+        "rows": rows,
+        "keyring": keyring,
+        "unknown_rows": unknown_rows,
+        "motes": motes,
+        "void_touched": void_touched,
+        "wind_runes": wind_runes,
         "all_items": all_items[:5000],
         "unmatched": unmatched[:500],
         "unmatched_count": len(unmatched),
         "skipped": skipped[:500],
         "skipped_count": len(skipped),
         "catalog_coverage": coverage,
-        "warnings": [],
+        "warnings": warnings,
         "note": (
             "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). "
             "Every line is retained in all_items. Names match eqlegendstools BiS data "

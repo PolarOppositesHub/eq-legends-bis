@@ -1,21 +1,6 @@
 {
   "all_items": [
     {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "Count",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "Location",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "unknown location",
-      "slots": "Slots",
-      "unmatched": true,
-      "upgrade_from_name": null
-    },
-    {
       "base_name": "Cloak of Flames",
       "catalog_source": "tools",
       "count": "1",
@@ -38,48 +23,48 @@
     "search_catalog": 11828,
     "tools_items": 940
   },
+  "character": null,
   "equipment": {
     "HEAD": "Cloak of Flames"
   },
+  "file_mtime": null,
+  "file_name": null,
+  "imported_at": null,
+  "keyring": [],
+  "motes": [],
   "note": "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). Every line is retained in all_items. Names match eqlegendstools BiS data and/or eqlwiki Category:Items (wiki matches do not invent stats). Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items.",
-  "skipped": [
+  "rows": [
     {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "Count",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "Location",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "unknown location",
-      "slots": "Slots",
-      "unmatched": true,
-      "upgrade_from_name": null
+      "container_kind": "worn",
+      "count": 1,
+      "depth": 0,
+      "flag_star": false,
+      "id": "1",
+      "line": 22,
+      "location_raw": "Head",
+      "name": "Cloak of Flames",
+      "name_raw": "Cloak of Flames",
+      "parent_idx": null,
+      "slots": 10,
+      "socket_index": null,
+      "socket_label": null,
+      "tier": null
     }
   ],
-  "skipped_count": 1,
-  "unmatched": [
-    {
-      "base_name": "Name",
-      "catalog_source": null,
-      "count": "Count",
-      "has_stats": false,
-      "id": "ID",
-      "in_catalog": false,
-      "location": "Location",
-      "name": "Name",
-      "planner_slot": null,
-      "reason": "unknown location",
-      "slots": "Slots",
-      "unmatched": true,
-      "upgrade_from_name": null
-    }
-  ],
-  "unmatched_count": 1,
+  "server": null,
+  "skipped": [],
+  "skipped_count": 0,
+  "unknown_rows": [],
+  "unmatched": [],
+  "unmatched_count": 0,
   "upgrade_hints": {},
+  "void_touched": {
+    "count": 0,
+    "locations": [],
+    "name": "Void-Touched Potential"
+  },
   "warnings": [],
+  "wind_runes": [],
   "worn": [
     {
       "base_name": "Cloak of Flames",

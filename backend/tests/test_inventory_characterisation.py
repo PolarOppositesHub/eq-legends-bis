@@ -1,15 +1,22 @@
-"""Characterisation snapshot of today's parse_inventory_tsv.
+"""Characterisation snapshot of parse_inventory_tsv.
 
 The fixture is synthetic. It mirrors the Inventory.txt shape (two TSV
 tables, +N names, nested -Slot rows, bags) and uses a few names that
 already exist in this repo's catalog. It is not a copy of a third-party
 dump.
 
-Quirks frozen here, so a later parser change shows up as a golden diff:
-- The header is recognised only in the first 20 lines.
-- The Table 2 header row is ingested as an item named "Name".
-- Equipment / Activated / SharedBank / Personal-Depot rows are "unknown location".
-- Nested *-SlotN rows and bags/bank are skipped for planner slots but kept.
+Golden diff for inventory import v2 (this work ships as 1.1.3; the plan
+section is still titled 1.1.2). Why the snapshot changed:
+- The Table 2 header is no longer an item named "Name".
+- A header past line 20 is recognised, so that header row is not an item.
+- SharedBank is "shared bank" and Personal-Depot is "depot"
+  (they were "unknown location").
+- Equipment, Activated, and Augmentation key-ring rows are "owned"
+  (they were "unknown location" or "non-planner worn"). They are not worn.
+- New snapshot fields: rows, keyring, unknown_rows, motes, void_touched,
+  wind_runes, and file metadata.
+Worn equipment and upgrade_hints are unchanged, so suggest_upgrades input
+from this fixture is unchanged.
 """
 from __future__ import annotations
 
@@ -44,19 +51,20 @@ class InventoryCharacterisationTests(unittest.TestCase):
         self.assertEqual(parsed["equipment"], crlf["equipment"])
         self.assertEqual(parsed["upgrade_hints"], crlf["upgrade_hints"])
         names = [row["name"] for row in parsed["all_items"]]
-        self.assertIn("Name", names)
+        self.assertNotIn("Name", names)
+        self.assertNotIn("KeyRing", [row["location"] for row in parsed["all_items"]])
         assert_golden(self, "inventory_synthetic", _project(parsed))
 
-    def test_header_past_line_20_is_not_recognised(self):
+    def test_header_past_line_20_is_recognised(self):
         body = "\n".join(["preamble"] * 20 + [
             "Location\tName\tID\tCount\tSlots",
             "Head\tCloak of Flames\t1\t1\t10",
         ])
         parsed = parse_inventory_tsv(body)
-        header_rows = [row for row in parsed["all_items"] if row.get("name") == "Name"]
-        self.assertTrue(header_rows)
-        self.assertEqual(header_rows[0]["location"], "Location")
+        names = [row["name"] for row in parsed["all_items"]]
+        self.assertNotIn("Name", names)
         self.assertEqual(parsed["equipment"].get("HEAD"), "Cloak of Flames")
+        self.assertEqual(parsed["unknown_rows"], [])
         assert_golden(self, "inventory_header_past_20", _project(parsed))
 
     def test_binary_payload_is_rejected(self):
