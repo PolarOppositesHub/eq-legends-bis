@@ -14,6 +14,7 @@ const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
 const workspaceStore = require('./workspaceSessionStore');
+const { InventoryFolderWatcher, isInventoryFileName } = require('./inventoryWatcher');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -389,6 +390,10 @@ async function createWindow({ playIntro = false } = {}) {
     shell.openExternal(url);
     return { action: 'deny' };
   });
+  // A file dropped on the window would otherwise navigate to file://.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (String(url || '').startsWith('file:')) event.preventDefault();
+  });
   const splashHtml = path.join(__dirname, 'splash.html');
   const videoPath = playIntro ? resolveSplashVideo() : null;
   if (videoPath) {
@@ -554,13 +559,6 @@ function defaultEqInstallCandidates() {
   ];
 }
 
-function isInventoryFileName(name) {
-  const n = String(name || '');
-  if (!/\.txt$/i.test(n)) return false;
-  if (/inventory\.exe$/i.test(n)) return false;
-  return /inventory\.txt$/i.test(n) || /-inventory\.txt$/i.test(n);
-}
-
 function listInventoryCandidates(folder) {
   const root = path.resolve(folder || '');
   if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
@@ -602,27 +600,23 @@ function pathIsInside(parent, child) {
   return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
-ipcMain.handle('eq:settings-get', async () => {
-  const s = readSettings();
+function settingsView(s) {
+  const src = s || {};
   return {
     ok: true,
-    eqInstallFolder: s.eqInstallFolder || '',
-    lastInventoryPath: s.lastInventoryPath || '',
-    lastInventoryName: s.lastInventoryName || '',
-    lastInventoryMtimeMs: s.lastInventoryMtimeMs || null,
+    eqInstallFolder: src.eqInstallFolder || '',
+    lastInventoryPath: src.lastInventoryPath || '',
+    lastInventoryName: src.lastInventoryName || '',
+    lastInventoryMtimeMs: src.lastInventoryMtimeMs || null,
+    lastInventoryImportedAt: src.lastInventoryImportedAt || null,
+    autoImportInventory: src.autoImportInventory !== false,
+    inventoryCharacterName: src.inventoryCharacterName || '',
   };
-});
+}
 
-ipcMain.handle('eq:settings-set', async (_evt, patch) => {
-  const next = writeSettings(patch || {});
-  return {
-    ok: true,
-    eqInstallFolder: next.eqInstallFolder || '',
-    lastInventoryPath: next.lastInventoryPath || '',
-    lastInventoryName: next.lastInventoryName || '',
-    lastInventoryMtimeMs: next.lastInventoryMtimeMs || null,
-  };
-});
+ipcMain.handle('eq:settings-get', async () => settingsView(readSettings()));
+
+ipcMain.handle('eq:settings-set', async (_evt, patch) => settingsView(writeSettings(patch || {})));
 
 function userDataDir() {
   return app.getPath('userData');
@@ -710,6 +704,64 @@ ipcMain.handle('eq:find-latest-inventory', async (_evt, folderArg) => {
     size: best.size,
     count: hits.length,
   };
+});
+
+let inventoryWatcher = null;
+
+function stopInventoryWatcher() {
+  if (!inventoryWatcher) return;
+  try {
+    inventoryWatcher.stop();
+  } catch (err) {
+    mainLog('inventory', 'stop failed', err && err.message ? err.message : err);
+  }
+  inventoryWatcher = null;
+}
+
+function startInventoryWatcher(folder) {
+  stopInventoryWatcher();
+  const root = path.resolve(String(folder || ''));
+  if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    return { ok: false, watching: false, message: 'Set the EQ install folder first.' };
+  }
+  inventoryWatcher = new InventoryFolderWatcher({
+    folder: root,
+    onReady(info) {
+      const win = mainWindow;
+      if (!win || win.isDestroyed()) return;
+      mainLog('inventory', 'stable', info.name, String(info.size));
+      win.webContents.send('eq:inventory-ready', {
+        path: info.path,
+        name: info.name,
+        size: info.size,
+        mtimeMs: info.mtimeMs,
+      });
+    },
+  });
+  inventoryWatcher.start();
+  mainLog('inventory', 'watching', root);
+  return { ok: true, watching: true, folder: root };
+}
+
+ipcMain.handle('eq:list-inventory-files', async (_evt, folderArg) => {
+  const settings = readSettings();
+  const folder = String((folderArg || settings.eqInstallFolder || '')).trim();
+  if (!folder) return { ok: false, files: [], message: 'Set the EQ install folder first.' };
+  if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
+    return { ok: false, files: [], folder, message: `EQ install folder not found:\n${folder}` };
+  }
+  return { ok: true, folder, files: listInventoryCandidates(folder) };
+});
+
+ipcMain.handle('eq:watch-inventory', async (_evt, args) => {
+  const enabled = !args || args.enabled !== false;
+  const settings = readSettings();
+  const folder = String((args && args.folder) || settings.eqInstallFolder || '').trim();
+  if (!enabled) {
+    stopInventoryWatcher();
+    return { ok: true, watching: false };
+  }
+  return startInventoryWatcher(folder);
 });
 
 ipcMain.handle('eq:read-inventory-file', async (_evt, filePath) => {
@@ -817,11 +869,13 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  stopInventoryWatcher();
   stopApi();
   if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('before-quit', () => {
+  stopInventoryWatcher();
   stopApi();
 });
 

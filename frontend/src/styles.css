@@ -1323,3 +1323,19 @@ html[data-reduce-motion="1"] .load-bar-fill.indeterminate { animation: none; wid
 input[type="text"], select, input[type="range"] {
   accent-color: var(--gold);
 }
+.inventory-drop-overlay {
+  position: fixed;
+  inset: 12px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #000 55%, transparent);
+  border: 3px dashed var(--gold);
+  border-radius: 12px;
+  color: var(--gold);
+  font-size: 1.15rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+.inventory-watch-status { margin-bottom: 0.75rem; }
