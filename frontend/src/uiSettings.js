@@ -81,6 +81,7 @@ export const APP_HELP = {
       body: [
         'Choose Mode (Priority Stat, Max All Stats, or AI Choice) and your upgrade level (+0…+10).',
         'Update BiS builds a recommended loadout for your trio. Hover item names for icons and stat tips.',
+        'An Owned badge marks a name from the last inventory import. Owned only hides picks you do not have. Scores and order stay the same.',
         'Weapons may show dual-wield vs two-hand picks based on class and character level.',
       ],
     },
@@ -103,6 +104,16 @@ export const APP_HELP = {
         'Each entry can show zone, drop mobs, and quest steps when known from the catalog / eqlwiki.',
         'If a non-weapon recommended for Any is already worn in its real slot (e.g. Valorium Chestplate on Chest while listed for Any2), those recommendations swap so the same piece is not double-listed. Weapons stay on Primary/Secondary/Range — damage does not apply from Any.',
         'Hover a worn or recommended item for catalog stats; click for Item Search or eqlwiki (same as Mobs Known Loot).',
+      ],
+    },
+    {
+      id: 'character',
+      title: 'Character',
+      body: [
+        'Shows what the last Inventory.txt import has you wearing: each worn row, its +N tier, and its sockets.',
+        'Bags, bank, shared bank, and depot are listed under those trees. Empty slots can be hidden.',
+        'Names missing from the catalog are marked unknown. This tab does not add stats.',
+        'Rows the parser does not recognise stay under Other sections, with the header and line text from the file.',
       ],
     },
     {
@@ -140,6 +151,7 @@ export const APP_HELP = {
         'Equipable items with an upgrade path use a +0…+10 slider. Catalog haste is the tooltip percent plus that upgrade level (eqlegendstools), not the AC curve. Non-equipables keep static stats. Stats are never invented.',
         'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
+        'An Owned badge marks a name from the last inventory import. Owned only hides names you do not have and keeps the search order.',
       ],
     },
     {

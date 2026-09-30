@@ -353,3 +353,119 @@ test('parser tab stays active across a session restore', async () => {
   assert.equal(junk.state.tab, 'parser')
   assert.equal(junk.state.whatsNewSeen, '')
 })
+
+test('session restore keeps the last inventory import', () => {
+  const raw = {
+    tab: 'character',
+    classes: ['Monk'],
+    ownedOnly: true,
+    importMeta: {
+      source: 'Hero-Inventory.txt',
+      rows: [
+        {
+          location_raw: 'Ear',
+          container_kind: 'worn',
+          parent_idx: null,
+          depth: 0,
+          socket_index: null,
+          name: 'Left Ear',
+          name_raw: 'Left Ear +2',
+          tier: 2,
+          id: '1',
+          count: 1,
+          slots: 10,
+          line: 2,
+        },
+        {
+          location_raw: 'Ear-Slot7',
+          container_kind: 'worn',
+          parent_idx: 0,
+          depth: 1,
+          socket_index: 7,
+          socket_label: 'Slot7 (Focus?)',
+          name: 'Focus Stone',
+          name_raw: 'Focus Stone',
+          tier: null,
+          id: '2',
+          count: 1,
+          slots: 10,
+          line: 3,
+        },
+        {
+          location_raw: 'Chest',
+          container_kind: 'worn',
+          name_raw: 'Empty',
+          name: 'Empty',
+          parent_idx: null,
+          depth: 0,
+        },
+      ],
+      keyring: [{ ring: 'Equipment', name: 'Spare Cap', id: '9', count: 2 }],
+      unknown_rows: [{
+        line: 20,
+        header: 'Dragon Hoard\tName\tID',
+        header_line: 18,
+        raw: 'Hoard\tMystery\t1',
+      }],
+      all_items: [{ name: 'Left Ear +2', base_name: 'Left Ear', location: 'Ear', in_catalog: false }],
+      equipment: { PRIMARY: 'Left Ear' },
+    },
+  }
+  const { restored, state } = sanitizeWorkspace(raw, catalog)
+  assert.equal(restored, true)
+  assert.equal(state.tab, 'character')
+  assert.equal(state.ownedOnly, true)
+  assert.equal(state.importMeta.rows.length, 3)
+  assert.equal(state.importMeta.rows[0].tier, 2)
+  assert.equal(state.importMeta.rows[1].parent_idx, 0)
+  assert.equal(state.importMeta.rows[1].socket_label, 'Slot7 (Focus?)')
+  assert.equal(state.importMeta.rows[2].name, 'Empty')
+  assert.equal(state.importMeta.keyring[0].count, 2)
+  assert.equal(state.importMeta.unknown_rows[0].raw, 'Hoard\tMystery\t1')
+  assert.equal(state.importMeta.unknown_rows[0].header, 'Dragon Hoard\tName\tID')
+  const snap = buildWorkspaceSnapshot(state, catalog)
+  const again = sanitizeWorkspace(snap, catalog)
+  assert.equal(again.restored, true)
+  assert.equal(again.state.tab, 'character')
+  assert.equal(again.state.importMeta.source, 'Hero-Inventory.txt')
+  assert.equal(again.state.importMeta.rows[1].socket_label, 'Slot7 (Focus?)')
+  assert.equal(again.state.importMeta.unknown_rows[0].raw, 'Hoard\tMystery\t1')
+  assert.equal(again.state.ownedOnly, true)
+})
+
+test('old sessions with no import still load', () => {
+  const { restored, state } = sanitizeWorkspace({
+    v: 1,
+    tab: 'bis',
+    classes: ['Wizard'],
+    race: 'Dark Elf',
+    characterLevel: 42,
+  }, catalog)
+  assert.equal(restored, true)
+  assert.equal(state.tab, 'bis')
+  assert.equal(state.importMeta, null)
+  assert.equal(state.ownedOnly, false)
+  assert.deepEqual(state.classes, ['Wizard'])
+  assert.equal(state.race, 'Dark Elf')
+  assert.equal(state.characterLevel, 42)
+})
+
+test('an older import without a slot tree still loads', () => {
+  const { restored, state } = sanitizeWorkspace({
+    v: 1,
+    tab: 'bags',
+    importMeta: {
+      source: 'Old-Inventory.txt',
+      all_items: [{ name: 'Jade Mace', location: 'Primary', in_catalog: true }],
+      equipment: { PRIMARY: 'Jade Mace' },
+    },
+  }, catalog)
+  assert.equal(restored, true)
+  assert.equal(state.tab, 'bags')
+  assert.equal(state.importMeta.source, 'Old-Inventory.txt')
+  assert.equal(state.importMeta.all_items[0].name, 'Jade Mace')
+  assert.deepEqual(state.importMeta.rows, [])
+  assert.deepEqual(state.importMeta.keyring, [])
+  assert.deepEqual(state.importMeta.unknown_rows, [])
+  assert.deepEqual(state.importMeta.equipment, { PRIMARY: 'Jade Mace' })
+})
