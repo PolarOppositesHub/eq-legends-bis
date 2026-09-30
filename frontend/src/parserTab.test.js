@@ -331,17 +331,21 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.2 notes", () => {
+test("what's new dialog shows the 1.1.3 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.2")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.2<\/h2>/)
-  assert.match(html, /Best in Slot icons/)
-  assert.match(html, /no longer freezes the rest of the app/)
-  assert.match(html, /parser-stall\.log/)
-  assert.match(html, /database is locked/)
-  assert.match(html, /missing from the 1\.1\.1/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.1<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.3")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.3<\/h2>/)
+  assert.match(html, /column headers/)
+  assert.match(html, /A header row is not an item/)
+  assert.match(html, /after the file stops changing/)
+  assert.match(html, /not an inventory dump is rejected/)
+  assert.match(html, /Character tab/)
+  assert.match(html, /marked unknown/)
+  assert.match(html, /Stats are not added/)
+  assert.match(html, /Owned badge/)
+  assert.match(html, /Scores and order stay the same/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.2<\/h2>/.test(html), false)
 })
 
 test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {
