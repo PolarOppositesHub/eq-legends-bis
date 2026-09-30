@@ -1,6 +1,14 @@
 # EQ Legends BiS app status
 
-Version: **1.1.2** — parser rebuild no longer freezes the app on the first launch after an update. 1.1.1 is PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export), and PR #43 (first launch no longer fails with "database is locked"). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.1.3** — inventory import v2 (PRs #45, #46, and #47): header-based inventory parsing, watching and dropping inventory dumps, the Character tab, and owned badges. 1.1.2 — parser rebuild no longer freezes the app on the first launch after an update. 1.1.1 is PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export), and PR #43 (first launch no longer fails with "database is locked"). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.1.3
+- Inventory dumps are read by their column headers, anywhere in the file. A header row is not an item. Table 1 is Location, Name, ID, Count, and Slots. Table 2 is KeyRing, Name, and ID. Nested slots stay on the item they belong to. Bags, bank, shared bank, depot, and key rings are included. A section the parser does not recognise is kept as the header and line text.
+- With an EQ folder set, the app watches for inventory dumps and imports one after the file stops changing, including a delete-and-recreate. Auto-import follows the chosen character file, or the newest dump when none is chosen. Dropping a file on the window imports it only when it is an inventory dump. Anything else is rejected.
+- The Character tab shows worn gear, bags, bank, shared bank, depot, and key rings from the last import. Empty slots can be hidden. A name that is not in the catalog is marked unknown. Stats are not added.
+- Best in Slot and Item Search mark a name from the last import with an Owned badge. Owned only hides names you do not have. Scores and order stay the same.
+- What's new dialog for 1.1.3.
+- Version bump across package.json, package-lock.json, and version.py sources.
 
 ## 1.1.2
 - After an update, the app rebuilds parser data from the log in the background. That rebuild no longer freezes the rest of the app. Best in Slot icons and the other pages keep working while it runs, and the Parser tab refreshes once when it finishes.

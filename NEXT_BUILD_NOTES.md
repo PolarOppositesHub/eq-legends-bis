@@ -1,5 +1,18 @@
 # Next build notes
 
+**Shipped as 1.1.3 (PRs #45 + #46 + #47 merged).** Updater untouched. Never invent item stats.
+
+## 1.1.3 — Inventory import v2
+- [x] Inventory dumps are read by their column headers, anywhere in the file. A header row is not an item. Table 1 is Location, Name, ID, Count, and Slots. Table 2 is KeyRing, Name, and ID. Nested slots stay on the item they belong to. Bags, bank, shared bank, depot, and key rings are included. A section the parser does not recognise is kept as the header and line text.
+- [x] With an EQ folder set, the app watches for inventory dumps and imports one after the file stops changing, including a delete-and-recreate. Auto-import follows the chosen character file, or the newest dump when none is chosen. Dropping a file on the window imports it only when it is an inventory dump. Anything else is rejected.
+- [x] The Character tab shows worn gear, bags, bank, shared bank, depot, and key rings from the last import. Empty slots can be hidden. A name that is not in the catalog is marked unknown. Stats are not added.
+- [x] Best in Slot and Item Search mark a name from the last import with an Owned badge. Owned only hides names you do not have. Scores and order stay the same.
+- [x] What's new dialog for 1.1.3.
+- [x] Versions **1.1.3**
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Shipped as 1.1.2.** Updater untouched. Never invent item stats.
 
 ## 1.1.2 — Parser rebuild no longer freezes the app

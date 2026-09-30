@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.2'
+export const WHATS_NEW_ID = '1.1.3'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,12 +23,13 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.2"
+export const WHATS_NEW_TITLE = "What's new in 1.1.3"
 
 export const WHATS_NEW_POINTS = [
-  'After an update, the app rebuilds parser data from your log in the background. That rebuild no longer freezes the rest of the app. Best in Slot icons and the other pages keep working while it runs, and the Parser tab refreshes once when it finishes.',
-  'If the rebuild stops moving for a minute, the Parser tab says so and points at logs\\parser-stall.log in the app data folder, instead of spinning forever.',
-  '1.1.1 also fixed a first launch that could stop with "database is locked". That note was missing from the 1.1.1 What\'s new list.',
+  'Inventory dumps are read by their column headers, anywhere in the file. A header row is not an item. Nested slots stay on the item they belong to. Bags, bank, shared bank, depot, and key rings are included.',
+  'With an EQ folder set, the app watches for inventory dumps and imports one after the file stops changing. You can also drop an inventory dump on the window. A file that is not an inventory dump is rejected.',
+  'The Character tab shows worn gear, bags, bank, shared bank, and depot from the last import. Empty slots can be hidden. A name that is not in the catalog is marked unknown. Stats are not added.',
+  'Best in Slot and Item Search mark a name from the last import with an Owned badge. Owned only hides names you do not have. Scores and order stay the same.',
 ]
 
 export const CREDITS = [
