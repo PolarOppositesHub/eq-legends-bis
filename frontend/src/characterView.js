@@ -46,7 +46,7 @@ const CONTAINER_PLACE = {
  */
 export const MERGEABLE_DUPLICATE_RULE = 'same-item-separate-copies-exclude-location-stacks'
 
-export const MERGE_LIST_NOTE = 'Same item means the same base name, the same tier (a missing tier is not +0), and the same id when both copies have one. More than one separate copy is listed. A Location Count greater than 1 is a stack in one slot and is left out. The inventory file and the catalog have no other merge rule, so anything else is left out.'
+export const MERGE_LIST_NOTE = 'Same item means the same base name, the same tier (a missing tier is not +0), and the same id when both copies have one. A copy with no id still matches when every identified copy uses that one id. More than one separate copy is listed. A Location Count greater than 1 is a stack in one slot and is left out. Copies that share a name but use different ids stay apart, and a copy with no id is left out in that case. The inventory file and the catalog have no other merge rule, so anything else is left out.'
 
 export function isDragonHoardName(value) {
   return DRAGON_HOARD_RE.test(String(value || ''))
@@ -482,47 +482,84 @@ export function searchCharacterCopies(copies, query) {
   })
 }
 
+function copyId(copy) {
+  return String(copy?.id || '').trim()
+}
+
+function blankGroup(key, sample, id) {
+  return {
+    key,
+    name: sample.baseName || sample.catalogName || sample.displayName,
+    tier: sample.tier ?? null,
+    id,
+    unknown: false,
+    catalogName: sample.catalogName || sample.baseName || sample.displayName,
+    copies: [],
+    stacked: false,
+  }
+}
+
+function absorbCopy(group, copy) {
+  if (copy.stackedInSlot) group.stacked = true
+  if (copy.unknown) group.unknown = true
+  group.copies.push(copy)
+}
+
+function finishMergeGroup(group, listed, omitted) {
+  if (group.stacked) {
+    omitted.push({ key: group.key, name: group.name, reason: 'stacked-in-one-slot' })
+    return
+  }
+  const total = group.copies.reduce((sum, copy) => {
+    const n = Number(copy.copyCount)
+    return sum + (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 1)
+  }, 0)
+  if (total < 2) return
+  listed.push({ ...group, total })
+}
+
 export function mergeableDuplicates(copies) {
-  const groups = new Map()
+  const buckets = new Map()
   for (const copy of copies || []) {
     const name = itemBaseName(copy.baseName || copy.catalogName || copy.displayName).toLowerCase()
     if (!name || name === 'empty') continue
     const tier = copy.tier == null || copy.tier === '' ? '' : String(copy.tier)
-    const id = String(copy.id || '').trim()
-    const key = `${name}\0${tier}\0${id}`
-    let group = groups.get(key)
-    if (!group) {
-      group = {
-        key,
-        name: copy.baseName || copy.catalogName || copy.displayName,
-        tier: copy.tier ?? null,
-        id,
-        unknown: !!copy.unknown,
-        catalogName: copy.catalogName || copy.baseName || copy.displayName,
-        copies: [],
-        stacked: false,
-      }
-      groups.set(key, group)
+    const key = `${name}\0${tier}`
+    let bucket = buckets.get(key)
+    if (!bucket) {
+      bucket = { key, sample: copy, copies: [] }
+      buckets.set(key, bucket)
     }
-    if (copy.stackedInSlot) group.stacked = true
-    if (copy.unknown) group.unknown = true
-    group.copies.push(copy)
+    bucket.copies.push(copy)
   }
   const listed = []
   const omitted = []
-  for (const group of groups.values()) {
-    if (group.stacked) {
-      omitted.push({ key: group.key, name: group.name, reason: 'stacked-in-one-slot' })
+  for (const bucket of buckets.values()) {
+    const ids = [...new Set(bucket.copies.map(copyId).filter(Boolean))]
+    if (ids.length <= 1) {
+      const id = ids[0] || ''
+      const group = blankGroup(`${bucket.key}\0${id}`, bucket.sample, id)
+      for (const copy of bucket.copies) absorbCopy(group, copy)
+      finishMergeGroup(group, listed, omitted)
       continue
     }
-    const total = group.copies.reduce((sum, copy) => {
-      const n = Number(copy.copyCount)
-      return sum + (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 1)
-    }, 0)
-    if (total < 2) continue
-    listed.push({ ...group, total })
+    const unidentified = bucket.copies.filter((copy) => !copyId(copy))
+    if (unidentified.length) {
+      omitted.push({
+        key: bucket.key,
+        name: bucket.sample.baseName || bucket.sample.catalogName || bucket.sample.displayName,
+        reason: 'ambiguous-id',
+      })
+    }
+    for (const id of ids) {
+      const group = blankGroup(`${bucket.key}\0${id}`, bucket.sample, id)
+      for (const copy of bucket.copies) {
+        if (copyId(copy) === id) absorbCopy(group, copy)
+      }
+      finishMergeGroup(group, listed, omitted)
+    }
   }
-  listed.sort((a, b) => String(a.name).localeCompare(String(b.name)))
+  listed.sort((a, b) => String(a.name).localeCompare(String(b.name)) || String(a.id).localeCompare(String(b.id)))
   return { groups: listed, omitted, rule: MERGEABLE_DUPLICATE_RULE }
 }
 

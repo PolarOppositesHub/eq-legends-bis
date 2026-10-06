@@ -373,6 +373,23 @@ test('merge list keeps separate copies and leaves stacked items out', () => {
   ])
   assert.equal(mixed.groups.length, 0)
   assert.equal(mixed.omitted[0].reason, 'stacked-in-one-slot')
+  const joined = mergeableDuplicates([
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+  ])
+  assert.equal(joined.groups.length, 1)
+  assert.equal(joined.groups[0].id, '9')
+  assert.equal(joined.groups[0].total, 2)
+  const split = mergeableDuplicates([
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '10', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+  ])
+  assert.equal(split.groups.length, 1)
+  assert.equal(split.groups[0].id, '9')
+  assert.equal(split.groups[0].copies.length, 2)
+  assert.equal(split.omitted.some((item) => item.reason === 'ambiguous-id' && item.name === 'Band'), true)
 })
 
 test('a raw dragon hoard section is not turned into items', () => {

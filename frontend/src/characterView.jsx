@@ -85,6 +85,8 @@ function SearchHit({ hit, renderItemName, onLocate }) {
 function MergeList({ merge, dragonHorde, renderItemName, onLocate }) {
   const groups = merge?.groups || []
   const omitted = merge?.omitted || []
+  const stackedOmitted = omitted.filter((item) => item.reason === 'stacked-in-one-slot')
+  const ambiguousOmitted = omitted.filter((item) => item.reason === 'ambiguous-id')
   return (
     <section className="character-section" data-testid="character-merge">
       <h3>Items that can be merged</h3>
@@ -92,9 +94,14 @@ function MergeList({ merge, dragonHorde, renderItemName, onLocate }) {
       {dragonHorde?.note ? (
         <p className="muted" data-testid="dragon-hoard-note">{dragonHorde.note}</p>
       ) : null}
-      {omitted.length ? (
+      {stackedOmitted.length ? (
         <p className="muted" data-testid="merge-omitted">
-          {omitted.length} stacked item{omitted.length === 1 ? '' : 's'} left out because Count is greater than 1 in one slot.
+          {stackedOmitted.length} stacked item{stackedOmitted.length === 1 ? '' : 's'} left out because Count is greater than 1 in one slot.
+        </p>
+      ) : null}
+      {ambiguousOmitted.length ? (
+        <p className="muted" data-testid="merge-ambiguous-id">
+          {ambiguousOmitted.length} item{ambiguousOmitted.length === 1 ? '' : 's'} left out because the copies do not share one id.
         </p>
       ) : null}
       {groups.length ? (
