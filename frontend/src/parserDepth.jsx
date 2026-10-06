@@ -28,6 +28,7 @@ export function ParserItemName({ name, itemNameProps }) {
       type="button"
       className="zone-link"
       data-parser-item={label}
+      data-item-tip-trigger="1"
       onMouseEnter={(e) => itemNameProps.preview && itemNameProps.preview(label, e)}
       onMouseMove={(e) => {
         if (itemNameProps.menuOpen) return

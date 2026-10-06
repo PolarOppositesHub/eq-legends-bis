@@ -1,5 +1,19 @@
 # Next build notes
 
+**Shipped as 1.1.4.** Updater untouched. Never invent item stats or merge rules.
+
+## 1.1.4 — Character search, merge list, popup dismiss
+- [x] Character names use the shared hover stat popup. Click offers Item Search (opens the item stats panel) and eqlwiki. Unknown names with no wiki page skip eqlwiki.
+- [x] Search My Bags is the search bar on Character. A result is one copy and names the bag, bank, slot, or other container. Click scrolls to that slot and highlights it.
+- [x] Items that can be merged uses only data the import already has: same base name, same tier (missing tier is not +0), same id when both copies have one, more than one separate copy. Location Count greater than 1 is a stack in one slot and the item is left out. Rule id `same-item-separate-copies-exclude-location-stacks`, kept in `characterView.js`.
+- [x] Dragon hoard is not an item table in the inventory parser. A location token that is a dragon hoard is scanned. A raw Dragon Hoard section is noted and not parsed into items. An import with no hoard rows says so.
+- [x] Stuck stat popup: the detail fetch kept the old hover generation, so a late response called show after the pointer had left. Dismiss bumps that generation. Pointer leave, scroll, blur, menus, tab changes, Escape, outside click, and the close control all dismiss.
+- [x] What's new dialog for 1.1.4.
+- [x] Versions **1.1.4**
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Shipped as 1.1.3 (PRs #45 + #46 + #47 merged).** Updater untouched. Never invent item stats.
 
 ## 1.1.3 — Inventory import v2

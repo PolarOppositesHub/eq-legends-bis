@@ -51,7 +51,7 @@ import {
 import ParserTab from './ParserTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
-import { InventoryBagsSummary, InventoryWatchStatus } from './inventoryImport.jsx'
+import { InventoryWatchStatus } from './inventoryImport.jsx'
 import {
   acceptInventoryDrop,
   defaultInventorySelection,
@@ -60,6 +60,12 @@ import {
   withChangedFile,
 } from './inventoryImport.js'
 import { CharacterPanel, OwnedBadge } from './characterView.jsx'
+import {
+  createHoverTipSession,
+  dismissHover,
+  floatingDismissAction,
+  startItemHover,
+} from './hoverTip.js'
 import {
   isOwnedName,
   ownedNameSet,
@@ -465,7 +471,9 @@ function tipCoordsFromPointer(e, tipW = 320, tipH = 220) {
  */
 function CatalogItemName({
   name,
+  label,
   className = 'zone-link',
+  allowWiki = true,
   preview,
   openMenu,
   moveTip,
@@ -474,11 +482,13 @@ function CatalogItemName({
   hoverTimerRef,
 }) {
   const item = (name || '').trim()
+  const shown = (label || item).trim()
   if (!item) return null
   return (
     <button
       type="button"
       className={className}
+      data-item-tip-trigger="1"
       onMouseEnter={(e) => preview(item, e)}
       onMouseMove={(e) => {
         if (menuOpen) return
@@ -488,9 +498,9 @@ function CatalogItemName({
         if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
         hideTip()
       }}
-      onClick={(e) => openMenu(item, e)}
+      onClick={(e) => openMenu(item, e, { allowWiki })}
     >
-      {item}
+      {shown}
     </button>
   )
 }
@@ -758,6 +768,7 @@ function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
             key={b.id}
             title={b.name}
             aria-label={b.name}
+            data-item-tip-trigger="1"
             onMouseEnter={show}
             onMouseMove={show}
             onFocus={show}
@@ -788,6 +799,7 @@ function AltRow({ a, upgrade, owned, onShowTip, onMoveTip, onHideTip, onConfirmW
     <li className="alt-row">
       <span
         className="alt-name-wrap"
+        data-item-tip-trigger="1"
         tabIndex={0}
         onMouseEnter={show}
         onMouseMove={onMoveTip}
@@ -924,62 +936,6 @@ function HelpModal({ markdown, onClose }) {
   )
 }
 
-function BagSearchResults({ bagsQ, setBagsQ, bagsLoc, setBagsLoc, bagHits, allImportedItems }) {
-  return (
-    <>
-      <div className="item-search-bar">
-        <input
-          type="text"
-          placeholder="Find an item in your bags…"
-          value={bagsQ}
-          onChange={(e) => setBagsQ(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Location filter (e.g. General, Bank)"
-          value={bagsLoc}
-          onChange={(e) => setBagsLoc(e.target.value)}
-          style={{ maxWidth: 220 }}
-        />
-      </div>
-      <p className="muted" style={{ marginTop: '0.65rem' }}>
-        {bagHits.length} match{bagHits.length === 1 ? '' : 'es'}
-        {' · '}
-        {allImportedItems.filter((r) => {
-          const n = String(r?.base_name || r?.name || '').trim().toLowerCase()
-          return n && n !== 'empty'
-        }).length}{' '}
-        items with contents
-      </p>
-      <ul className="item-search-list">
-        {bagHits.slice(0, 500).map((row, i) => {
-          const name = row?.base_name || row?.name || String(row)
-          const loc = row?.location || '—'
-          const count = row?.count || ''
-          return (
-            <li key={`${loc}-${name}-${i}`}>
-              <div className="item-search-result" style={{ cursor: 'default' }}>
-                <div>
-                  <div className="item-search-name">{name}</div>
-                  <div className="muted" style={{ fontSize: '0.78rem' }}>
-                    {loc}{count ? ` · ×${count}` : ''}
-                    {row?.in_catalog === false
-                      ? ' · not in item catalog'
-                      : (row?.catalog_source === 'eqlwiki' && !row?.has_stats
-                        ? ' · eqlwiki name (no stats yet)'
-                        : '')}
-                    {row?.planner_slot ? ` · worn ${row.planner_slot}` : ''}
-                  </div>
-                </div>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-    </>
-  )
-}
-
 function TierSelects({ label, values, options, onChange }) {
   const vals = padTier(values)
   return (
@@ -1095,6 +1051,11 @@ export default function App() {
   const [searchItemUpgrade, setSearchItemUpgrade] = useState(0)
   const [hoverTip, setHoverTip] = useState(null)
   const hoverTipClearRef = useRef(null)
+  const hoverSessionRef = useRef(null)
+  if (!hoverSessionRef.current) hoverSessionRef.current = createHoverTipSession()
+  const hoverHandleRef = useRef(null)
+  const hoverTipRef = useRef(null)
+  const dropItemMenuRef = useRef(null)
   const [dropItemMenu, setDropItemMenu] = useState(null)
   const [wikiConfirm, setWikiConfirm] = useState(null)
   const wikiConfirmRef = useRef(null)
@@ -1119,6 +1080,9 @@ export default function App() {
   const priorityStat = nonemptyStats(primaryStats)[0] || 'INT'
 
   const showHoverTip = useCallback((tip) => {
+    const session = hoverSessionRef.current
+    const gen = tip && tip.gen != null ? tip.gen : session.arm()
+    if (!session.isCurrent(gen)) return
     if (hoverTipClearRef.current) {
       clearTimeout(hoverTipClearRef.current)
       hoverTipClearRef.current = null
@@ -1130,6 +1094,7 @@ export default function App() {
       ensuredImagesRef.current.add(tip.name)
       ensureItemImage(tip.name)
         .then(() => {
+          if (!hoverSessionRef.current.isCurrent(gen)) return
           setHoverTip((t) =>
             t && t.name === tip.name
               ? { ...t, image: `${itemImageUrl(tip.name)}&_=${Date.now()}` }
@@ -1145,9 +1110,21 @@ export default function App() {
     setHoverTip((t) => (t ? { ...t, x, y } : t))
   }, [])
 
-  const hideHoverTip = useCallback(() => {
-    if (hoverTipClearRef.current) clearTimeout(hoverTipClearRef.current)
-    hoverTipClearRef.current = setTimeout(() => setHoverTip(null), 80)
+  const hideHoverTip = useCallback((reason) => {
+    // React passes the event into onMouseLeave / onBlur. Only named reasons count.
+    const why = typeof reason === 'string' ? reason : 'pointerleave'
+    if (hoverHandleRef.current) {
+      const handle = hoverHandleRef.current
+      hoverHandleRef.current = null
+      handle.cancel()
+    } else {
+      dismissHover(hoverSessionRef.current, why)
+    }
+    if (hoverTipClearRef.current) {
+      clearTimeout(hoverTipClearRef.current)
+      hoverTipClearRef.current = null
+    }
+    setHoverTip(null)
   }, [])
 
   const openItemInSearch = useCallback(async (itemName) => {
@@ -1189,51 +1166,40 @@ export default function App() {
   const previewMobDrop = useCallback((itemName, e) => {
     const name = (itemName || '').trim()
     if (!name || dropItemMenu) return
-    const { x, y } = tipCoordsFromPointer(e)
     if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
-    const seq = ++dropHoverSeqRef.current
-    const cached = dropItemCacheRef.current.get(name.toLowerCase())
-    if (cached) {
-      showHoverTip({
-        name: cached.name || name,
-        statsText: itemDetailTipText(cached),
-        x,
-        y,
-      })
-      return
+    if (hoverHandleRef.current) {
+      hoverHandleRef.current.cancel()
+      hoverHandleRef.current = null
     }
-    showHoverTip({ name, statsText: 'Loading…', x, y })
-    dropHoverTimerRef.current = setTimeout(async () => {
-      try {
-        const d = await getItemDetail(name)
-        if (!d) return
-        dropItemCacheRef.current.set(name.toLowerCase(), d)
-        if (dropHoverSeqRef.current !== seq) return
-        const { x: x2, y: y2 } = tipCoordsFromPointer(e)
-        showHoverTip({
-          name: d.name || name,
-          statsText: itemDetailTipText(d),
-          x: x2,
-          y: y2,
-        })
-      } catch (_) {
-        if (dropHoverSeqRef.current !== seq) return
-        showHoverTip({
-          name,
-          statsText: 'No catalog stats yet — click for Item Search or eqlwiki.',
-          x,
-          y,
-        })
-      }
-    }, 90)
+    const cached = dropItemCacheRef.current.get(name.toLowerCase())
+    const handle = startItemHover(hoverSessionRef.current, {
+      name,
+      cached,
+      load: async (item) => {
+        const detail = await getItemDetail(item)
+        if (detail) dropItemCacheRef.current.set(item.toLowerCase(), detail)
+        return detail
+      },
+      tipText: (detail) => itemDetailTipText(detail),
+      coords: () => tipCoordsFromPointer(e),
+      onShow: (tip) => showHoverTip(tip),
+    })
+    hoverHandleRef.current = handle
   }, [dropItemMenu, showHoverTip])
 
-  const openMobDropMenu = useCallback((itemName, e) => {
+  const openMobDropMenu = useCallback((itemName, e, opts = {}) => {
     e.preventDefault()
     e.stopPropagation()
     const name = (itemName || '').trim()
     if (!name) return
+    const allowWiki = opts.allowWiki !== false
     if (dropHoverTimerRef.current) clearTimeout(dropHoverTimerRef.current)
+    if (hoverHandleRef.current) {
+      hoverHandleRef.current.cancel()
+      hoverHandleRef.current = null
+    } else {
+      dismissHover(hoverSessionRef.current, 'menu')
+    }
     if (hoverTipClearRef.current) {
       clearTimeout(hoverTipClearRef.current)
       hoverTipClearRef.current = null
@@ -1248,16 +1214,20 @@ export default function App() {
     if (y + 96 > window.innerHeight - 8) y = Math.max(8, window.innerHeight - 96 - 8)
     setDropItemMenu({
       name,
-      url: eqlwikiItemUrl(name, cached),
+      url: allowWiki ? eqlwikiItemUrl(name, cached) : '',
+      allowWiki,
       x,
       y,
     })
-    // Refresh wiki URL from detail when needed (non-blocking).
-    if (!cached) {
+    // Refresh wiki URL from detail when the name is in the catalog. Unknown
+    // names do not get an invented wiki page.
+    if (!cached && allowWiki) {
       getItemDetail(name).then((d) => {
         if (!d) return
         dropItemCacheRef.current.set(name.toLowerCase(), d)
-        setDropItemMenu((m) => (m && m.name === name ? { ...m, url: eqlwikiItemUrl(name, d) } : m))
+        setDropItemMenu((m) => (m && m.name === name && m.allowWiki !== false
+          ? { ...m, url: eqlwikiItemUrl(name, d) }
+          : m))
       }).catch(() => {})
     }
   }, [])
@@ -2313,6 +2283,112 @@ export default function App() {
 
 
   useEffect(() => {
+    hoverTipRef.current = hoverTip
+  }, [hoverTip])
+
+  useEffect(() => {
+    dropItemMenuRef.current = dropItemMenu
+  }, [dropItemMenu])
+
+  useEffect(() => {
+    const onKey = (event) => {
+      const action = floatingDismissAction(event, {
+        tip: !!hoverTipRef.current,
+        menu: !!dropItemMenuRef.current,
+        confirm: !!wikiConfirmRef.current,
+        modal: !!(
+          zoneDetail
+          || helpMd != null
+          || settingsOpen
+          || appHelpOpen
+          || creditsOpen
+          || whatsNewOpen
+        ),
+      })
+      if (!action) return
+      if (action === 'confirm') {
+        setWikiConfirm(null)
+        return
+      }
+      if (action === 'menu') {
+        setDropItemMenu(null)
+        return
+      }
+      if (action === 'tip' || action === 'outside') {
+        hideHoverTip(action === 'tip' ? 'escape' : 'outside')
+        if (action === 'outside') {
+          setDropItemMenu(null)
+          setWikiConfirm(null)
+        }
+        return
+      }
+      if (action === 'modal') {
+        if (zoneDetail) setZoneDetail(null)
+        else if (helpMd != null) setHelpMd(null)
+        else if (settingsOpen) setSettingsOpen(false)
+        else if (appHelpOpen) setAppHelpOpen(false)
+        else if (creditsOpen) setCreditsOpen(false)
+        else if (whatsNewOpen) setWhatsNewOpen(false)
+      }
+    }
+    const onPtr = (event) => {
+      const action = floatingDismissAction(event, {
+        tip: !!hoverTipRef.current,
+        menu: !!dropItemMenuRef.current,
+        confirm: !!wikiConfirmRef.current,
+      })
+      if (action !== 'outside') return
+      hideHoverTip('outside')
+      setDropItemMenu(null)
+      setWikiConfirm(null)
+    }
+    const onScroll = () => {
+      if (hoverTipRef.current) hideHoverTip('scroll')
+    }
+    const onBlur = () => {
+      if (hoverTipRef.current) hideHoverTip('blur')
+    }
+    const onVis = () => {
+      if (document.hidden && hoverTipRef.current) hideHoverTip('blur')
+    }
+    const onOver = (event) => {
+      if (!hoverTipRef.current) return
+      const target = event.target
+      if (!target || typeof target.closest !== 'function') return
+      if (target.closest('[data-item-tip-trigger], .hover-tip')) return
+      if (target.closest('.side-nav, .mob-drop-menu, .wiki-confirm-menu, .modal')) hideHoverTip('menu')
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('mousedown', onPtr)
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', onVis)
+    document.addEventListener('mouseover', onOver)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mousedown', onPtr)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('blur', onBlur)
+      document.removeEventListener('visibilitychange', onVis)
+      document.removeEventListener('mouseover', onOver)
+    }
+  }, [
+    hideHoverTip,
+    zoneDetail,
+    helpMd,
+    settingsOpen,
+    appHelpOpen,
+    creditsOpen,
+    whatsNewOpen,
+  ])
+
+  useEffect(() => {
+    hideHoverTip('tab')
+    setDropItemMenu(null)
+    setWikiConfirm(null)
+  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!dropItemMenu) return undefined
     const onKey = (ev) => {
       if (ev.key === 'Escape') setDropItemMenu(null)
@@ -2793,7 +2869,6 @@ export default function App() {
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
     { id: 'character', label: 'Character' },
-    { id: 'bags', label: 'Search My Bags' },
     { id: 'quests', label: 'Quest Hub' },
     { id: 'mobs', label: 'Mobs' },
     { id: 'search', label: 'Item Search' },
@@ -2814,20 +2889,19 @@ export default function App() {
     now: nowTick,
   })
 
-  const bagHits = useMemo(() => {
-    const q = (bagsQ || '').trim().toLowerCase()
-    const tokens = q.split(/[^a-z0-9']+/i).filter((t) => t && !['of', 'the', 'a', 'an', 'and'].includes(t))
-    const locFilter = (bagsLoc || '').trim().toLowerCase()
-    return allImportedItems.filter((row) => {
-      const name = String(row?.base_name || row?.name || row || '').trim()
-      const nameLc = name.toLowerCase()
-      if (!name || nameLc === 'empty') return false
-      const loc = String(row?.location || '').toLowerCase()
-      if (locFilter && !loc.includes(locFilter)) return false
-      if (!tokens.length) return true
-      return tokens.every((t) => nameLc.includes(t) || loc.includes(t))
-    })
-  }, [allImportedItems, bagsQ, bagsLoc])
+  const renderCharacterItem = useCallback((node, ctx) => (
+    <CatalogItemName
+      name={node.catalogName || node.displayName}
+      label={node.displayName}
+      allowWiki={!node.unknown}
+      className="zone-link character-item-name"
+      {...catalogItemNameProps}
+      openMenu={(item, event, opts) => {
+        catalogItemNameProps.openMenu(item, event, { ...opts, allowWiki: !node.unknown })
+        if (ctx && typeof ctx.onLocate === 'function' && node.key) ctx.onLocate(node.key)
+      }}
+    />
+  ), [catalogItemNameProps])
 
   return (
     <div className="app" data-workspace-ready={sessionReady ? '1' : '0'} data-active-tab={tab}>
@@ -3205,6 +3279,7 @@ export default function App() {
                         <>
                         <span
                           className="bis-item-name"
+                          data-item-tip-trigger="1"
                           tabIndex={0}
                           onMouseEnter={(e) => {
                             const { x, y } = tipCoordsFromPointer(e)
@@ -3296,7 +3371,7 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Character</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Worn gear with the tier and sockets from the inventory file, then bags, bank, shared bank, and depot.
-                Names missing from the catalog are marked unknown. Stats are not added.
+                Hover a name for catalog stats. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki.
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                 {isDesktopApp && (
@@ -3345,88 +3420,12 @@ export default function App() {
                   now={nowTick}
                 />
               )}
-              <CharacterPanel importMeta={importMeta} />
-            </div>
-          )}
-
-          {tab === 'bags' && (
-            <div className="panel item-search">
-              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Search My Bags</h2>
-              <p className="muted" style={{ marginTop: 0 }}>
-                Search occupied slots from your last Inventory.txt import (worn, bags, bank, nested — empty slots hidden).
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
-                {isDesktopApp && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={pickEqInstallFolder}
-                      title="Point once at your EverQuest Legends install folder"
-                    >
-                      {eqInstallFolder ? 'Change EQ folder' : 'Set EQ folder'}
-                    </button>
-                    <button
-                      type="button"
-                      className="primary"
-                      onClick={() => updateInventoryFromEqFolder({ switchTab: 'bags' })}
-                      title="Find the newest *-Inventory.txt in your EQ install folder and import it"
-                    >
-                      Update from EQ folder
-                    </button>
-                  </>
-                )}
-                <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
-                  Import Inventory.txt
-                  <input
-                    type="file"
-                    accept=".txt,text/plain"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const f = e.target.files && e.target.files[0]
-                      e.target.value = ''
-                      if (f) onImportFile(f, { switchTab: 'bags' })
-                    }}
-                  />
-                </label>
-              </div>
-              {isDesktopApp && (
-                <InventoryBagsSummary
-                  folder={eqInstallFolder}
-                  files={inventoryFiles}
-                  selectedName={inventoryCharacterName}
-                  onSelect={onInventoryCharacter}
-                  autoImport={autoImport}
-                  onAutoImport={onAutoImportChange}
-                  importedName={importMeta?.source || ''}
-                  importedAt={importedAt || eqInventoryInfo?.mtimeMs || null}
-                  now={nowTick}
-                  items={allImportedItems}
-                >
-                  <BagSearchResults
-                    bagsQ={bagsQ}
-                    setBagsQ={setBagsQ}
-                    bagsLoc={bagsLoc}
-                    setBagsLoc={setBagsLoc}
-                    bagHits={bagHits}
-                    allImportedItems={allImportedItems}
-                  />
-                </InventoryBagsSummary>
-              )}
-              {!isDesktopApp && !allImportedItems.length ? (
-                <p className="muted">
-                  No inventory imported yet — use Update from EQ folder or Import Inventory.txt.
-                </p>
-              ) : null}
-              {!isDesktopApp && allImportedItems.length > 0 ? (
-                <BagSearchResults
-                  bagsQ={bagsQ}
-                  setBagsQ={setBagsQ}
-                  bagsLoc={bagsLoc}
-                  setBagsLoc={setBagsLoc}
-                  bagHits={bagHits}
-                  allImportedItems={allImportedItems}
-                />
-              ) : null}
+              <CharacterPanel
+                importMeta={importMeta}
+                query={bagsQ}
+                onQuery={setBagsQ}
+                renderItemName={renderCharacterItem}
+              />
             </div>
           )}
 
@@ -4252,10 +4251,10 @@ export default function App() {
                   <div className="import-unmatched">
                     <p style={{ marginTop: 0, marginBottom: '0.35rem' }}>
                       Inventory import: <strong>{wornSlotCount}</strong> worn slots filled
-                      {importMeta.skipped_count ? ` · ${importMeta.skipped_count} bag/nested lines kept for Search My Bags` : ''}
+                      {importMeta.skipped_count ? ` · ${importMeta.skipped_count} bag/nested lines kept for Character search` : ''}
                     </p>
                     <p className="muted" style={{ marginTop: 0, fontSize: '0.8rem' }}>
-                      Bag/bank contents are searchable under <strong>Search My Bags</strong>.
+                      Bag/bank contents are searchable on the <strong>Character</strong> tab.
                       Names are matched against eqlegendstools BiS data and eqlwiki item pages;
                       wiki-only matches do not invent stats.
                     </p>
@@ -4899,17 +4898,27 @@ export default function App() {
           >
             Open in Item Search
           </button>
+          {dropItemMenu.allowWiki !== false ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="mob-drop-menu-item"
+              onClick={() => {
+                const url = dropItemMenu.url
+                setDropItemMenu(null)
+                openEqlwikiNow(url)
+              }}
+            >
+              Open on eqlwiki
+            </button>
+          ) : null}
           <button
             type="button"
             role="menuitem"
             className="mob-drop-menu-item"
-            onClick={() => {
-              const url = dropItemMenu.url
-              setDropItemMenu(null)
-              openEqlwikiNow(url)
-            }}
+            onClick={() => setDropItemMenu(null)}
           >
-            Open on eqlwiki
+            Close
           </button>
         </div>
       ) : null}
@@ -4922,6 +4931,14 @@ export default function App() {
           style={{ left: hoverTip.x, top: hoverTip.y }}
           role="tooltip"
         >
+          <button
+            type="button"
+            className="hover-tip-close"
+            aria-label="Close item details"
+            onClick={() => hideHoverTip('escape')}
+          >
+            ×
+          </button>
           {hoverTip.kind === 'buff' ? (
             <img
               className="item-icon buff-icon"

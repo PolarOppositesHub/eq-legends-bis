@@ -461,7 +461,7 @@ test('an older import without a slot tree still loads', () => {
     },
   }, catalog)
   assert.equal(restored, true)
-  assert.equal(state.tab, 'bags')
+  assert.equal(state.tab, 'character')
   assert.equal(state.importMeta.source, 'Old-Inventory.txt')
   assert.equal(state.importMeta.all_items[0].name, 'Jade Mace')
   assert.deepEqual(state.importMeta.rows, [])
