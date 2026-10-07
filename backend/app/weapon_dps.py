@@ -150,13 +150,22 @@ def evaluate_dw_vs_2h(
     dwc = dual_wield_chance(level, skill)
     cat = catalog_by_name or {}
 
+    def item_upgrade(item: dict) -> int:
+        raw = item.get("owned_upgrade")
+        if raw is None or raw == "":
+            return upgrade
+        try:
+            return max(0, min(10, int(raw)))
+        except (TypeError, ValueError):
+            return upgrade
+
     def dmg_dly(item: dict) -> tuple[float, float] | None:
         s0 = item.get("stats_plus0") or {}
         dmg0 = s0.get("DMG")
         dly = s0.get("DLY")
         if dmg0 is None or not dly:
             return None
-        return float(scaled_dmg_fn(dmg0, upgrade)), float(dly)
+        return float(scaled_dmg_fn(dmg0, item_upgrade(item))), float(dly)
 
     ones: list[dict] = []
     twos: list[dict] = []
@@ -216,7 +225,7 @@ def evaluate_dw_vs_2h(
     )
 
     def cand(item: dict, *, score: float, why: str, why_ui: str, pval: float | None = None) -> dict:
-        ratio = ratio_at_level_fn(item, upgrade)
+        ratio = ratio_at_level_fn(item, item_upgrade(item))
         return {
             "name": item["name"],
             "score": float(score),

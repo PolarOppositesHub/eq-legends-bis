@@ -17,6 +17,11 @@ section is still titled 1.1.2). Why the snapshot changed:
   wind_runes, and file metadata.
 Worn equipment and upgrade_hints are unchanged, so suggest_upgrades input
 from this fixture is unchanged.
+
+1.1.5 adds wearable and container_item on tree rows and keyring entries.
+A bag or box name is a container. A worn sheet row or a catalog wearable
+slot is wearable, except exaltations and containers. Hoard N is not in
+this fixture.
 """
 from __future__ import annotations
 

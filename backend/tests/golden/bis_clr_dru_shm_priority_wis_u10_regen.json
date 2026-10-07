@@ -53,6 +53,7 @@
   "haste_rule": "Only ONE worn haste item counts (highest %). Loadout enforces this.",
   "maximize_hp_regen": true,
   "mode": "Priority Stat",
+  "owned_only": false,
   "pool_size": 397,
   "prefer_ranged_damage": true,
   "primary_stats": [

@@ -8,6 +8,7 @@ import {
   buildCharacterView,
   isOwnedName,
   mergeableDuplicates,
+  ownedItemLevels,
   ownedNameSet,
   scrollCharacterSlotIntoView,
   searchCharacterCopies,
@@ -203,7 +204,8 @@ test('unknown rows stay in Other sections and are not given a new tree', () => {
   assert.match(html, /Slot7 \(Focus\?\)/)
   assert.match(html, /unknown/)
   assert.doesNotMatch(html, /AC:|HP:|stats_plus|Click\?|Worn\?|Proc\?/)
-  assert.equal(html.includes('>Dragon'), false)
+  assert.match(html, /Dragon&#x27;s Hoard/)
+  assert.match(html, /not an item table/)
 })
 
 test('an import saved before the slot tree still shows worn and bank rows', () => {
@@ -322,12 +324,12 @@ test('character search lists every copy and scroll targets that slot', () => {
 test('merge list keeps separate copies and leaves stacked items out', () => {
   const rows = [
     row({ location_raw: 'General 1', container_kind: 'general', name_raw: 'Bag', name: 'Bag', id: '1', line: 1 }),
-    row({ location_raw: 'General 1-Slot1', container_kind: 'general', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', parent_idx: 0, depth: 1, socket_index: 1, line: 2 }),
-    row({ location_raw: 'Bank1', container_kind: 'bank', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 3 }),
-    row({ location_raw: 'General 1-Slot2', container_kind: 'general', name_raw: 'Spare Cloak +1', name: 'Spare Cloak', tier: 1, id: '42', parent_idx: 0, depth: 1, socket_index: 2, line: 4 }),
+    row({ location_raw: 'General 1-Slot1', container_kind: 'general', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', parent_idx: 0, depth: 1, socket_index: 1, line: 2, wearable: true }),
+    row({ location_raw: 'Bank1', container_kind: 'bank', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 3, wearable: true }),
+    row({ location_raw: 'General 1-Slot2', container_kind: 'general', name_raw: 'Spare Cloak +1', name: 'Spare Cloak', tier: 1, id: '42', parent_idx: 0, depth: 1, socket_index: 2, line: 4, wearable: true }),
     row({ location_raw: 'General 1-Slot3', container_kind: 'general', name_raw: 'Mote of Infinitesimal Potential', name: 'Mote of Infinitesimal Potential', id: '148590', count: 5, parent_idx: 0, depth: 1, socket_index: 3, line: 5 }),
-    row({ location_raw: 'General 1-Slot4', container_kind: 'general', name_raw: 'Other Cloak', name: 'Other Cloak', id: '99', parent_idx: 0, depth: 1, socket_index: 4, line: 6 }),
-    row({ location_raw: 'Dragon Hoard', container_kind: 'unknown', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 7 }),
+    row({ location_raw: 'General 1-Slot4', container_kind: 'general', name_raw: 'Other Cloak', name: 'Other Cloak', id: '99', parent_idx: 0, depth: 1, socket_index: 4, line: 6, wearable: true }),
+    row({ location_raw: 'Dragon Hoard', container_kind: 'unknown', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 7, wearable: true }),
     row({ location_raw: 'General 2', container_kind: 'general', name_raw: 'Second Bag', name: 'Second Bag', id: '2', line: 8 }),
     row({ location_raw: 'General 2-Slot1', container_kind: 'general', name_raw: 'Lone Ring', name: 'Lone Ring', id: '7', parent_idx: 7, depth: 1, socket_index: 1, line: 9 }),
   ]
@@ -335,7 +337,7 @@ test('merge list keeps separate copies and leaves stacked items out', () => {
     source: 'Dupes.txt',
     rows,
     keyring: [
-      { ring: 'Equipment', name: 'Spare Cloak', id: '42', count: 1 },
+      { ring: 'Equipment', name: 'Spare Cloak', id: '42', count: 1, wearable: true },
       { ring: 'Augmentation', name: 'Collapsed Stone', id: '8', count: 2 },
     ],
     all_items: [
@@ -353,38 +355,39 @@ test('merge list keeps separate copies and leaves stacked items out', () => {
   assert.ok(spare)
   assert.equal(spare.copies.some((copy) => copy.place === 'Bag · General 1 · Slot1'), true)
   assert.equal(spare.copies.some((copy) => copy.place === 'Bank · Bank1'), true)
-  assert.equal(spare.copies.some((copy) => copy.place === 'Dragon hoard · Dragon Hoard'), true)
-  assert.equal(spare.copies.some((copy) => copy.place === 'Key ring · Equipment'), true)
+  assert.equal(spare.copies.some((copy) => copy.place === "Dragon's Hoard · Dragon Hoard"), true)
+  assert.equal(spare.copies.some((copy) => copy.place === 'Storage · Equipment'), true)
   assert.equal(view.merge.groups.some((group) => group.tier === 1), false)
   assert.equal(view.merge.groups.some((group) => group.name === 'Mote of Infinitesimal Potential'), false)
   assert.equal(view.merge.omitted.some((item) => item.name === 'Mote of Infinitesimal Potential'), true)
   assert.equal(view.merge.groups.some((group) => group.name === 'Lone Ring'), false)
-  const stone = view.merge.groups.find((group) => group.name === 'Collapsed Stone')
-  assert.equal(stone.total, 2)
-  assert.equal(stone.unknown, true)
+  assert.equal(view.merge.groups.some((group) => group.name === 'Collapsed Stone'), false)
+  assert.equal(view.merge.omitted.some((item) => item.name === 'Collapsed Stone' && item.reason === 'not-equipable'), true)
+  assert.equal(view.merge.groups.some((group) => /bag/i.test(group.name)), false)
   assert.equal(view.dragonHorde.state, 'included')
+  assert.equal(view.dragonHorde.note, '')
   const direct = mergeableDuplicates([
-    { displayName: 'Only', baseName: 'Only', tier: null, id: '1', copyCount: 1, stackedInSlot: false, container: 'general' },
+    { displayName: 'Only', baseName: 'Only', tier: null, id: '1', copyCount: 1, stackedInSlot: false, container: 'general', wearable: true },
   ])
   assert.equal(direct.groups.length, 0)
   const mixed = mergeableDuplicates([
-    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: true, container: 'general' },
-    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: false, container: 'bank' },
+    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: true, container: 'general', wearable: true },
+    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: false, container: 'bank', wearable: true },
   ])
   assert.equal(mixed.groups.length, 0)
   assert.equal(mixed.omitted[0].reason, 'stacked-in-one-slot')
   const joined = mergeableDuplicates([
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false, wearable: true },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false, wearable: true },
   ])
   assert.equal(joined.groups.length, 1)
   assert.equal(joined.groups[0].id, '9')
   assert.equal(joined.groups[0].total, 2)
   const split = mergeableDuplicates([
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '10', copyCount: 1, stackedInSlot: false },
-    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false, wearable: true },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false, wearable: true },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '10', copyCount: 1, stackedInSlot: false, wearable: true },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false, wearable: true },
   ])
   assert.equal(split.groups.length, 1)
   assert.equal(split.groups[0].id, '9')
@@ -403,7 +406,7 @@ test('a raw dragon hoard section is not turned into items', () => {
     all_items: [{ location: 'Head', name: 'Cap', base_name: 'Cap', id: '1', in_catalog: true }],
   })
   assert.equal(absent.dragonHorde.state, 'absent')
-  assert.match(absent.dragonHorde.note, /no dragon hoard item rows/)
+  assert.match(absent.dragonHorde.note, /Open the Dragon's Hoard window before running \/outputfile inventory/)
 })
 
 test('character items can render the shared name control and skip wiki when unknown', () => {
@@ -430,4 +433,78 @@ test('character items can render the shared name control and skip wiki when unkn
   assert.match(html, /Items that can be merged/)
   assert.match(html, /data-testid="character-search"/)
   assert.doesNotMatch(html, /AC:|HP:|stats_plus/)
+  assert.match(html, /class="item-icon"/)
+  assert.match(html, /\/api\/item-image\?name=/)
+  const mergeAt = html.indexOf('Items that can be merged')
+  const bagsAt = html.indexOf('Bags')
+  assert.ok(mergeAt > 0 && bagsAt > mergeAt)
+  assert.match(html, /data-testid="character-storage"/)
+  assert.match(html, /aria-expanded="true"/)
+})
+
+test('collapse state closes a section and hoard rows stay a container', () => {
+  const view = buildCharacterView({
+    source: 'Hoard.txt',
+    rows: [
+      row({
+        location_raw: 'Hoard 1',
+        container_kind: 'dragonhorde',
+        name_raw: 'Synthetic Hoard Leggings +4',
+        name: 'Synthetic Hoard Leggings',
+        tier: 4,
+        id: '301',
+        wearable: true,
+      }),
+      row({
+        location_raw: 'Hoard 1-Slot7',
+        container_kind: 'dragonhorde',
+        name_raw: 'Synthetic Hoard Leggings (Exaltation)',
+        name: 'Synthetic Hoard Leggings (Exaltation)',
+        id: '301',
+        parent_idx: 0,
+        depth: 1,
+        socket_index: 7,
+        wearable: false,
+      }),
+    ],
+    keyring: [
+      { ring: 'Equipment', name: 'Synthetic Stored Blade', id: '401', wearable: true },
+    ],
+    all_items: [
+      { location: 'Hoard 1', name: 'Synthetic Hoard Leggings +4', base_name: 'Synthetic Hoard Leggings', id: '301', in_catalog: false, upgrade_from_name: 4 },
+    ],
+  })
+  const hoard = view.carried.find((section) => section.kind === 'dragonhorde')
+  assert.equal(hoard.title, "Dragon's Hoard")
+  assert.equal(hoard.nodes[0].displayName, 'Synthetic Hoard Leggings +4')
+  assert.equal(hoard.nodes[0].children[0].displayName, 'Synthetic Hoard Leggings (Exaltation)')
+  assert.equal(view.dragonHorde.state, 'included')
+  assert.equal(view.dragonHorde.note, '')
+  assert.equal(view.merge.groups.some((group) => /exaltation/i.test(group.name)), false)
+  const levels = ownedItemLevels({
+    all_items: [
+      { base_name: 'Cloak of Leaves', name: 'Cloak of Leaves +10', upgrade_from_name: 10 },
+      { base_name: 'Cloak of Shadows', name: 'Cloak of Shadows' },
+    ],
+    rows: [{ name_raw: 'Cloak of Leaves +4', name: 'Cloak of Leaves', tier: 4 }],
+    keyring: [{ name: 'Synthetic Guise +2' }],
+    equipment: { HEAD: 'Midnight Cap' },
+  })
+  const byName = Object.fromEntries(levels.map((item) => [item.name, item.upgrade]))
+  assert.equal(byName['Cloak of Leaves'], 10)
+  assert.equal(byName['Cloak of Shadows'], null)
+  assert.equal(byName['Synthetic Guise'], 2)
+  assert.equal(byName['Midnight Cap'], null)
+  const html = renderToStaticMarkup(React.createElement(CharacterView, {
+    view,
+    hideEmpty: true,
+    onHideEmpty: () => {},
+    collapsed: { worn: true, 'section:dragonhorde': true },
+    onToggle: () => {},
+  }))
+  assert.match(html, /data-collapse-id="worn"/)
+  assert.match(html, /aria-expanded="false"/)
+  assert.doesNotMatch(html, /Synthetic Hoard Leggings \+4/)
+  assert.match(html, /▶/)
+  assert.match(html, /▼/)
 })

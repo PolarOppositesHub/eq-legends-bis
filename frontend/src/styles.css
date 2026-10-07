@@ -1368,6 +1368,52 @@ input[type="text"], select, input[type="range"] {
   font-size: 0.82rem;
   color: var(--muted);
 }
+.character-collapse { margin: 0; }
+.character-collapse-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+.character-collapse-arrow {
+  width: 1rem;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.character-collapse-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+.character-item .item-icon { margin-right: 0.15rem; }
+.item-search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.85rem;
+  margin-top: 0.65rem;
+  align-items: flex-end;
+}
+.item-search-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.item-search-filters select,
+.item-search-filters input {
+  min-width: 7rem;
+}
+.item-search-sort { display: flex; gap: 0.3rem; }
 .character-hide-empty {
   display: inline-flex;
   gap: 0.4rem;

@@ -310,22 +310,28 @@
   "imported_at": null,
   "keyring": [
     {
+      "container_item": false,
       "count": 1,
       "id": "1001",
       "name": "Synthetic Spare Cap",
-      "ring": "Equipment"
+      "ring": "Equipment",
+      "wearable": false
     },
     {
+      "container_item": false,
       "count": 1,
       "id": "90001",
       "name": "Synthetic Stone (Exaltation)",
-      "ring": "Augmentation"
+      "ring": "Augmentation",
+      "wearable": false
     },
     {
+      "container_item": false,
       "count": 1,
       "id": "90002",
       "name": "Synthetic Guise +4",
-      "ring": "Activated"
+      "ring": "Activated",
+      "wearable": false
     }
   ],
   "motes": [
@@ -341,6 +347,7 @@
   "note": "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). Every line is retained in all_items. Names match eqlegendstools BiS data and/or eqlwiki Category:Items (wiki matches do not invent stats). Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items.",
   "rows": [
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -354,9 +361,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -370,9 +379,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": 2
+      "tier": 2,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -386,9 +397,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 1,
@@ -402,9 +415,11 @@
       "slots": 10,
       "socket_index": 7,
       "socket_label": "Slot7 (Focus?)",
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 0,
       "depth": 0,
@@ -418,9 +433,11 @@
       "slots": 0,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -434,9 +451,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": 0
+      "tier": 0,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -450,9 +469,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": 10
+      "tier": 10,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -466,9 +487,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": 5
+      "tier": 5,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -482,9 +505,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -498,9 +523,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -514,9 +541,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     },
     {
+      "container_item": true,
       "container_kind": "general",
       "count": 1,
       "depth": 0,
@@ -530,9 +559,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "general",
       "count": 5,
       "depth": 1,
@@ -546,9 +577,11 @@
       "slots": 10,
       "socket_index": 1,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "bank",
       "count": 1,
       "depth": 0,
@@ -562,9 +595,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "sharedbank",
       "count": 1,
       "depth": 0,
@@ -578,9 +613,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "depot",
       "count": 1,
       "depth": 0,
@@ -594,9 +631,11 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     },
     {
+      "container_item": false,
       "container_kind": "depot",
       "count": 1,
       "depth": 1,
@@ -610,7 +649,8 @@
       "slots": 10,
       "socket_index": 3,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": false
     }
   ],
   "server": null,

@@ -128,6 +128,17 @@ export function defaultWorkspace(catalog) {
     mobListCollapsed: false,
     searchQ: '',
     searchSlot: '',
+    searchType: '',
+    searchClass: '',
+    searchStat: '',
+    searchStatMin: '',
+    searchSort1: '',
+    searchSort1Dir: 'desc',
+    searchSort2: '',
+    searchSort2Dir: 'desc',
+    searchSort3: '',
+    searchSort3Dir: 'desc',
+    characterCollapsed: {},
     searchSelectedName: '',
     searchItemUpgrade: 0,
     buildName: '',
@@ -299,7 +310,7 @@ function sanitizeImportRow(row) {
   }
 }
 
-const TREE_KINDS = ['worn', 'general', 'bank', 'sharedbank', 'depot', 'unknown']
+const TREE_KINDS = ['worn', 'general', 'bank', 'sharedbank', 'depot', 'dragonhorde', 'unknown']
 
 function pickOptionalInt(value, max) {
   if (value == null || value === '') return null
@@ -340,7 +351,7 @@ function sanitizeTreeRow(row) {
     ? row.container_kind
     : 'unknown'
   const parent = pickOptionalInt(row.parent_idx, 20000)
-  return {
+  const clean = {
     location_raw: pickText(row.location_raw, 200),
     container_kind: kind,
     parent_idx: parent,
@@ -356,6 +367,9 @@ function sanitizeTreeRow(row) {
     slots: pickOptionalInt(row.slots, 1000000),
     line: pickOptionalInt(row.line, 1000000),
   }
+  if (typeof row.wearable === 'boolean') clean.wearable = row.wearable
+  if (typeof row.container_item === 'boolean') clean.container_item = row.container_item
+  return clean
 }
 
 function sanitizeTreeRows(raw) {
@@ -381,12 +395,15 @@ function sanitizeKeyring(raw) {
     const name = pickText(entry.name, 300)
     if (!ring || !name || name.toLowerCase() === 'empty') continue
     const count = pickOptionalInt(entry.count, 1000000)
-    out.push({
+    const clean = {
       ring,
       name,
       id: pickText(entry.id == null ? '' : String(entry.id), 64),
       count: count == null || count < 1 ? 1 : count,
-    })
+    }
+    if (typeof entry.wearable === 'boolean') clean.wearable = entry.wearable
+    if (typeof entry.container_item === 'boolean') clean.container_item = entry.container_item
+    out.push(clean)
   }
   return out
 }
@@ -406,6 +423,41 @@ function sanitizeUnknownRows(raw) {
       header_line: pickOptionalInt(entry.header_line, 1000000),
       raw: rawText,
     })
+  }
+  return out
+}
+
+function pickSortKey(value) {
+  return pickText(value, 40)
+}
+
+function pickSortDir(value) {
+  return value === 'asc' ? 'asc' : 'desc'
+}
+
+function pickStatMin(value) {
+  if (value == null || value === '') return ''
+  const n = Number(value)
+  if (!Number.isFinite(n)) return ''
+  return String(n)
+}
+
+function pickClassFilter(value, catalog) {
+  const text = pickText(value, 40)
+  if (!text) return ''
+  const known = catalog?.classes || []
+  if (!known.length) return text
+  return known.find((name) => name.toLowerCase() === text.toLowerCase()) || ''
+}
+
+function sanitizeCollapsed(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (Object.keys(out).length >= 500) break
+    if (value !== true) continue
+    if (typeof key !== 'string' || !key || key.length > 120) continue
+    out[key] = true
   }
   return out
 }
@@ -521,6 +573,17 @@ export function sanitizeWorkspace(raw, catalog) {
       mobListCollapsed: pickBool(raw.mobListCollapsed, false),
       searchQ: pickText(raw.searchQ, 200),
       searchSlot: searchSlot && slotAllowed(searchSlot, slots) ? searchSlot : '',
+      searchType: pickText(raw.searchType, 80),
+      searchClass: pickClassFilter(raw.searchClass, cat),
+      searchStat: pickSortKey(raw.searchStat),
+      searchStatMin: pickStatMin(raw.searchStatMin),
+      searchSort1: pickSortKey(raw.searchSort1),
+      searchSort1Dir: pickSortDir(raw.searchSort1Dir),
+      searchSort2: pickSortKey(raw.searchSort2),
+      searchSort2Dir: pickSortDir(raw.searchSort2Dir),
+      searchSort3: pickSortKey(raw.searchSort3),
+      searchSort3Dir: pickSortDir(raw.searchSort3Dir),
+      characterCollapsed: sanitizeCollapsed(raw.characterCollapsed),
       searchSelectedName,
       searchItemUpgrade: searchSelectedName ? clampUpgrade(raw.searchItemUpgrade) : 0,
       buildName: pickText(raw.buildName, 80),

@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.4'
+export const WHATS_NEW_ID = '1.1.5'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,13 +23,15 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.4"
+export const WHATS_NEW_TITLE = "What's new in 1.1.5"
 
 export const WHATS_NEW_POINTS = [
-  'Character item names use the same hover stat popup as the rest of the app. Click a name for Item Search, which opens the item stats panel, or eqlwiki. A name with no wiki page does not offer eqlwiki.',
-  'Search My Bags is now the search bar at the top of Character. Each result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot and highlight it.',
-  'Character lists items that can be merged: the same item in more than one place. A stack in one slot (Count greater than 1) is left out. No other merge rule is invented. A dragon hoard section that is not an item table is left out and noted.',
-  'An item stat popup closes when the pointer leaves the name, and also on scroll, blur, a tab change, Escape, an outside click, or the close control. The same Escape, outside click, and close control dismiss a menu that stays open.',
+  'Item Search filters by slot or type, usable class, and any stat that exists on items, with an optional minimum. Sort by up to three keys. The first key orders the list and later keys only break ties. Name search, the class filter, and the +0…+10 slider stay.',
+  'Character sections collapse, and that choice is remembered: worn, items that can be merged, bags, each bag, bank, each bank bag, shared bank, Dragon\'s Hoard, storage, and depot. Down means open. Right means closed. Items that can be merged sit above bags.',
+  'BiS Owned only ranks every slot from owned items only, with the same scoring, class, level, and single-haste rules. A slot is empty only when nothing owned fits it. An owned +N is used when the import recorded one.',
+  'Character shows an item icon to the left of each item name.',
+  'The merge list keeps equipable items except exaltations. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, those are left out. A stack in one slot is still left out. Dragon\'s Hoard and storage copies count.',
+  'Inventory dumps with the hoard window open read Hoard N rows as Dragon\'s Hoard. Hoard N-SlotK is that item\'s aug slot. The second table is Storage, with Equipment, Augmentation, and Activated. An export with no Hoard rows says to open the Dragon\'s Hoard window before /outputfile inventory.',
 ]
 
 export const CREDITS = [

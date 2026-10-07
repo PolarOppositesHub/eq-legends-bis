@@ -331,18 +331,17 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.4 notes", () => {
+test("what's new dialog shows the 1.1.5 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.4")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.4<\/h2>/)
-  assert.match(html, /hover stat popup/)
-  assert.match(html, /search bar at the top of Character/)
-  assert.match(html, /scroll to that slot/)
-  assert.match(html, /items that can be merged/)
-  assert.match(html, /Count greater than 1/)
-  assert.match(html, /Escape/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.3<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.5")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.5<\/h2>/)
+  assert.match(html, /three keys/)
+  assert.match(html, /Owned only/)
+  assert.match(html, /Dragon/)
+  assert.match(html, /Exaltation|exaltations/)
+  assert.match(html, /\/outputfile inventory/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.4<\/h2>/.test(html), false)
 })
 
 test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {

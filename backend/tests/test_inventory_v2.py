@@ -374,9 +374,43 @@ class InventoryV2SpecTests(unittest.TestCase):
             "name": "Synthetic Spare Cap",
             "id": "1001",
             "count": 1,
+            "wearable": False,
+            "container_item": False,
         }])
         self.assertEqual(payload["unknown_rows"], [])
         self.assertGreaterEqual(len(payload["rows"]), 2)
+
+
+class InventoryHoardFormatTests(unittest.TestCase):
+    def test_hoard_rows_are_a_container_and_slot_rows_are_augs(self):
+        text = (Path(__file__).resolve().parent / "fixtures" / "synthetic_hoard_inventory.txt").read_text(encoding="utf-8")
+        parsed = parse_inventory_tsv(text)
+        kinds = {row["location_raw"]: row["container_kind"] for row in parsed["rows"]}
+        self.assertEqual(kinds["Hoard 1"], "dragonhorde")
+        self.assertEqual(kinds["Hoard 1-Slot7"], "dragonhorde")
+        self.assertEqual(kinds["Hoard 74"], "dragonhorde")
+        parent = next(row for row in parsed["rows"] if row["location_raw"] == "Hoard 1")
+        aug = next(row for row in parsed["rows"] if row["location_raw"] == "Hoard 1-Slot7")
+        empty_aug = next(row for row in parsed["rows"] if row["location_raw"] == "Hoard 1-Slot8")
+        self.assertEqual(parent["name"], "Synthetic Hoard Leggings")
+        self.assertEqual(parent["tier"], 4)
+        self.assertIsNone(parent["parent_idx"])
+        self.assertEqual(parsed["rows"][aug["parent_idx"]]["location_raw"], "Hoard 1")
+        self.assertEqual(aug["name_raw"], "Synthetic Hoard Leggings (Exaltation)")
+        self.assertEqual(aug["depth"], 1)
+        self.assertFalse(aug["wearable"])
+        self.assertEqual(parsed["rows"][empty_aug["parent_idx"]]["location_raw"], "Hoard 1")
+        self.assertNotIn("Hoard 1", {row["raw"].split("\t")[0] for row in parsed["unknown_rows"]})
+        owned = {row["base_name"] for row in parsed["all_items"]}
+        self.assertIn("Synthetic Hoard Leggings", owned)
+        rings = [entry["ring"] for entry in parsed["keyring"]]
+        self.assertEqual(rings, ["Equipment", "Augmentation", "Activated"])
+
+    def test_export_without_hoard_rows_still_parses(self):
+        text = FIXTURE.read_text(encoding="utf-8")
+        parsed = parse_inventory_tsv(text)
+        self.assertFalse(any(row["container_kind"] == "dragonhorde" for row in parsed["rows"]))
+        self.assertTrue(parsed["rows"])
 
 
 if __name__ == "__main__":
