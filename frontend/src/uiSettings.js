@@ -73,7 +73,7 @@ export function pickLoadingSaying(seed = Date.now()) {
 export const APP_HELP = {
   title: 'How to use EQ Legends BiS',
   intro:
-    'Pick up to three classes, then use the side menu to plan BiS, simulate your worn gear, search bags, and look up quests. Data comes from decoded eqlegendstools / eqlwiki sources — stats are never invented.',
+    'Pick up to three classes, then use the side menu to plan BiS, simulate your worn gear, search your character, and look up quests. Data comes from decoded eqlegendstools / eqlwiki sources — stats are never invented.',
   sections: [
     {
       id: 'bis',
@@ -111,17 +111,10 @@ export const APP_HELP = {
       title: 'Character',
       body: [
         'Shows what the last Inventory.txt import has you wearing: each worn row, its +N tier, and its sockets.',
-        'Bags, bank, shared bank, and depot are listed under those trees. Empty slots can be hidden.',
-        'Names missing from the catalog are marked unknown. This tab does not add stats.',
+        'Bags, bank, shared bank, depot, and key rings are listed under those trees. Empty slots can be hidden. Search is the bar at the top of this tab. A result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot.',
+        'Hover a name for the same catalog stat popup used elsewhere. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki. Stats are not invented.',
+        'Items that can be merged lists the same item in more than one place. A stack whose Count is greater than 1 in one slot is left out. The inventory file has no other merge rule.',
         'Rows the parser does not recognise stay under Other sections, with the header and line text from the file.',
-      ],
-    },
-    {
-      id: 'bags',
-      title: 'Search My Bags',
-      body: [
-        'Search every occupied line from your last inventory import (worn, bags, bank, nested slots — empty slots hidden).',
-        'Names match the tools catalog and eqlwiki item list. Wiki-only names may show without stats yet.',
       ],
     },
     {
@@ -181,7 +174,7 @@ export const APP_HELP = {
       title: 'Inventory tips',
       body: [
         'In game: /outputfile inventory — file lands in the EQ install root as Character_server-Inventory.txt.',
-        'Desktop: Set EQ folder once, then Update from EQ folder on Simulator or Bags.',
+        'Desktop: Set EQ folder once, then Update from EQ folder on Simulator or Character.',
         'You can still use the file picker anytime.',
       ],
     },

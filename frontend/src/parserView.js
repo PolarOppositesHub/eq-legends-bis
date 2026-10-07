@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.3'
+export const WHATS_NEW_ID = '1.1.4'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,13 +23,13 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.3"
+export const WHATS_NEW_TITLE = "What's new in 1.1.4"
 
 export const WHATS_NEW_POINTS = [
-  'Inventory dumps are read by their column headers, anywhere in the file. A header row is not an item. Nested slots stay on the item they belong to. Bags, bank, shared bank, depot, and key rings are included.',
-  'With an EQ folder set, the app watches for inventory dumps and imports one after the file stops changing. You can also drop an inventory dump on the window. A file that is not an inventory dump is rejected.',
-  'The Character tab shows worn gear, bags, bank, shared bank, and depot from the last import. Empty slots can be hidden. A name that is not in the catalog is marked unknown. Stats are not added.',
-  'Best in Slot and Item Search mark a name from the last import with an Owned badge. Owned only hides names you do not have. Scores and order stay the same.',
+  'Character item names use the same hover stat popup as the rest of the app. Click a name for Item Search, which opens the item stats panel, or eqlwiki. A name with no wiki page does not offer eqlwiki.',
+  'Search My Bags is now the search bar at the top of Character. Each result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot and highlight it.',
+  'Character lists items that can be merged: the same item in more than one place. A stack in one slot (Count greater than 1) is left out. No other merge rule is invented. A dragon hoard section that is not an item table is left out and noted.',
+  'An item stat popup closes when the pointer leaves the name, and also on scroll, blur, a tab change, Escape, an outside click, or the close control. The same Escape, outside click, and close control dismiss a menu that stays open.',
 ]
 
 export const CREDITS = [

@@ -9,7 +9,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'bags', 'quests', 'mobs', 'search', 'parser']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'quests', 'mobs', 'search', 'parser']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -225,6 +225,11 @@ function pickNameMap(value, slots, itemExists) {
     out[key.trim()] = name
   }
   return out
+}
+
+function pickTab(value) {
+  if (value === 'bags') return 'character'
+  return pickEnum(value, WORKSPACE_TABS, 'bis')
 }
 
 function pickEnum(value, allowed, fallback) {
@@ -486,7 +491,7 @@ export function sanitizeWorkspace(raw, catalog) {
     }
     const state = {
       ...defaults,
-      tab: pickEnum(raw.tab, WORKSPACE_TABS, 'bis'),
+      tab: pickTab(raw.tab),
       classes: pickClasses(raw.classes, cat),
       mode: pickMode(raw.mode, cat),
       primaryStats: pickTiers(raw.primaryStats, cat),

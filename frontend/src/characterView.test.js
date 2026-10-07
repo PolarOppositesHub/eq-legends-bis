@@ -4,9 +4,13 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { CharacterPanel, CharacterView, OwnedBadge } from './characterView.jsx'
 import {
+  MERGEABLE_DUPLICATE_RULE,
   buildCharacterView,
   isOwnedName,
+  mergeableDuplicates,
   ownedNameSet,
+  scrollCharacterSlotIntoView,
+  searchCharacterCopies,
   visibleBisSlots,
   visibleSearchItems,
 } from './characterView.js'
@@ -278,4 +282,152 @@ test('Character panel renders the import and the owned badge is separate from sc
   assert.equal(renderToStaticMarkup(React.createElement(OwnedBadge, { owned: false })), '')
   const empty = renderToStaticMarkup(React.createElement(CharacterPanel, { importMeta: null }))
   assert.match(empty, /No inventory imported yet/)
+})
+
+test('character search lists every copy and scroll targets that slot', () => {
+  const view = buildCharacterView(importMeta, { hideEmpty: true })
+  const hits = searchCharacterCopies(view.copies, 'mote')
+  assert.equal(hits.length, 1)
+  assert.equal(hits[0].displayName, 'Mote of Infinitesimal Potential')
+  assert.equal(hits[0].place, 'Bag · General 1 · Slot1')
+  const node = view.carried
+    .find((section) => section.kind === 'general')
+    .nodes[0].children[0]
+  assert.equal(hits[0].key, node.key)
+  const html = renderToStaticMarkup(React.createElement(CharacterView, {
+    view,
+    hideEmpty: true,
+    onHideEmpty: () => {},
+    query: 'mote',
+    onQuery: () => {},
+    hits,
+    highlightKey: hits[0].key,
+    onLocate: () => {},
+  }))
+  assert.match(html, new RegExp(`data-character-slot="${hits[0].key}"`))
+  assert.match(html, /character-slot-hit/)
+  assert.match(html, /data-testid="character-search-hit"/)
+  assert.match(html, /Bag · General 1 · Slot1/)
+  const calls = []
+  const root = {
+    querySelector: (sel) => (sel.includes(hits[0].key) ? { scrollIntoView: (opts) => calls.push(opts) } : null),
+  }
+  assert.equal(scrollCharacterSlotIntoView(hits[0].key, root), true)
+  assert.deepEqual(calls, [{ block: 'center', inline: 'nearest' }])
+  assert.equal(scrollCharacterSlotIntoView('missing', root), false)
+  assert.equal(searchCharacterCopies(view.copies, 'bank').some((hit) => hit.place.startsWith('Bank ·')), true)
+  assert.equal(searchCharacterCopies(view.copies, '').length, 0)
+})
+
+test('merge list keeps separate copies and leaves stacked items out', () => {
+  const rows = [
+    row({ location_raw: 'General 1', container_kind: 'general', name_raw: 'Bag', name: 'Bag', id: '1', line: 1 }),
+    row({ location_raw: 'General 1-Slot1', container_kind: 'general', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', parent_idx: 0, depth: 1, socket_index: 1, line: 2 }),
+    row({ location_raw: 'Bank1', container_kind: 'bank', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 3 }),
+    row({ location_raw: 'General 1-Slot2', container_kind: 'general', name_raw: 'Spare Cloak +1', name: 'Spare Cloak', tier: 1, id: '42', parent_idx: 0, depth: 1, socket_index: 2, line: 4 }),
+    row({ location_raw: 'General 1-Slot3', container_kind: 'general', name_raw: 'Mote of Infinitesimal Potential', name: 'Mote of Infinitesimal Potential', id: '148590', count: 5, parent_idx: 0, depth: 1, socket_index: 3, line: 5 }),
+    row({ location_raw: 'General 1-Slot4', container_kind: 'general', name_raw: 'Other Cloak', name: 'Other Cloak', id: '99', parent_idx: 0, depth: 1, socket_index: 4, line: 6 }),
+    row({ location_raw: 'Dragon Hoard', container_kind: 'unknown', name_raw: 'Spare Cloak', name: 'Spare Cloak', id: '42', line: 7 }),
+    row({ location_raw: 'General 2', container_kind: 'general', name_raw: 'Second Bag', name: 'Second Bag', id: '2', line: 8 }),
+    row({ location_raw: 'General 2-Slot1', container_kind: 'general', name_raw: 'Lone Ring', name: 'Lone Ring', id: '7', parent_idx: 7, depth: 1, socket_index: 1, line: 9 }),
+  ]
+  const view = buildCharacterView({
+    source: 'Dupes.txt',
+    rows,
+    keyring: [
+      { ring: 'Equipment', name: 'Spare Cloak', id: '42', count: 1 },
+      { ring: 'Augmentation', name: 'Collapsed Stone', id: '8', count: 2 },
+    ],
+    all_items: [
+      { location: 'General 1-Slot1', name: 'Spare Cloak', base_name: 'Spare Cloak', id: '42', in_catalog: true },
+      { location: 'Bank1', name: 'Spare Cloak', base_name: 'Spare Cloak', id: '42', in_catalog: true },
+      { location: 'General 1-Slot2', name: 'Spare Cloak +1', base_name: 'Spare Cloak', id: '42', in_catalog: true },
+      { location: 'General 1-Slot3', name: 'Mote of Infinitesimal Potential', base_name: 'Mote of Infinitesimal Potential', id: '148590', in_catalog: true },
+      { location: 'Dragon Hoard', name: 'Spare Cloak', base_name: 'Spare Cloak', id: '42', in_catalog: true },
+      { location: 'Equipment', name: 'Spare Cloak', base_name: 'Spare Cloak', id: '42', in_catalog: true },
+      { location: 'Augmentation', name: 'Collapsed Stone', base_name: 'Collapsed Stone', id: '8', in_catalog: false },
+    ],
+  })
+  assert.equal(view.merge.rule, MERGEABLE_DUPLICATE_RULE)
+  const spare = view.merge.groups.find((group) => group.name === 'Spare Cloak' && (group.tier == null || group.tier === ''))
+  assert.ok(spare)
+  assert.equal(spare.copies.some((copy) => copy.place === 'Bag · General 1 · Slot1'), true)
+  assert.equal(spare.copies.some((copy) => copy.place === 'Bank · Bank1'), true)
+  assert.equal(spare.copies.some((copy) => copy.place === 'Dragon hoard · Dragon Hoard'), true)
+  assert.equal(spare.copies.some((copy) => copy.place === 'Key ring · Equipment'), true)
+  assert.equal(view.merge.groups.some((group) => group.tier === 1), false)
+  assert.equal(view.merge.groups.some((group) => group.name === 'Mote of Infinitesimal Potential'), false)
+  assert.equal(view.merge.omitted.some((item) => item.name === 'Mote of Infinitesimal Potential'), true)
+  assert.equal(view.merge.groups.some((group) => group.name === 'Lone Ring'), false)
+  const stone = view.merge.groups.find((group) => group.name === 'Collapsed Stone')
+  assert.equal(stone.total, 2)
+  assert.equal(stone.unknown, true)
+  assert.equal(view.dragonHorde.state, 'included')
+  const direct = mergeableDuplicates([
+    { displayName: 'Only', baseName: 'Only', tier: null, id: '1', copyCount: 1, stackedInSlot: false, container: 'general' },
+  ])
+  assert.equal(direct.groups.length, 0)
+  const mixed = mergeableDuplicates([
+    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: true, container: 'general' },
+    { displayName: 'Gem', baseName: 'Gem', tier: null, id: '3', copyCount: 1, stackedInSlot: false, container: 'bank' },
+  ])
+  assert.equal(mixed.groups.length, 0)
+  assert.equal(mixed.omitted[0].reason, 'stacked-in-one-slot')
+  const joined = mergeableDuplicates([
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+  ])
+  assert.equal(joined.groups.length, 1)
+  assert.equal(joined.groups[0].id, '9')
+  assert.equal(joined.groups[0].total, 2)
+  const split = mergeableDuplicates([
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '9', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '10', copyCount: 1, stackedInSlot: false },
+    { displayName: 'Band', baseName: 'Band', tier: null, id: '', copyCount: 1, stackedInSlot: false },
+  ])
+  assert.equal(split.groups.length, 1)
+  assert.equal(split.groups[0].id, '9')
+  assert.equal(split.groups[0].copies.length, 2)
+  assert.equal(split.omitted.some((item) => item.reason === 'ambiguous-id' && item.name === 'Band'), true)
+})
+
+test('a raw dragon hoard section is not turned into items', () => {
+  const view = buildCharacterView(importMeta)
+  assert.equal(view.dragonHorde.state, 'unparsed')
+  assert.equal(view.copies.some((copy) => /mystery/i.test(copy.displayName)), false)
+  assert.equal(view.carried.some((section) => section.kind === 'dragonhorde'), false)
+  const absent = buildCharacterView({
+    source: 'Plain.txt',
+    rows: [row({ location_raw: 'Head', name_raw: 'Cap', name: 'Cap', id: '1' })],
+    all_items: [{ location: 'Head', name: 'Cap', base_name: 'Cap', id: '1', in_catalog: true }],
+  })
+  assert.equal(absent.dragonHorde.state, 'absent')
+  assert.match(absent.dragonHorde.note, /no dragon hoard item rows/)
+})
+
+test('character items can render the shared name control and skip wiki when unknown', () => {
+  const view = buildCharacterView(importMeta, { hideEmpty: true })
+  const calls = []
+  const html = renderToStaticMarkup(React.createElement(CharacterView, {
+    view,
+    hideEmpty: true,
+    onHideEmpty: () => {},
+    query: '',
+    hits: [],
+    highlightKey: '',
+    onLocate: () => {},
+    renderItemName: (node) => React.createElement('button', {
+      type: 'button',
+      'data-item-tip-trigger': '1',
+      'data-allow-wiki': node.unknown ? '0' : '1',
+      onClick: () => calls.push(node.catalogName),
+    }, node.displayName),
+  }))
+  assert.match(html, /data-item-tip-trigger="1"/)
+  assert.match(html, /data-allow-wiki="0"/)
+  assert.match(html, /data-allow-wiki="1"/)
+  assert.match(html, /Items that can be merged/)
+  assert.match(html, /data-testid="character-search"/)
+  assert.doesNotMatch(html, /AC:|HP:|stats_plus/)
 })

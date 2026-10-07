@@ -1,6 +1,15 @@
 # EQ Legends BiS app status
 
-Version: **1.1.3** — inventory import v2 (PRs #45, #46, and #47): header-based inventory parsing, watching and dropping inventory dumps, the Character tab, and owned badges. 1.1.2 — parser rebuild no longer freezes the app on the first launch after an update. 1.1.1 is PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export), and PR #43 (first launch no longer fails with "database is locked"). Updater PolarOppositesHub/eq-legends-bis untouched.
+Version: **1.1.4** — Character item hover and click, bag search on the Character tab, a merge list, and stat-popup dismiss. 1.1.3 — inventory import v2 (PRs #45, #46, and #47): header-based inventory parsing, watching and dropping inventory dumps, the Character tab, and owned badges. 1.1.2 — parser rebuild no longer freezes the app on the first launch after an update. 1.1.1 is PR #36 (per-fight breakdowns; a 1.1.0 parse rebuilds from the log), PR #37 (Item Search quest links), PR #38 (fight history), PR #39 (pets, group, and Self/Group/Pets/All), PR #40 (desktop and Start Menu seal icons), PR #41 (Parser drill-down, timeline, tabs, merge, copy, and export), and PR #43 (first launch no longer fails with "database is locked"). Updater PolarOppositesHub/eq-legends-bis untouched.
+
+## 1.1.4
+- Character item names use the same hover stat popup as the rest of the app. Click a name for Item Search, which opens the item stats panel, or eqlwiki. A name with no wiki page does not offer eqlwiki.
+- Search My Bags is now the search bar at the top of Character. Each result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot and highlight it.
+- Character lists items that can be merged: the same item (base name, tier, and id) in more than one place. A Location Count greater than 1 is a stack in one slot and is left out. The inventory file and the catalog have no other merge rule, so anything else is left out. Rule id: `same-item-separate-copies-exclude-location-stacks`.
+- Dragon hoard: `/outputfile inventory` in this repo has no hoard item table. Location rows whose token is a dragon hoard are included. A raw Dragon Hoard section that is not an item table stays under Other sections and is not turned into items. If the import has no hoard rows, the Character tab says so.
+- An item stat popup closes when the pointer leaves its trigger. A detail fetch that finishes after that leave cannot show the popup again. Scroll, blur, tab changes, Escape, an outside click, and the close control also dismiss it. Menus already closed on Escape and an outside click; they now have a Close control too.
+- What's new dialog for 1.1.4.
+- Version bump across package.json, package-lock.json, and version.py sources.
 
 ## 1.1.3
 - Inventory dumps are read by their column headers, anywhere in the file. A header row is not an item. Table 1 is Location, Name, ID, Count, and Slots. Table 2 is KeyRing, Name, and ID. Nested slots stay on the item they belong to. Bags, bank, shared bank, depot, and key rings are included. A section the parser does not recognise is kept as the header and line text.
