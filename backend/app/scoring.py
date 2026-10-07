@@ -132,8 +132,19 @@ def item_haste(item: dict, level: int = 10) -> float:
     return num(base) + lvl
 
 
+def haste_level_of(item: dict | None) -> int:
+    """+10 unless the item carries an owned copy's +N."""
+    raw = (item or {}).get("owned_upgrade")
+    if raw is None or raw == "":
+        return 10
+    try:
+        return max(0, min(10, int(raw)))
+    except (TypeError, ValueError):
+        return 10
+
+
 def haste_bonus(item: dict) -> float:
-    h = item_haste(item)
+    h = item_haste(item, haste_level_of(item))
     return h * 2.0 if h > 0 else 0.0
 
 
@@ -519,7 +530,7 @@ def rank_for_slot(
             "is_weapon": item.get("is_weapon", False),
             "stats_plus0": item.get("stats_plus0") or {},
             "stats_plus10": s10,
-            "haste": item_haste(item),
+            "haste": item_haste(item, haste_level_of(item)),
             "planner_slots": item.get("planner_slots") or [],
             "slot": item.get("slot") or "",
             "image_url": item.get("image_url") or "",
@@ -554,7 +565,7 @@ def pick_loadout(
     for group in groups:
         ranked = rank_for_slot(pool, group[0], mode, stat_key, opts)
         for cand in ranked:
-            h = item_haste(cand.get("item") or {})
+            h = item_haste(cand.get("item") or {}, haste_level_of(cand.get("item") or {}))
             if h <= 0:
                 continue
             cand_h = dict(cand)
@@ -588,7 +599,7 @@ def pick_loadout(
                 continue
             if any(p["name"] == cand["name"] for p in picks):
                 continue
-            h = item_haste(cand.get("item") or {})
+            h = item_haste(cand.get("item") or {}, haste_level_of(cand.get("item") or {}))
             if h > 0 and cand["name"] != reserved_haste_name:
                 continue
             picks.append(cand)

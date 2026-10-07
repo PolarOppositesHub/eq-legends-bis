@@ -1,13 +1,13 @@
 {
   "name": "eq-legends-bis-app",
   "private": true,
-  "version": "1.1.4",
+  "version": "1.1.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --import ./src/jsxRegister.js --test src/workspaceSession.test.js src/itemUpgradeStats.test.js src/parserTab.test.js src/parserDepth.test.js src/inventoryImport.test.js src/characterView.test.js src/hoverTip.test.js"
+    "test": "node --import ./src/jsxRegister.js --test src/workspaceSession.test.js src/itemUpgradeStats.test.js src/parserTab.test.js src/parserDepth.test.js src/inventoryImport.test.js src/characterView.test.js src/itemSearchQuery.test.js src/hoverTip.test.js"
   },
   "dependencies": {
     "react": "^18.3.1",

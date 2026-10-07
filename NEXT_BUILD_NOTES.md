@@ -1,5 +1,19 @@
 # Next build notes
 
+**Shipped as 1.1.5.** Updater untouched. Never invent item stats, merge rules, or file formats.
+
+## 1.1.5 — Search filters, collapsible character, owned BiS, hoard
+- [x] Item Search filters by slot or type, usable class, and any catalog stat with an optional minimum. Three sort keys: the first orders the list, later keys break ties. Name matching, the slot filter, and the +0…+10 slider stay.
+- [x] Character sections collapse and the choice is remembered. Items that can be merged sit above bags. An item icon sits to the left of each name on that tab.
+- [x] BiS Owned only re-ranks every slot from owned items, with the same scoring, class, level, and single-haste rules, including a recorded +N. Item Search Owned only still only hides.
+- [x] Merge list: eqlwiki Item Upgrade System (https://eqlwiki.com/Item_Upgrade_System) says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, equipable items are mergeable except exaltations, and non-equipable items, bags, and boxes are not. A Location Count greater than 1 stays left out. Hoard and storage copies count.
+- [x] `Hoard N` rows are Dragon's Hoard. `Hoard N-SlotK` is that item's aug slot. The KeyRing table is labeled Storage (Equipment, Augmentation, Activated). No Hoard rows: open the Dragon's Hoard window before `/outputfile inventory`.
+- [x] What's new dialog for 1.1.5.
+- [x] Versions **1.1.5**
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Shipped as 1.1.4.** Updater untouched. Never invent item stats or merge rules.
 
 ## 1.1.4 — Character search, merge list, popup dismiss

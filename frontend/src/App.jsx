@@ -68,10 +68,11 @@ import {
 } from './hoverTip.js'
 import {
   isOwnedName,
+  ownedItemLevels,
   ownedNameSet,
-  visibleBisSlots,
   visibleSearchItems,
 } from './characterView.js'
+import { buildItemSearchParams, searchStatLabel } from './itemSearchQuery.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -1045,6 +1046,17 @@ export default function App() {
 
   const [searchQ, setSearchQ] = useState('')
   const [searchSlot, setSearchSlot] = useState('')
+  const [searchType, setSearchType] = useState('')
+  const [searchClass, setSearchClass] = useState('')
+  const [searchStat, setSearchStat] = useState('')
+  const [searchStatMin, setSearchStatMin] = useState('')
+  const [searchSort1, setSearchSort1] = useState('')
+  const [searchSort1Dir, setSearchSort1Dir] = useState('desc')
+  const [searchSort2, setSearchSort2] = useState('')
+  const [searchSort2Dir, setSearchSort2Dir] = useState('desc')
+  const [searchSort3, setSearchSort3] = useState('')
+  const [searchSort3Dir, setSearchSort3Dir] = useState('desc')
+  const [characterCollapsed, setCharacterCollapsed] = useState({})
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [itemDetail, setItemDetail] = useState(null)
@@ -1343,6 +1355,17 @@ export default function App() {
     setMobListCollapsed(!!state.mobListCollapsed)
     setSearchQ(state.searchQ || '')
     setSearchSlot(state.searchSlot || '')
+    setSearchType(state.searchType || '')
+    setSearchClass(state.searchClass || '')
+    setSearchStat(state.searchStat || '')
+    setSearchStatMin(state.searchStatMin || '')
+    setSearchSort1(state.searchSort1 || '')
+    setSearchSort1Dir(state.searchSort1Dir === 'asc' ? 'asc' : 'desc')
+    setSearchSort2(state.searchSort2 || '')
+    setSearchSort2Dir(state.searchSort2Dir === 'asc' ? 'asc' : 'desc')
+    setSearchSort3(state.searchSort3 || '')
+    setSearchSort3Dir(state.searchSort3Dir === 'asc' ? 'asc' : 'desc')
+    setCharacterCollapsed(state.characterCollapsed || {})
     setSearchItemUpgrade(state.searchItemUpgrade || 0)
     setBuildName(state.buildName || '')
     setSelectedBuildId(state.selectedBuildId || '')
@@ -1473,21 +1496,30 @@ export default function App() {
     })
   }
 
-  const bisRequestBody = useCallback(() => ({
-    classes,
-    mode,
-    priority_stat: priorityStat,
-    primary_stats: nonemptyStats(primaryStats),
-    secondary_stats: nonemptyStats(secondaryStats),
-    tertiary_stats: nonemptyStats(tertiaryStats),
-    maximize_hp_regen: maximizeHpRegen,
-    alts: 5,
-    upgrade,
-    prefer_ranged_damage: preferRanged,
-    character_level: characterLevel,
-  }), [
+  const ownedForBis = useMemo(() => ownedItemLevels(importMeta), [importMeta])
+  const ownedBisKey = ownedOnly
+    ? ownedForBis.map((row) => `${row.name}\0${row.upgrade ?? ''}`).join('\n')
+    : ''
+
+  const bisRequestBody = useCallback(() => {
+    const body = {
+      classes,
+      mode,
+      priority_stat: priorityStat,
+      primary_stats: nonemptyStats(primaryStats),
+      secondary_stats: nonemptyStats(secondaryStats),
+      tertiary_stats: nonemptyStats(tertiaryStats),
+      maximize_hp_regen: maximizeHpRegen,
+      alts: 5,
+      upgrade,
+      prefer_ranged_damage: preferRanged,
+      character_level: characterLevel,
+    }
+    if (ownedOnly) body.owned_items = ownedForBis
+    return body
+  }, [
     classes, mode, priorityStat, primaryStats, secondaryStats, tertiaryStats,
-    maximizeHpRegen, upgrade, preferRanged, characterLevel,
+    maximizeHpRegen, upgrade, preferRanged, characterLevel, ownedOnly, ownedForBis,
   ])
 
   const runBis = useCallback(async (opts) => {
@@ -1550,7 +1582,7 @@ export default function App() {
   useEffect(() => {
     if (meta && classes.length >= 1) runBis()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta, upgrade, preferRanged, characterLevel, mode, maximizeHpRegen])
+  }, [meta, upgrade, preferRanged, characterLevel, mode, maximizeHpRegen, ownedOnly, ownedBisKey])
 
   const loadSlotOptions = useCallback(async () => {
     if (!meta || classes.length < 1) return
@@ -2224,12 +2256,29 @@ export default function App() {
     setImportMsg('Deleted saved build')
   }
 
+  const itemSearchParams = useCallback((limit) => buildItemSearchParams({
+    q: searchQ,
+    slot: searchSlot,
+    typeName: searchType,
+    usableClass: searchClass,
+    stat: searchStat,
+    statMin: searchStatMin,
+    sorts: [
+      { key: searchSort1, dir: searchSort1Dir },
+      { key: searchSort2, dir: searchSort2Dir },
+      { key: searchSort3, dir: searchSort3Dir },
+    ],
+    limit,
+  }), [
+    searchQ, searchSlot, searchType, searchClass, searchStat, searchStatMin,
+    searchSort1, searchSort1Dir, searchSort2, searchSort2Dir, searchSort3, searchSort3Dir,
+  ])
+
   const runSearch = async () => {
     setSearchLoading(true)
     setError('')
     try {
-      const params = { q: searchQ || '', limit: 80 }
-      if (searchSlot) params.slot = searchSlot
+      const params = itemSearchParams(80)
       const res = await searchItems(params)
       setSearchResults(res)
       if (res?.warning) setError(String(res.warning))
@@ -2429,10 +2478,7 @@ export default function App() {
 
   const ownedNames = useMemo(() => ownedNameSet(importMeta), [importMeta])
   const ownedFilterOn = ownedOnly && ownedNames.size > 0
-  const bisSlots = useMemo(
-    () => visibleBisSlots(bis?.slots, ownedNames, ownedFilterOn),
-    [bis, ownedNames, ownedFilterOn],
-  )
+  const bisSlots = bis?.slots || []
   const ownedSearchItems = useMemo(
     () => visibleSearchItems(searchResults?.items, ownedNames, ownedFilterOn),
     [searchResults, ownedNames, ownedFilterOn],
@@ -2445,8 +2491,7 @@ export default function App() {
     const t = setTimeout(async () => {
       setSearchLoading(true)
       try {
-        const params = { q: searchQ || '', limit: ownedFilterOn ? 200 : 80 }
-        if (searchSlot) params.slot = searchSlot
+        const params = itemSearchParams(ownedFilterOn ? 200 : 80)
         const res = await searchItems(params)
         if (!cancelled) {
           setSearchResults(res)
@@ -2465,7 +2510,7 @@ export default function App() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [tab, searchQ, searchSlot, ownedFilterOn])
+  }, [tab, itemSearchParams, ownedFilterOn])
 
   useEffect(() => {
     const name = itemDetail?.name || ''
@@ -2553,6 +2598,17 @@ export default function App() {
       mobListCollapsed,
       searchQ,
       searchSlot,
+      searchType,
+      searchClass,
+      searchStat,
+      searchStatMin,
+      searchSort1,
+      searchSort1Dir,
+      searchSort2,
+      searchSort2Dir,
+      searchSort3,
+      searchSort3Dir,
+      characterCollapsed,
       searchSelectedName: itemDetail?.name || '',
       searchItemUpgrade,
       buildName,
@@ -2570,7 +2626,9 @@ export default function App() {
     maximizeHpRegen, upgrade, wornUpgrades, bisUpgrades, preferRanged, race, characterLevel,
     castBuffsMode, assumeMaxAas, equipment, bisOverrides, bagsQ, bagsLoc, questQ,
     selectedQuestName, questListCollapsed, questRewardUpgrade, mobQ, mobKind, mobEra,
-    selectedMobName, mobListCollapsed, searchQ, searchSlot, itemDetail, searchItemUpgrade,
+    selectedMobName, mobListCollapsed, searchQ, searchSlot, searchType, searchClass,
+    searchStat, searchStatMin, searchSort1, searchSort1Dir, searchSort2, searchSort2Dir,
+    searchSort3, searchSort3Dir, characterCollapsed, itemDetail, searchItemUpgrade,
     buildName, selectedBuildId, ownedOnly, importMeta, uiSettings, parserLogPath, parserMergePets,
     parserFightId, whatsNewSeenId,
   ])
@@ -3264,11 +3322,8 @@ export default function App() {
                 Owned only
               </label>
               <p className="note" style={{ marginTop: '0.35rem' }}>
-                An Owned badge marks a name from the last import. Owned only hides picks you do not have. Scores and order stay the same.
+                An Owned badge marks a name from the last import. Owned only ranks each slot again using only owned items (worn, bags, bank, shared bank, Dragon&apos;s Hoard, storage, and any other imported container). Scoring, class, level, and the single-haste rule stay the same, and a copy&apos;s +N is used when the import recorded one. A slot stays empty when nothing owned fits it.
               </p>
-              {ownedFilterOn && bis?.slots?.length && !bisSlots.length ? (
-                <p className="muted">None of these BiS picks are in the imported inventory.</p>
-              ) : null}
               <div className="grid-slots">
                 {bisSlots.map((s) => (
                   <div className="slot-card" key={s.slot}>
@@ -3316,7 +3371,7 @@ export default function App() {
                         <OwnedBadge owned={isOwnedName(s.name, ownedNames)} />
                         </>
                       ) : (
-                        '—'
+                        bis?.owned_only ? 'Nothing owned fits this slot.' : '—'
                       )}
                     </div>
                     <div className="meta">
@@ -3370,8 +3425,8 @@ export default function App() {
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Character</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                Worn gear with the tier and sockets from the inventory file, then bags, bank, shared bank, and depot.
-                Hover a name for catalog stats. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki.
+                Worn gear, then items that can be merged, then bags, bank, shared bank, Dragon&apos;s Hoard, storage, and depot.
+                Section headers collapse. Hover a name for catalog stats. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki.
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
                 {isDesktopApp && (
@@ -3425,6 +3480,8 @@ export default function App() {
                 query={bagsQ}
                 onQuery={setBagsQ}
                 renderItemName={renderCharacterItem}
+                collapsed={characterCollapsed}
+                onCollapsedChange={setCharacterCollapsed}
               />
             </div>
           )}
@@ -3956,6 +4013,67 @@ export default function App() {
                   />
                   Owned only
                 </label>
+              </div>
+              <div className="item-search-filters">
+                <label>
+                  Type
+                  <select value={searchType} onChange={(e) => setSearchType(e.target.value)} aria-label="Item type">
+                    <option value="">Any type</option>
+                    {(searchResults?.types || []).map((typeName) => (
+                      <option key={typeName} value={typeName}>{typeName}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Usable by
+                  <select value={searchClass} onChange={(e) => setSearchClass(e.target.value)} aria-label="Usable class">
+                    <option value="">Any class</option>
+                    {(meta?.classes || []).map((className) => (
+                      <option key={className} value={className}>{className}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Has stat
+                  <select value={searchStat} onChange={(e) => setSearchStat(e.target.value)} aria-label="Has stat">
+                    <option value="">Any stat</option>
+                    {(searchResults?.stat_keys || []).map((key) => (
+                      <option key={key} value={key}>{searchStatLabel(key)}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Min
+                  <input
+                    type="number"
+                    aria-label="Minimum stat"
+                    value={searchStatMin}
+                    disabled={!searchStat}
+                    onChange={(e) => setSearchStatMin(e.target.value)}
+                  />
+                </label>
+                {[
+                  ['Primary sort', searchSort1, setSearchSort1, searchSort1Dir, setSearchSort1Dir],
+                  ['Secondary sort', searchSort2, setSearchSort2, searchSort2Dir, setSearchSort2Dir],
+                  ['Tertiary sort', searchSort3, setSearchSort3, searchSort3Dir, setSearchSort3Dir],
+                ].map(([label, value, setValue, dir, setDir]) => (
+                  <label key={label}>
+                    {label}
+                    <span className="item-search-sort">
+                      <select value={value} onChange={(e) => setValue(e.target.value)} aria-label={label}>
+                        <option value="">None</option>
+                        <option value="name">Name</option>
+                        {(searchResults?.stat_keys || []).map((key) => (
+                          <option key={key} value={key}>{searchStatLabel(key)}</option>
+                        ))}
+                      </select>
+                      <select value={dir} onChange={(e) => setDir(e.target.value)} aria-label={`${label} direction`} disabled={!value}>
+                        <option value="desc">Desc</option>
+                        <option value="asc">Asc</option>
+                      </select>
+                    </span>
+                  </label>
+                ))}
               </div>
               {searchResults && (
                 <p className="muted" style={{ marginTop: '0.65rem' }}>

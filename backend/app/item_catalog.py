@@ -11,7 +11,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from functools import lru_cache
+from functools import cmp_to_key, lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -483,15 +483,248 @@ def _all_flat_items() -> list[dict[str, Any]]:
     return list(by_name.values())
 
 
+# Class: tokens observed in decoded tooltips, paired with planner class names.
+_CLASS_TOKEN_TO_NAME = {
+    "BRD": "Bard",
+    "BST": "Beastlord",
+    "BER": "Berserker",
+    "CLR": "Cleric",
+    "DRU": "Druid",
+    "ENC": "Enchanter",
+    "MAG": "Magician",
+    "MNK": "Monk",
+    "NEC": "Necromancer",
+    "PAL": "Paladin",
+    "RNG": "Ranger",
+    "ROG": "Rogue",
+    "SHD": "Shadow Knight",
+    "SHM": "Shaman",
+    "WAR": "Warrior",
+    "WIZ": "Wizard",
+}
+_CLASS_NAME_TO_TOKEN = {name.casefold(): token for token, name in _CLASS_TOKEN_TO_NAME.items()}
+_NAME_STOP = frozenset({"of", "the", "a", "an", "and"})
+_SKILL_RE = re.compile(r"(?i)^Skill:\s*(.+?)(?:\s+Atk(?:ack)?\s+Delay\b.*)?$")
+_SEARCH_STAT_ORDER = (
+    "AC", "HP", "MANA", "END", "STR", "STA", "AGI", "DEX", "WIS", "INT", "CHA",
+    "Haste", "DMG", "DLY", "HP_REGEN", "MANA_REGEN", "END_REGEN",
+    "SVF", "SVC", "SVM", "SVP", "SVD", "SVV", "ATK", "FIRE_DMG", "COLD_DMG",
+)
+
+
+def _resolve_class_name(value: str) -> str:
+    text = (value or "").strip()
+    if not text:
+        return ""
+    token = _CLASS_TOKEN_TO_NAME.get(text.upper())
+    if token:
+        return token
+    folded = text.casefold()
+    for name in _CLASS_NAME_TO_TOKEN:
+        if name == folded:
+            return _CLASS_TOKEN_TO_NAME[_CLASS_NAME_TO_TOKEN[name]]
+    return text
+
+
+def item_skill(item: dict[str, Any]) -> str:
+    """Skill line from a decoded tooltip, such as '1H Slashing'. Empty when absent."""
+    cached = item.get("skill")
+    if isinstance(cached, str) and cached.strip():
+        return re.sub(r"\s+", " ", cached).strip()
+    for line in item.get("tooltipLines") or []:
+        match = _SKILL_RE.match(str(line).strip())
+        if not match:
+            continue
+        skill = re.sub(r"\s+", " ", match.group(1)).strip()
+        if skill:
+            return skill
+    return ""
+
+
+def _query_tokens(qn: str) -> list[str]:
+    return [token for token in re.split(r"[^a-z0-9']+", qn) if token and token not in _NAME_STOP]
+
+
+def item_name_matches(item: dict[str, Any], q: str) -> bool:
+    """Substring match kept as-is, plus token match so words need not be adjacent.
+
+    Filler words (of, the, a, an, and) are ignored only for the token path.
+    A query that is only filler stays on the substring path.
+    """
+    qn = (q or "").strip().lower()
+    if not qn:
+        return True
+    name = item.get("name") or ""
+    blob = f"{name} {item.get('classes_str') or ''} {item.get('zone') or ''}".lower()
+    if qn in name.lower() or qn in blob:
+        return True
+    tokens = _query_tokens(qn)
+    if not tokens:
+        return False
+    return all(token in blob for token in tokens)
+
+
+def item_slot_matches(item: dict[str, Any], slot_u: str | None) -> bool:
+    if not slot_u:
+        return True
+    slots = {str(s).upper() for s in (item.get("slots") or [])}
+    slot_field = str(item.get("slot") or "").upper()
+    if slot_u in slots or slot_u in slot_field.replace("/", " ").split():
+        return True
+    if any(slot_u in str(s).upper() for s in slots) or slot_u in slot_field:
+        return True
+    return False
+
+
+def item_type_matches(item: dict[str, Any], type_name: str | None) -> bool:
+    """Type is a Skill: value, or a whole word in the item name when no skill uses it."""
+    wanted = re.sub(r"\s+", " ", (type_name or "").strip())
+    if not wanted:
+        return True
+    skill = item_skill(item)
+    if skill and skill.casefold() == wanted.casefold():
+        return True
+    if re.search(rf"(?i)(?<![a-z0-9]){re.escape(wanted)}(?![a-z0-9])", item.get("name") or ""):
+        return True
+    return False
+
+
+def item_usable_by_class(item: dict[str, Any], class_name: str | None) -> bool:
+    wanted = _resolve_class_name(class_name or "")
+    if not wanted:
+        return True
+    parts: list[str] = []
+    for raw in list(item.get("classes") or []) + [item.get("classes_str") or ""]:
+        text = str(raw or "").strip()
+        if text:
+            parts.append(text)
+    for line in item.get("tooltipLines") or []:
+        s = str(line).strip()
+        if s.lower().startswith("class:"):
+            parts.append(s.split(":", 1)[1].strip())
+    blob = " ".join(parts)
+    except_match = re.search(r"(?i)\ball\s+except\b\s+(.+)$", blob)
+    if except_match:
+        excluded = {p.upper() for p in re.split(r"[\s,/]+", except_match.group(1)) if p}
+        token = _CLASS_NAME_TO_TOKEN.get(wanted.casefold(), wanted.upper())
+        return token not in excluded and wanted.upper() not in excluded
+    tokens = [p for p in re.split(r"[\s,/]+", blob) if p]
+    if any(token.upper() == "ALL" for token in tokens):
+        return True
+    return any(_resolve_class_name(token).casefold() == wanted.casefold() for token in tokens)
+
+
+def item_stat_value(item: dict[str, Any], stat: str) -> float | None:
+    """Catalog value for a stat key. +0 when present, else +10, else a tooltip line."""
+    key = (stat or "").strip()
+    if not key:
+        return None
+    folded = key.casefold()
+    for bucket_name in ("stats_plus0", "stats_plus10"):
+        bucket = item.get(bucket_name)
+        if not isinstance(bucket, dict):
+            continue
+        for raw_key, raw_value in bucket.items():
+            if str(raw_key).casefold() != folded or raw_value is None or raw_value == "":
+                continue
+            try:
+                return float(raw_value)
+            except (TypeError, ValueError):
+                continue
+    pattern = re.compile(rf"(?i)\b{re.escape(key)}\s*:\s*\+?(-?\d+(?:\.\d+)?)")
+    for line in item.get("tooltipLines") or []:
+        match = pattern.search(str(line))
+        if match:
+            return float(match.group(1))
+    return None
+
+
+def _stat_sort_raw(item: dict[str, Any], key: str) -> str | float | None:
+    if not key or key.casefold() == "name":
+        return (item.get("name") or "").casefold()
+    return item_stat_value(item, key)
+
+
+def sort_search_items(
+    items: list[dict[str, Any]],
+    levels: list[tuple[str, str]],
+) -> list[dict[str, Any]]:
+    """Primary key first. Later keys break ties only. Missing stats sort last."""
+    active = [(key, "desc" if direction == "desc" else "asc") for key, direction in levels if key]
+
+    def compare(left: dict[str, Any], right: dict[str, Any]) -> int:
+        for key, direction in active:
+            a = _stat_sort_raw(left, key)
+            b = _stat_sort_raw(right, key)
+            if a is None and b is None:
+                continue
+            if a is None:
+                return 1
+            if b is None:
+                return -1
+            if a == b:
+                continue
+            if direction == "desc":
+                return -1 if a > b else 1
+            return -1 if a < b else 1
+        an = (left.get("name") or "").casefold()
+        bn = (right.get("name") or "").casefold()
+        if an < bn:
+            return -1
+        if an > bn:
+            return 1
+        return 0
+
+    return sorted(items, key=cmp_to_key(compare))
+
+
+@lru_cache(maxsize=1)
+def search_facets() -> dict[str, list[str]]:
+    """Stat keys and skill types that actually occur on catalog items."""
+    stats: set[str] = set()
+    types: set[str] = set()
+    try:
+        pool = _all_flat_items()
+    except Exception:
+        pool = []
+    for item in pool:
+        for bucket_name in ("stats_plus0", "stats_plus10"):
+            bucket = item.get(bucket_name)
+            if not isinstance(bucket, dict):
+                continue
+            for key, value in bucket.items():
+                if value is None or value == "":
+                    continue
+                stats.add(str(key))
+        skill = item_skill(item)
+        if skill:
+            types.add(skill)
+    ordered_stats = [key for key in _SEARCH_STAT_ORDER if key in stats]
+    ordered_stats.extend(sorted(key for key in stats if key not in ordered_stats))
+    return {"stat_keys": ordered_stats, "types": sorted(types, key=str.casefold)}
+
+
 def search_items(
     q: str = "",
     *,
     slot: str | None = None,
+    type_name: str | None = None,
+    usable_class: str | None = None,
+    stat: str | None = None,
+    stat_min: float | None = None,
+    sort: str | None = None,
+    sort_dir: str | None = None,
+    sort2: str | None = None,
+    sort2_dir: str | None = None,
+    sort3: str | None = None,
+    sort3_dir: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> dict[str, Any]:
-    """Search catalog. Never raises — empty catalog when data is missing."""
-    qn = (q or "").strip().lower()
+    """Search catalog. Never raises — empty catalog when data is missing.
+
+    With no sort keys, order stays alphabetical by name. Filters are AND.
+    """
     slot_u = (slot or "").strip().upper() or None
     try:
         pool = _all_flat_items()
@@ -500,21 +733,36 @@ def search_items(
     hits: list[dict[str, Any]] = []
     for it in pool:
         try:
-            name = it.get("name") or ""
-            if qn and qn not in name.lower():
-                blob = f"{name} {it.get('classes_str') or ''} {it.get('zone') or ''}".lower()
-                if qn not in blob:
+            if not item_name_matches(it, q):
+                continue
+            if not item_slot_matches(it, slot_u):
+                continue
+            if not item_type_matches(it, type_name):
+                continue
+            if not item_usable_by_class(it, usable_class):
+                continue
+            if stat:
+                value = item_stat_value(it, stat)
+                if value is None:
                     continue
-            if slot_u:
-                slots = {str(s).upper() for s in (it.get("slots") or [])}
-                slot_field = str(it.get("slot") or "").upper()
-                if slot_u not in slots and slot_u not in slot_field.replace("/", " ").split():
-                    if not any(slot_u in str(s).upper() for s in slots) and slot_u not in slot_field:
-                        continue
-            hits.append(_public_item(it))
+                if stat_min is not None and value < float(stat_min):
+                    continue
+            public = _public_item(it)
+            skill = item_skill(it)
+            if skill:
+                public["skill"] = skill
+            hits.append(public)
         except Exception:
             continue
-    hits.sort(key=lambda r: (r["name"] or "").lower())
+    levels = [
+        ((sort or "").strip(), (sort_dir or "asc").strip().lower()),
+        ((sort2 or "").strip(), (sort2_dir or "asc").strip().lower()),
+        ((sort3 or "").strip(), (sort3_dir or "asc").strip().lower()),
+    ]
+    if any(key for key, _direction in levels):
+        hits = sort_search_items(hits, levels)
+    else:
+        hits.sort(key=lambda r: (r["name"] or "").lower())
     total = len(hits)
     page = hits[offset: offset + max(1, min(200, limit))]
     decoded_s = ""
@@ -522,13 +770,25 @@ def search_items(
         decoded_s = str(decoded_dir())
     except Exception:
         decoded_s = ""
+    facets = {"stat_keys": [], "types": []}
+    try:
+        facets = search_facets()
+    except Exception:
+        facets = {"stat_keys": [], "types": []}
     return {
         "total": total,
         "offset": offset,
         "limit": limit,
         "query": q,
         "slot": slot_u,
+        "type": (type_name or "").strip() or None,
+        "usable_class": _resolve_class_name(usable_class or "") or None,
+        "stat": (stat or "").strip() or None,
+        "stat_min": stat_min,
+        "sort": [key for key, _direction in levels if key],
         "items": page,
+        "stat_keys": facets.get("stat_keys") or [],
+        "types": facets.get("types") or [],
         "catalog_size": len(pool),
         "tools_items": sum(1 for it in pool if (it.get("catalog_source") or "tools") == "tools"),
         "eqlwiki_names": sum(1 for it in pool if it.get("catalog_source") == "eqlwiki"),
@@ -784,6 +1044,7 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
             "has_stats": bool(s0 or s10),
             "name": it.get("name") or name,
             "itemID": it.get("itemID"),
+            "slots": [str(s).strip().upper() for s in (it.get("slots") or []) if str(s).strip()],
         }
     if key and key in wiki and not str(key).startswith("__"):
         return {

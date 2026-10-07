@@ -433,6 +433,51 @@ test('session restore keeps the last inventory import', () => {
   assert.equal(again.state.ownedOnly, true)
 })
 
+test('dragon hoard rows, storage flags, search filters, and collapse flags survive a session', () => {
+  const { state } = sanitizeWorkspace({
+    v: 1,
+    tab: 'character',
+    searchType: '1H Slashing',
+    searchClass: 'wizard',
+    searchStat: 'INT',
+    searchStatMin: '4',
+    searchSort1: 'DMG',
+    searchSort1Dir: 'desc',
+    searchSort2: 'INT',
+    searchSort2Dir: 'asc',
+    searchSort3: '',
+    characterCollapsed: { worn: true, 'section:dragonhorde': true, nope: false, '': true },
+    importMeta: {
+      source: 'Hoard.txt',
+      rows: [{
+        location_raw: 'Hoard 1',
+        container_kind: 'dragonhorde',
+        name_raw: 'Dark Plate Leggings +4',
+        name: 'Dark Plate Leggings',
+        tier: 4,
+        wearable: true,
+        container_item: false,
+      }],
+      keyring: [{ ring: 'Equipment', name: 'Stored Blade', id: '1', wearable: true, container_item: false }],
+    },
+  }, catalog)
+  assert.equal(state.searchClass, 'Wizard')
+  assert.equal(state.searchType, '1H Slashing')
+  assert.equal(state.searchStat, 'INT')
+  assert.equal(state.searchStatMin, '4')
+  assert.equal(state.searchSort1, 'DMG')
+  assert.equal(state.searchSort1Dir, 'desc')
+  assert.equal(state.searchSort2Dir, 'asc')
+  assert.deepEqual(state.characterCollapsed, { worn: true, 'section:dragonhorde': true })
+  assert.equal(state.importMeta.rows[0].container_kind, 'dragonhorde')
+  assert.equal(state.importMeta.rows[0].wearable, true)
+  assert.equal(state.importMeta.keyring[0].wearable, true)
+  const snap = buildWorkspaceSnapshot(state, catalog)
+  const again = sanitizeWorkspace(snap, catalog)
+  assert.equal(again.state.importMeta.rows[0].container_kind, 'dragonhorde')
+  assert.equal(again.state.searchSort1, 'DMG')
+})
+
 test('old sessions with no import still load', () => {
   const { restored, state } = sanitizeWorkspace({
     v: 1,

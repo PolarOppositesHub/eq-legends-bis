@@ -81,7 +81,7 @@ export const APP_HELP = {
       body: [
         'Choose Mode (Priority Stat, Max All Stats, or AI Choice) and your upgrade level (+0…+10).',
         'Update BiS builds a recommended loadout for your trio. Hover item names for icons and stat tips.',
-        'An Owned badge marks a name from the last inventory import. Owned only hides picks you do not have. Scores and order stay the same.',
+        'An Owned badge marks a name from the last inventory import. Owned only ranks every slot again from owned items only (worn, bags, bank, shared bank, Dragon\'s Hoard, storage, and any other imported container). Scoring, class, level, and the single worn-haste rule stay the same. A copy\'s +N is used when the import recorded one. A slot is empty only when nothing owned fits it.',
         'Weapons may show dual-wield vs two-hand picks based on class and character level.',
       ],
     },
@@ -111,9 +111,9 @@ export const APP_HELP = {
       title: 'Character',
       body: [
         'Shows what the last Inventory.txt import has you wearing: each worn row, its +N tier, and its sockets.',
-        'Bags, bank, shared bank, depot, and key rings are listed under those trees. Empty slots can be hidden. Search is the bar at the top of this tab. A result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot.',
-        'Hover a name for the same catalog stat popup used elsewhere. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki. Stats are not invented.',
-        'Items that can be merged lists the same item in more than one place. A stack whose Count is greater than 1 in one slot is left out. The inventory file has no other merge rule.',
+        'Bags, bank, shared bank, Dragon\'s Hoard, storage (Equipment, Augmentation, and Activated), and depot are listed under those trees. Each section header collapses, and that choice is remembered. Empty slots can be hidden. Search is the bar at the top of this tab. A result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot.',
+        'Hover a name for the same catalog stat popup used elsewhere. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki. An item icon sits to the left of each name. Stats are not invented.',
+        'Items that can be merged lists the same equipable item in more than one place. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, equipable items are mergeable except exaltations, and non-equipable items, bags, and boxes are not. A stack whose Count is greater than 1 in one slot is left out. Dragon\'s Hoard and storage copies count as places. If the export has no Hoard rows, open the Dragon\'s Hoard window before running /outputfile inventory.',
         'Rows the parser does not recognise stay under Other sections, with the header and line text from the file.',
       ],
     },
@@ -144,7 +144,8 @@ export const APP_HELP = {
         'Equipable items with an upgrade path use a +0…+10 slider. Catalog haste is the tooltip percent plus that upgrade level (eqlegendstools), not the AC curve. Non-equipables keep static stats. Stats are never invented.',
         'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
-        'An Owned badge marks a name from the last inventory import. Owned only hides names you do not have and keeps the search order.',
+        'Filter by slot, type (a Skill: line, or a whole word in the name), usable class, and any catalog stat, with an optional minimum. Sort by up to three keys. The first key orders the list. The later keys break ties only. With no sort key, names stay alphabetical.',
+        'An Owned badge marks a name from the last inventory import. Owned only hides names you do not have and keeps the search order. The +0…+10 slider is unchanged.',
       ],
     },
     {

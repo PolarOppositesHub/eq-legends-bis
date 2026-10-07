@@ -1,0 +1,14 @@
+Location	Name	ID	Count	Slots
+Head	Synthetic Cap +1	100	1	10
+Head-Slot7	Empty	0	0	0
+Bank1	Synthetic Bank Bag	200	1	10
+Bank1-Slot1	Synthetic Banked Blade	201	1	10
+Hoard 1	Synthetic Hoard Leggings +4	301	1	10
+Hoard 1-Slot7	Synthetic Hoard Leggings (Exaltation)	301	1	10
+Hoard 1-Slot8	Empty	0	0	0
+Hoard 74	Empty	0	0	0
+
+KeyRing	Name	ID
+Equipment	Synthetic Stored Blade	401
+Augmentation	Synthetic Stored Aug	402
+Activated	Synthetic Stored Click	403

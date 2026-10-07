@@ -5,6 +5,7 @@ Item stats come only from decoded JSON — never invented.
 """
 from __future__ import annotations
 
+import copy
 import json
 import math
 import sys
@@ -369,6 +370,81 @@ def _match_slots(planner_slot: str) -> set[str]:
     return {planner_slot}
 
 
+def item_score_upgrade(item: dict | None, upgrade: int) -> int:
+    """Planner upgrade, or the owned copy's +N when that field is set."""
+    if not item:
+        return upgrade
+    raw = item.get("owned_upgrade")
+    if raw is None or raw == "":
+        return upgrade
+    try:
+        return max(0, min(10, int(raw)))
+    except (TypeError, ValueError):
+        return upgrade
+
+
+def _owned_name_key(name: str) -> str:
+    return (name or "").strip().casefold()
+
+
+def _apply_owned_upgrade_view(item: dict, level: int) -> dict:
+    """Score this copy at its +N using the existing scale and haste rules."""
+    clone = copy.deepcopy(item)
+    level = max(0, min(10, int(level)))
+    s0 = dict(clone.get("stats_plus0") or {})
+    catalog10 = dict(clone.get("stats_plus10") or {})
+    clone["_catalog_stats_plus10"] = catalog10
+    scaled = scale_stats_to_level(s0, level)
+    apply_worn_haste(scaled, s0, level, catalog10)
+    clone["stats_plus10"] = scaled
+    ratio = ratio_at_level(clone, level)
+    if ratio is not None:
+        clone["ratio_plus10"] = ratio
+        clone["ratio_at_upgrade"] = ratio
+    clone["owned_upgrade"] = level
+    return clone
+
+
+def restrict_pool_to_owned(
+    pool: list[dict],
+    owned_items: list[dict[str, Any]],
+    fallback_upgrade: int,
+) -> list[dict]:
+    """Keep catalog items the import owns. Highest recorded +N wins.
+
+    A copy with no +N uses the planner upgrade. Missing +N is not treated as +0.
+    """
+    levels: dict[str, int | None] = {}
+    for entry in owned_items or []:
+        if not isinstance(entry, dict):
+            continue
+        key = _owned_name_key(str(entry.get("name") or ""))
+        if not key or key == "empty":
+            continue
+        raw = entry.get("upgrade")
+        level: int | None
+        if raw is None or raw == "":
+            level = None
+        else:
+            try:
+                level = max(0, min(10, int(raw)))
+            except (TypeError, ValueError):
+                level = None
+        if key not in levels:
+            levels[key] = level
+        elif level is not None and (levels[key] is None or level > levels[key]):
+            levels[key] = level
+    fallback = max(0, min(10, int(fallback_upgrade)))
+    out: list[dict] = []
+    for item in pool:
+        key = _owned_name_key(str(item.get("name") or ""))
+        if key not in levels:
+            continue
+        recorded = levels[key]
+        out.append(_apply_owned_upgrade_view(item, fallback if recorded is None else recorded))
+    return out
+
+
 def rank_slot_by_ratio(pool: list[dict], slot: str, upgrade: int) -> list[dict]:
     """Rank DMG/DLY weapons for a slot by ratio at upgrade only (no other stats)."""
     match = _match_slots(slot)
@@ -379,14 +455,15 @@ def rank_slot_by_ratio(pool: list[dict], slot: str, upgrade: int) -> list[dict]:
             continue
         if not _has_weapon_ratio(item):
             continue
-        ratio = ratio_at_level(item, upgrade)
+        level = item_score_upgrade(item, upgrade)
+        ratio = ratio_at_level(item, level)
         if ratio is None:
             continue
         ranked.append({
             "name": item["name"],
             "score": float(ratio) * 10000.0,
             "pval": float(ratio),
-            "why": f"best ratio @+{upgrade}",
+            "why": f"best ratio @+{level}",
             "zone": item.get("zone") or "",
             "drops_mobs": item.get("drops_mobs") or "",
             "classes_str": item.get("classes_str") or "",
@@ -417,6 +494,7 @@ def recommend_bis(
     secondary_stats: list[str] | None = None,
     tertiary_stats: list[str] | None = None,
     maximize_hp_regen: bool = False,
+    owned_items: list[dict[str, Any]] | None = None,
 ) -> dict:
     """Return haste-aware BiS loadout + per-slot ranked alts.
 
@@ -475,6 +553,9 @@ def recommend_bis(
     # Armor/jewelry + weapons: any-class union (item usable by at least one selected class).
     # Multi-class overlap is a soft scoring preference, not an eligibility gate.
     gear_pool = build_pool_for_classes(cleaned, mode="any")
+    owned_only = owned_items is not None
+    if owned_only:
+        gear_pool = restrict_pool_to_owned(gear_pool, owned_items or [], upgrade)
     weapon_pool = gear_pool
     pool = gear_pool  # default ranking pool for non-weapon slots
     loadout = sc.pick_loadout(
@@ -625,14 +706,27 @@ def recommend_bis(
                 or (slot == "RANGE" and prefer_ranged_damage and _has_weapon_ratio(item or {}))
             )
         )
-        ratio_u = ratio_at_level(item, upgrade) if item else None
+        owned_level = item.get("owned_upgrade") if item else None
         s0 = (item or {}).get("stats_plus0") or {}
-        s10 = cand.get("stats_plus10") or (item or {}).get("stats_plus10") or {}
-        s_up = scale_stats_to_level(s0, upgrade) if item else {}
-        if upgrade == 10 and s10:
-            s_up = dict(s10)
-        if item:
-            apply_worn_haste(s_up, s0, upgrade, s10)
+        if owned_level is None:
+            ratio_u = ratio_at_level(item, upgrade) if item else None
+            s10 = cand.get("stats_plus10") or (item or {}).get("stats_plus10") or {}
+            s_up = scale_stats_to_level(s0, upgrade) if item else {}
+            if upgrade == 10 and s10:
+                s_up = dict(s10)
+            if item:
+                apply_worn_haste(s_up, s0, upgrade, s10)
+            shown_upgrade = upgrade
+        else:
+            shown_upgrade = item_score_upgrade(item, upgrade)
+            catalog10 = (item or {}).get("_catalog_stats_plus10") or {}
+            ratio_u = ratio_at_level(item, shown_upgrade) if item else None
+            s10 = catalog10
+            s_up = scale_stats_to_level(s0, shown_upgrade) if item else {}
+            if shown_upgrade >= 10 and catalog10:
+                s_up = dict(catalog10)
+            if item:
+                apply_worn_haste(s_up, s0, shown_upgrade, catalog10)
         row = {
             "slot": slot,
             "name": cand.get("name") or "",
@@ -653,7 +747,7 @@ def recommend_bis(
             "stats_plus0": s0,
             "stats_plus10": sc.enrich_stats_with_regen({"stats_plus10": s10, "tooltipLines": (item or {}).get("tooltipLines") or [], "special": (item or {}).get("special"), "effect": (item or {}).get("effect")}) if (s10 or item) else {},
             "stats_at_upgrade": s_up,
-            "upgrade": upgrade,
+            "upgrade": shown_upgrade,
             "haste": 0,
             "alts": [],
         }
@@ -742,10 +836,11 @@ def recommend_bis(
             if r["name"] == row["name"]:
                 continue
             r_item = r.get("item") or {}
-            alt_up = scale_stats_to_level((r_item.get("stats_plus0") or {}), upgrade) if r_item else {}
+            alt_level = item_score_upgrade(r_item, upgrade) if r_item else upgrade
+            alt_up = scale_stats_to_level((r_item.get("stats_plus0") or {}), alt_level) if r_item else {}
             _hk, ih = _haste_pair(alt_up)
             if ih is None and r_item:
-                ih = bp.item_haste(r_item, upgrade)
+                ih = bp.item_haste(r_item, alt_level)
             if ih is None:
                 ih = 0
             r_ratio = r.get("ratio_at_upgrade")
@@ -810,6 +905,7 @@ def recommend_bis(
             "attr_weights": score_opts.get("attr_weights") or {},
         },
         "upgrade": upgrade,
+        "owned_only": owned_only,
         "character_level": character_level,
         "ac_softcap": {
             **ac_softcap.softcap_payload(

@@ -6,8 +6,8 @@
  * attached here — the catalog is only a yes/no match. Hover stats are
  * loaded by the same item popup the rest of the app uses.
  *
- * Owned badges and the owned-only filter never rescore BiS or Item Search.
- * With the filter off, the slot list is the same array the API returned.
+ * Owned badges use the imported names. Item Search "Owned only" hides rows.
+ * BiS "Owned only" is re-ranked by the API from ownedItemLevels, not here.
  */
 
 const OBSERVED_WORN = new Set([
@@ -21,12 +21,15 @@ const CARRIED_SECTIONS = [
   { kind: 'general', title: 'Bags' },
   { kind: 'bank', title: 'Bank' },
   { kind: 'sharedbank', title: 'Shared bank' },
+  { kind: 'dragonhorde', title: "Dragon's Hoard" },
   { kind: 'depot', title: 'Depot' },
-  { kind: 'dragonhorde', title: 'Dragon hoard' },
 ]
 
 const TRAILING_SLOTS = /(?:-Slot\d+)+$/i
 const DRAGON_HOARD_RE = /dragon(?:['’]s)?\s*hoard/i
+const HOARD_TOKEN_RE = /^hoard \d+$/i
+const EXALTATION_RE = /\(Exaltation\)\s*$/i
+const CONTAINER_NAME_RE = /\b(?:bags?|boxes|box|satchels?|backpacks?|pouches|pouch)\b/i
 const SEARCH_STOP = new Set(['of', 'the', 'a', 'an', 'and'])
 
 const CONTAINER_PLACE = {
@@ -35,21 +38,26 @@ const CONTAINER_PLACE = {
   bank: 'Bank',
   sharedbank: 'Shared bank',
   depot: 'Depot',
-  dragonhorde: 'Dragon hoard',
-  keyring: 'Key ring',
+  dragonhorde: "Dragon's Hoard",
+  keyring: 'Storage',
 }
 
 /**
- * The inventory file and the catalog do not say which items the game
- * allows you to merge. The only facts they do carry are identity (name,
- * tier, id) and Location Count. This id is the conservative rule below.
+ * eqlwiki Item Upgrade System says all gear can be upgraded by merging an
+ * item of the same name, or a Mote of Potential. It does not say whether
+ * bags, other non-equipable items, or exaltations can be merged. Where the
+ * wiki is silent, equipable items are mergeable except exaltations, and
+ * non-equipable items, bags, and boxes are not.
  */
-export const MERGEABLE_DUPLICATE_RULE = 'same-item-separate-copies-exclude-location-stacks'
+export const MERGEABLE_DUPLICATE_RULE = 'equipable-same-item-separate-copies-exclude-stacks-exaltations-containers'
 
-export const MERGE_LIST_NOTE = 'Same item means the same base name, the same tier (a missing tier is not +0), and the same id when both copies have one. A copy with no id still matches when every identified copy uses that one id. More than one separate copy is listed. A Location Count greater than 1 is a stack in one slot and is left out. Copies that share a name but use different ids stay apart, and a copy with no id is left out in that case. The inventory file and the catalog have no other merge rule, so anything else is left out.'
+export const MERGE_LIST_NOTE = 'eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. This list follows that gear rule. Where the wiki is silent: equipable items (wearable on the character sheet) are mergeable except exaltations (names ending “(Exaltation)”), non-equipable items are not mergeable, and bags and boxes (containers) are never mergeable. Same item means the same base name, the same tier (a missing tier is not +0), and the same id when both copies have one. A copy with no id still matches when every identified copy uses that one id. More than one separate copy is listed. A Location Count greater than 1 is a stack in one slot and is left out. Dragon’s Hoard and storage copies count as separate places.'
 
 export function isDragonHoardName(value) {
-  return DRAGON_HOARD_RE.test(String(value || ''))
+  const text = String(value || '').trim()
+  if (DRAGON_HOARD_RE.test(text)) return true
+  const base = text.replace(/(?:-Slot\d+)+$/i, '').trim()
+  return HOARD_TOKEN_RE.test(base)
 }
 
 export function itemBaseName(name) {
@@ -113,6 +121,61 @@ export function visibleSearchItems(items, owned, ownedOnly) {
   const list = Array.isArray(items) ? items : []
   if (!ownedOnly) return list
   return list.filter((item) => isOwnedName(item && item.name, owned))
+}
+
+function recordOwnedLevel(levels, name, tier) {
+  const base = itemBaseName(name)
+  if (!base || base.toLowerCase() === 'empty') return
+  const key = base.toLowerCase()
+  let recorded = null
+  if (tier != null && tier !== '') {
+    const n = Number(tier)
+    if (Number.isFinite(n)) recorded = Math.max(0, Math.min(10, Math.trunc(n)))
+  }
+  const current = levels.get(key)
+  if (!current) {
+    levels.set(key, { name: base, upgrade: recorded })
+    return
+  }
+  if (recorded != null && (current.upgrade == null || recorded > current.upgrade)) {
+    current.upgrade = recorded
+  }
+}
+
+function tierOfName(name) {
+  const n = String(name || '').trim().replace(/\*$/, '').trim()
+  const match = n.match(/(?:\s*\+\s*(\d+))\s*$/)
+  return match ? Number(match[1]) : null
+}
+
+/** Owned catalog names and the highest +N on any copy. Missing +N stays null. */
+export function ownedItemLevels(importMeta) {
+  const levels = new Map()
+  if (!importMeta || typeof importMeta !== 'object') return []
+  for (const row of importMeta.all_items || []) {
+    const rawName = row.name || row.base_name
+    const tier = row.upgrade_from_name != null && row.upgrade_from_name !== ''
+      ? row.upgrade_from_name
+      : tierOfName(rawName)
+    recordOwnedLevel(levels, row.base_name || rawName, tier)
+  }
+  for (const row of importMeta.rows || []) {
+    recordOwnedLevel(
+      levels,
+      row.name_raw || row.name,
+      row.tier ?? tierOfName(row.name_raw || row.name),
+    )
+  }
+  for (const entry of importMeta.keyring || []) {
+    recordOwnedLevel(levels, entry.name, tierOfName(entry.name))
+  }
+  const equipment = importMeta.equipment
+  if (equipment && typeof equipment === 'object') {
+    for (const name of Object.values(equipment)) {
+      recordOwnedLevel(levels, name, tierOfName(name))
+    }
+  }
+  return [...levels.values()]
 }
 
 function splitLocation(location) {
@@ -204,10 +267,22 @@ function placeOf(row) {
   return String(row.location_raw || row.location || '')
 }
 
-function tierOfName(name) {
-  const n = String(name || '').trim().replace(/\*$/, '').trim()
-  const match = n.match(/(?:\s*\+\s*(\d+))\s*$/)
-  return match ? Number(match[1]) : null
+function nameIsExaltation(value) {
+  return EXALTATION_RE.test(String(value || '').trim())
+}
+
+function nameIsContainer(value) {
+  return CONTAINER_NAME_RE.test(String(value || ''))
+}
+
+function inferWearable(row) {
+  const names = [row.name_raw, row.name]
+  if (names.some(nameIsExaltation) || names.some(nameIsContainer)) return false
+  return row.container_kind === 'worn' && !(Number(row.depth) > 0)
+}
+
+function inferContainer(row) {
+  return [row.name_raw, row.name].some(nameIsContainer)
 }
 
 function decorate(row, index, catalog, keyPrefix) {
@@ -235,6 +310,9 @@ function decorate(row, index, catalog, keyPrefix) {
     slots: asInt(row.slots),
     empty,
     unknown: !empty && !status.inCatalog,
+    wearable: empty ? false : (typeof row.wearable === 'boolean' ? row.wearable : inferWearable(row)),
+    containerItem: empty ? false : (typeof row.container_item === 'boolean' ? row.container_item : inferContainer(row)),
+    depth: row.depth == null || row.depth === '' ? 0 : Number(row.depth) || 0,
     children: [],
   }
 }
@@ -366,6 +444,11 @@ function keyringGroups(importMeta, catalog) {
       slots: null,
       empty,
       unknown: !empty && !status.inCatalog,
+      wearable: empty ? false : (typeof entry.wearable === 'boolean' ? entry.wearable : false),
+      containerItem: empty ? false : (
+        typeof entry.container_item === 'boolean' ? entry.container_item : nameIsContainer(entry.name)
+      ),
+      depth: 0,
       children: [],
     })
   }
@@ -459,6 +542,9 @@ function collectCopies(nodes, container, prefix, out) {
         copyCount: node.copyCount || 1,
         stackedInSlot: !!node.stackedInSlot,
         unknown: !!node.unknown,
+        wearable: node.wearable === true,
+        containerItem: node.containerItem === true,
+        depth: node.depth == null ? 0 : node.depth,
         container,
         place: parts.filter(Boolean).join(' · '),
       })
@@ -518,13 +604,33 @@ function finishMergeGroup(group, listed, omitted) {
   listed.push({ ...group, total })
 }
 
+function copyNames(copy) {
+  return [copy?.displayName, copy?.baseName, copy?.catalogName]
+}
+
+export function copyMergeBlock(copy) {
+  if (copyNames(copy).some(nameIsExaltation)) return 'exaltation'
+  if (copy?.containerItem === true || copyNames(copy).some(nameIsContainer)) return 'container'
+  if (copy?.wearable === true) return ''
+  if (copy?.wearable === false) return 'not-equipable'
+  if (copy?.container === 'worn' && !(Number(copy?.depth) > 0)) return ''
+  return 'not-equipable'
+}
+
 export function mergeableDuplicates(copies) {
   const buckets = new Map()
+  const skipped = new Map()
   for (const copy of copies || []) {
-    const name = itemBaseName(copy.baseName || copy.catalogName || copy.displayName).toLowerCase()
-    if (!name || name === 'empty') continue
+    const name = itemBaseName(copy.baseName || copy.catalogName || copy.displayName)
+    const keyName = name.toLowerCase()
+    if (!keyName || keyName === 'empty') continue
+    const block = copyMergeBlock(copy)
+    if (block) {
+      if (!skipped.has(keyName)) skipped.set(keyName, { name, reason: block })
+      continue
+    }
     const tier = copy.tier == null || copy.tier === '' ? '' : String(copy.tier)
-    const key = `${name}\0${tier}`
+    const key = `${keyName}\0${tier}`
     let bucket = buckets.get(key)
     if (!bucket) {
       bucket = { key, sample: copy, copies: [] }
@@ -559,6 +665,9 @@ export function mergeableDuplicates(copies) {
       finishMergeGroup(group, listed, omitted)
     }
   }
+  for (const item of skipped.values()) {
+    omitted.push({ key: item.name.toLowerCase(), name: item.name, reason: item.reason })
+  }
   listed.sort((a, b) => String(a.name).localeCompare(String(b.name)) || String(a.id).localeCompare(String(b.id)))
   return { groups: listed, omitted, rule: MERGEABLE_DUPLICATE_RULE }
 }
@@ -569,7 +678,7 @@ export function dragonHordeStatus(importMeta, copies) {
     return {
       state: 'included',
       count: included.length,
-      note: 'Dragon hoard rows in this import are included.',
+      note: '',
     }
   }
   const raw = (importMeta?.unknown_rows || []).filter((row) => (
@@ -584,7 +693,7 @@ export function dragonHordeStatus(importMeta, copies) {
   }
   return {
     state: 'absent',
-    note: 'This inventory export has no dragon hoard item rows. A dump includes hoard items only while that window is open, and this file has none.',
+    note: 'Open the Dragon\'s Hoard window before running /outputfile inventory.',
   }
 }
 

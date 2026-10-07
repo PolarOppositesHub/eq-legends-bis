@@ -35,6 +35,7 @@
   "note": "Parsed Inventory.txt TSV (Location/Name/ID/Count/Slots). Every line is retained in all_items. Names match eqlegendstools BiS data and/or eqlwiki Category:Items (wiki matches do not invent stats). Nested *-SlotN / bags / bank tagged in skipped but still visible in all_items.",
   "rows": [
     {
+      "container_item": false,
       "container_kind": "worn",
       "count": 1,
       "depth": 0,
@@ -48,7 +49,8 @@
       "slots": 10,
       "socket_index": null,
       "socket_label": null,
-      "tier": null
+      "tier": null,
+      "wearable": true
     }
   ],
   "server": null,

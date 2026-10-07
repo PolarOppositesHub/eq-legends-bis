@@ -95,6 +95,11 @@ _SLOT_NUMBER = re.compile(r"(?i)-Slot(\d+)")
 _LAST_SLOT = re.compile(r"(?i)-Slot\d+$")
 _GENERAL_TOKEN = re.compile(r"(?i)^general \d+$")
 _INT_TOKEN = re.compile(r"^-?\d+$")
+# Real /outputfile inventory rows are "Hoard N", not a Dragon Hoard header.
+_HOARD_TOKEN = re.compile(r"(?i)^hoard \d+$")
+_EXALTATION_NAME = re.compile(r"(?i)\(Exaltation\)\s*$")
+# Bags and boxes are containers. Match the words the inventory uses for them.
+_CONTAINER_NAME = re.compile(r"(?i)\b(?:bags?|boxes|box|satchels?|backpacks?|pouches|pouch)\b")
 
 
 def _parse_item_name(name: str) -> tuple[str, int | None, bool]:
@@ -146,12 +151,30 @@ def _numbered_token(token: str, prefix: str, low: int, high: int | None) -> bool
     return high is None or number <= high
 
 
+def _wearable_slot_tokens() -> set[str]:
+    tokens = {key.upper() for key in LOCATION_TO_SLOTS}
+    tokens.update(_OBSERVED_WORN)
+    for slots in LOCATION_TO_SLOTS.values():
+        tokens.update(slot.upper() for slot in slots)
+    return tokens
+
+
+_WEARABLE_SLOT_TOKENS = _wearable_slot_tokens()
+
+
 def _container_kind(base: str) -> str:
-    """Kinds follow the closed lists in SPEC §4.1. Unseen indexes stay unknown."""
+    """Kinds follow the closed lists in SPEC §4.1. Unseen indexes stay unknown.
+
+    Hoard N is the Dragon's Hoard container from a dump taken with that window
+    open. N has no observed upper bound in the sample (1..74). -SlotK under a
+    hoard row is that item's aug slot, attached by the usual parent link.
+    """
     token = (base or "").strip()
     # "General N" has no observed upper bound. Bank is 1–24, SharedBank is 1–6.
     if _GENERAL_TOKEN.fullmatch(token) and _numbered_token(token, "general ", 1, None):
         return "general"
+    if _HOARD_TOKEN.fullmatch(token) and _numbered_token(token, "hoard ", 1, None):
+        return "dragonhorde"
     if _numbered_token(token, "sharedbank", 1, 6):
         return "sharedbank"
     if _numbered_token(token, "bank", 1, 24):
@@ -163,6 +186,35 @@ def _container_kind(base: str) -> str:
     if upper in _OBSERVED_WORN or upper in LOCATION_TO_SLOTS:
         return "worn"
     return "unknown"
+
+
+def _is_exaltation_name(name: str) -> bool:
+    return bool(_EXALTATION_NAME.search(name or ""))
+
+
+def _is_container_name(name: str) -> bool:
+    return bool(_CONTAINER_NAME.search(name or ""))
+
+
+def _catalog_slots(base_name: str, item_id: str) -> set[str]:
+    match = _catalog_match(base_name, item_id=item_id or None)
+    slots = match.get("slots") or []
+    return {str(slot).strip().upper() for slot in slots if str(slot).strip()}
+
+
+def _row_flags(name: str, base_name: str, item_id: str, kind: str, slot_nums: list[int]) -> tuple[bool, bool]:
+    """Wearable means the catalog slot list or a worn sheet row.
+
+    A bag or box name is a container even when it sits in a bank or bag slot.
+    A loose item in Bank N is not a container. Exaltations are not wearable gear.
+    """
+    catalog_slots = _catalog_slots(base_name, item_id)
+    catalog_wearable = bool(catalog_slots & _WEARABLE_SLOT_TOKENS)
+    on_sheet = kind == "worn" and not slot_nums
+    exaltation = _is_exaltation_name(name) or _is_exaltation_name(base_name)
+    container_item = _is_container_name(base_name or name)
+    wearable = (catalog_wearable or on_sheet) and not exaltation and not container_item
+    return wearable, container_item
 
 
 def _classify_header(line: str) -> tuple[str, dict[str, int]] | None:
@@ -260,10 +312,16 @@ def _collapse_keyring(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "name": entry["name"],
                 "id": entry["id"],
                 "count": 1,
+                "wearable": bool(entry.get("wearable")),
+                "container_item": bool(entry.get("container_item")),
             }
             order.append(key)
         else:
             found["count"] += 1
+            if entry.get("wearable"):
+                found["wearable"] = True
+            if entry.get("container_item"):
+                found["container_item"] = True
     return [collapsed[key] for key in order]
 
 
@@ -449,8 +507,13 @@ def _tree_row(
 ) -> dict[str, Any]:
     socket_index = slot_nums[-1] if slot_nums else None
     kind = _container_kind(base)
-    # Slot7–10 role names apply to worn gear only. A bag's Slot9 is not "Worn?".
-    label = EXALTATION_SOCKET_LABELS.get(socket_index) if kind == "worn" and socket_index is not None else None
+    # Slot7–10 role names apply to worn gear and hoard aug slots. A bag's Slot9 is not "Worn?".
+    label = (
+        EXALTATION_SOCKET_LABELS.get(socket_index)
+        if kind in ("worn", "dragonhorde") and socket_index is not None
+        else None
+    )
+    wearable, container_item = _row_flags(name, base_name, item_id, kind, slot_nums)
     return {
         "location_raw": location,
         "container_kind": kind,
@@ -466,6 +529,8 @@ def _tree_row(
         "count": _parse_int(count),
         "slots": _parse_int(slots_col),
         "line": line,
+        "wearable": wearable,
+        "container_item": container_item,
     }
 
 
@@ -546,11 +611,14 @@ def parse_inventory_tsv(
                     continue
                 if _is_empty_item(name, base_name):
                     continue
+                wearable, container_item = _row_flags(name, base_name, item_id, "keyring", [])
                 keyring_raw.append({
                     "ring": ring,
                     "name": name,
                     "id": item_id,
                     "count": 1,
+                    "wearable": wearable,
+                    "container_item": container_item,
                 })
                 entry = _legacy_entry(
                     location=ring,
@@ -651,6 +719,15 @@ def parse_inventory_tsv(
                 _keep_legacy(
                     entry,
                     reason="depot",
+                    all_items=all_items,
+                    skipped=skipped,
+                    unmatched=unmatched,
+                )
+                continue
+            if container == "dragonhorde":
+                _keep_legacy(
+                    entry,
+                    reason="dragon hoard",
                     all_items=all_items,
                     skipped=skipped,
                     unmatched=unmatched,

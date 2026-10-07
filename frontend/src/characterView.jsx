@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { itemImageUrl } from './api.js'
 import {
   MERGE_LIST_NOTE,
   buildCharacterView,
@@ -11,12 +12,28 @@ export function OwnedBadge({ owned }) {
   return <span className="badge owned-badge">Owned</span>
 }
 
+function CharacterItemIcon({ name }) {
+  if (!name) return null
+  return (
+    <img
+      className="item-icon"
+      src={itemImageUrl(name)}
+      alt=""
+      onError={(event) => {
+        event.currentTarget.style.display = 'none'
+      }}
+    />
+  )
+}
+
 function ItemLine({ node, renderItemName, onLocate }) {
   if (!node || node.empty) return <span className="muted">Empty</span>
   const count = node.count
   const name = node.displayName
+  const iconName = node.catalogName || node.baseName || name
   return (
     <span className="character-item">
+      <CharacterItemIcon name={iconName} />
       {name && typeof renderItemName === 'function' ? (
         renderItemName(node, { onLocate })
       ) : (
@@ -28,18 +45,64 @@ function ItemLine({ node, renderItemName, onLocate }) {
   )
 }
 
-function TreeNode({ node, highlightKey, renderItemName, onLocate }) {
+function stopHeaderClick(event) {
+  event.stopPropagation()
+}
+
+function CollapseButton({ id, title, collapsed, onToggle, className = '' }) {
+  const open = !collapsed?.[id]
+  return (
+    <button
+      type="button"
+      className={`character-collapse-btn${className ? ` ${className}` : ''}`}
+      aria-expanded={open}
+      data-collapse-id={id}
+      onClick={() => onToggle && onToggle(id)}
+    >
+      <span className="character-collapse-arrow" aria-hidden="true">{open ? '▼' : '▶'}</span>
+      <span>{title}</span>
+    </button>
+  )
+}
+
+function TreeNode({ node, highlightKey, renderItemName, onLocate, collapsed, onToggle }) {
   const hit = highlightKey && highlightKey === node.key
+  const childCount = node.children?.length || 0
+  const collapseId = childCount ? `node:${node.key}` : ''
+  const open = !collapseId || !collapsed?.[collapseId]
+  const row = (
+    <div>
+      {node.location ? <span className="muted character-place">{node.location}</span> : null}
+      <span onClick={stopHeaderClick} onKeyDown={stopHeaderClick}>
+        <ItemLine node={node} renderItemName={renderItemName} onLocate={onLocate} />
+      </span>
+    </div>
+  )
   return (
     <li
       data-character-slot={node.key}
       className={hit ? 'character-slot-hit' : undefined}
     >
-      <div>
-        {node.location ? <span className="muted character-place">{node.location}</span> : null}
-        <ItemLine node={node} renderItemName={renderItemName} onLocate={onLocate} />
-      </div>
-      {node.children?.length ? (
+      {childCount ? (
+        <div
+          className="character-collapse-row"
+          role="button"
+          tabIndex={0}
+          aria-expanded={open}
+          data-collapse-id={collapseId}
+          onClick={() => onToggle && onToggle(collapseId)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onToggle && onToggle(collapseId)
+            }
+          }}
+        >
+          <span className="character-collapse-arrow" aria-hidden="true">{open ? '▼' : '▶'}</span>
+          {row}
+        </div>
+      ) : row}
+      {childCount && open ? (
         <ul>
           {node.children.map((child) => (
             <TreeNode
@@ -48,6 +111,8 @@ function TreeNode({ node, highlightKey, renderItemName, onLocate }) {
               highlightKey={highlightKey}
               renderItemName={renderItemName}
               onLocate={onLocate}
+              collapsed={collapsed}
+              onToggle={onToggle}
             />
           ))}
         </ul>
@@ -82,60 +147,95 @@ function SearchHit({ hit, renderItemName, onLocate }) {
   )
 }
 
-function MergeList({ merge, dragonHorde, renderItemName, onLocate }) {
+function MergeList({ merge, renderItemName, onLocate, collapsed, onToggle }) {
   const groups = merge?.groups || []
   const omitted = merge?.omitted || []
   const stackedOmitted = omitted.filter((item) => item.reason === 'stacked-in-one-slot')
   const ambiguousOmitted = omitted.filter((item) => item.reason === 'ambiguous-id')
+  const open = !collapsed?.merge
   return (
-    <section className="character-section" data-testid="character-merge">
-      <h3>Items that can be merged</h3>
-      <p className="muted character-merge-note">{MERGE_LIST_NOTE}</p>
-      {dragonHorde?.note ? (
-        <p className="muted" data-testid="dragon-hoard-note">{dragonHorde.note}</p>
+    <section className="character-section" data-testid="character-merge" data-collapse-id="merge">
+      <h3 className="character-collapse">
+        <CollapseButton id="merge" title="Items that can be merged" collapsed={collapsed} onToggle={onToggle} />
+      </h3>
+      {open ? (
+        <>
+          <p className="muted character-merge-note">{MERGE_LIST_NOTE}</p>
+          {stackedOmitted.length ? (
+            <p className="muted" data-testid="merge-omitted">
+              {stackedOmitted.length} stacked item{stackedOmitted.length === 1 ? '' : 's'} left out because Count is greater than 1 in one slot.
+            </p>
+          ) : null}
+          {ambiguousOmitted.length ? (
+            <p className="muted" data-testid="merge-ambiguous-id">
+              {ambiguousOmitted.length} item{ambiguousOmitted.length === 1 ? '' : 's'} left out because the copies do not share one id.
+            </p>
+          ) : null}
+          {groups.length ? (
+            <ul className="character-tree">
+              {groups.map((group) => (
+                <li key={group.key}>
+                  <ItemLine
+                    node={{
+                      displayName: group.name,
+                      catalogName: group.catalogName || group.name,
+                      baseName: group.name,
+                      unknown: group.unknown,
+                      empty: false,
+                      count: group.total,
+                    }}
+                    renderItemName={renderItemName}
+                    onLocate={onLocate}
+                  />
+                  <ul>
+                    {group.copies.map((copy) => (
+                      <li key={copy.key}>
+                        <button type="button" className="zone-link" onClick={() => onLocate(copy.key)}>
+                          {copy.place}
+                          {Number(copy.copyCount) > 1 ? ` ×${copy.copyCount}` : ''}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No duplicate items to merge in this import.</p>
+          )}
+        </>
       ) : null}
-      {stackedOmitted.length ? (
-        <p className="muted" data-testid="merge-omitted">
-          {stackedOmitted.length} stacked item{stackedOmitted.length === 1 ? '' : 's'} left out because Count is greater than 1 in one slot.
-        </p>
-      ) : null}
-      {ambiguousOmitted.length ? (
-        <p className="muted" data-testid="merge-ambiguous-id">
-          {ambiguousOmitted.length} item{ambiguousOmitted.length === 1 ? '' : 's'} left out because the copies do not share one id.
-        </p>
-      ) : null}
-      {groups.length ? (
-        <ul className="character-tree">
-          {groups.map((group) => (
-            <li key={group.key}>
-              <ItemLine
-                node={{
-                  displayName: group.name,
-                  catalogName: group.catalogName || group.name,
-                  baseName: group.name,
-                  unknown: group.unknown,
-                  empty: false,
-                  count: group.total,
-                }}
+    </section>
+  )
+}
+
+function CarriedSection({ section, highlightKey, renderItemName, onLocate, collapsed, onToggle }) {
+  const id = `section:${section.kind}`
+  const open = !collapsed?.[id]
+  return (
+    <section className="character-section" data-collapse-id={id}>
+      <h3 className="character-collapse">
+        <CollapseButton id={id} title={section.title} collapsed={collapsed} onToggle={onToggle} />
+      </h3>
+      {open ? (
+        section.nodes.length ? (
+          <ul className="character-tree">
+            {section.nodes.map((node) => (
+              <TreeNode
+                key={node.key}
+                node={node}
+                highlightKey={highlightKey}
                 renderItemName={renderItemName}
                 onLocate={onLocate}
+                collapsed={collapsed}
+                onToggle={onToggle}
               />
-              <ul>
-                {group.copies.map((copy) => (
-                  <li key={copy.key}>
-                    <button type="button" className="zone-link" onClick={() => onLocate(copy.key)}>
-                      {copy.place}
-                      {Number(copy.copyCount) > 1 ? ` ×${copy.copyCount}` : ''}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="muted">No duplicate items to merge in this import.</p>
-      )}
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">No rows in this section.</p>
+        )
+      ) : null}
     </section>
   )
 }
@@ -150,9 +250,12 @@ export function CharacterView({
   highlightKey,
   onLocate,
   renderItemName,
+  collapsed,
+  onToggle,
 }) {
   const otherCount = (view?.otherSections || []).reduce((sum, group) => sum + group.rows.length, 0)
   const locate = typeof onLocate === 'function' ? onLocate : () => {}
+  const toggle = typeof onToggle === 'function' ? onToggle : () => {}
   if (!view?.hasImport) {
     return (
       <p className="muted inventory-empty">
@@ -160,6 +263,18 @@ export function CharacterView({
       </p>
     )
   }
+  const carriedOf = (kind) => (view.carried || []).find((section) => section.kind === kind)
+  const beforeStorage = ['general', 'bank', 'sharedbank']
+    .map(carriedOf)
+    .filter(Boolean)
+  const hoard = carriedOf('dragonhorde') || {
+    kind: 'dragonhorde',
+    title: "Dragon's Hoard",
+    nodes: [],
+  }
+  const depot = carriedOf('depot')
+  const wornOpen = !collapsed?.worn
+  const storageOpen = !collapsed?.storage
   return (
     <div className="character-view">
       <div className="item-search-bar">
@@ -189,84 +304,138 @@ export function CharacterView({
         />
         Hide empty slots
       </label>
-      <section className="character-section">
-        <h3>Worn</h3>
-        {view.worn.length ? (
-          <div className="grid-slots">
-            {view.worn.map((slot) => (
-              <div
-                className={`slot-card${highlightKey === slot.key ? ' character-slot-hit' : ''}`}
-                data-character-slot={slot.key}
-                key={slot.key}
-              >
-                <h3>{slot.location || 'Worn'}</h3>
-                <ItemLine node={slot} renderItemName={renderItemName} onLocate={locate} />
-                {slot.children?.length ? (
-                  <ul className="character-sockets">
-                    {slot.children.map((child) => (
-                      <TreeNode
-                        key={child.key}
-                        node={child}
-                        highlightKey={highlightKey}
-                        renderItemName={renderItemName}
-                        onLocate={locate}
-                      />
-                    ))}
+      <section className="character-section" data-collapse-id="worn">
+        <h3 className="character-collapse">
+          <CollapseButton id="worn" title="Worn" collapsed={collapsed} onToggle={toggle} />
+        </h3>
+        {wornOpen ? (
+          view.worn.length ? (
+            <div className="grid-slots">
+              {view.worn.map((slot) => (
+                <div
+                  className={`slot-card${highlightKey === slot.key ? ' character-slot-hit' : ''}`}
+                  data-character-slot={slot.key}
+                  key={slot.key}
+                >
+                  <h3>{slot.location || 'Worn'}</h3>
+                  <ItemLine node={slot} renderItemName={renderItemName} onLocate={locate} />
+                  {slot.children?.length ? (
+                    <ul className="character-sockets">
+                      {slot.children.map((child) => (
+                        <TreeNode
+                          key={child.key}
+                          node={child}
+                          highlightKey={highlightKey}
+                          renderItemName={renderItemName}
+                          onLocate={locate}
+                          collapsed={collapsed}
+                          onToggle={toggle}
+                        />
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">No worn rows in this import.</p>
+          )
+        ) : null}
+      </section>
+      <MergeList
+        merge={view.merge}
+        renderItemName={renderItemName}
+        onLocate={locate}
+        collapsed={collapsed}
+        onToggle={toggle}
+      />
+      {beforeStorage.map((section) => (
+        <CarriedSection
+          key={section.kind}
+          section={section}
+          highlightKey={highlightKey}
+          renderItemName={renderItemName}
+          onLocate={locate}
+          collapsed={collapsed}
+          onToggle={toggle}
+        />
+      ))}
+      <section className="character-section" data-testid="dragon-hoard" data-collapse-id="section:dragonhorde">
+        <h3 className="character-collapse">
+          <CollapseButton
+            id="section:dragonhorde"
+            title="Dragon's Hoard"
+            collapsed={collapsed}
+            onToggle={toggle}
+          />
+        </h3>
+        {!collapsed?.['section:dragonhorde'] ? (
+          <>
+            {view.dragonHorde?.note ? (
+              <p className="muted" data-testid="dragon-hoard-note">{view.dragonHorde.note}</p>
+            ) : null}
+            {hoard.nodes.length ? (
+              <ul className="character-tree">
+                {hoard.nodes.map((node) => (
+                  <TreeNode
+                    key={node.key}
+                    node={node}
+                    highlightKey={highlightKey}
+                    renderItemName={renderItemName}
+                    onLocate={locate}
+                    collapsed={collapsed}
+                    onToggle={toggle}
+                  />
+                ))}
+              </ul>
+            ) : null}
+          </>
+        ) : null}
+      </section>
+      {view.keyrings.length ? (
+        <section className="character-section" data-testid="character-storage" data-collapse-id="storage">
+          <h3 className="character-collapse">
+            <CollapseButton id="storage" title="Storage" collapsed={collapsed} onToggle={toggle} />
+          </h3>
+          {storageOpen ? view.keyrings.map((group) => {
+            const id = `storage:${group.ring}`
+            const open = !collapsed?.[id]
+            return (
+              <div key={group.ring} data-collapse-id={id}>
+                <h4 className="character-collapse">
+                  <CollapseButton id={id} title={group.ring} collapsed={collapsed} onToggle={toggle} />
+                </h4>
+                {open ? (
+                  <ul className="character-tree">
+                    {group.items.map((item) => {
+                      const hit = highlightKey && highlightKey === item.key
+                      return (
+                        <li
+                          key={item.key}
+                          data-character-slot={item.key}
+                          className={hit ? 'character-slot-hit' : undefined}
+                        >
+                          <ItemLine node={item} renderItemName={renderItemName} onLocate={locate} />
+                        </li>
+                      )
+                    })}
                   </ul>
                 ) : null}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="muted">No worn rows in this import.</p>
-        )}
-      </section>
-      {view.carried.map((section) => (
-        <section className="character-section" key={section.kind}>
-          <h3>{section.title}</h3>
-          <ul className="character-tree">
-            {section.nodes.map((node) => (
-              <TreeNode
-                key={node.key}
-                node={node}
-                highlightKey={highlightKey}
-                renderItemName={renderItemName}
-                onLocate={locate}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
-      {view.keyrings.length ? (
-        <section className="character-section">
-          <h3>Key rings</h3>
-          {view.keyrings.map((group) => (
-            <div key={group.ring}>
-              <h4>{group.ring}</h4>
-              <ul className="character-tree">
-                {group.items.map((item) => {
-                  const hit = highlightKey && highlightKey === item.key
-                  return (
-                    <li
-                      key={item.key}
-                      data-character-slot={item.key}
-                      className={hit ? 'character-slot-hit' : undefined}
-                    >
-                      <ItemLine node={item} renderItemName={renderItemName} onLocate={locate} />
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
+            )
+          }) : null}
         </section>
       ) : null}
-      <MergeList
-        merge={view.merge}
-        dragonHorde={view.dragonHorde}
-        renderItemName={renderItemName}
-        onLocate={locate}
-      />
+      {depot ? (
+        <CarriedSection
+          section={depot}
+          highlightKey={highlightKey}
+          renderItemName={renderItemName}
+          onLocate={locate}
+          collapsed={collapsed}
+          onToggle={toggle}
+        />
+      ) : null}
       {otherCount ? (
         <details className="character-other">
           <summary>Other sections ({otherCount})</summary>
@@ -287,9 +456,18 @@ export function CharacterView({
   )
 }
 
-export function CharacterPanel({ importMeta, query = '', onQuery, renderItemName }) {
+export function CharacterPanel({
+  importMeta,
+  query = '',
+  onQuery,
+  renderItemName,
+  collapsed,
+  onCollapsedChange,
+}) {
   const [hideEmpty, setHideEmpty] = useState(true)
   const [highlightKey, setHighlightKey] = useState('')
+  const [localCollapsed, setLocalCollapsed] = useState({})
+  const closed = collapsed && typeof collapsed === 'object' ? collapsed : localCollapsed
   const view = useMemo(
     () => buildCharacterView(importMeta, { hideEmpty }),
     [importMeta, hideEmpty],
@@ -299,6 +477,13 @@ export function CharacterPanel({ importMeta, query = '', onQuery, renderItemName
     [view.copies, query],
   )
   const locate = (key) => setHighlightKey(key || '')
+  const toggle = (id) => {
+    const next = { ...closed }
+    if (next[id]) delete next[id]
+    else next[id] = true
+    if (typeof onCollapsedChange === 'function') onCollapsedChange(next)
+    else setLocalCollapsed(next)
+  }
   useEffect(() => {
     if (!highlightKey) return
     scrollCharacterSlotIntoView(highlightKey)
@@ -314,6 +499,8 @@ export function CharacterPanel({ importMeta, query = '', onQuery, renderItemName
       highlightKey={highlightKey}
       onLocate={locate}
       renderItemName={renderItemName}
+      collapsed={closed}
+      onToggle={toggle}
     />
   )
 }

@@ -51,6 +51,8 @@ class BisRequest(BaseModel):
     usable_by: str = "any"  # weapons/gear: any selected class (union)
     prefer_ranged_damage: bool = True
     character_level: int = 50
+    # When set, BiS is re-ranked from these owned names. upgrade is the copy's +N, or null.
+    owned_items: list[dict[str, Any]] | None = None
 
 
 class SimulateRequest(BaseModel):
@@ -193,6 +195,7 @@ def post_bis(body: BisRequest):
             secondary_stats=body.secondary_stats,
             tertiary_stats=body.tertiary_stats,
             maximize_hp_regen=bool(body.maximize_hp_regen),
+            owned_items=body.owned_items,
         )
     except AssertionError as e:
         raise HTTPException(500, f"BiS haste assertion failed: {e}") from e
@@ -225,12 +228,37 @@ def api_priority_defaults(classes: Optional[list[str]] = Query(default=None)):
 def api_item_search(
     q: str = Query(default=""),
     slot: Optional[str] = Query(default=None),
+    type: Optional[str] = Query(default=None),
+    usable_class: Optional[str] = Query(default=None),
+    stat: Optional[str] = Query(default=None),
+    stat_min: Optional[float] = Query(default=None),
+    sort: Optional[str] = Query(default=None),
+    sort_dir: Optional[str] = Query(default=None),
+    sort2: Optional[str] = Query(default=None),
+    sort2_dir: Optional[str] = Query(default=None),
+    sort3: Optional[str] = Query(default=None),
+    sort3_dir: Optional[str] = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
     """Search all game items: eqlegendstools decoded union + every eqlwiki item name."""
     try:
-        return item_catalog_mod.search_items(q, slot=slot, limit=limit, offset=offset)
+        return item_catalog_mod.search_items(
+            q,
+            slot=slot,
+            type_name=type,
+            usable_class=usable_class,
+            stat=stat,
+            stat_min=stat_min,
+            sort=sort,
+            sort_dir=sort_dir,
+            sort2=sort2,
+            sort2_dir=sort2_dir,
+            sort3=sort3,
+            sort3_dir=sort3_dir,
+            limit=limit,
+            offset=offset,
+        )
     except Exception as e:
         return {
             "total": 0,
