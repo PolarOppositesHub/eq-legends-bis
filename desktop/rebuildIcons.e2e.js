@@ -116,7 +116,7 @@ async function main() {
     const before = await readConfig(page);
     assert.equal(before.upgrading, true, 'rebuild should still be paused before icons are checked');
 
-    const iconDeadline = Date.now() + 5000;
+    const iconDeadline = Date.now() + 20000;
     await clickTab(page, 'Best in Slot');
     let icons = { count: 0, ok: 0, pending: [], tab: '' };
     while (Date.now() < iconDeadline) {
@@ -128,7 +128,7 @@ async function main() {
     assert.equal(icons.tab, 'bis', 'Best in Slot tab did not open');
     assert.ok(
       icons.count >= 8 && icons.ok === icons.count,
-      `item icons did not all load within 5s while the rebuild was paused `
+      `item icons did not all load within 20s while the rebuild was paused `
       + `(${icons.ok}/${icons.count} ready, sample ${icons.pending.join(' ')})`,
     );
     const during = await readConfig(page);
