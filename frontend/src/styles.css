@@ -1413,6 +1413,10 @@ input[type="text"], select, input[type="range"] {
 .item-search-filters input {
   min-width: 7rem;
 }
+.item-search-filters input.item-search-min {
+  min-width: 0;
+  width: 4.25rem;
+}
 .item-search-sort { display: flex; gap: 0.3rem; }
 .character-hide-empty {
   display: inline-flex;

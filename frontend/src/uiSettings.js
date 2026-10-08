@@ -93,6 +93,7 @@ export const APP_HELP = {
         'Import Inventory.txt (or Update from EQ folder on desktop) to fill worn gear and bag contents.',
         'Live Totals use race/class pools, gear, optional Cast Buffs, and haste rules (highest worn haste stacks with spell haste; caps at 175%, or 185% with Monk).',
         'Default upgrade + Apply to all slots sets every piece; otherwise edit +N under each slot.',
+        'Swapping a class waits until the set is full. That is 3 classes, or 2 when Character Level is below 10. Until then the class buttons stay usable and the last totals stay on screen.',
       ],
     },
     {
@@ -115,6 +116,17 @@ export const APP_HELP = {
         'Hover a name for the same catalog stat popup used elsewhere. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki. An item icon sits to the left of each name. Stats are not invented.',
         'Items that can be merged lists the same equipable item in more than one place. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, equipable items are mergeable except exaltations, and non-equipable items, bags, and boxes are not. A stack whose Count is greater than 1 in one slot is left out. Dragon\'s Hoard and storage copies count as places. If the export has no Hoard rows, open the Dragon\'s Hoard window before running /outputfile inventory.',
         'Rows the parser does not recognise stay under Other sections, with the header and line text from the file.',
+      ],
+    },
+    {
+      id: 'currencies',
+      title: 'Currencies',
+      body: [
+        'Tracks the 10 mote grades, the 15 Wind Runes, and Void-Touched Potential for one character.',
+        'Set a currency storage count. Later log loot and given lines add, and an offer line subtracts, after that time. Auto-sold motes count 0 and are marked auto-sold, not kept. Lines before the count are ignored.',
+        'A merge line does not name the mote. It shows Pending: N merges since last check until you record I used.',
+        'An inventory import sets bag counts. Bags from the import plus currency storage is the total. A drop with no matching ledger entry can be undone.',
+        'Condense turns 2 of a grade into 1 of the next, up to Grand → Ascendant, and warns when item XP is lost. This ledger does not plan Void-Touched spending. Wind Rune need is not tracked in this version.',
       ],
     },
     {
@@ -144,7 +156,7 @@ export const APP_HELP = {
         'Equipable items with an upgrade path use a +0…+10 slider. Catalog haste is the tooltip percent plus that upgrade level (eqlegendstools), not the AC curve. Non-equipables keep static stats. Stats are never invented.',
         'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
-        'Filter by slot, type (a Skill: line, or a whole word in the name), usable class, and any catalog stat, with an optional minimum. Sort by up to three keys. The first key orders the list. The later keys break ties only. With no sort key, names stay alphabetical.',
+        'Filter by slot, type (a Skill: line, or a whole word in the name), up to three usable classes (Any or All), and any catalog stat, with a compact minimum. Compare at +N uses that upgrade for the minimum, the sort, and the values in the list. Sort by up to three keys. The first key orders the list. The later keys break ties only. With no sort key, names stay alphabetical.',
         'An Owned badge marks a name from the last inventory import. Owned only hides names you do not have and keeps the search order. The +0…+10 slider is unchanged.',
       ],
     },
@@ -156,6 +168,7 @@ export const APP_HELP = {
         'Fights list time, zone when the log recorded one, targets, duration, and total damage. Select a fight for DPS and SDPS for you, your pet, and your group.',
         'Merge pets rolls a pet into its owner. Level follows the current 3-class loadout, so a later lower level after a class swap is kept.',
         'If no log is found, type /log on in game, check the EQ install folder, and check chat filters. Filtered chat channels are not written to the log.',
+        'The Group panel collapses with the same down and right chevron as Character sections. That choice is remembered.',
       ],
     },
     {

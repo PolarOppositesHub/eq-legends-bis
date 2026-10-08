@@ -379,6 +379,8 @@ export function ParserPanel({
   spellTimeline = null,
   fightsTruncated = false,
   itemNameProps = null,
+  groupCollapsed = false,
+  onToggleGroup,
 }) {
   const [assignPet, setAssignPet] = useState('')
   const [assignOwner, setAssignOwner] = useState('')
@@ -594,7 +596,19 @@ export function ParserPanel({
 
       {!empty && logsStatus === 'ready' ? (
         <section className="parser-roster" data-testid="parser-group">
-          <h3 className="parser-subhead">Group</h3>
+          <button
+            type="button"
+            className="character-collapse-btn"
+            aria-expanded={!groupCollapsed}
+            data-testid="parser-group-toggle"
+            data-collapse-id="group"
+            onClick={() => onToggleGroup && onToggleGroup()}
+          >
+            <span className="character-collapse-arrow" aria-hidden="true">{groupCollapsed ? '▶' : '▼'}</span>
+            <span>Group</span>
+          </button>
+          {groupCollapsed ? null : (
+            <>
           <p className="note">
             From the log: {members.length ? members.map((row) => row.name || row).join(', ') : 'none yet'}
           </p>
@@ -645,6 +659,8 @@ export function ParserPanel({
             <p className="muted">No /who lines yet. A line looks like [36 PAL/DRU/WIZ] Zasariz.</p>
           )}
           <p className="note">{PET_LEADER_HINT}</p>
+            </>
+          )}
         </section>
       ) : null}
 
@@ -1033,6 +1049,8 @@ export default function ParserTab({
   canSetFolder,
   onOpenCredits,
   itemNameProps,
+  groupCollapsed = false,
+  onToggleGroup,
 }) {
   const [folder, setFolder] = useState('')
   const [logs, setLogs] = useState([])
@@ -1522,6 +1540,8 @@ export default function ParserTab({
       loadouts={roster.loadouts}
       petBindings={roster.pets}
       character={selected?.character || ''}
+      groupCollapsed={groupCollapsed}
+      onToggleGroup={onToggleGroup}
       onConfirmPet={(pet) => {
         const name = selected?.character
         if (!name) return

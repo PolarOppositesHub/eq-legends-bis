@@ -1,5 +1,5 @@
 {
-  "sheet_count": 42,
+  "sheet_count": 43,
   "sheets": [
     {
       "name": "How to use",
@@ -1832,6 +1832,21 @@
         "URL"
       ],
       "name": "Wizard weapons top",
+      "state": "visible"
+    },
+    {
+      "headers": [
+        "Currency",
+        "Kind",
+        "Rank",
+        "Item XP",
+        "Spell XP",
+        "Usable on items currently at",
+        "Bags",
+        "Currency storage",
+        "Total"
+      ],
+      "name": "Currencies",
       "state": "visible"
     }
   ]

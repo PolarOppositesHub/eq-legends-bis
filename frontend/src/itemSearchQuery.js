@@ -41,6 +41,9 @@ export function buildItemSearchParams({
   slot = '',
   typeName = '',
   usableClass = '',
+  usableClasses = null,
+  usableMatch = 'any',
+  compareLevel = 0,
   stat = '',
   statMin = '',
   sorts = [],
@@ -50,6 +53,17 @@ export function buildItemSearchParams({
   if (slot) params.slot = slot
   if (typeName) params.type = typeName
   if (usableClass) params.usable_class = usableClass
+  const classList = Array.isArray(usableClasses)
+    ? usableClasses.filter(Boolean).slice(0, 3)
+    : (usableClass ? [usableClass] : [])
+  if (classList.length === 1 && !params.usable_class) params.usable_class = classList[0]
+  if (classList.length) params.usable_classes = classList.join(',')
+  if (classList.length > 1 || usableMatch === 'all') {
+    params.usable_match = usableMatch === 'all' ? 'all' : 'any'
+  }
+  const level = Number(compareLevel)
+  const clamped = Number.isFinite(level) ? Math.max(0, Math.min(10, Math.trunc(level))) : 0
+  params.compare_level = String(clamped)
   if (stat) {
     params.stat = stat
     if (statMin !== '' && statMin != null && Number.isFinite(Number(statMin))) {

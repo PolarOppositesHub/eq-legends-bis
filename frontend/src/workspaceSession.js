@@ -9,7 +9,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'quests', 'mobs', 'search', 'parser']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -130,6 +130,9 @@ export function defaultWorkspace(catalog) {
     searchSlot: '',
     searchType: '',
     searchClass: '',
+    searchClasses: [],
+    searchClassMatch: 'any',
+    searchCompareLevel: 0,
     searchStat: '',
     searchStatMin: '',
     searchSort1: '',
@@ -149,6 +152,8 @@ export function defaultWorkspace(catalog) {
     parserLogPath: '',
     parserMergePets: true,
     parserFightId: null,
+    parserGroupCollapsed: false,
+    currencyCharacter: '',
     whatsNewSeen: '',
   }
 }
@@ -450,6 +455,17 @@ function pickClassFilter(value, catalog) {
   return known.find((name) => name.toLowerCase() === text.toLowerCase()) || ''
 }
 
+function pickClassList(raw, catalog, fallbackSingle) {
+  const source = Array.isArray(raw) ? raw : (fallbackSingle ? [fallbackSingle] : [])
+  const out = []
+  for (const entry of source) {
+    if (out.length >= 3) break
+    const name = pickClassFilter(typeof entry === 'string' ? entry : '', catalog)
+    if (name && !out.includes(name)) out.push(name)
+  }
+  return out
+}
+
 function sanitizeCollapsed(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
   const out = {}
@@ -541,6 +557,7 @@ export function sanitizeWorkspace(raw, catalog) {
     if (itemExists && searchSelectedName && !itemExists(searchSelectedName)) {
       searchSelectedName = ''
     }
+    const searchClasses = pickClassList(raw.searchClasses, cat, raw.searchClass)
     const state = {
       ...defaults,
       tab: pickTab(raw.tab),
@@ -574,7 +591,10 @@ export function sanitizeWorkspace(raw, catalog) {
       searchQ: pickText(raw.searchQ, 200),
       searchSlot: searchSlot && slotAllowed(searchSlot, slots) ? searchSlot : '',
       searchType: pickText(raw.searchType, 80),
-      searchClass: pickClassFilter(raw.searchClass, cat),
+      searchClasses,
+      searchClass: searchClasses[0] || '',
+      searchClassMatch: raw.searchClassMatch === 'all' ? 'all' : 'any',
+      searchCompareLevel: clampUpgrade(raw.searchCompareLevel),
       searchStat: pickSortKey(raw.searchStat),
       searchStatMin: pickStatMin(raw.searchStatMin),
       searchSort1: pickSortKey(raw.searchSort1),
@@ -594,6 +614,8 @@ export function sanitizeWorkspace(raw, catalog) {
       parserLogPath: pickParserLogPath(raw.parserLogPath),
       parserMergePets: pickBool(raw.parserMergePets, true),
       parserFightId: pickParserFightId(raw.parserFightId),
+      parserGroupCollapsed: pickBool(raw.parserGroupCollapsed, false),
+      currencyCharacter: pickText(raw.currencyCharacter, 80),
       whatsNewSeen: pickWhatsNewSeen(raw.whatsNewSeen),
     }
     return { restored: true, state }

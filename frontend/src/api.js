@@ -87,3 +87,17 @@ export const listMobs = (params = {}) => {
 }
 export const getMobDetail = (body) =>
   req('/api/mob-detail', { method: 'POST', body: JSON.stringify(body) })
+export const getCurrencies = (character) => {
+  const q = new URLSearchParams({ character: character || '' })
+  return req(`/api/currencies?${q}`)
+}
+export const setCurrencyAnchor = (body) =>
+  req('/api/currencies/anchor', { method: 'POST', body: JSON.stringify(body) })
+export const recordCurrencyUsed = (body) =>
+  req('/api/currencies/used', { method: 'POST', body: JSON.stringify(body) })
+export const condenseCurrency = (body) =>
+  req('/api/currencies/condense', { method: 'POST', body: JSON.stringify(body) })
+export const undoCurrency = (body) =>
+  req('/api/currencies/undo', { method: 'POST', body: JSON.stringify(body) })
+export const reconcileCurrencies = (body) =>
+  req('/api/currencies/reconcile', { method: 'POST', body: JSON.stringify(body) })

@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.5'
+export const WHATS_NEW_ID = '1.1.6'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,15 +23,17 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.5"
+export const WHATS_NEW_TITLE = "What's new in 1.1.6"
 
 export const WHATS_NEW_POINTS = [
-  'Item Search filters by slot or type, usable class, and any stat that exists on items, with an optional minimum. Sort by up to three keys. The first key orders the list and later keys only break ties. Name search, the class filter, and the +0…+10 slider stay.',
-  'Character sections collapse, and that choice is remembered: worn, items that can be merged, bags, each bag, bank, each bank bag, shared bank, Dragon\'s Hoard, storage, and depot. Down means open. Right means closed. Items that can be merged sit above bags.',
-  'BiS Owned only ranks every slot from owned items only, with the same scoring, class, level, and single-haste rules. A slot is empty only when nothing owned fits it. An owned +N is used when the import recorded one.',
-  'Character shows an item icon to the left of each item name.',
-  'The merge list keeps equipable items except exaltations. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, those are left out. A stack in one slot is still left out. Dragon\'s Hoard and storage copies count.',
-  'Inventory dumps with the hoard window open read Hoard N rows as Dragon\'s Hoard. Hoard N-SlotK is that item\'s aug slot. The second table is Storage, with Equipment, Augmentation, and Activated. An export with no Hoard rows says to open the Dragon\'s Hoard window before /outputfile inventory.',
+  'Currencies tracks the 10 mote grades, the 15 Wind Runes, and Void-Touched Potential. Set a storage count, and later loot, given, and offer lines update it. Auto-sold motes count 0 and are marked auto-sold, not kept.',
+  'Pending: N merges since last check. A merge line does not name the mote, so the count stays until you record I used.',
+  'An inventory import reconciles bag counts. Bags from the import plus currency storage is the total, and that reconcile can be undone.',
+  'Condense turns 2 of a grade into 1 of the next and warns when item XP is lost. It is offered up to Grand → Ascendant.',
+  'Void-Touched shows held n/3 and earned this week n/3, with a countdown in Central time to Tuesday 8:00 AM Pacific.',
+  'Item Search usable-by accepts up to 3 classes. Match is Any unless you switch it to All. Has stat Min is a short field. Compare at +N filters, sorts, and lists stats at that upgrade.',
+  'Parser: the Group panel can now be collapsed, and it remembers your choice.',
+  'Simulator: swapping a class no longer locks you on the loading screen; it recalculates once your full set of classes is picked.',
 ]
 
 export const CREDITS = [

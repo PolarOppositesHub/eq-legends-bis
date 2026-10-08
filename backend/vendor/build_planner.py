@@ -1441,6 +1441,8 @@ def main():
         ws = wb.create_sheet(f"{cls} weapons top"[:31])
         bx.write_weapon_sheet(ws, per_weapons[cls], highlight=(cls == "Paladin"))
 
+    bx.write_currencies_sheet(wb)
+
     for path_out in (XLSX, XLSX_FIXED):
         wb.save(path_out)
         print(f"Wrote {path_out}")

@@ -21,6 +21,8 @@ test('search params keep token query, slot, class, stat min, and three sort keys
   assert.equal(params.slot, 'PRIMARY')
   assert.equal(params.type, 'sword')
   assert.equal(params.usable_class, 'Wizard')
+  assert.equal(params.usable_classes, 'Wizard')
+  assert.equal(params.compare_level, '0')
   assert.equal(params.stat, 'INT')
   assert.equal(params.stat_min, '3')
   assert.equal(params.sort, 'DMG')
@@ -37,4 +39,16 @@ test('an empty sort leaves the server on its alphabetical order', () => {
   assert.equal(params.sort, undefined)
   assert.equal(params.stat, undefined)
   assert.equal(params.stat_min, undefined)
+})
+
+test('usable-by sends up to three classes and the compare level', () => {
+  const params = buildItemSearchParams({
+    usableClasses: ['Wizard', 'Warrior', 'Cleric', 'Rogue'],
+    usableMatch: 'all',
+    compareLevel: 10,
+  })
+  assert.equal(params.usable_classes, 'Wizard,Warrior,Cleric')
+  assert.equal(params.usable_match, 'all')
+  assert.equal(params.compare_level, '10')
+  assert.equal(params.usable_class, undefined)
 })

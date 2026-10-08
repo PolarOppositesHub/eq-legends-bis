@@ -4,20 +4,22 @@
 
 ## 1.1.6 — Currencies tab and Item Search fixes
 The spec and PR plan still title this "1.1.3: Currencies tab". That work ships as 1.1.6.
-- [ ] Track all 10 mote grades (exact names and item XP from SPEC §8.1), the 15 Wind Runes, and Void-Touched Potential.
-- [ ] Manual anchor per currency. Log loot and given lines add. `You offered n <rune> to <npc>` subtracts. Auto-sold motes count 0 and are flagged. Lines before the anchor timestamp are ignored.
-- [ ] Merge lines never auto-decrement. Show `Pending: N merges since last check` with an `I used: [grade] x [n]` dialog.
-- [ ] Inventory import reconciles bag counts (Bags from import + Currency storage = Total), recorded as inventory_reconcile and revertible.
-- [ ] Condense (2 x grade → 1 x next grade) with an item-XP-loss warning, offered up to Grand → Ascendant only.
-- [ ] Void-Touched card: held n/3, earned this week n/3, countdown in CT to the weekly reset Tuesday 8:00 AM America/Los_Angeles, DST-safe.
-- [ ] Ledger drawer per currency with undo. Per-character storage in the sidecar user-data. Session restore keeps the character and the tab.
-- [ ] Keep the existing upgrade rule that Void-Touched is spent on the highest-tier items first. Do not add a mote-spending planner in this release.
-- [ ] Optional XLSX `Currencies` sheet only. Existing sheets unchanged.
-- [ ] Item Search: Usable by allows up to 3 classes. Default match is ANY. Optional Any/All toggle defaults to Any. Persist with the other Item Search filters.
-- [ ] Has stat Min is a compact number field.
-- [ ] Compare at +N: the stat minimum and all three sort keys use stats at the slider level via `scale_stats_to_level` the same way `engine.py` does. Result values match that level.
-- [ ] SPEC §8.3 acceptance tests, plus +0 vs +10 filter/sort tests and a multi-class Any test.
-- [ ] Version **1.1.6** the same way 1.1.5 was bumped, with 1.1.6-only release notes.
+- [x] Track all 10 mote grades (exact names and item XP from SPEC §8.1), the 15 Wind Runes, and Void-Touched Potential.
+- [x] Manual anchor per currency. Log loot and given lines add. `You offered n <rune> to <npc>` subtracts. Auto-sold motes count 0 and are flagged. Lines before the anchor timestamp are ignored.
+- [x] Merge lines never auto-decrement. Show `Pending: N merges since last check` with an `I used: [grade] x [n]` dialog.
+- [x] Inventory import reconciles bag counts (Bags from import + Currency storage = Total), recorded as inventory_reconcile and revertible.
+- [x] Condense (2 x grade → 1 x next grade) with an item-XP-loss warning, offered up to Grand → Ascendant only.
+- [x] Void-Touched card: held n/3, earned this week n/3, countdown in CT to the weekly reset Tuesday 8:00 AM America/Los_Angeles, DST-safe.
+- [x] Ledger drawer per currency with undo. Per-character storage in the sidecar user-data. Session restore keeps the character and the tab.
+- [x] The ledger does not plan or reorder Void-Touched spending. SPEC §9.3 stays a later release.
+- [x] Optional XLSX `Currencies` sheet only. Existing sheets unchanged.
+- [x] Item Search: Usable by allows up to 3 classes. Default match is ANY. Optional Any/All toggle defaults to Any. Persist with the other Item Search filters.
+- [x] Has stat Min is a compact number field.
+- [x] Compare at +N: the stat minimum and all three sort keys use stats at the slider level via `scale_stats_to_level` the same way `engine.py` does. Result values match that level.
+- [x] SPEC §8.3 acceptance tests, plus +0 vs +10 filter/sort tests and a multi-class Any test.
+- [x] Parser: the Group panel collapses with the same down/right chevron as Character sections, and the choice is remembered.
+- [x] Simulator: do not recalculate or show the loading screen until a full class set is selected. A full set is 3 classes, or 2 when the simulator level is below 10. Fewer than that keeps the class pickers usable and shows the last result or a pick-N-more hint.
+- [x] Version **1.1.6** the same way 1.1.5 was bumped, with 1.1.6-only release notes.
 - [ ] Josh spot-check in the installed app.
 
 ---

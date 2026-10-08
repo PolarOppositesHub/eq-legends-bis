@@ -446,6 +446,11 @@ test('dragon hoard rows, storage flags, search filters, and collapse flags survi
     searchSort2: 'INT',
     searchSort2Dir: 'asc',
     searchSort3: '',
+    searchClasses: ['Wizard', 'Cleric', 'Monk', 'Rogue'],
+    searchClassMatch: 'all',
+    searchCompareLevel: 6,
+    parserGroupCollapsed: true,
+    currencyCharacter: 'Zasariz',
     characterCollapsed: { worn: true, 'section:dragonhorde': true, nope: false, '': true },
     importMeta: {
       source: 'Hoard.txt',
@@ -462,6 +467,11 @@ test('dragon hoard rows, storage flags, search filters, and collapse flags survi
     },
   }, catalog)
   assert.equal(state.searchClass, 'Wizard')
+  assert.deepEqual(state.searchClasses, ['Wizard', 'Cleric', 'Monk'])
+  assert.equal(state.searchClassMatch, 'all')
+  assert.equal(state.searchCompareLevel, 6)
+  assert.equal(state.parserGroupCollapsed, true)
+  assert.equal(state.currencyCharacter, 'Zasariz')
   assert.equal(state.searchType, '1H Slashing')
   assert.equal(state.searchStat, 'INT')
   assert.equal(state.searchStatMin, '4')
@@ -476,6 +486,12 @@ test('dragon hoard rows, storage flags, search filters, and collapse flags survi
   const again = sanitizeWorkspace(snap, catalog)
   assert.equal(again.state.importMeta.rows[0].container_kind, 'dragonhorde')
   assert.equal(again.state.searchSort1, 'DMG')
+  assert.deepEqual(again.state.searchClasses, ['Wizard', 'Cleric', 'Monk'])
+  assert.equal(again.state.searchClass, 'Wizard')
+  assert.equal(again.state.searchClassMatch, 'all')
+  assert.equal(again.state.searchCompareLevel, 6)
+  assert.equal(again.state.parserGroupCollapsed, true)
+  assert.equal(again.state.currencyCharacter, 'Zasariz')
 })
 
 test('old sessions with no import still load', () => {
@@ -493,6 +509,17 @@ test('old sessions with no import still load', () => {
   assert.deepEqual(state.classes, ['Wizard'])
   assert.equal(state.race, 'Dark Elf')
   assert.equal(state.characterLevel, 42)
+  assert.equal(state.parserGroupCollapsed, false)
+  assert.deepEqual(state.searchClasses, [])
+  assert.equal(state.currencyCharacter, '')
+})
+
+test('an older session with a single search class still loads', () => {
+  const { state } = sanitizeWorkspace({ v: 1, searchClass: 'wizard' }, catalog)
+  assert.equal(state.searchClass, 'Wizard')
+  assert.deepEqual(state.searchClasses, ['Wizard'])
+  assert.equal(state.searchClassMatch, 'any')
+  assert.equal(state.parserGroupCollapsed, false)
 })
 
 test('an older import without a slot tree still loads', () => {

@@ -1148,3 +1148,56 @@ class ParserDB:
             }
             for row in self._list_economy("merge_events", character, limit, offset)
         ]
+
+    def currency_feed(self, character: str) -> list[dict]:
+        """Loot, offer, and merge rows the currency ledger can apply. Keys are idempotent."""
+        name = (character or "").strip()
+        if not name:
+            return []
+        events: list[dict] = []
+        loot_sql = """
+            SELECT file_id, generation, offset, ts, item, qty, mode
+            FROM loot_events
+            WHERE character = ? COLLATE NOCASE AND (is_mote = 1 OR is_wind_rune = 1)
+            ORDER BY COALESCE(ts, ''), offset
+        """
+        for row in self.conn.execute(loot_sql, (name,)):
+            events.append({
+                "key": f"loot:{row['file_id']}:{row['generation']}:{row['offset']}",
+                "kind": "loot",
+                "ts": row["ts"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "mode": row["mode"],
+            })
+        give_sql = """
+            SELECT file_id, generation, offset, ts, item, qty, npc
+            FROM give_events
+            WHERE character = ? COLLATE NOCASE AND (is_mote = 1 OR is_wind_rune = 1)
+            ORDER BY COALESCE(ts, ''), offset
+        """
+        for row in self.conn.execute(give_sql, (name,)):
+            events.append({
+                "key": f"give:{row['file_id']}:{row['generation']}:{row['offset']}",
+                "kind": "give",
+                "ts": row["ts"],
+                "item": row["item"],
+                "qty": row["qty"],
+                "npc": row["npc"],
+            })
+        merge_sql = """
+            SELECT file_id, generation, offset, ts, result_item, result_tier
+            FROM merge_events
+            WHERE character = ? COLLATE NOCASE
+            ORDER BY COALESCE(ts, ''), offset
+        """
+        for row in self.conn.execute(merge_sql, (name,)):
+            events.append({
+                "key": f"merge:{row['file_id']}:{row['generation']}:{row['offset']}",
+                "kind": "merge",
+                "ts": row["ts"],
+                "item": row["result_item"],
+                "result_item": row["result_item"],
+                "result_tier": row["result_tier"],
+            })
+        return events
