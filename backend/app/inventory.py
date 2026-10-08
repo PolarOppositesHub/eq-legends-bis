@@ -24,7 +24,7 @@ LOCATION_TO_SLOTS: dict[str, list[str]] = {
     "NECK": ["NECK"],
     "SHOULDERS": ["SHOULDERS"],
     "ARMS": ["ARMS"],
-    "WRIST": ["WRIST"],
+    "WRIST": ["WRIST1", "WRIST2"],
     "HANDS": ["HANDS"],
     "CHEST": ["CHEST"],
     "BACK": ["BACK"],
@@ -849,7 +849,7 @@ def _slot_importance(slot: str) -> int:
     """Tie-break order when priorities match — weapons/chest before jewelry."""
     order = [
         "CHEST", "PRIMARY", "SECONDARY", "LEGS", "HEAD", "ARMS", "HANDS", "FEET",
-        "BACK", "SHOULDERS", "WAIST", "FACE", "NECK", "WRIST", "EAR1", "EAR2",
+        "BACK", "SHOULDERS", "WAIST", "FACE", "NECK", "WRIST1", "WRIST2", "EAR1", "EAR2",
         "FINGER1", "FINGER2", "RANGE", "AMMO",
     ]
     try:
@@ -859,7 +859,8 @@ def _slot_importance(slot: str) -> int:
 
 
 def _norm_item_name(name: str | None) -> str:
-    return (name or "").strip().lower()
+    from .item_names import owned_name_key
+    return owned_name_key(name or "")
 
 
 def _dedicated_slots_for_recommendation(row: dict[str, Any]) -> set[str]:

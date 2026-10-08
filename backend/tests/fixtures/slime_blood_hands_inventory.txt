@@ -1,0 +1,6 @@
+Location	Name	ID	Count	Slots
+Hands	Slime Blood of Cazic-Thule +5	20655	1	10
+Wrist	Valorium Bracers +4	4854	1	10
+Wrist	Lustrous Russet Bracer +4	4834	1	10
+Equipment	Crushbone Cadet`s Grimoire +3	177861	1	0
+Bank1-Slot1	Used Gold Training Tunic*	13591	1	0

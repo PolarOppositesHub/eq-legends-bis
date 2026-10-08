@@ -289,7 +289,18 @@
       "missing": false,
       "name": "",
       "ratio": null,
-      "slot": "WRIST",
+      "slot": "WRIST1",
+      "stats": {},
+      "upgrade": 0,
+      "url": ""
+    },
+    {
+      "haste": 0,
+      "haste_applied": false,
+      "missing": false,
+      "name": "",
+      "ratio": null,
+      "slot": "WRIST2",
       "stats": {},
       "upgrade": 0,
       "url": ""

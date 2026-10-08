@@ -81,6 +81,7 @@ import {
   visibleSearchItems,
 } from './characterView.js'
 import { buildItemSearchParams, searchStatLabel } from './itemSearchQuery.js'
+import { itemIsLore, namesMatch } from './itemNames.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -154,7 +155,7 @@ function openEqlwikiNow(url) {
 }
 
 function sameItemName(a, b) {
-  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+  return namesMatch(a, b)
 }
 
 function menuCoords(e, w = 220, h = 128) {
@@ -3463,7 +3464,7 @@ export default function App() {
                             s.name
                           )}
                         </span>
-                        <OwnedBadge owned={isOwnedName(s.name, ownedNames)} />
+                        <OwnedBadge owned={isOwnedName(s.name, ownedNames, s.itemID)} />
                         </>
                       ) : (
                         bis?.owned_only ? 'Nothing owned fits this slot.' : '—'
@@ -3500,7 +3501,7 @@ export default function App() {
                               key={a.name}
                               a={a}
                               upgrade={upgrade}
-                              owned={isOwnedName(a.name, ownedNames)}
+                              owned={isOwnedName(a.name, ownedNames, a.itemID)}
                               onShowTip={showHoverTip}
                               onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
@@ -4297,7 +4298,7 @@ export default function App() {
                             >
                               {it.name}
                             </span>
-                            <OwnedBadge owned={isOwnedName(it.name, ownedNames)} />
+                            <OwnedBadge owned={isOwnedName(it.name, ownedNames, it.itemID)} />
                             {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
                               <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
                             ) : null}
@@ -4366,7 +4367,7 @@ export default function App() {
                       >
                         {itemDetail.name}
                       </button>
-                      <OwnedBadge owned={isOwnedName(itemDetail.name, ownedNames)} />
+                      <OwnedBadge owned={isOwnedName(itemDetail.name, ownedNames, itemDetail.itemID)} />
                     </div>
                     <div className="meta">
                       {(panelMeta.slots || []).join(', ') || panelMeta.slot || (panelMeta.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
@@ -4602,20 +4603,35 @@ export default function App() {
                         <div className="equip-slot-cell">
                           <select
                             className="slot-select"
+                            data-testid={`worn-slot-${slot}`}
                             value={equipment[slot] || ''}
                             onChange={(e) => {
                               const v = e.target.value
                               setEquipment((prev) => {
                                 const next = { ...prev }
-                                if (!v) delete next[slot]
-                                else next[slot] = v
+                                if (!v) {
+                                  delete next[slot]
+                                  return next
+                                }
+                                next[slot] = v
+                                const picked = (slotItems[slot] || []).find((it) => namesMatch(it.name, v))
+                                if (picked && itemIsLore(picked.flags)) {
+                                  for (const other of Object.keys(next)) {
+                                    if (other !== slot && namesMatch(next[other], v)) delete next[other]
+                                  }
+                                }
                                 return next
                               })
                             }}
                             onBlur={runSim}
                           >
                             <option value="">— empty —</option>
-                            {(slotItems[slot] || []).map((it) => (
+                            {(slotItems[slot] || []).filter((it) => {
+                              if (!itemIsLore(it.flags)) return true
+                              return !Object.entries(equipment).some(([other, worn]) => (
+                                other !== slot && namesMatch(worn, it.name)
+                              ))
+                            }).map((it) => (
                               <option key={it.name} value={it.name}>
                                 {it.name}{it.haste ? ` (+${it.haste}% haste)` : ''}
                                 {(it.ratio_at_upgrade != null || it.ratio_plus10 != null)
@@ -4623,7 +4639,7 @@ export default function App() {
                                   : ''}
                               </option>
                             ))}
-                            {equipment[slot] && !(slotItems[slot] || []).some((it) => it.name === equipment[slot]) && (
+                            {equipment[slot] && !(slotItems[slot] || []).some((it) => namesMatch(it.name, equipment[slot])) && (
                               <option value={equipment[slot]}>{equipment[slot]} (imported)</option>
                             )}
                           </select>
@@ -4668,7 +4684,7 @@ export default function App() {
                           {deltas.length === 0 ? (
                             <span className="muted">
                               {selectedBis && (equipment[slot] || '') &&
-                              String(equipment[slot]).toLowerCase() === String(selectedBis).toLowerCase()
+                              namesMatch(equipment[slot], selectedBis)
                                 ? 'match'
                                 : '—'}
                             </span>

@@ -34,6 +34,10 @@ export const WHATS_NEW_POINTS = [
   'Item Search usable-by accepts up to 3 classes. Match is Any unless you switch it to All. Has stat Min is a short field. Compare at +N filters, sorts, and lists stats at that upgrade.',
   'Parser: the Group panel can now be collapsed, and it remembers your choice.',
   'Simulator: swapping a class no longer locks you on the loading screen; it recalculates once your full set of classes is picked.',
+  'Owned badges treat the game\'s Slime Blood of Cazic-Thule as the catalog hands item. Matching ignores case, hyphens versus spaces, apostrophe marks, and extra spaces. Long names wrap with their badges.',
+  'The window uses the full width at any size, including a maximized ultrawide, and the panels reflow when it shrinks.',
+  'Best in Slot, the Simulator, inventory import, saved builds, and the spreadsheet export all have two wrist slots.',
+  'A lore item fills only one of a paired wrist, finger, or ear slot. A non-lore item can fill both. Owned-only uses a second copy only when Count is at least 2.',
 ]
 
 export const CREDITS = [

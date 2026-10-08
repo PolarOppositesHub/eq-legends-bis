@@ -5,6 +5,7 @@
  * describes the automatic "where I left off" state and refuses shapes that
  * would crash the UI after a catalog change.
  */
+import { canonicalItemName } from './itemNames.js'
 import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
@@ -220,10 +221,25 @@ function pickLevel(value, catalog) {
   return lv
 }
 
+function withLegacyWrists(value, slots) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
+  const slotSet = new Set(slots || [])
+  if (slotSet.size && (!slotSet.has('WRIST1') || slotSet.has('WRIST'))) return value
+  if (!Object.prototype.hasOwnProperty.call(value, 'WRIST')) return value
+  const next = { ...value }
+  const legacy = next.WRIST
+  const current = next.WRIST1
+  const empty = current == null || current === ''
+  if (empty && legacy != null && legacy !== '') next.WRIST1 = legacy
+  delete next.WRIST
+  return next
+}
+
 function pickUpgradeMap(value, slots) {
   const out = {}
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return out
-  for (const [key, raw] of Object.entries(value)) {
+  const source = withLegacyWrists(value, slots)
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return out
+  for (const [key, raw] of Object.entries(source)) {
     if (!slotAllowed(key, slots)) continue
     out[key.trim()] = clampUpgrade(raw)
   }
@@ -232,10 +248,12 @@ function pickUpgradeMap(value, slots) {
 
 function pickNameMap(value, slots, itemExists) {
   const out = {}
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return out
-  for (const [key, raw] of Object.entries(value)) {
+  const source = withLegacyWrists(value, slots)
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return out
+  for (const [key, raw] of Object.entries(source)) {
     if (!slotAllowed(key, slots)) continue
-    const name = cleanItemName(raw)
+    const cleaned = cleanItemName(raw)
+    const name = canonicalItemName(cleaned) || cleaned
     if (!name) continue
     if (itemExists && !itemExists(name)) continue
     out[key.trim()] = name
@@ -553,7 +571,7 @@ export function sanitizeWorkspace(raw, catalog) {
     const slots = knownSlots(cat)
     const itemExists = typeof cat.itemExists === 'function' ? cat.itemExists : null
     const searchSlot = typeof raw.searchSlot === 'string' ? raw.searchSlot.trim() : ''
-    let searchSelectedName = cleanItemName(raw.searchSelectedName)
+    let searchSelectedName = canonicalItemName(cleanItemName(raw.searchSelectedName)) || cleanItemName(raw.searchSelectedName)
     if (itemExists && searchSelectedName && !itemExists(searchSelectedName)) {
       searchSelectedName = ''
     }

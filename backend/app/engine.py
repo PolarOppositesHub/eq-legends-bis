@@ -29,6 +29,7 @@ from .races import RACES, get_races_payload, race_bases, class_stat_rows  # noqa
 from . import weapon_dps as wdps
 from .version import __version__  # noqa: E402
 from . import scoring as sc  # noqa: E402
+from .item_names import canonical_item_name, item_id_text, owned_name_key  # noqa: E402
 from . import class_roles as class_roles  # noqa: E402
 from . import ac_softcap as ac_softcap  # noqa: E402
 from . import character_pools as pools  # noqa: E402
@@ -217,6 +218,7 @@ def _public_item(item: dict, level: int = 10) -> dict:
         "effect": item.get("effect") or "",
         "url": item.get("url") or "",
         "is_weapon": bool(item.get("is_weapon")),
+        "flags": item.get("flags") or "",
         "stats_plus0": s0,
         "stats_plus10": s10,
         "stats_at_upgrade": s_lvl,
@@ -367,6 +369,8 @@ def _match_slots(planner_slot: str) -> set[str]:
         return {"EAR1", "EAR2"}
     if planner_slot in ("FINGER1", "FINGER2"):
         return {"FINGER1", "FINGER2"}
+    if planner_slot in ("WRIST1", "WRIST2"):
+        return {"WRIST1", "WRIST2"}
     return {planner_slot}
 
 
@@ -384,7 +388,17 @@ def item_score_upgrade(item: dict | None, upgrade: int) -> int:
 
 
 def _owned_name_key(name: str) -> str:
-    return (name or "").strip().casefold()
+    return owned_name_key(name)
+
+
+def _owned_entry_count(entry: dict) -> int:
+    raw = entry.get("count")
+    if raw is None or raw == "":
+        return 1
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return 1
 
 
 def _apply_owned_upgrade_view(item: dict, level: int) -> dict:
@@ -414,13 +428,22 @@ def restrict_pool_to_owned(
 
     A copy with no +N uses the planner upgrade. Missing +N is not treated as +0.
     """
-    levels: dict[str, int | None] = {}
+    by_name: dict[str, dict[str, Any]] = {}
+    by_id: dict[str, dict[str, Any]] = {}
+
+    def _bump(bucket: dict[str, dict[str, Any]], key: str, level: int | None, count: int) -> None:
+        cur = bucket.get(key)
+        if cur is None:
+            bucket[key] = {"upgrade": level, "count": count}
+            return
+        cur["count"] = int(cur["count"]) + count
+        if level is not None and (cur["upgrade"] is None or level > cur["upgrade"]):
+            cur["upgrade"] = level
+
     for entry in owned_items or []:
         if not isinstance(entry, dict):
             continue
         key = _owned_name_key(str(entry.get("name") or ""))
-        if not key or key == "empty":
-            continue
         raw = entry.get("upgrade")
         level: int | None
         if raw is None or raw == "":
@@ -430,18 +453,34 @@ def restrict_pool_to_owned(
                 level = max(0, min(10, int(raw)))
             except (TypeError, ValueError):
                 level = None
-        if key not in levels:
-            levels[key] = level
-        elif level is not None and (levels[key] is None or level > levels[key]):
-            levels[key] = level
+        count = _owned_entry_count(entry)
+        if key and key != "empty":
+            _bump(by_name, key, level, count)
+        iid = item_id_text(entry.get("id") if entry.get("id") not in (None, "") else entry.get("itemID") or entry.get("item_id"))
+        if iid:
+            _bump(by_id, iid, level, count)
     fallback = max(0, min(10, int(fallback_upgrade)))
     out: list[dict] = []
     for item in pool:
         key = _owned_name_key(str(item.get("name") or ""))
-        if key not in levels:
+        iid = item_id_text(item.get("itemID"))
+        # Prefer the catalog id when the import has that id. Name-key count
+        # stays the copy count: an exaltation that only repeats the parent id
+        # marks the parent owned without adding a second wearable copy.
+        name_rec = by_name.get(key)
+        id_rec = by_id.get(iid) if iid else None
+        if name_rec is None and id_rec is None:
             continue
-        recorded = levels[key]
-        out.append(_apply_owned_upgrade_view(item, fallback if recorded is None else recorded))
+        recorded = None
+        for rec in (name_rec, id_rec):
+            if not rec:
+                continue
+            level = rec.get("upgrade")
+            if level is not None and (recorded is None or level > recorded):
+                recorded = level
+        viewed = _apply_owned_upgrade_view(item, fallback if recorded is None else recorded)
+        viewed["owned_count"] = int(name_rec["count"]) if name_rec else 1
+        out.append(viewed)
     return out
 
 
@@ -749,6 +788,8 @@ def recommend_bis(
             "stats_at_upgrade": s_up,
             "upgrade": shown_upgrade,
             "haste": 0,
+            "itemID": (item or {}).get("itemID"),
+            "flags": (item or {}).get("flags") or "",
             "alts": [],
         }
         dw_slot = bool(
@@ -863,6 +904,8 @@ def recommend_bis(
                 "stats_at_upgrade": alt_up,
                 "url": r.get("url") or "",
                 "image_url": f"/api/item-image?name={r['name']}" if r.get("name") else "",
+                "itemID": r_item.get("itemID"),
+                "flags": r_item.get("flags") or "",
             })
             if len(alts_list) >= alts:
                 break
@@ -974,6 +1017,8 @@ def items_for_slot(
                     match = {"EAR1", "EAR2"}
                 elif slot_u in ("FINGER1", "FINGER2"):
                     match = {"FINGER1", "FINGER2"}
+                elif slot_u in ("WRIST1", "WRIST2"):
+                    match = {"WRIST1", "WRIST2"}
                 if not (set(pslots) & match):
                     continue
         if qn and qn not in (item.get("name") or "").lower():
@@ -990,13 +1035,22 @@ def items_for_slot(
 
 
 def get_item_by_name(pool: list[dict], name: str) -> dict | None:
-    if not name:
+    """Pool lookup used by the simulator and any log name resolved to a catalog row."""
+    key = owned_name_key(canonical_item_name(name))
+    if not key:
         return None
-    key = name.strip().lower()
+    best = None
     for item in pool:
-        if (item.get("name") or "").strip().lower() == key:
-            return item
-    return None
+        if owned_name_key(item.get("name") or "") != key:
+            continue
+        if best is None:
+            best = item
+            continue
+        best_stats = bool(best.get("stats_plus0") or best.get("stats_plus10"))
+        item_stats = bool(item.get("stats_plus0") or item.get("stats_plus10"))
+        if item_stats and not best_stats:
+            best = item
+    return best
 
 
 def simulate(
@@ -1028,16 +1082,33 @@ def simulate(
             continue
     cleaned = [c for c in classes if c in ALL_CLASSES]
     pool = build_pool_for_classes(cleaned, mode="any")
-    by_name = {(it.get("name") or "").strip().lower(): it for it in pool}
+    by_name: dict[str, dict] = {}
+    for it in pool:
+        key = owned_name_key(it.get("name") or "")
+        if not key:
+            continue
+        prev = by_name.get(key)
+        if prev is None:
+            by_name[key] = it
+            continue
+        prev_stats = bool(prev.get("stats_plus0") or prev.get("stats_plus10"))
+        it_stats = bool(it.get("stats_plus0") or it.get("stats_plus10"))
+        if it_stats and not prev_stats:
+            by_name[key] = it
 
     equipped = []
     haste_candidates = []
     warnings = []
     gear_stats: dict[str, float] = {}
+    seen_lore: dict[str, str] = {}
 
     for slot in PLANNER_SLOTS:
         raw_name = (equipment or {}).get(slot) or (equipment or {}).get(slot.lower()) or ""
+        if not str(raw_name).strip() and slot == "WRIST1":
+            raw_name = (equipment or {}).get("WRIST") or (equipment or {}).get("wrist") or ""
         slot_level = slot_upg.get(slot, upgrade)
+        if slot == "WRIST1" and slot not in slot_upg and "WRIST" in slot_upg:
+            slot_level = slot_upg["WRIST"]
         if not raw_name or str(raw_name).strip().lower() in ("", "none", "-"):
             equipped.append({
                 "slot": slot,
@@ -1048,7 +1119,7 @@ def simulate(
                 "upgrade": slot_level,
             })
             continue
-        item = by_name.get(str(raw_name).strip().lower())
+        item = by_name.get(owned_name_key(canonical_item_name(str(raw_name))))
         if not item:
             warnings.append(f"{slot}: item not in trio pool: {raw_name}")
             equipped.append({
@@ -1061,6 +1132,25 @@ def simulate(
                 "upgrade": slot_level,
             })
             continue
+        if sc.item_is_lore(item):
+            lore_key = owned_name_key(item.get("name") or "")
+            if lore_key and lore_key in seen_lore:
+                warnings.append(
+                    f"{slot}: lore item {item.get('name')} is already equipped in "
+                    f"{seen_lore[lore_key]}; stats counted once"
+                )
+                equipped.append({
+                    "slot": slot,
+                    "name": item.get("name") or str(raw_name),
+                    "lore_duplicate": True,
+                    "included_stats": {},
+                    "haste": 0,
+                    "haste_applied": False,
+                    "upgrade": slot_level,
+                })
+                continue
+            if lore_key:
+                seen_lore[lore_key] = slot
         s0_item = item.get("stats_plus0") or {}
         s10_item = item.get("stats_plus10") or {}
         stats = scale_stats_to_level(s0_item, slot_level)

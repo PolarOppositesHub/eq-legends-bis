@@ -15,6 +15,7 @@ from functools import cmp_to_key, lru_cache
 from pathlib import Path
 from typing import Any
 
+from .item_names import canonical_item_name, item_id_text, owned_name_key
 from .paths import APP_ROOT, decoded_dir, image_seed_dirs, images_dir
 
 USER_AGENT = "EQLegendsBiS/1.0.10 (local; josh; item-icon-cache)"
@@ -915,6 +916,52 @@ def _flat_by_name() -> dict[str, dict[str, Any]]:
     return out
 
 
+def _row_has_stats(it: dict[str, Any] | None) -> bool:
+    if not isinstance(it, dict):
+        return False
+    if it.get("has_stats") is True:
+        return True
+    return bool(it.get("stats_plus0") or it.get("stats_plus10") or it.get("tooltipLines"))
+
+
+@lru_cache(maxsize=1)
+def _flat_by_owned_key() -> dict[str, dict[str, Any]]:
+    """Owned-name index. A stats row wins over a wiki stub with the same key."""
+    out: dict[str, dict[str, Any]] = {}
+    try:
+        for it in _all_flat_items():
+            key = owned_name_key(it.get("name") or "")
+            if not key:
+                continue
+            prev = out.get(key)
+            if prev is None or (_row_has_stats(it) and not _row_has_stats(prev)):
+                out[key] = it
+    except Exception:
+        return {}
+    return out
+
+
+def _lookup_flat_item(name: str) -> dict[str, Any] | None:
+    """Exact catalog key, then the game-spelling alias, then the owned-name key."""
+    try:
+        by_name = _flat_by_name()
+        by_owned = _flat_by_owned_key()
+    except Exception:
+        return None
+    key = _name_key(name)
+    it = by_name.get(key) if key else None
+    canon = canonical_item_name(name)
+    if canon:
+        canon_hit = by_name.get(_name_key(canon))
+        if canon_hit is not None and (it is None or (_row_has_stats(canon_hit) and not _row_has_stats(it))):
+            it = canon_hit
+    owned = owned_name_key(name)
+    owned_hit = by_owned.get(owned) if owned else None
+    if owned_hit is not None and (it is None or (_row_has_stats(owned_hit) and not _row_has_stats(it))):
+        it = owned_hit
+    return it
+
+
 @lru_cache(maxsize=1)
 def _flat_by_id() -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
@@ -1116,41 +1163,63 @@ def _quests_payload_for_item(
     return rows
 
 
+def _wiki_display_for_name(name: str) -> str | None:
+    key = _name_key(name)
+    wiki = _wiki_display_names()
+    if key and key in wiki and not str(key).startswith("__"):
+        return wiki[key]
+    canon = canonical_item_name(name)
+    canon_key = _name_key(canon) if canon else ""
+    if canon_key and canon_key in wiki and not str(canon_key).startswith("__"):
+        return wiki[canon_key]
+    owned = owned_name_key(name)
+    if not owned:
+        return None
+    for display in wiki.values():
+        if owned_name_key(display) == owned:
+            return display
+    return None
+
+
+def _tools_match(it: dict[str, Any], fallback_name: str) -> dict[str, Any]:
+    # A flat-pool hit stays "tools", including a wiki stub that was merged in.
+    # The eqlwiki source is only the name-index fallback below.
+    return {
+        "matched": True,
+        "source": "tools",
+        "has_stats": bool(it.get("stats_plus0") or it.get("stats_plus10")),
+        "name": it.get("name") or fallback_name,
+        "itemID": it.get("itemID"),
+        "slots": [str(s).strip().upper() for s in (it.get("slots") or []) if str(s).strip()],
+    }
+
+
 def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, Any]:
     """Resolve an inventory name/id against tools catalog + eqlwiki name index.
 
-    Never invents stats. ``source`` is ``tools`` (has decoded stats when present),
-    ``eqlwiki`` (name known from wiki category dump), or None.
+    A non-zero item id in the catalog wins over the name. Names still match when
+    the id is missing: case, hyphens versus spaces, and apostrophe marks fold.
+    Never invents stats or an item id. ``source`` is ``tools`` (has decoded stats
+    when present), ``eqlwiki`` (name known from wiki category dump), or None.
     """
-    key = _name_key(name)
-    iid = str(item_id).strip() if item_id is not None and str(item_id).strip() else ""
+    iid = item_id_text(item_id)
     try:
-        by_name = _flat_by_name()
         by_id = _flat_by_id()
-        wiki = _wiki_display_names()
     except Exception:
-        by_name, by_id, wiki = {}, {}, {}
+        by_id = {}
 
-    it = by_name.get(key) if key else None
-    if it is None and iid:
-        it = by_id.get(iid)
+    it = by_id.get(iid) if iid else None
+    if it is None:
+        it = _lookup_flat_item(name)
     if it is not None:
-        s0 = it.get("stats_plus0") or {}
-        s10 = it.get("stats_plus10") or {}
-        return {
-            "matched": True,
-            "source": "tools",
-            "has_stats": bool(s0 or s10),
-            "name": it.get("name") or name,
-            "itemID": it.get("itemID"),
-            "slots": [str(s).strip().upper() for s in (it.get("slots") or []) if str(s).strip()],
-        }
-    if key and key in wiki and not str(key).startswith("__"):
+        return _tools_match(it, name)
+    display = _wiki_display_for_name(name)
+    if display:
         return {
             "matched": True,
             "source": "eqlwiki",
             "has_stats": False,
-            "name": wiki[key],
+            "name": display,
             "itemID": None,
         }
     return {
@@ -1164,19 +1233,13 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
 
 def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None:
     """Return a public item row. Optionally enrich wiki-only rows from eqlwiki HTML."""
-    key = _name_key(name)
+    key = _name_key(name) or owned_name_key(name)
     if not key:
         return None
-    try:
-        it = _flat_by_name().get(key)
-    except Exception:
-        it = None
+    it = _lookup_flat_item(name)
     if not it:
         # Last chance: wiki name index alone (before pool rebuild)
-        try:
-            display = _wiki_name_index().get(key)
-        except Exception:
-            display = None
+        display = _wiki_display_for_name(name)
         if not display:
             return None
         title = display.replace(" ", "_")

@@ -13,7 +13,7 @@ from . import ac_softcap
 from . import class_roles as roles
 
 PLANNER_SLOTS = [
-    "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST",
+    "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST1", "WRIST2",
     "HANDS", "CHEST", "BACK", "WAIST", "LEGS", "FEET",
     "FINGER1", "FINGER2", "PRIMARY", "SECONDARY", "RANGE", "AMMO",
     "ANY1", "ANY2",
@@ -21,13 +21,22 @@ PLANNER_SLOTS = [
 
 SLOT_ALIASES = {
     "HEAD": ["HEAD"], "FACE": ["FACE"], "EAR": ["EAR1", "EAR2"], "NECK": ["NECK"],
-    "SHOULDERS": ["SHOULDERS"], "ARMS": ["ARMS"], "WRIST": ["WRIST"], "HANDS": ["HANDS"],
+    "SHOULDERS": ["SHOULDERS"], "ARMS": ["ARMS"], "WRIST": ["WRIST1", "WRIST2"],
+    "HANDS": ["HANDS"],
     "CHEST": ["CHEST"], "BACK": ["BACK"], "WAIST": ["WAIST"], "LEGS": ["LEGS"],
     "FEET": ["FEET"], "FINGER": ["FINGER1", "FINGER2"], "PRIMARY": ["PRIMARY"],
     "SECONDARY": ["SECONDARY"], "RANGE": ["RANGE"], "RANGED": ["RANGE"], "AMMO": ["AMMO"],
     # EQ Legends has two "Any Slot" worn slots (Inventory.txt Location: Any Slot).
     "ANY": ["ANY1", "ANY2"], "ANYSLOT": ["ANY1", "ANY2"], "CHARM": ["ANY1", "ANY2"],
 }
+
+# Paired worn slots. A lore item fills only one of the pair.
+PAIRED_GROUPS = (
+    ("EAR1", "EAR2"),
+    ("WRIST1", "WRIST2"),
+    ("FINGER1", "FINGER2"),
+)
+_LORE_RE = re.compile(r"\blore\b", re.I)
 
 ANY_SLOTS = frozenset({"ANY1", "ANY2"})
 WEAPON_SLOTS = frozenset({"PRIMARY", "SECONDARY", "RANGE", "AMMO"})
@@ -488,6 +497,8 @@ def rank_for_slot(
         match_slots = {"EAR1", "EAR2"}
     elif planner_slot in ("FINGER1", "FINGER2"):
         match_slots = {"FINGER1", "FINGER2"}
+    elif planner_slot in ("WRIST1", "WRIST2"):
+        match_slots = {"WRIST1", "WRIST2"}
     else:
         match_slots = {planner_slot}
 
@@ -540,6 +551,58 @@ def rank_for_slot(
     return prefer_multi_class(candidates, 0.05)
 
 
+def item_is_lore(item: dict | None) -> bool:
+    """True only when a flags string contains the word lore.
+
+    Blank or missing flags are not lore. Tooltip prose is not a lore flag.
+    """
+    if not isinstance(item, dict):
+        return False
+    flags = item.get("flags")
+    if (flags is None or str(flags).strip() == "") and isinstance(item.get("item"), dict):
+        flags = item["item"].get("flags")
+    if flags is None or str(flags).strip() == "":
+        return False
+    return bool(_LORE_RE.search(str(flags)))
+
+
+def owned_copy_count(item: dict | None) -> int | None:
+    """Owned-only copy count. None means the recommend is not limited by Count."""
+    if not isinstance(item, dict):
+        return None
+    raw = item.get("owned_count")
+    if raw is None and isinstance(item.get("item"), dict):
+        raw = item["item"].get("owned_count")
+    if raw is None or raw == "":
+        return None
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return None
+
+
+def is_paired_group(group: list[str]) -> bool:
+    return tuple(group) in PAIRED_GROUPS
+
+
+def allows_another_copy(cand: dict, picks: list[dict]) -> bool:
+    """A second copy inside one paired group.
+
+    Lore is once, even when Count is 2 or more. A non-lore item can fill both
+    slots. Owned-only still needs Count at least 2 for that second copy.
+    """
+    already = sum(1 for pick in picks if pick.get("name") == cand.get("name"))
+    if already <= 0:
+        return True
+    source = cand.get("item") if isinstance(cand.get("item"), dict) else cand
+    if item_is_lore(source):
+        return False
+    count = owned_copy_count(source)
+    if count is None:
+        return True
+    return count >= already + 1
+
+
 def pick_loadout(
     pool: list[dict],
     mode: str,
@@ -550,7 +613,7 @@ def pick_loadout(
     loadout: dict[str, dict] = {}
     groups = [
         ["HEAD"], ["FACE"], ["EAR1", "EAR2"], ["NECK"], ["SHOULDERS"], ["ARMS"],
-        ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
+        ["WRIST1", "WRIST2"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
         # Fill dedicated slots first; Any Slot uses leftover best-stat gear (no DMG).
         ["ANY1", "ANY2"],
@@ -595,16 +658,20 @@ def pick_loadout(
                     picks.append(c)
                     break
         for cand in ranked:
+            if len(picks) >= len(group):
+                break
             if cand["name"] in used_names:
-                continue
-            if any(p["name"] == cand["name"] for p in picks):
                 continue
             h = item_haste(cand.get("item") or {}, haste_level_of(cand.get("item") or {}))
             if h > 0 and cand["name"] != reserved_haste_name:
                 continue
-            picks.append(cand)
-            if len(picks) >= len(group):
-                break
+            while len(picks) < len(group):
+                if any(p["name"] == cand["name"] for p in picks):
+                    if not (is_paired_group(group) and allows_another_copy(cand, picks)):
+                        break
+                picks.append(dict(cand))
+                if not is_paired_group(group) or not allows_another_copy(cand, picks):
+                    break
         for slot, cand in zip(group, picks):
             used_names.add(cand["name"])
             why = cand["why"]

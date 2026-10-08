@@ -19,6 +19,10 @@ The spec and PR plan still title this "1.1.3: Currencies tab". That work ships a
 - [x] SPEC §8.3 acceptance tests, plus +0 vs +10 filter/sort tests and a multi-class Any test.
 - [x] Parser: the Group panel collapses with the same down/right chevron as Character sections, and the choice is remembered.
 - [x] Simulator: do not recalculate or show the loading screen until a full class set is selected. A full set is 3 classes, or 2 when the simulator level is below 10. Fewer than that keeps the class pickers usable and shows the last result or a pick-N-more hint.
+- [x] Owned badges: the catalog name for the hands item is the in-game spelling `Slime Blood of Cazic-Thule`. The old spaced spelling stays an alias so a saved build still resolves. Owned, equipped, log-name, Character, and merge matching folds case, hyphens and spaces, apostrophe marks, and extra spaces. A real item id wins when the import has one. Long names wrap with their badges.
+- [x] The window fills any size, including a maximized ultrawide. The old 1600px content cap is gone. Slot and panel grids reflow.
+- [x] Two wrist slots, WRIST1 and WRIST2, in Best in Slot, the Simulator, inventory import, saved builds, and the spreadsheet. A saved build that still has one WRIST loads into WRIST1 when WRIST1 is empty.
+- [x] A lore item fills only one wrist, finger, or ear. A non-lore item can fill both. Owned-only repeats a non-lore item only when Count is at least 2. A blank flags field is not lore.
 - [x] Version **1.1.6** the same way 1.1.5 was bumped, with 1.1.6-only release notes.
 - [ ] Josh spot-check in the installed app.
 

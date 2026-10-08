@@ -290,7 +290,7 @@
     "eqlwiki_names": 11820,
     "index_path": "eqlwiki_item_names.json",
     "note": "Item Search covers tools stats plus every eqlwiki item name (equipable and non-equipable). Stats come from decoded data or the wiki page only.",
-    "search_catalog": 11828,
+    "search_catalog": 11827,
     "tools_items": 940
   },
   "character": null,
