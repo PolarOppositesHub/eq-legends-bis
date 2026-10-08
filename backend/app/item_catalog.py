@@ -15,6 +15,7 @@ from functools import cmp_to_key, lru_cache
 from pathlib import Path
 from typing import Any
 
+from .item_names import canonical_item_name, item_id_text, owned_name_key
 from .paths import APP_ROOT, decoded_dir, image_seed_dirs, images_dir
 
 USER_AGENT = "EQLegendsBiS/1.0.10 (local; josh; item-icon-cache)"
@@ -614,23 +615,56 @@ def item_usable_by_class(item: dict[str, Any], class_name: str | None) -> bool:
     return any(_resolve_class_name(token).casefold() == wanted.casefold() for token in tokens)
 
 
-def item_stat_value(item: dict[str, Any], stat: str) -> float | None:
-    """Catalog value for a stat key. +0 when present, else +10, else a tooltip line."""
-    key = (stat or "").strip()
-    if not key:
-        return None
-    folded = key.casefold()
-    for bucket_name in ("stats_plus0", "stats_plus10"):
-        bucket = item.get(bucket_name)
-        if not isinstance(bucket, dict):
-            continue
-        for raw_key, raw_value in bucket.items():
-            if str(raw_key).casefold() != folded or raw_value is None or raw_value == "":
+def _compare_level(level: int | None) -> int:
+    try:
+        value = int(0 if level is None else level)
+    except (TypeError, ValueError):
+        value = 0
+    return max(0, min(10, value))
+
+
+def stats_at_compare_level(item: dict[str, Any], level: int) -> dict[str, Any]:
+    """Stats at +N the same way engine._public_item builds stats_at_upgrade.
+
+    Level 0 uses stats_plus0. Level 10 uses stats_plus10 when present, else
+    scale_stats_to_level. Levels 1–9 scale +0. apply_worn_haste then runs,
+    so a copied +10 haste becomes tooltip base + level.
+    """
+    from .engine import apply_worn_haste, scale_stats_to_level
+
+    lvl = _compare_level(level)
+    s0 = item.get("stats_plus0") if isinstance(item.get("stats_plus0"), dict) else {}
+    s10_raw = item.get("stats_plus10") if isinstance(item.get("stats_plus10"), dict) else {}
+    if lvl == 0:
+        scaled: dict[str, Any] = {}
+        for key, value in s0.items():
+            if isinstance(value, str):
+                scaled[key] = value
                 continue
             try:
-                return float(raw_value)
+                scaled[key] = float(value) if value is not None else value
             except (TypeError, ValueError):
-                continue
+                scaled[key] = value
+    elif lvl == 10:
+        scaled = dict(s10_raw) if s10_raw else scale_stats_to_level(dict(s0), 10)
+    else:
+        scaled = scale_stats_to_level(dict(s0), lvl)
+    apply_worn_haste(scaled, s0, lvl, s10_raw or None)
+    return scaled
+
+
+def _lookup_stat(bucket: dict[str, Any], folded: str) -> float | None:
+    for raw_key, raw_value in bucket.items():
+        if str(raw_key).casefold() != folded or raw_value is None or raw_value == "":
+            continue
+        try:
+            return float(raw_value)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _tooltip_stat(item: dict[str, Any], key: str) -> float | None:
     pattern = re.compile(rf"(?i)\b{re.escape(key)}\s*:\s*\+?(-?\d+(?:\.\d+)?)")
     for line in item.get("tooltipLines") or []:
         match = pattern.search(str(line))
@@ -639,23 +673,50 @@ def item_stat_value(item: dict[str, Any], stat: str) -> float | None:
     return None
 
 
-def _stat_sort_raw(item: dict[str, Any], key: str) -> str | float | None:
+def item_stat_value(item: dict[str, Any], stat: str, level: int | None = None) -> float | None:
+    """Catalog value for a stat key.
+
+    With no level, +0 when present, else +10, else a tooltip line.
+    With a level, use stats at that upgrade and do not read the other tier.
+    A stat that is only on a tooltip line still counts.
+    """
+    key = (stat or "").strip()
+    if not key:
+        return None
+    folded = key.casefold()
+    if level is None:
+        for bucket_name in ("stats_plus0", "stats_plus10"):
+            bucket = item.get(bucket_name)
+            if not isinstance(bucket, dict):
+                continue
+            found = _lookup_stat(bucket, folded)
+            if found is not None:
+                return found
+        return _tooltip_stat(item, key)
+    found = _lookup_stat(stats_at_compare_level(item, level), folded)
+    if found is not None:
+        return found
+    return _tooltip_stat(item, key)
+
+
+def _stat_sort_raw(item: dict[str, Any], key: str, level: int | None = None) -> str | float | None:
     if not key or key.casefold() == "name":
         return (item.get("name") or "").casefold()
-    return item_stat_value(item, key)
+    return item_stat_value(item, key, level)
 
 
 def sort_search_items(
     items: list[dict[str, Any]],
     levels: list[tuple[str, str]],
+    compare_level: int | None = None,
 ) -> list[dict[str, Any]]:
     """Primary key first. Later keys break ties only. Missing stats sort last."""
     active = [(key, "desc" if direction == "desc" else "asc") for key, direction in levels if key]
 
     def compare(left: dict[str, Any], right: dict[str, Any]) -> int:
         for key, direction in active:
-            a = _stat_sort_raw(left, key)
-            b = _stat_sort_raw(right, key)
+            a = _stat_sort_raw(left, key, compare_level)
+            b = _stat_sort_raw(right, key, compare_level)
             if a is None and b is None:
                 continue
             if a is None:
@@ -704,12 +765,43 @@ def search_facets() -> dict[str, list[str]]:
     return {"stat_keys": ordered_stats, "types": sorted(types, key=str.casefold)}
 
 
+def _usable_names(usable_class: str | None, usable_classes: Any) -> list[str]:
+    """Up to three resolved class names. A single usable_class still works."""
+    raw: list[str] = []
+    if isinstance(usable_classes, str) and usable_classes.strip():
+        raw.extend(part for part in usable_classes.split(","))
+    elif isinstance(usable_classes, (list, tuple)):
+        raw.extend(str(part) for part in usable_classes)
+    if not raw and usable_class:
+        raw.append(usable_class)
+    names: list[str] = []
+    for part in raw:
+        name = _resolve_class_name(str(part).strip())
+        if name and name not in names:
+            names.append(name)
+        if len(names) >= 3:
+            break
+    return names
+
+
+def item_usable_by_classes(item: dict[str, Any], classes: list[str], match: str | None) -> bool:
+    if not classes:
+        return True
+    flags = [item_usable_by_class(item, name) for name in classes]
+    if (match or "any").strip().lower() == "all":
+        return all(flags)
+    return any(flags)
+
+
 def search_items(
     q: str = "",
     *,
     slot: str | None = None,
     type_name: str | None = None,
     usable_class: str | None = None,
+    usable_classes: Any = None,
+    usable_match: str | None = None,
+    compare_level: int = 0,
     stat: str | None = None,
     stat_min: float | None = None,
     sort: str | None = None,
@@ -726,6 +818,9 @@ def search_items(
     With no sort keys, order stays alphabetical by name. Filters are AND.
     """
     slot_u = (slot or "").strip().upper() or None
+    class_names = _usable_names(usable_class, usable_classes)
+    match = "all" if (usable_match or "").strip().lower() == "all" else "any"
+    level = _compare_level(compare_level)
     try:
         pool = _all_flat_items()
     except Exception:
@@ -739,10 +834,10 @@ def search_items(
                 continue
             if not item_type_matches(it, type_name):
                 continue
-            if not item_usable_by_class(it, usable_class):
+            if not item_usable_by_classes(it, class_names, match):
                 continue
             if stat:
-                value = item_stat_value(it, stat)
+                value = item_stat_value(it, stat, level)
                 if value is None:
                     continue
                 if stat_min is not None and value < float(stat_min):
@@ -751,6 +846,8 @@ def search_items(
             skill = item_skill(it)
             if skill:
                 public["skill"] = skill
+            public["compare_level"] = level
+            public["stats_at_compare"] = stats_at_compare_level(it, level)
             hits.append(public)
         except Exception:
             continue
@@ -760,7 +857,7 @@ def search_items(
         ((sort3 or "").strip(), (sort3_dir or "asc").strip().lower()),
     ]
     if any(key for key, _direction in levels):
-        hits = sort_search_items(hits, levels)
+        hits = sort_search_items(hits, levels, level)
     else:
         hits.sort(key=lambda r: (r["name"] or "").lower())
     total = len(hits)
@@ -782,7 +879,10 @@ def search_items(
         "query": q,
         "slot": slot_u,
         "type": (type_name or "").strip() or None,
-        "usable_class": _resolve_class_name(usable_class or "") or None,
+        "usable_class": class_names[0] if class_names else None,
+        "usable_classes": class_names,
+        "usable_match": match,
+        "compare_level": level,
         "stat": (stat or "").strip() or None,
         "stat_min": stat_min,
         "sort": [key for key, _direction in levels if key],
@@ -814,6 +914,52 @@ def _flat_by_name() -> dict[str, dict[str, Any]]:
     except Exception:
         return {}
     return out
+
+
+def _row_has_stats(it: dict[str, Any] | None) -> bool:
+    if not isinstance(it, dict):
+        return False
+    if it.get("has_stats") is True:
+        return True
+    return bool(it.get("stats_plus0") or it.get("stats_plus10") or it.get("tooltipLines"))
+
+
+@lru_cache(maxsize=1)
+def _flat_by_owned_key() -> dict[str, dict[str, Any]]:
+    """Owned-name index. A stats row wins over a wiki stub with the same key."""
+    out: dict[str, dict[str, Any]] = {}
+    try:
+        for it in _all_flat_items():
+            key = owned_name_key(it.get("name") or "")
+            if not key:
+                continue
+            prev = out.get(key)
+            if prev is None or (_row_has_stats(it) and not _row_has_stats(prev)):
+                out[key] = it
+    except Exception:
+        return {}
+    return out
+
+
+def _lookup_flat_item(name: str) -> dict[str, Any] | None:
+    """Exact catalog key, then the game-spelling alias, then the owned-name key."""
+    try:
+        by_name = _flat_by_name()
+        by_owned = _flat_by_owned_key()
+    except Exception:
+        return None
+    key = _name_key(name)
+    it = by_name.get(key) if key else None
+    canon = canonical_item_name(name)
+    if canon:
+        canon_hit = by_name.get(_name_key(canon))
+        if canon_hit is not None and (it is None or (_row_has_stats(canon_hit) and not _row_has_stats(it))):
+            it = canon_hit
+    owned = owned_name_key(name)
+    owned_hit = by_owned.get(owned) if owned else None
+    if owned_hit is not None and (it is None or (_row_has_stats(owned_hit) and not _row_has_stats(it))):
+        it = owned_hit
+    return it
 
 
 @lru_cache(maxsize=1)
@@ -1017,41 +1163,63 @@ def _quests_payload_for_item(
     return rows
 
 
+def _wiki_display_for_name(name: str) -> str | None:
+    key = _name_key(name)
+    wiki = _wiki_display_names()
+    if key and key in wiki and not str(key).startswith("__"):
+        return wiki[key]
+    canon = canonical_item_name(name)
+    canon_key = _name_key(canon) if canon else ""
+    if canon_key and canon_key in wiki and not str(canon_key).startswith("__"):
+        return wiki[canon_key]
+    owned = owned_name_key(name)
+    if not owned:
+        return None
+    for display in wiki.values():
+        if owned_name_key(display) == owned:
+            return display
+    return None
+
+
+def _tools_match(it: dict[str, Any], fallback_name: str) -> dict[str, Any]:
+    # A flat-pool hit stays "tools", including a wiki stub that was merged in.
+    # The eqlwiki source is only the name-index fallback below.
+    return {
+        "matched": True,
+        "source": "tools",
+        "has_stats": bool(it.get("stats_plus0") or it.get("stats_plus10")),
+        "name": it.get("name") or fallback_name,
+        "itemID": it.get("itemID"),
+        "slots": [str(s).strip().upper() for s in (it.get("slots") or []) if str(s).strip()],
+    }
+
+
 def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, Any]:
     """Resolve an inventory name/id against tools catalog + eqlwiki name index.
 
-    Never invents stats. ``source`` is ``tools`` (has decoded stats when present),
-    ``eqlwiki`` (name known from wiki category dump), or None.
+    A non-zero item id in the catalog wins over the name. Names still match when
+    the id is missing: case, hyphens versus spaces, and apostrophe marks fold.
+    Never invents stats or an item id. ``source`` is ``tools`` (has decoded stats
+    when present), ``eqlwiki`` (name known from wiki category dump), or None.
     """
-    key = _name_key(name)
-    iid = str(item_id).strip() if item_id is not None and str(item_id).strip() else ""
+    iid = item_id_text(item_id)
     try:
-        by_name = _flat_by_name()
         by_id = _flat_by_id()
-        wiki = _wiki_display_names()
     except Exception:
-        by_name, by_id, wiki = {}, {}, {}
+        by_id = {}
 
-    it = by_name.get(key) if key else None
-    if it is None and iid:
-        it = by_id.get(iid)
+    it = by_id.get(iid) if iid else None
+    if it is None:
+        it = _lookup_flat_item(name)
     if it is not None:
-        s0 = it.get("stats_plus0") or {}
-        s10 = it.get("stats_plus10") or {}
-        return {
-            "matched": True,
-            "source": "tools",
-            "has_stats": bool(s0 or s10),
-            "name": it.get("name") or name,
-            "itemID": it.get("itemID"),
-            "slots": [str(s).strip().upper() for s in (it.get("slots") or []) if str(s).strip()],
-        }
-    if key and key in wiki and not str(key).startswith("__"):
+        return _tools_match(it, name)
+    display = _wiki_display_for_name(name)
+    if display:
         return {
             "matched": True,
             "source": "eqlwiki",
             "has_stats": False,
-            "name": wiki[key],
+            "name": display,
             "itemID": None,
         }
     return {
@@ -1065,19 +1233,13 @@ def catalog_match(name: str, *, item_id: str | int | None = None) -> dict[str, A
 
 def get_item_by_name(name: str, *, enrich: bool = True) -> dict[str, Any] | None:
     """Return a public item row. Optionally enrich wiki-only rows from eqlwiki HTML."""
-    key = _name_key(name)
+    key = _name_key(name) or owned_name_key(name)
     if not key:
         return None
-    try:
-        it = _flat_by_name().get(key)
-    except Exception:
-        it = None
+    it = _lookup_flat_item(name)
     if not it:
         # Last chance: wiki name index alone (before pool rebuild)
-        try:
-            display = _wiki_name_index().get(key)
-        except Exception:
-            display = None
+        display = _wiki_display_for_name(name)
         if not display:
             return None
         title = display.replace(" ", "_")

@@ -273,10 +273,16 @@
       },
       "url": ""
     },
-    "WRIST": {
+    "WRIST1": {
       "haste": 0,
       "name": "",
-      "slot": "WRIST",
+      "slot": "WRIST1",
+      "stats": {}
+    },
+    "WRIST2": {
+      "haste": 0,
+      "name": "",
+      "slot": "WRIST2",
       "stats": {}
     }
   },

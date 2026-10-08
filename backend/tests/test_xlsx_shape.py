@@ -74,6 +74,7 @@ def build_shape_workbook():
     bx.write_gear_rows(wb.create_sheet("All gear (planner trio)"), [])
     for cls in bx.ALL_CLASSES:
         bx.write_weapon_sheet(wb.create_sheet(f"{cls} weapons top"[:31]), [], highlight=(cls == "Paladin"))
+    bx.write_currencies_sheet(wb)
     return wb
 
 
@@ -116,6 +117,32 @@ class XlsxShapeTests(unittest.TestCase):
         self.assertEqual(weapons["headers"][0], "Class(es)")
         self.assertIn("Haste +0", weapons["headers"])
         assert_golden(self, "xlsx_sheet_headers", shape)
+        currencies = next(sheet for sheet in shape["sheets"] if sheet["name"] == "Currencies")
+        self.assertEqual(currencies["headers"][0], "Currency")
+        self.assertEqual(names[-1], "Currencies")
+        self.assertEqual(len(names), 43)
+
+    def test_currency_sheet_locks_spec_item_xp(self):
+        """Row values are the SPEC §8.1 table. Existing sheets are not rewritten."""
+        sys.path.insert(0, str(ROOT / "backend"))
+        from app.currencies import CURRENCY_SHEET_HEADERS, currency_sheet_rows
+
+        wb = build_shape_workbook()
+        ws = wb["Currencies"]
+        headers = _row_values(ws, 1)
+        self.assertEqual(headers, list(CURRENCY_SHEET_HEADERS))
+        rows = currency_sheet_rows()
+        self.assertEqual(ws.max_row, 1 + len(rows))
+        for index, row in enumerate(rows, 2):
+            for col, header in enumerate(CURRENCY_SHEET_HEADERS, 1):
+                self.assertEqual(ws.cell(index, col).value, row[header])
+        minor = next(row for row in rows if row["Currency"] == "Mote of Minor Potential")
+        lesser = next(row for row in rows if row["Currency"] == "Mote of Lesser Potential")
+        potential = next(row for row in rows if row["Currency"] == "Mote of Potential")
+        self.assertEqual(minor["Item XP"], 1)
+        self.assertEqual(lesser["Item XP"], 2)
+        self.assertEqual(potential["Item XP"], 4)
+        self.assertEqual(potential["Currency"], "Mote of Potential")
 
 
 if __name__ == "__main__":

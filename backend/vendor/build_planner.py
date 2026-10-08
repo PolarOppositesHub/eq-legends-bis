@@ -68,7 +68,7 @@ ALL_CLASSES = bx.ALL_CLASSES
 # Planner equipment slots (display order). FINGER/EAR get two distinct picks.
 # ANY1/ANY2 = EQ Legends worn "Any Slot" (Inventory.txt Location: Any Slot).
 PLANNER_SLOTS = [
-    "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST",
+    "HEAD", "FACE", "EAR1", "EAR2", "NECK", "SHOULDERS", "ARMS", "WRIST1", "WRIST2",
     "HANDS", "CHEST", "BACK", "WAIST", "LEGS", "FEET",
     "FINGER1", "FINGER2", "PRIMARY", "SECONDARY", "RANGE", "AMMO",
     "ANY1", "ANY2",
@@ -82,7 +82,7 @@ SLOT_ALIASES = {
     "NECK": ["NECK"],
     "SHOULDERS": ["SHOULDERS"],
     "ARMS": ["ARMS"],
-    "WRIST": ["WRIST"],
+    "WRIST": ["WRIST1", "WRIST2"],
     "HANDS": ["HANDS"],
     "CHEST": ["CHEST"],
     "BACK": ["BACK"],
@@ -470,6 +470,8 @@ def build_item_pool(merged, catalog, slug_map) -> list[dict]:
             existing["tri_classes"] = item["tri_classes"]
             existing["classes"] = item.get("classes") or existing.get("classes")
             existing["classes_str"] = item.get("classes_str") or existing.get("classes_str")
+        if item.get("flags") and not existing.get("flags"):
+            existing["flags"] = item.get("flags")
 
     # Gear from merged BiS (already PAL/MNK/WIZ BiS union)
     for r in bx.filter_gear_rows(merged):
@@ -510,6 +512,7 @@ def build_item_pool(merged, catalog, slug_map) -> list[dict]:
             "ratio_plus0": r.get("ratio_plus0"),
             "ratio_plus10": r.get("ratio_plus10"),
             "is_weapon": False,
+            "flags": r.get("flags") or "",
         }
         # mark as weapon if has proper dmg/dly ratio
         if item["ratio_plus10"] is not None or (
@@ -587,6 +590,7 @@ def build_item_pool(merged, catalog, slug_map) -> list[dict]:
             "oneHanded": (w.get("oneHanded") or "").strip(),
             "hand": bx.handedness(w),
             "offhandUsable": (w.get("offhandUsable") or "").strip(),
+            "flags": w.get("flags") or "",
         }
         upsert(item)
 
@@ -601,6 +605,8 @@ def rank_for_slot(pool: list[dict], planner_slot: str, mode: str, stat_key: str 
         match_slots = {"EAR1", "EAR2"}
     elif planner_slot in ("FINGER1", "FINGER2"):
         match_slots = {"FINGER1", "FINGER2"}
+    elif planner_slot in ("WRIST1", "WRIST2"):
+        match_slots = {"WRIST1", "WRIST2"}
     else:
         match_slots = {planner_slot}
 
@@ -642,6 +648,48 @@ def rank_for_slot(pool: list[dict], planner_slot: str, mode: str, stat_key: str 
     return candidates
 
 
+_LORE_RE = re.compile(r"\blore\b", re.I)
+_PAIRED_GROUPS = {("EAR1", "EAR2"), ("WRIST1", "WRIST2"), ("FINGER1", "FINGER2")}
+
+
+def _item_is_lore(item) -> bool:
+    if not isinstance(item, dict):
+        return False
+    flags = item.get("flags")
+    if (flags is None or str(flags).strip() == "") and isinstance(item.get("item"), dict):
+        flags = item["item"].get("flags")
+    if flags is None or str(flags).strip() == "":
+        return False
+    return bool(_LORE_RE.search(str(flags)))
+
+
+def _owned_copy_count(item):
+    if not isinstance(item, dict):
+        return None
+    raw = item.get("owned_count")
+    if raw is None and isinstance(item.get("item"), dict):
+        raw = item["item"].get("owned_count")
+    if raw is None or raw == "":
+        return None
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return None
+
+
+def _allows_another_copy(cand: dict, picks: list) -> bool:
+    already = sum(1 for pick in picks if pick.get("name") == cand.get("name"))
+    if already <= 0:
+        return True
+    source = cand.get("item") if isinstance(cand.get("item"), dict) else cand
+    if _item_is_lore(source):
+        return False
+    count = _owned_copy_count(source)
+    if count is None:
+        return True
+    return count >= already + 1
+
+
 def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str, dict]:
     """Pick one item per planner slot; FINGER/EAR get distinct items.
 
@@ -654,7 +702,7 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
 
     groups = [
         ["HEAD"], ["FACE"], ["EAR1", "EAR2"], ["NECK"], ["SHOULDERS"], ["ARMS"],
-        ["WRIST"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
+        ["WRIST1", "WRIST2"], ["HANDS"], ["CHEST"], ["BACK"], ["WAIST"], ["LEGS"], ["FEET"],
         ["FINGER1", "FINGER2"], ["PRIMARY"], ["SECONDARY"], ["RANGE"], ["AMMO"],
         ["ANY1", "ANY2"],
     ]
@@ -693,17 +741,21 @@ def pick_loadout(pool: list[dict], mode: str, stat_key: str | None) -> dict[str,
                     break
 
         for cand in ranked:
+            if len(picks) >= len(group):
+                break
             if cand["name"] in used_names:
-                continue
-            if any(p["name"] == cand["name"] for p in picks):
                 continue
             # Skip other haste items — only the reserved best haste counts
             h = item_haste(cand.get("item") or {})
             if h > 0 and cand["name"] != reserved_haste_name:
                 continue
-            picks.append(cand)
-            if len(picks) >= len(group):
-                break
+            while len(picks) < len(group):
+                if any(p["name"] == cand["name"] for p in picks):
+                    if not (tuple(group) in _PAIRED_GROUPS and _allows_another_copy(cand, picks)):
+                        break
+                picks.append(dict(cand))
+                if tuple(group) not in _PAIRED_GROUPS or not _allows_another_copy(cand, picks):
+                    break
 
         for slot, cand in zip(group, picks):
             used_names.add(cand["name"])
@@ -1440,6 +1492,8 @@ def main():
     for cls in ALL_CLASSES:
         ws = wb.create_sheet(f"{cls} weapons top"[:31])
         bx.write_weapon_sheet(ws, per_weapons[cls], highlight=(cls == "Paladin"))
+
+    bx.write_currencies_sheet(wb)
 
     for path_out in (XLSX, XLSX_FIXED):
         wb.save(path_out)

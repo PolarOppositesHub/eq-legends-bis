@@ -22,6 +22,7 @@ from .races import get_races_payload
 from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_mode, xlsx_dir
 from .parser.api import busy_response as parser_busy_response
 from .parser.api import router as parser_router
+from .currencies_api import router as currencies_router
 from .parser.service import ParserBusy
 from .version import __version__
 
@@ -230,6 +231,9 @@ def api_item_search(
     slot: Optional[str] = Query(default=None),
     type: Optional[str] = Query(default=None),
     usable_class: Optional[str] = Query(default=None),
+    usable_classes: Optional[str] = Query(default=None),
+    usable_match: Optional[str] = Query(default=None),
+    compare_level: int = Query(default=0, ge=0, le=10),
     stat: Optional[str] = Query(default=None),
     stat_min: Optional[float] = Query(default=None),
     sort: Optional[str] = Query(default=None),
@@ -248,6 +252,9 @@ def api_item_search(
             slot=slot,
             type_name=type,
             usable_class=usable_class,
+            usable_classes=usable_classes,
+            usable_match=usable_match,
+            compare_level=compare_level,
             stat=stat,
             stat_min=stat_min,
             sort=sort,
@@ -813,6 +820,7 @@ def _mount_spa() -> None:
 
 
 app.include_router(parser_router)
+app.include_router(currencies_router)
 
 
 @app.exception_handler(ParserBusy)

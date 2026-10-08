@@ -10,6 +10,10 @@
  * BiS "Owned only" is re-ranked by the API from ownedItemLevels, not here.
  */
 
+import { canonicalItemName, itemBaseName, itemIdText, ownedNameKey } from './itemNames.js'
+
+export { itemBaseName }
+
 const OBSERVED_WORN = new Set([
   'ANY SLOT', 'AMMO', 'ARMS', 'BACK', 'CHEST', 'EAR', 'FACE', 'FEET',
   'FINGERS', 'HANDS', 'HEAD', 'HELD', 'LEGS', 'NECK', 'PRIMARY', 'RANGE',
@@ -60,14 +64,6 @@ export function isDragonHoardName(value) {
   return HOARD_TOKEN_RE.test(base)
 }
 
-export function itemBaseName(name) {
-  let n = String(name || '').trim()
-  if (n.endsWith('*')) n = n.slice(0, -1).trim()
-  const match = n.match(/(?:\s*\+\s*\d+)\s*$/)
-  if (match) n = n.slice(0, match.index).trim()
-  return n
-}
-
 function isEmptyName(name) {
   const n = String(name || '').trim().toLowerCase()
   return !n || n === 'empty'
@@ -76,14 +72,15 @@ function isEmptyName(name) {
 export function ownedNameSet(importMeta) {
   const set = new Set()
   if (!importMeta || typeof importMeta !== 'object') return set
-  const add = (name) => {
-    const base = itemBaseName(name)
-    if (!base || base.toLowerCase() === 'empty') return
-    set.add(base.toLowerCase())
+  const add = (name, id) => {
+    const key = ownedNameKey(name)
+    if (key && key !== 'empty') set.add(key)
+    const iid = itemIdText(id)
+    if (iid) set.add(`id:${iid}`)
   }
-  for (const row of importMeta.all_items || []) add(row.base_name || row.name)
-  for (const row of importMeta.rows || []) add(row.name || row.name_raw)
-  for (const entry of importMeta.keyring || []) add(entry.name)
+  for (const row of importMeta.all_items || []) add(row.base_name || row.name, row.id || row.itemID)
+  for (const row of importMeta.rows || []) add(row.name || row.name_raw, row.id || row.itemID)
+  for (const entry of importMeta.keyring || []) add(entry.name, entry.id || entry.itemID)
   const equipment = importMeta.equipment
   if (equipment && typeof equipment === 'object') {
     for (const name of Object.values(equipment)) add(name)
@@ -91,10 +88,13 @@ export function ownedNameSet(importMeta) {
   return set
 }
 
-export function isOwnedName(name, owned) {
-  const base = itemBaseName(name).toLowerCase()
-  if (!base || base === 'empty') return false
-  return owned instanceof Set && owned.has(base)
+export function isOwnedName(name, owned, itemId) {
+  const key = ownedNameKey(name)
+  if (!key || key === 'empty') return false
+  if (!(owned instanceof Set)) return false
+  if (owned.has(key)) return true
+  const iid = itemIdText(itemId)
+  return Boolean(iid) && owned.has(`id:${iid}`)
 }
 
 /**
@@ -107,9 +107,9 @@ export function visibleBisSlots(slots, owned, ownedOnly) {
   if (!ownedOnly) return list
   const out = []
   for (const slot of list) {
-    if (!isOwnedName(slot && slot.name, owned)) continue
+    if (!isOwnedName(slot && slot.name, owned, slot && slot.itemID)) continue
     const alts = Array.isArray(slot.alts)
-      ? slot.alts.filter((alt) => isOwnedName(alt && alt.name, owned))
+      ? slot.alts.filter((alt) => isOwnedName(alt && alt.name, owned, alt && alt.itemID))
       : slot.alts
     if (alts === slot.alts) out.push(slot)
     else out.push({ ...slot, alts })
@@ -120,13 +120,20 @@ export function visibleBisSlots(slots, owned, ownedOnly) {
 export function visibleSearchItems(items, owned, ownedOnly) {
   const list = Array.isArray(items) ? items : []
   if (!ownedOnly) return list
-  return list.filter((item) => isOwnedName(item && item.name, owned))
+  return list.filter((item) => isOwnedName(item && item.name, owned, item && item.itemID))
 }
 
-function recordOwnedLevel(levels, name, tier) {
+function parseCopyCount(value) {
+  if (value == null || value === '') return 1
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 1
+  return Math.max(0, Math.trunc(n))
+}
+
+function recordOwnedLevel(levels, name, tier, { count = 0, id } = {}) {
   const base = itemBaseName(name)
-  if (!base || base.toLowerCase() === 'empty') return
-  const key = base.toLowerCase()
+  const key = ownedNameKey(base)
+  if (!key || key === 'empty') return
   let recorded = null
   if (tier != null && tier !== '') {
     const n = Number(tier)
@@ -134,12 +141,17 @@ function recordOwnedLevel(levels, name, tier) {
   }
   const current = levels.get(key)
   if (!current) {
-    levels.set(key, { name: base, upgrade: recorded })
-    return
-  }
-  if (recorded != null && (current.upgrade == null || recorded > current.upgrade)) {
+    const row = { name: canonicalItemName(base) || base, upgrade: recorded, count: 0 }
+    const iid = itemIdText(id)
+    if (iid) row.id = iid
+    levels.set(key, row)
+  } else if (recorded != null && (current.upgrade == null || recorded > current.upgrade)) {
     current.upgrade = recorded
+    const iid = itemIdText(id)
+    if (iid && !current.id) current.id = iid
   }
+  const bucket = levels.get(key)
+  if (count) bucket.count += count
 }
 
 function tierOfName(name) {
@@ -148,31 +160,65 @@ function tierOfName(name) {
   return match ? Number(match[1]) : null
 }
 
-/** Owned catalog names and the highest +N on any copy. Missing +N stays null. */
+/** Owned catalog names and the highest +N on any copy. Missing +N stays null.
+
+ * Count sums all_items (default 1). When all_items is present, rows update
+ * the +N only. Keyring and equipment add a count only for a name not already
+ * counted, so the same worn piece is not counted twice.
+ */
 export function ownedItemLevels(importMeta) {
   const levels = new Map()
   if (!importMeta || typeof importMeta !== 'object') return []
-  for (const row of importMeta.all_items || []) {
-    const rawName = row.name || row.base_name
-    const tier = row.upgrade_from_name != null && row.upgrade_from_name !== ''
-      ? row.upgrade_from_name
-      : tierOfName(rawName)
-    recordOwnedLevel(levels, row.base_name || rawName, tier)
-  }
-  for (const row of importMeta.rows || []) {
-    recordOwnedLevel(
-      levels,
-      row.name_raw || row.name,
-      row.tier ?? tierOfName(row.name_raw || row.name),
-    )
+  const counted = new Set()
+  const hasAll = Array.isArray(importMeta.all_items) && importMeta.all_items.length > 0
+  if (hasAll) {
+    for (const row of importMeta.all_items) {
+      const rawName = row.name || row.base_name
+      const tier = row.upgrade_from_name != null && row.upgrade_from_name !== ''
+        ? row.upgrade_from_name
+        : tierOfName(rawName)
+      const name = row.base_name || rawName
+      recordOwnedLevel(levels, name, tier, {
+        count: parseCopyCount(row.count),
+        id: row.id || row.itemID,
+      })
+      const key = ownedNameKey(name)
+      if (key) counted.add(key)
+    }
+    for (const row of importMeta.rows || []) {
+      recordOwnedLevel(
+        levels,
+        row.name_raw || row.name,
+        row.tier ?? tierOfName(row.name_raw || row.name),
+        { id: row.id || row.itemID },
+      )
+    }
+  } else {
+    for (const row of importMeta.rows || []) {
+      recordOwnedLevel(
+        levels,
+        row.name_raw || row.name,
+        row.tier ?? tierOfName(row.name_raw || row.name),
+        { count: parseCopyCount(row.count), id: row.id || row.itemID },
+      )
+    }
   }
   for (const entry of importMeta.keyring || []) {
-    recordOwnedLevel(levels, entry.name, tierOfName(entry.name))
+    const key = ownedNameKey(entry.name)
+    recordOwnedLevel(levels, entry.name, tierOfName(entry.name), {
+      count: counted.has(key) ? 0 : parseCopyCount(entry.count),
+      id: entry.id || entry.itemID,
+    })
+    if (key) counted.add(key)
   }
   const equipment = importMeta.equipment
   if (equipment && typeof equipment === 'object') {
     for (const name of Object.values(equipment)) {
-      recordOwnedLevel(levels, name, tierOfName(name))
+      const key = ownedNameKey(name)
+      recordOwnedLevel(levels, name, tierOfName(name), {
+        count: counted.has(key) ? 0 : 1,
+      })
+      if (key) counted.add(key)
     }
   }
   return [...levels.values()]
@@ -621,8 +667,8 @@ export function mergeableDuplicates(copies) {
   const buckets = new Map()
   const skipped = new Map()
   for (const copy of copies || []) {
-    const name = itemBaseName(copy.baseName || copy.catalogName || copy.displayName)
-    const keyName = name.toLowerCase()
+    const name = canonicalItemName(copy.baseName || copy.catalogName || copy.displayName)
+    const keyName = ownedNameKey(name)
     if (!keyName || keyName === 'empty') continue
     const block = copyMergeBlock(copy)
     if (block) {

@@ -19,6 +19,12 @@ import {
   getQuestDetail,
   listMobs,
   getMobDetail,
+  getCurrencies,
+  setCurrencyAnchor,
+  recordCurrencyUsed,
+  condenseCurrency,
+  undoCurrency,
+  reconcileCurrencies,
 } from './api.js'
 import LoadingOverlay from './LoadingOverlay.jsx'
 import {
@@ -45,12 +51,14 @@ import {
   clampUpgrade,
   isCatalogHasteKey,
   itemStatsAtLevel,
-  previewStatsPlus10,
   scaleTooltipLines,
 } from './itemUpgradeStats.js'
 import ParserTab from './ParserTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
+import { CurrenciesPanel } from './currenciesView.jsx'
+import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
+import { simulatorRecalcDecision } from './simulatorClasses.js'
 import { InventoryWatchStatus } from './inventoryImport.jsx'
 import {
   acceptInventoryDrop,
@@ -73,6 +81,7 @@ import {
   visibleSearchItems,
 } from './characterView.js'
 import { buildItemSearchParams, searchStatLabel } from './itemSearchQuery.js'
+import { itemIsLore, namesMatch } from './itemNames.js'
 
 const EMPTY_EQ = {}
 const BUILDS_KEY = 'eq-legends-bis-saved-builds-v1'
@@ -146,7 +155,7 @@ function openEqlwikiNow(url) {
 }
 
 function sameItemName(a, b) {
-  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
+  return namesMatch(a, b)
 }
 
 function menuCoords(e, w = 220, h = 128) {
@@ -217,7 +226,7 @@ function ItemStatsDetail({ item, upgrade, onUpgrade, sliderId }) {
     return (
       <div className="item-stats-detail">
         <div className="quest-reward-upgrade">
-          <label htmlFor={sliderId}>Upgrade +0…+10</label>
+          <label htmlFor={sliderId}>Compare at +{clampUpgrade(upgrade)}</label>
           <input
             id={sliderId}
             type="range"
@@ -229,7 +238,7 @@ function ItemStatsDetail({ item, upgrade, onUpgrade, sliderId }) {
           />
           <span className="muted">+{clampUpgrade(upgrade)}</span>
         </div>
-        <div className="muted item-stats-caption">All catalog stats at +{clampUpgrade(upgrade)}</div>
+        <div className="muted item-stats-caption">All catalog stats at +{clampUpgrade(upgrade)} (Compare at +{clampUpgrade(upgrade)})</div>
         {entries.length || ratio != null ? (
           <StatChipGrid entries={entries} ratio={ratio} />
         ) : (
@@ -1001,6 +1010,10 @@ export default function App() {
   const [parserLogPath, setParserLogPath] = useState('')
   const [parserMergePets, setParserMergePets] = useState(true)
   const [parserFightId, setParserFightId] = useState(null)
+  const [parserGroupCollapsed, setParserGroupCollapsed] = useState(false)
+  const [currencyCharacter, setCurrencyCharacter] = useState('')
+  const [currencyView, setCurrencyView] = useState(null)
+  const [currencyStatus, setCurrencyStatus] = useState('idle')
   const [whatsNewSeenId, setWhatsNewSeenId] = useState('')
   const [loadJobs, setLoadJobs] = useState([])
   const loadJobsRef = useRef([])
@@ -1048,6 +1061,9 @@ export default function App() {
   const [searchSlot, setSearchSlot] = useState('')
   const [searchType, setSearchType] = useState('')
   const [searchClass, setSearchClass] = useState('')
+  const [searchClasses, setSearchClasses] = useState(['', '', ''])
+  const [searchClassMatch, setSearchClassMatch] = useState('any')
+  const [searchCompareLevel, setSearchCompareLevel] = useState(0)
   const [searchStat, setSearchStat] = useState('')
   const [searchStatMin, setSearchStatMin] = useState('')
   const [searchSort1, setSearchSort1] = useState('')
@@ -1357,6 +1373,10 @@ export default function App() {
     setSearchSlot(state.searchSlot || '')
     setSearchType(state.searchType || '')
     setSearchClass(state.searchClass || '')
+    const picked = state.searchClasses?.length ? state.searchClasses : (state.searchClass ? [state.searchClass] : [])
+    setSearchClasses([picked[0] || '', picked[1] || '', picked[2] || ''])
+    setSearchClassMatch(state.searchClassMatch === 'all' ? 'all' : 'any')
+    setSearchCompareLevel(state.searchCompareLevel || 0)
     setSearchStat(state.searchStat || '')
     setSearchStatMin(state.searchStatMin || '')
     setSearchSort1(state.searchSort1 || '')
@@ -1374,6 +1394,8 @@ export default function App() {
     setParserLogPath(state.parserLogPath || '')
     setParserMergePets(state.parserMergePets !== false)
     setParserFightId(state.parserFightId || null)
+    setParserGroupCollapsed(!!state.parserGroupCollapsed)
+    setCurrencyCharacter(state.currencyCharacter || '')
     setWhatsNewSeenId(state.whatsNewSeen || '')
   }, [])
 
@@ -1486,6 +1508,25 @@ export default function App() {
       if (prev.length >= 3) return prev
       return [...prev, c]
     })
+  }
+
+  const setSearchClassAt = (index, value) => {
+    setSearchClasses((prev) => {
+      const next = [prev[0] || '', prev[1] || '', prev[2] || '']
+      next[index] = value
+      for (let i = 0; i < 3; i += 1) {
+        if (i !== index && value && next[i] === value) next[i] = ''
+      }
+      const compact = next.filter(Boolean)
+      setSearchClass(compact[0] || '')
+      return [compact[0] || '', compact[1] || '', compact[2] || '']
+    })
+  }
+
+  const setCompareLevel = (level) => {
+    const n = clampUpgrade(level)
+    setSearchCompareLevel(n)
+    setSearchItemUpgrade(n)
   }
 
   const setTierAt = (setter, index, value) => {
@@ -1634,10 +1675,8 @@ export default function App() {
   ])
 
   const runSim = useCallback(async (equipmentOverride, wornUpgradesOverride) => {
-    if (classes.length < 1) {
-      setError('Pick at least one class (up to 3).')
-      return
-    }
+    const decision = simulatorRecalcDecision(classes, characterLevel)
+    if (!decision.recalc) return
     const eq =
       equipmentOverride && typeof equipmentOverride === 'object' && !equipmentOverride.nativeEvent
         ? equipmentOverride
@@ -1679,9 +1718,10 @@ export default function App() {
   }, [classes, race, upgrade, wornUpgrades, characterLevel, equipment, castBuffsMode, assumeMaxAas, suggestionBody, beginLoad, endLoad])
 
   useEffect(() => {
-    // Recalc on Cast Buffs / level / race / per-slot upgrade changes even with
-    // empty worn slots so Quick Buff totals and icon strip update immediately.
-    if (tab !== 'sim' || classes.length < 1) return undefined
+    // Wait for a full class set. Unselecting one class must not cover the
+    // pickers with the loading screen.
+    const decision = simulatorRecalcDecision(classes, characterLevel)
+    if (tab !== 'sim' || !decision.recalc) return undefined
     const t = setTimeout(() => { runSim() }, 220)
     return () => clearTimeout(t)
   }, [tab, upgrade, wornUpgrades, race, characterLevel, castBuffsMode, assumeMaxAas, classes]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -1810,6 +1850,19 @@ export default function App() {
         keyring: parsed.keyring || [],
         unknown_rows: parsed.unknown_rows || [],
       })
+      const importedCharacter = characterFromInventoryFile(sourceLabel)
+      if (importedCharacter) {
+        try {
+          const ledger = await reconcileCurrencies({
+            character: importedCharacter,
+            bag_counts: bagCountsFromImport(parsed),
+          })
+          setCurrencyCharacter((current) => current || importedCharacter)
+          if (!currencyCharacter || currencyCharacter === importedCharacter) setCurrencyView(ledger)
+        } catch (_) {
+          /* import succeeded; the ledger can be refreshed from the Currencies tab */
+        }
+      }
       const wornN = Object.keys(eq).length
       const hinted = Object.values(wornUpg).filter((n) => n > 0).length
       setImportMsg(
@@ -1837,7 +1890,7 @@ export default function App() {
     } finally {
       endLoad('import')
     }
-  }, [classes, suggestionBody, runSim, beginLoad, endLoad])
+  }, [classes, suggestionBody, runSim, beginLoad, endLoad, currencyCharacter])
 
   applyInventoryTextRef.current = applyInventoryText
   importMetaRef.current = importMeta
@@ -2260,7 +2313,10 @@ export default function App() {
     q: searchQ,
     slot: searchSlot,
     typeName: searchType,
-    usableClass: searchClass,
+    usableClass: searchClasses.find((name) => name) || searchClass,
+    usableClasses: searchClasses.filter(Boolean),
+    usableMatch: searchClassMatch,
+    compareLevel: searchCompareLevel,
     stat: searchStat,
     statMin: searchStatMin,
     sorts: [
@@ -2270,7 +2326,8 @@ export default function App() {
     ],
     limit,
   }), [
-    searchQ, searchSlot, searchType, searchClass, searchStat, searchStatMin,
+    searchQ, searchSlot, searchType, searchClass, searchClasses, searchClassMatch, searchCompareLevel,
+    searchStat, searchStatMin,
     searchSort1, searchSort1Dir, searchSort2, searchSort2Dir, searchSort3, searchSort3Dir,
   ])
 
@@ -2516,15 +2573,16 @@ export default function App() {
     const name = itemDetail?.name || ''
     const loading = !!itemDetail?._loading
     if (pendingSearchUpgradeRef.current != null && name && !loading) {
-      setSearchItemUpgrade(pendingSearchUpgradeRef.current)
+      const pending = pendingSearchUpgradeRef.current
       pendingSearchUpgradeRef.current = null
       searchUpgradeItemRef.current = name
+      setSearchItemUpgrade(pending)
+      setSearchCompareLevel((current) => (current ? current : pending))
       return undefined
     }
     if (loading && pendingSearchUpgradeRef.current != null) return undefined
     if (searchUpgradeItemRef.current === name) return undefined
     searchUpgradeItemRef.current = name
-    setSearchItemUpgrade(0)
     return undefined
   }, [itemDetail?.name, itemDetail?._loading])
 
@@ -2599,7 +2657,10 @@ export default function App() {
       searchQ,
       searchSlot,
       searchType,
-      searchClass,
+      searchClass: searchClasses.find((name) => name) || searchClass,
+      searchClasses: searchClasses.filter(Boolean),
+      searchClassMatch,
+      searchCompareLevel,
       searchStat,
       searchStatMin,
       searchSort1,
@@ -2610,7 +2671,7 @@ export default function App() {
       searchSort3Dir,
       characterCollapsed,
       searchSelectedName: itemDetail?.name || '',
-      searchItemUpgrade,
+      searchItemUpgrade: itemDetail?.name ? searchCompareLevel : searchItemUpgrade,
       buildName,
       selectedBuildId,
       ownedOnly,
@@ -2619,6 +2680,8 @@ export default function App() {
       parserLogPath,
       parserMergePets,
       parserFightId,
+      parserGroupCollapsed,
+      currencyCharacter,
       whatsNewSeen: whatsNewSeenId,
     }, catalogFromMeta(meta))
   }, [
@@ -2629,8 +2692,9 @@ export default function App() {
     selectedMobName, mobListCollapsed, searchQ, searchSlot, searchType, searchClass,
     searchStat, searchStatMin, searchSort1, searchSort1Dir, searchSort2, searchSort2Dir,
     searchSort3, searchSort3Dir, characterCollapsed, itemDetail, searchItemUpgrade,
+    searchClasses, searchClassMatch, searchCompareLevel,
     buildName, selectedBuildId, ownedOnly, importMeta, uiSettings, parserLogPath, parserMergePets,
-    parserFightId, whatsNewSeenId,
+    parserFightId, parserGroupCollapsed, currencyCharacter, whatsNewSeenId,
   ])
   workspaceSnapshotRef.current = workspaceSnapshot
 
@@ -2922,16 +2986,45 @@ export default function App() {
     loadMobDetail(selectedMobName)
   }, [tab, selectedMobName, loadMobDetail])
 
+  useEffect(() => {
+    if (tab !== 'currencies') return undefined
+    const name = (currencyCharacter || '').trim()
+    if (!name) {
+      setCurrencyView(null)
+      setCurrencyStatus('idle')
+      return undefined
+    }
+    let cancelled = false
+    const handle = setTimeout(() => {
+      setCurrencyStatus('loading')
+      getCurrencies(name).then((view) => {
+        if (cancelled) return
+        setCurrencyView(view)
+        setCurrencyStatus('ready')
+      }).catch((err) => {
+        if (cancelled) return
+        setCurrencyStatus('error')
+        setError(String(err.message || err))
+      })
+    }, 250)
+    return () => {
+      cancelled = true
+      clearTimeout(handle)
+    }
+  }, [tab, currencyCharacter])
+
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
     { id: 'character', label: 'Character' },
+    { id: 'currencies', label: 'Currencies' },
     { id: 'quests', label: 'Quest Hub' },
     { id: 'mobs', label: 'Mobs' },
     { id: 'search', label: 'Item Search' },
     { id: 'parser', label: 'Parser' },
   ]
+  const simClassDecision = simulatorRecalcDecision(classes, characterLevel)
 
   const unmatchedNames = (importMeta?.unmatched || [])
     .map((u) => (typeof u === 'string' ? u : (u.name || u.base_name || '')))
@@ -3062,6 +3155,9 @@ export default function App() {
                     )
                   })}
                 </div>
+                {tab === 'sim' && simClassDecision.hint ? (
+                  <p className="note" data-testid="sim-class-hint">{simClassDecision.hint}</p>
+                ) : null}
               </div>
               {tab === 'bis' && (
                 <>
@@ -3236,7 +3332,7 @@ export default function App() {
                   </div>
                   <div className="field">
                     <label>&nbsp;</label>
-                    <button className="primary" disabled={loading} onClick={runSim}>
+                    <button className="primary" disabled={loading || !simClassDecision.recalc} onClick={runSim}>
                       {loading ? 'Updating…' : 'Apply / Recalculate'}
                     </button>
                   </div>
@@ -3368,7 +3464,7 @@ export default function App() {
                             s.name
                           )}
                         </span>
-                        <OwnedBadge owned={isOwnedName(s.name, ownedNames)} />
+                        <OwnedBadge owned={isOwnedName(s.name, ownedNames, s.itemID)} />
                         </>
                       ) : (
                         bis?.owned_only ? 'Nothing owned fits this slot.' : '—'
@@ -3405,7 +3501,7 @@ export default function App() {
                               key={a.name}
                               a={a}
                               upgrade={upgrade}
-                              owned={isOwnedName(a.name, ownedNames)}
+                              owned={isOwnedName(a.name, ownedNames, a.itemID)}
                               onShowTip={showHoverTip}
                               onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
@@ -3975,6 +4071,65 @@ export default function App() {
               canSetFolder={isDesktopApp}
               onOpenCredits={() => setCreditsOpen(true)}
               itemNameProps={catalogItemNameProps}
+              groupCollapsed={parserGroupCollapsed}
+              onToggleGroup={() => setParserGroupCollapsed((open) => !open)}
+            />
+          )}
+
+          {tab === 'currencies' && (
+            <CurrenciesPanel
+              character={currencyCharacter}
+              onCharacter={setCurrencyCharacter}
+              view={currencyView}
+              status={currencyStatus}
+              onAnchor={async (currency, count) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await setCurrencyAnchor({
+                    character: who,
+                    currency,
+                    count: Number(count) || 0,
+                  })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
+              onUse={async (currency, qty) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await recordCurrencyUsed({
+                    character: who,
+                    currency,
+                    qty: Number(qty) || 0,
+                  })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
+              onCondense={async (currency) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await condenseCurrency({ character: who, currency })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
+              onUndo={async (entryId) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await undoCurrency({ character: who, entry_id: entryId })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
             />
           )}
 
@@ -3983,7 +4138,7 @@ export default function App() {
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Item Search</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Full EQ Legends catalog (~11k+ names from eqlwiki Category:Items, plus tools stats when known).
-                Click a row to expand every catalog stat. Equipables with an upgrade path use a +0…+10 slider
+                Click a row to expand every catalog stat. Compare at +N uses that upgrade for the filter, the sort, and the listed stats
                 (catalog +0 scaled like Quest Hub — never invented).
                 Click the item name again while it is expanded for Open eqlwiki or Cancel.
                 Stats and descriptions come from decoded tools data or the item’s eqlwiki page — never invented.
@@ -4026,12 +4181,29 @@ export default function App() {
                 </label>
                 <label>
                   Usable by
-                  <select value={searchClass} onChange={(e) => setSearchClass(e.target.value)} aria-label="Usable class">
-                    <option value="">Any class</option>
-                    {(meta?.classes || []).map((className) => (
-                      <option key={className} value={className}>{className}</option>
+                  <span className="item-search-sort">
+                    {[0, 1, 2].map((index) => (
+                      <select
+                        key={index}
+                        value={searchClasses[index] || ''}
+                        aria-label={`Usable class ${index + 1}`}
+                        onChange={(e) => setSearchClassAt(index, e.target.value)}
+                      >
+                        <option value="">{index === 0 ? 'Any class' : '—'}</option>
+                        {(meta?.classes || []).map((className) => (
+                          <option key={className} value={className}>{className}</option>
+                        ))}
+                      </select>
                     ))}
-                  </select>
+                    <select
+                      value={searchClassMatch}
+                      aria-label="Usable class match"
+                      onChange={(e) => setSearchClassMatch(e.target.value === 'all' ? 'all' : 'any')}
+                    >
+                      <option value="any">Any</option>
+                      <option value="all">All</option>
+                    </select>
+                  </span>
                 </label>
                 <label>
                   Has stat
@@ -4046,10 +4218,22 @@ export default function App() {
                   Min
                   <input
                     type="number"
+                    className="item-search-min"
                     aria-label="Minimum stat"
                     value={searchStatMin}
                     disabled={!searchStat}
                     onChange={(e) => setSearchStatMin(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Compare at +{searchCompareLevel}
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    aria-label={`Compare at +${searchCompareLevel}`}
+                    value={searchCompareLevel}
+                    onChange={(e) => setCompareLevel(e.target.value)}
                   />
                 </label>
                 {[
@@ -4089,7 +4273,8 @@ export default function App() {
                   {ownedSearchItems.map((it, searchIdx) => {
                     const rowSelected = !!(itemDetail && sameItemName(itemDetail.name, it.name))
                     const rowStatItem = rowSelected ? (itemDetail._loading ? it : itemDetail) : null
-                    const collapsedPreview = fmtStats(previewStatsPlus10(it), SHOW_UP)
+                    const collapsedLevel = clampUpgrade(searchCompareLevel)
+                    const collapsedPreview = fmtStats(it.stats_at_compare || itemStatsAtLevel(it, collapsedLevel), SHOW_UP)
                     return (
                     <li key={it.name} className={rowSelected ? 'item-search-open' : ''}>
                       <button
@@ -4113,7 +4298,7 @@ export default function App() {
                             >
                               {it.name}
                             </span>
-                            <OwnedBadge owned={isOwnedName(it.name, ownedNames)} />
+                            <OwnedBadge owned={isOwnedName(it.name, ownedNames, it.itemID)} />
                             {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
                               <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
                             ) : null}
@@ -4125,7 +4310,7 @@ export default function App() {
                           {!rowSelected ? (
                             <div className="stats-line">
                               {collapsedPreview
-                                ? `+10 ${collapsedPreview}`
+                                ? `+${collapsedLevel} ${collapsedPreview}`
                                 : (it.has_stats ? '—' : 'Open for wiki stats / description')}
                             </div>
                           ) : null}
@@ -4136,8 +4321,8 @@ export default function App() {
                           {rowStatItem ? (
                             <ItemStatsDetail
                               item={rowStatItem}
-                              upgrade={searchItemUpgrade}
-                              onUpgrade={setSearchItemUpgrade}
+                              upgrade={searchCompareLevel}
+                              onUpgrade={setCompareLevel}
                               sliderId={`item-row-upgrade-${searchIdx}`}
                             />
                           ) : (
@@ -4153,7 +4338,7 @@ export default function App() {
                   const searchHit = (searchResults?.items || []).find((it) => sameItemName(it.name, itemDetail.name))
                   const panelItem = itemDetail._loading ? (searchHit || null) : itemDetail
                   const panelMeta = panelItem || itemDetail
-                  const tipLevel = itemShowsUpgradeSlider(panelItem) ? clampUpgrade(searchItemUpgrade) : 0
+                  const tipLevel = itemShowsUpgradeSlider(panelItem) ? clampUpgrade(searchCompareLevel) : 0
                   const tipLines = itemDetail._loading
                     ? []
                     : scaleTooltipLines(itemDetail.tooltipLines, tipLevel)
@@ -4182,7 +4367,7 @@ export default function App() {
                       >
                         {itemDetail.name}
                       </button>
-                      <OwnedBadge owned={isOwnedName(itemDetail.name, ownedNames)} />
+                      <OwnedBadge owned={isOwnedName(itemDetail.name, ownedNames, itemDetail.itemID)} />
                     </div>
                     <div className="meta">
                       {(panelMeta.slots || []).join(', ') || panelMeta.slot || (panelMeta.catalog_source === 'eqlwiki' ? 'Non-equipable / see description' : '—')}
@@ -4195,8 +4380,8 @@ export default function App() {
                     {panelItem ? (
                       <ItemStatsDetail
                         item={panelItem}
-                        upgrade={searchItemUpgrade}
-                        onUpgrade={setSearchItemUpgrade}
+                        upgrade={searchCompareLevel}
+                        onUpgrade={setCompareLevel}
                         sliderId="item-detail-upgrade"
                       />
                     ) : (
@@ -4418,20 +4603,35 @@ export default function App() {
                         <div className="equip-slot-cell">
                           <select
                             className="slot-select"
+                            data-testid={`worn-slot-${slot}`}
                             value={equipment[slot] || ''}
                             onChange={(e) => {
                               const v = e.target.value
                               setEquipment((prev) => {
                                 const next = { ...prev }
-                                if (!v) delete next[slot]
-                                else next[slot] = v
+                                if (!v) {
+                                  delete next[slot]
+                                  return next
+                                }
+                                next[slot] = v
+                                const picked = (slotItems[slot] || []).find((it) => namesMatch(it.name, v))
+                                if (picked && itemIsLore(picked.flags)) {
+                                  for (const other of Object.keys(next)) {
+                                    if (other !== slot && namesMatch(next[other], v)) delete next[other]
+                                  }
+                                }
                                 return next
                               })
                             }}
                             onBlur={runSim}
                           >
                             <option value="">— empty —</option>
-                            {(slotItems[slot] || []).map((it) => (
+                            {(slotItems[slot] || []).filter((it) => {
+                              if (!itemIsLore(it.flags)) return true
+                              return !Object.entries(equipment).some(([other, worn]) => (
+                                other !== slot && namesMatch(worn, it.name)
+                              ))
+                            }).map((it) => (
                               <option key={it.name} value={it.name}>
                                 {it.name}{it.haste ? ` (+${it.haste}% haste)` : ''}
                                 {(it.ratio_at_upgrade != null || it.ratio_plus10 != null)
@@ -4439,7 +4639,7 @@ export default function App() {
                                   : ''}
                               </option>
                             ))}
-                            {equipment[slot] && !(slotItems[slot] || []).some((it) => it.name === equipment[slot]) && (
+                            {equipment[slot] && !(slotItems[slot] || []).some((it) => namesMatch(it.name, equipment[slot])) && (
                               <option value={equipment[slot]}>{equipment[slot]} (imported)</option>
                             )}
                           </select>
@@ -4484,7 +4684,7 @@ export default function App() {
                           {deltas.length === 0 ? (
                             <span className="muted">
                               {selectedBis && (equipment[slot] || '') &&
-                              String(equipment[slot]).toLowerCase() === String(selectedBis).toLowerCase()
+                              namesMatch(equipment[slot], selectedBis)
                                 ? 'match'
                                 : '—'}
                             </span>

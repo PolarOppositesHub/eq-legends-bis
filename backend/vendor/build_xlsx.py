@@ -638,6 +638,44 @@ def write_class_selector(wb, summary, weapon_counts, gear_counts, planner_classe
 
 
 
+def write_currencies_sheet(wb):
+    """Reference sheet for mote XP and Wind Runes. Counts stay blank.
+
+    Names and item XP come from app.currencies (SPEC §8.1). A missing
+    import still writes the header row so the sheet shape stays stable.
+    """
+    headers = (
+        "Currency",
+        "Kind",
+        "Rank",
+        "Item XP",
+        "Spell XP",
+        "Usable on items currently at",
+        "Bags",
+        "Currency storage",
+        "Total",
+    )
+    ws = wb.create_sheet("Currencies")
+    for col, header in enumerate(headers, 1):
+        ws.cell(1, col, header)
+    rows = []
+    try:
+        import sys
+        from pathlib import Path
+        backend = Path(__file__).resolve().parents[1]
+        if str(backend) not in sys.path:
+            sys.path.insert(0, str(backend))
+        from app.currencies import currency_sheet_rows
+        rows = currency_sheet_rows()
+    except Exception:
+        rows = []
+    for index, row in enumerate(rows, 2):
+        for col, header in enumerate(headers, 1):
+            ws.cell(index, col, row.get(header))
+    ws.column_dimensions["A"].width = 36
+    return ws
+
+
 def main():
     merged, per, tri, summary, catalog, planner_classes = load_rows()
     slug_map = load_slug_map()
@@ -693,6 +731,8 @@ def main():
     for cls in ALL_CLASSES:
         ws = wb.create_sheet(f"{cls} weapons top"[:31])
         write_weapon_sheet(ws, per_weapons[cls], highlight=(cls == "Paladin"))
+
+    write_currencies_sheet(wb)
 
     for path_out in (XLSX, XLSX_FIXED):
         wb.save(path_out)

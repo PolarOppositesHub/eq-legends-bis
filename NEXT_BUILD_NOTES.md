@@ -1,5 +1,33 @@
 # Next build notes
 
+**Planned as 1.1.6.** Updater untouched. Never invent item stats, mote IDs, log line formats, or formulas. Anything the spec marks UNVERIFIED stays unverified.
+
+## 1.1.6 — Currencies tab and Item Search fixes
+The spec and PR plan still title this "1.1.3: Currencies tab". That work ships as 1.1.6.
+- [x] Track all 10 mote grades (exact names and item XP from SPEC §8.1), the 15 Wind Runes, and Void-Touched Potential.
+- [x] Manual anchor per currency. Log loot and given lines add. `You offered n <rune> to <npc>` subtracts. Auto-sold motes count 0 and are flagged. Lines before the anchor timestamp are ignored.
+- [x] Merge lines never auto-decrement. Show `Pending: N merges since last check` with an `I used: [grade] x [n]` dialog.
+- [x] Inventory import reconciles bag counts (Bags from import + Currency storage = Total), recorded as inventory_reconcile and revertible.
+- [x] Condense (2 x grade → 1 x next grade) with an item-XP-loss warning, offered up to Grand → Ascendant only.
+- [x] Void-Touched card: held n/3, earned this week n/3, countdown in CT to the weekly reset Tuesday 8:00 AM America/Los_Angeles, DST-safe.
+- [x] Ledger drawer per currency with undo. Per-character storage in the sidecar user-data. Session restore keeps the character and the tab.
+- [x] The ledger does not plan or reorder Void-Touched spending. SPEC §9.3 stays a later release.
+- [x] Optional XLSX `Currencies` sheet only. Existing sheets unchanged.
+- [x] Item Search: Usable by allows up to 3 classes. Default match is ANY. Optional Any/All toggle defaults to Any. Persist with the other Item Search filters.
+- [x] Has stat Min is a compact number field.
+- [x] Compare at +N: the stat minimum and all three sort keys use stats at the slider level via `scale_stats_to_level` the same way `engine.py` does. Result values match that level.
+- [x] SPEC §8.3 acceptance tests, plus +0 vs +10 filter/sort tests and a multi-class Any test.
+- [x] Parser: the Group panel collapses with the same down/right chevron as Character sections, and the choice is remembered.
+- [x] Simulator: do not recalculate or show the loading screen until a full class set is selected. A full set is 3 classes, or 2 when the simulator level is below 10. Fewer than that keeps the class pickers usable and shows the last result or a pick-N-more hint.
+- [x] Owned badges: the catalog name for the hands item is the in-game spelling `Slime Blood of Cazic-Thule`. The old spaced spelling stays an alias so a saved build still resolves. Owned, equipped, log-name, Character, and merge matching folds case, hyphens and spaces, apostrophe marks, and extra spaces. A real item id wins when the import has one. Long names wrap with their badges.
+- [x] The window fills any size, including a maximized ultrawide. The old 1600px content cap is gone. Slot and panel grids reflow.
+- [x] Two wrist slots, WRIST1 and WRIST2, in Best in Slot, the Simulator, inventory import, saved builds, and the spreadsheet. A saved build that still has one WRIST loads into WRIST1 when WRIST1 is empty.
+- [x] A lore item fills only one wrist, finger, or ear. A non-lore item can fill both. Owned-only repeats a non-lore item only when Count is at least 2. A blank flags field is not lore.
+- [x] Version **1.1.6** the same way 1.1.5 was bumped, with 1.1.6-only release notes.
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Shipped as 1.1.5.** Updater untouched. Never invent item stats, merge rules, or file formats.
 
 ## 1.1.5 — Search filters, collapsible character, owned BiS, hoard

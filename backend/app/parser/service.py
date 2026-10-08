@@ -941,6 +941,11 @@ class ParserService:
                 "merges": self.db.list_merges(character, limit, offset),
             }
 
+    def currency_feed(self, character: str) -> list[dict]:
+        """Idempotent loot, offer, and merge rows for one character."""
+        with self.read_guard():
+            return self.db.currency_feed(character)
+
     def set_pet_owner(self, character: str, pet: str, owner: str | None) -> dict:
         kind = "pet" if owner else ("npc" if is_npc_pet_name(pet) else "other")
         with self.db.lock:

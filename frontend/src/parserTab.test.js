@@ -331,17 +331,45 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.5 notes", () => {
+test("what's new dialog shows the 1.1.6 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.5")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.5<\/h2>/)
-  assert.match(html, /three keys/)
-  assert.match(html, /Owned only/)
-  assert.match(html, /Dragon/)
-  assert.match(html, /Exaltation|exaltations/)
-  assert.match(html, /\/outputfile inventory/)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.6")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.6<\/h2>/)
+  assert.match(html, /Currencies tracks/)
+  assert.match(html, /Compare at \+N/)
+  assert.match(html, /Parser: the Group panel can now be collapsed, and it remembers your choice\./)
+  assert.match(html, /Simulator: swapping a class no longer locks you on the loading screen/)
+  assert.match(html, /Slime Blood of Cazic-Thule/)
+  assert.match(html, /full width at any size/)
+  assert.match(html, /two wrist slots/)
+  assert.match(html, /lore item fills only one/)
   assert.equal(/<h2>What&#x27;s new in 1\.1\.4<\/h2>/.test(html), false)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.5<\/h2>/.test(html), false)
+})
+
+test('group panel collapses with a down or right chevron', () => {
+  const logs = [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }]
+  const open = markup(panel({
+    logs,
+    logsStatus: 'ready',
+    allowlist: ['Amop'],
+    groupCollapsed: false,
+  }))
+  assert.match(open, /data-testid="parser-group-toggle"/)
+  assert.match(open, /aria-expanded="true"/)
+  assert.match(open, /▼/)
+  assert.match(open, /data-testid="parser-allow-list"/)
+  const closed = markup(panel({
+    logs,
+    logsStatus: 'ready',
+    allowlist: ['Amop'],
+    groupCollapsed: true,
+  }))
+  assert.match(closed, /aria-expanded="false"/)
+  assert.match(closed, /▶/)
+  assert.equal(closed.includes('parser-allow-list'), false)
+  assert.equal(closed.includes('Allowlist is empty'), false)
 })
 
 test('scope filter keeps a candidate out of group and raid players who hit the same NPC', () => {
