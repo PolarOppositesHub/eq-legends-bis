@@ -3,6 +3,8 @@
 const SORT_KEYS = ['sort', 'sort2', 'sort3']
 const SORT_DIRS = ['sort_dir', 'sort2_dir', 'sort3_dir']
 
+export const DAMAGE_DELAY_SORT = 'damage_delay_ratio'
+
 export const SEARCH_STAT_LABELS = {
   AC: 'AC',
   HP: 'HP',
@@ -46,6 +48,7 @@ export function buildItemSearchParams({
   compareLevel = 0,
   stat = '',
   statMin = '',
+  ratioMin = '',
   sorts = [],
   limit = 80,
 } = {}) {
@@ -69,6 +72,9 @@ export function buildItemSearchParams({
     if (statMin !== '' && statMin != null && Number.isFinite(Number(statMin))) {
       params.stat_min = String(statMin)
     }
+  }
+  if (ratioMin !== '' && ratioMin != null && Number.isFinite(Number(ratioMin))) {
+    params.ratio_min = String(ratioMin)
   }
   const levels = Array.isArray(sorts) ? sorts : []
   levels.slice(0, 3).forEach((level, index) => {

@@ -331,21 +331,18 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.6 notes", () => {
+test("what's new dialog shows the 1.1.7 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.6")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.6<\/h2>/)
-  assert.match(html, /Currencies tracks/)
-  assert.match(html, /Compare at \+N/)
-  assert.match(html, /Parser: the Group panel can now be collapsed, and it remembers your choice\./)
-  assert.match(html, /Simulator: swapping a class no longer locks you on the loading screen/)
-  assert.match(html, /Slime Blood of Cazic-Thule/)
-  assert.match(html, /full width at any size/)
-  assert.match(html, /two wrist slots/)
-  assert.match(html, /lore item fills only one/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.4<\/h2>/.test(html), false)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.5<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.7")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.7<\/h2>/)
+  assert.match(html, /highest-tier items first/)
+  assert.match(html, /Plane of Sky/)
+  assert.match(html, /token case stays unverified/)
+  assert.match(html, /Wish list/)
+  assert.match(html, /Damage\/Delay/)
+  assert.match(html, /same Item Search and eqlwiki menu/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.6<\/h2>/.test(html), false)
 })
 
 test('group panel collapses with a down or right chevron', () => {

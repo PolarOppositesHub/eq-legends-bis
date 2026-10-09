@@ -10,7 +10,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -142,6 +142,7 @@ export function defaultWorkspace(catalog) {
     searchSort2Dir: 'desc',
     searchSort3: '',
     searchSort3Dir: 'desc',
+    searchRatioMin: '',
     characterCollapsed: {},
     searchSelectedName: '',
     searchItemUpgrade: 0,
@@ -156,6 +157,14 @@ export function defaultWorkspace(catalog) {
     parserGroupCollapsed: false,
     currencyCharacter: '',
     whatsNewSeen: '',
+    wishByCharacter: {},
+    upgradeProgressByCharacter: {},
+    upgradeTierByCharacter: {},
+    posManualByCharacter: {},
+    posIgnoredByCharacter: {},
+    posGoalClasses: [],
+    achievementsByCharacter: {},
+    requirementsPane: 'upgrades',
   }
 }
 
@@ -450,6 +459,81 @@ function sanitizeUnknownRows(raw) {
   return out
 }
 
+function sanitizeNameList(raw, max, length) {
+  if (!Array.isArray(raw)) return []
+  const out = []
+  for (const entry of raw) {
+    if (out.length >= max) break
+    const text = pickText(entry, length)
+    if (text && !out.includes(text)) out.push(text)
+  }
+  return out
+}
+
+function sanitizeStringListMap(raw, maxKeys, maxItems, maxLen) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (Object.keys(out).length >= maxKeys) break
+    if (typeof key !== 'string' || key.length > 80) continue
+    const mapKey = key.trim()
+    if (!Array.isArray(value)) continue
+    out[mapKey] = sanitizeNameList(value, maxItems, maxLen)
+  }
+  return out
+}
+
+function sanitizeNumberMap(raw, max) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (Object.keys(out).length >= 24) break
+    if (typeof key !== 'string' || key.length > 80) continue
+    const inner = {}
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue
+    for (const [item, amount] of Object.entries(value)) {
+      if (Object.keys(inner).length >= 80) break
+      const name = pickText(item, 300)
+      const n = Number(amount)
+      if (!name || !Number.isFinite(n)) continue
+      inner[name] = Math.max(0, Math.min(max, Math.trunc(n)))
+    }
+    out[key.trim()] = inner
+  }
+  return out
+}
+
+function sanitizeManualMap(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (Object.keys(out).length >= 24) break
+    if (typeof key !== 'string' || key.length > 80) continue
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue
+    const inner = {}
+    for (const [quest, flag] of Object.entries(value)) {
+      if (Object.keys(inner).length >= 120) break
+      const name = pickText(quest, 200)
+      if (!name) continue
+      if (flag === 'done' || flag === 'not_done') inner[name] = flag
+    }
+    out[key.trim()] = inner
+  }
+  return out
+}
+
+function sanitizeTextMap(raw, maxKeys, maxLen) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (Object.keys(out).length >= maxKeys) break
+    if (typeof key !== 'string' || key.length > 80) continue
+    const text = pickText(value, maxLen)
+    if (text) out[key.trim()] = text
+  }
+  return out
+}
+
 function pickSortKey(value) {
   return pickText(value, 40)
 }
@@ -621,6 +705,7 @@ export function sanitizeWorkspace(raw, catalog) {
       searchSort2Dir: pickSortDir(raw.searchSort2Dir),
       searchSort3: pickSortKey(raw.searchSort3),
       searchSort3Dir: pickSortDir(raw.searchSort3Dir),
+      searchRatioMin: pickStatMin(raw.searchRatioMin),
       characterCollapsed: sanitizeCollapsed(raw.characterCollapsed),
       searchSelectedName,
       searchItemUpgrade: searchSelectedName ? clampUpgrade(raw.searchItemUpgrade) : 0,
@@ -635,6 +720,14 @@ export function sanitizeWorkspace(raw, catalog) {
       parserGroupCollapsed: pickBool(raw.parserGroupCollapsed, false),
       currencyCharacter: pickText(raw.currencyCharacter, 80),
       whatsNewSeen: pickWhatsNewSeen(raw.whatsNewSeen),
+      wishByCharacter: sanitizeStringListMap(raw.wishByCharacter, 24, 200, 300),
+      upgradeProgressByCharacter: sanitizeNumberMap(raw.upgradeProgressByCharacter, 1023),
+      upgradeTierByCharacter: sanitizeNumberMap(raw.upgradeTierByCharacter, 10),
+      posManualByCharacter: sanitizeManualMap(raw.posManualByCharacter),
+      posIgnoredByCharacter: sanitizeStringListMap(raw.posIgnoredByCharacter, 24, 120, 200),
+      posGoalClasses: sanitizeNameList(raw.posGoalClasses, 16, 40),
+      achievementsByCharacter: sanitizeTextMap(raw.achievementsByCharacter, 8, 200000),
+      requirementsPane: raw.requirementsPane === 'pos' ? 'pos' : 'upgrades',
     }
     return { restored: true, state }
   } catch (_) {

@@ -47,6 +47,6 @@ test('currencies panel shows storage, pending merges, and the void countdown', (
   assert.match(html, /Held 1\/3/)
   assert.match(html, /Earned this week 1\/3/)
   assert.match(html, /10:00 AM CT/)
-  assert.match(html, /need not tracked in this version/)
+  assert.match(html, /Plane of Sky need is on Requirements/)
   assert.match(html, /does not plan Void-Touched spending/)
 })

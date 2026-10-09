@@ -161,7 +161,7 @@ export function CurrenciesPanel({
                 <tr key={row.name} data-currency={row.name}>
                   <td>
                     {row.name}
-                    <span className="muted"> · need not tracked in this version</span>
+                    <span className="muted"> · Plane of Sky need is on Requirements</span>
                   </td>
                   <CountCells row={row} />
                   <td>

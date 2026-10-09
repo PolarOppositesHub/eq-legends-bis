@@ -80,7 +80,7 @@ export const APP_HELP = {
       title: 'Best in Slot',
       body: [
         'Choose Mode (Priority Stat, Max All Stats, or AI Choice) and your upgrade level (+0…+10).',
-        'Update BiS builds a recommended loadout for your trio. Hover item names for icons and stat tips.',
+        'Update BiS builds a recommended loadout for your trio. Hover item names for icons and stat tips. Click a name for the same Item Search and eqlwiki menu used elsewhere.',
         'An Owned badge marks a name from the last inventory import. Owned only ranks every slot again from owned items only (worn, bags, bank, shared bank, Dragon\'s Hoard, storage, and any other imported container). Scoring, class, level, and the single worn-haste rule stay the same. A copy\'s +N is used when the import recorded one. A slot is empty only when nothing owned fits it.',
         'Weapons may show dual-wield vs two-hand picks based on class and character level.',
       ],
@@ -108,6 +108,23 @@ export const APP_HELP = {
       ],
     },
     {
+      id: 'requirements',
+      title: 'Requirements',
+      body: [
+        'For each Best in Slot item: the XP to the target +N, the motes that takes, the cheapest path from the Currencies ledger, and what is still missing. Void-Touched Potential is spent on the highest-tier gaps first.',
+        'XP from +t to the next tier is 2^t. A duplicate at +k adds 2^k XP. A copy with no +N is not treated as +0. Progress inside a tier is not in the export, so it stays 0 until you set it.',
+        'Plane of Sky lists the remaining tests, Wind Runes from Currencies, and turn-in items from the inventory import. Classes are sorted by how many tests are left. A granted unlock does not count Obtain rows as turn-ins. The token case is unverified.',
+      ],
+    },
+    {
+      id: 'wishlist',
+      title: 'Wish list',
+      body: [
+        'Pin or unpin an item from Item Search, Best in Slot, Character, or the item menu. The list is stored for the character selected on Currencies.',
+        'Each pinned item shows whether the last import owns it, and the same mote path as Requirements when one can be planned.',
+      ],
+    },
+    {
       id: 'character',
       title: 'Character',
       body: [
@@ -126,7 +143,7 @@ export const APP_HELP = {
         'Set a currency storage count. Later log loot and given lines add, and an offer line subtracts, after that time. Auto-sold motes count 0 and are marked auto-sold, not kept. Lines before the count are ignored.',
         'A merge line does not name the mote. It shows Pending: N merges since last check until you record I used.',
         'An inventory import sets bag counts. Bags from the import plus currency storage is the total. A drop with no matching ledger entry can be undone.',
-        'Condense turns 2 of a grade into 1 of the next, up to Grand → Ascendant, and warns when item XP is lost. This ledger does not plan Void-Touched spending. Wind Rune need is not tracked in this version.',
+        'Condense turns 2 of a grade into 1 of the next, up to Grand → Ascendant, and warns when item XP is lost. This ledger does not plan Void-Touched spending. Requirements uses these totals and spends Void-Touched on the highest-tier items first. Wind Rune need for Plane of Sky is on Requirements.',
       ],
     },
     {
@@ -156,7 +173,7 @@ export const APP_HELP = {
         'Equipable items with an upgrade path use a +0…+10 slider. Catalog haste is the tooltip percent plus that upgrade level (eqlegendstools), not the AC curve. Non-equipables keep static stats. Stats are never invented.',
         'Other eqlwiki links ask before opening. A menu you are already in (Known Loot, quest rewards, upgrade names) still opens eqlwiki in one step.',
         'Catalog unions eqlegendstools decoded items with the full eqlwiki item name list.',
-        'Filter by slot, type (a Skill: line, or a whole word in the name), up to three usable classes (Any or All), and any catalog stat, with a compact minimum. Compare at +N uses that upgrade for the minimum, the sort, and the values in the list. Sort by up to three keys. The first key orders the list. The later keys break ties only. With no sort key, names stay alphabetical.',
+        'Filter by slot, type (a Skill: line, or a whole word in the name), up to three usable classes (Any or All), and any catalog stat, with a compact minimum. Damage/Delay is damage divided by delay, with its own minimum. Compare at +N uses that upgrade for the minimum, the sort, and the values in the list. Sort by up to three keys, including Damage/Delay. The first key orders the list. The later keys break ties only. Items with no damage or delay sort last. With no sort key, names stay alphabetical.',
         'An Owned badge marks a name from the last inventory import. Owned only hides names you do not have and keeps the search order. The +0…+10 slider is unchanged.',
       ],
     },

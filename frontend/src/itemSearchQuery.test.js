@@ -30,6 +30,7 @@ test('search params keep token query, slot, class, stat min, and three sort keys
   assert.equal(params.sort2, 'INT')
   assert.equal(params.sort2_dir, 'desc')
   assert.equal(params.sort3, undefined)
+  assert.equal(params.ratio_min, undefined)
   assert.equal(searchStatLabel('INT'), 'INT')
   assert.equal(searchStatLabel('SVF'), 'SV Fire')
 })
@@ -51,4 +52,22 @@ test('usable-by sends up to three classes and the compare level', () => {
   assert.equal(params.usable_match, 'all')
   assert.equal(params.compare_level, '10')
   assert.equal(params.usable_class, undefined)
+})
+
+test('damage/delay ratio is a sort key and a minimum', () => {
+  const params = buildItemSearchParams({
+    ratioMin: '1.25',
+    compareLevel: 10,
+    sorts: [
+      { key: 'damage_delay_ratio', dir: 'desc' },
+      { key: 'damage_delay_ratio', dir: 'asc' },
+      { key: 'damage_delay_ratio', dir: 'desc' },
+    ],
+  })
+  assert.equal(params.ratio_min, '1.25')
+  assert.equal(params.compare_level, '10')
+  assert.equal(params.sort, 'damage_delay_ratio')
+  assert.equal(params.sort2, 'damage_delay_ratio')
+  assert.equal(params.sort3, 'damage_delay_ratio')
+  assert.equal(params.sort2_dir, 'asc')
 })

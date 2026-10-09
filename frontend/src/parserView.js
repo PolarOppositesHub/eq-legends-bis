@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.6'
+export const WHATS_NEW_ID = '1.1.7'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,21 +23,14 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.6"
+export const WHATS_NEW_TITLE = "What's new in 1.1.7"
 
 export const WHATS_NEW_POINTS = [
-  'Currencies tracks the 10 mote grades, the 15 Wind Runes, and Void-Touched Potential. Set a storage count, and later loot, given, and offer lines update it. Auto-sold motes count 0 and are marked auto-sold, not kept.',
-  'Pending: N merges since last check. A merge line does not name the mote, so the count stays until you record I used.',
-  'An inventory import reconciles bag counts. Bags from the import plus currency storage is the total, and that reconcile can be undone.',
-  'Condense turns 2 of a grade into 1 of the next and warns when item XP is lost. It is offered up to Grand → Ascendant.',
-  'Void-Touched shows held n/3 and earned this week n/3, with a countdown in Central time to Tuesday 8:00 AM Pacific.',
-  'Item Search usable-by accepts up to 3 classes. Match is Any unless you switch it to All. Has stat Min is a short field. Compare at +N filters, sorts, and lists stats at that upgrade.',
-  'Parser: the Group panel can now be collapsed, and it remembers your choice.',
-  'Simulator: swapping a class no longer locks you on the loading screen; it recalculates once your full set of classes is picked.',
-  'Owned badges treat the game\'s Slime Blood of Cazic-Thule as the catalog hands item. Matching ignores case, hyphens versus spaces, apostrophe marks, and extra spaces. Long names wrap with their badges.',
-  'The window uses the full width at any size, including a maximized ultrawide, and the panels reflow when it shrinks.',
-  'Best in Slot, the Simulator, inventory import, saved builds, and the spreadsheet export all have two wrist slots.',
-  'A lore item fills only one of a paired wrist, finger, or ear slot. A non-lore item can fill both. Owned-only uses a second copy only when Count is at least 2.',
+  'Best in Slot lists the XP to your target +N, the motes that takes, the cheapest path from the motes you already hold, and what is still missing. Void-Touched Potential is used on the highest-tier items first.',
+  'Plane of Sky shows the tests still open, the Wind Runes and turn-in items you hold, and which classes are closest to unlocking. A granted unlock is labeled. The token case stays unverified.',
+  'Pin an item from Item Search, Best in Slot, Character, or the item menu. The Wish list shows whether you own it and the mote path for that character.',
+  'Item Search can sort and filter by Damage/Delay, which is damage divided by delay. Compare at +N uses the same scaling as the rest of the app. The ratio is shown to two decimals.',
+  'Click a Best in Slot item for the same Item Search and eqlwiki menu used elsewhere. Hover still shows the stat popup.',
 ]
 
 export const CREDITS = [
