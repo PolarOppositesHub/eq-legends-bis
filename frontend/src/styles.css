@@ -1458,3 +1458,32 @@ input[type="text"], select, input[type="range"] {
   margin: 0.35rem 0 0.75rem;
 }
 .character-other-header { margin-top: 0.65rem; font-size: 0.78rem; }
+.wish-pin {
+  font-size: 0.72rem;
+  padding: 0.05rem 0.4rem;
+  line-height: 1.2;
+}
+.item-search-list li { position: relative; }
+.item-search-list .wish-pin {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+}
+.item-search-result { padding-right: 3.4rem; }
+.requirement-card {
+  margin: 0.65rem 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.requirement-panes { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; }
+.chip {
+  display: inline-block;
+  margin: 0.15rem 0.25rem 0.15rem 0;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+}
+.chip-have { color: #d7f5d0; }
+.chip-need { color: #f3d2a2; }

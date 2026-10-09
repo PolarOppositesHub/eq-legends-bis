@@ -23,6 +23,7 @@ from .paths import APP_ROOT, decoded_dir, frontend_dist, legends_root, packaged_
 from .parser.api import busy_response as parser_busy_response
 from .parser.api import router as parser_router
 from .currencies_api import router as currencies_router
+from .requirements_api import router as requirements_router
 from .parser.service import ParserBusy
 from .version import __version__
 
@@ -236,6 +237,7 @@ def api_item_search(
     compare_level: int = Query(default=0, ge=0, le=10),
     stat: Optional[str] = Query(default=None),
     stat_min: Optional[float] = Query(default=None),
+    ratio_min: Optional[float] = Query(default=None),
     sort: Optional[str] = Query(default=None),
     sort_dir: Optional[str] = Query(default=None),
     sort2: Optional[str] = Query(default=None),
@@ -257,6 +259,7 @@ def api_item_search(
             compare_level=compare_level,
             stat=stat,
             stat_min=stat_min,
+            ratio_min=ratio_min,
             sort=sort,
             sort_dir=sort_dir,
             sort2=sort2,
@@ -821,6 +824,7 @@ def _mount_spa() -> None:
 
 app.include_router(parser_router)
 app.include_router(currencies_router)
+app.include_router(requirements_router)
 
 
 @app.exception_handler(ParserBusy)

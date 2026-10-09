@@ -541,3 +541,38 @@ test('an older import without a slot tree still loads', () => {
   assert.deepEqual(state.importMeta.unknown_rows, [])
   assert.deepEqual(state.importMeta.equipment, { PRIMARY: 'Jade Mace' })
 })
+
+test('wish list and upgrade progress stay with the character', () => {
+  const { restored, state } = sanitizeWorkspace({
+    v: 1,
+    tab: 'wishlist',
+    currencyCharacter: 'Zasariz',
+    searchRatioMin: '1.25',
+    searchSort1: 'damage_delay_ratio',
+    wishByCharacter: { Zasariz: ['Mask of Song'], Other: ['Cloak of Flames'] },
+    upgradeProgressByCharacter: { Zasariz: { 'Cloak of Flames': 8 } },
+    upgradeTierByCharacter: { Zasariz: { 'Cloak of Flames': 5 } },
+    posManualByCharacter: { Zasariz: { 'Bard Test of Tone': 'done' } },
+    posIgnoredByCharacter: { Zasariz: ['Paladin Test of Spirit'] },
+    requirementsPane: 'pos',
+    achievementsByCharacter: { Zasariz: 'C\tPrimary Class Unlock - Bard' },
+  }, catalog)
+  assert.equal(restored, true)
+  assert.equal(state.tab, 'wishlist')
+  assert.equal(state.searchRatioMin, '1.25')
+  assert.equal(state.searchSort1, 'damage_delay_ratio')
+  assert.deepEqual(state.wishByCharacter.Zasariz, ['Mask of Song'])
+  assert.deepEqual(state.wishByCharacter.Other, ['Cloak of Flames'])
+  assert.equal(state.upgradeProgressByCharacter.Zasariz['Cloak of Flames'], 8)
+  assert.equal(state.upgradeTierByCharacter.Zasariz['Cloak of Flames'], 5)
+  assert.equal(state.posManualByCharacter.Zasariz['Bard Test of Tone'], 'done')
+  assert.deepEqual(state.posIgnoredByCharacter.Zasariz, ['Paladin Test of Spirit'])
+  assert.equal(state.requirementsPane, 'pos')
+  assert.match(state.achievementsByCharacter.Zasariz, /Primary Class Unlock - Bard/)
+  const old = sanitizeWorkspace({ v: 1, tab: 'bis' }, catalog)
+  assert.equal(old.restored, true)
+  assert.deepEqual(old.state.wishByCharacter, {})
+  assert.equal(old.state.requirementsPane, 'upgrades')
+  assert.equal(old.state.searchRatioMin, '')
+  assert.equal(old.state.tab, 'bis')
+})

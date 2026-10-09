@@ -101,3 +101,11 @@ export const undoCurrency = (body) =>
   req('/api/currencies/undo', { method: 'POST', body: JSON.stringify(body) })
 export const reconcileCurrencies = (body) =>
   req('/api/currencies/reconcile', { method: 'POST', body: JSON.stringify(body) })
+export const postUpgradePlan = (body) =>
+  req('/api/requirements/upgrades', { method: 'POST', body: JSON.stringify(body) })
+export const postPlaneOfSky = (body) =>
+  req('/api/requirements/pos', { method: 'POST', body: JSON.stringify(body) })
+export const getParserLoot = (character) => {
+  const q = new URLSearchParams({ character: character || '', limit: '500' })
+  return req(`/api/parser/loot?${q}`)
+}

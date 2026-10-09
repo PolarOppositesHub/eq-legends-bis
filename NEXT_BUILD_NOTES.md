@@ -1,5 +1,19 @@
 # Next build notes
 
+**Planned as 1.1.7.** Updater untouched. Never invent item stats, XP values, mote values, log or achievement formats, test names, or formulas. Anything the spec marks UNVERIFIED stays unverified and is labeled in the UI.
+
+## 1.1.7 — BiS mote paths, Plane of Sky, wish list
+The spec and PR plan still title this "1.1.4: Requirement tracker + Plane of Sky tracker + Wish list" (SPEC §9). That work ships as 1.1.7. Damage/Delay ratio and the Best in Slot item menu ship in the same release.
+- [x] For each BiS item: XP to the target +N (2^t per tier, cumulative 2^T − 1, from SPEC §9.1), motes that takes, the cheapest path from the Currencies ledger, and the shortfall. Mote item XP stays the SPEC §8.1 table already in the ledger. Void-Touched is spent on the highest-tier gaps first. Intra-tier progress is manual because the export does not include it. A duplicate at +k adds 2^k XP. A copy with no +N is not treated as +0.
+- [x] Plane of Sky: remaining tests from data/pos_class_tests.json (95 tests, eqlwiki CC BY-SA). Runes from the Currencies ledger. Turn-in items from the inventory import. Classes closest to unlocking. Achievements import uses the verified I/C tab tree. A completed "autocomplete" or "can be bypassed" component marks the class Unlocked (granted) and does not count Obtain rows as turn-ins. The token case stays UNVERIFIED. A status letter other than I or C stays UNVERIFIED. Log turn-ins use the verified `You offered <n> <item> to <npc>.` line. Reward names that do not match a test stay unmatched.
+- [x] Wish list: pin or unpin from Item Search, Best in Slot, Character, and the item menu. The wish list shows owned status and the mote path when the item is in the plan. Stored per character.
+- [x] Item Search Damage/Delay ratio = damage / delay, higher is better. Sort option on all three keys, and a minimum next to Has stat. Compare at +N uses scale_stats_to_level. If damage does not change, the ratio uses the base values and says so. Results show two decimals. Items with no damage or delay sort last.
+- [x] Best in Slot item click opens the same item menu as everywhere else (Item Search, eqlwiki with the existing menu). Hover stays the stat popup.
+- [x] Version **1.1.7** the same way 1.1.6 was bumped, with 1.1.7-only What's new lines. No release publishing.
+- [ ] Josh spot-check in the installed app.
+
+---
+
 **Planned as 1.1.6.** Updater untouched. Never invent item stats, mote IDs, log line formats, or formulas. Anything the spec marks UNVERIFIED stays unverified.
 
 ## 1.1.6 — Currencies tab and Item Search fixes

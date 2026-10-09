@@ -25,6 +25,9 @@ import {
   condenseCurrency,
   undoCurrency,
   reconcileCurrencies,
+  postUpgradePlan,
+  postPlaneOfSky,
+  getParserLoot,
 } from './api.js'
 import LoadingOverlay from './LoadingOverlay.jsx'
 import {
@@ -80,7 +83,16 @@ import {
   ownedNameSet,
   visibleSearchItems,
 } from './characterView.js'
-import { buildItemSearchParams, searchStatLabel } from './itemSearchQuery.js'
+import { DAMAGE_DELAY_SORT, buildItemSearchParams, searchStatLabel } from './itemSearchQuery.js'
+import { BisItemName, ItemActionMenu, WishPin } from './itemActionMenu.jsx'
+import { RequirementsPanel, WishListPanel } from './requirementsView.jsx'
+import {
+  copiesFromImport,
+  inventoryRuneCounts,
+  isWished,
+  toggleWish,
+  wishNamesFor,
+} from './requirementsView.js'
 import { itemIsLore, namesMatch } from './itemNames.js'
 
 const EMPTY_EQ = {}
@@ -793,7 +805,7 @@ function CastBuffsIconStrip({ castBuffs, onShowTip, onMoveTip, onHideTip }) {
   )
 }
 
-function AltRow({ a, upgrade, owned, onShowTip, onMoveTip, onHideTip, onConfirmWiki }) {
+function AltRow({ a, upgrade, owned, onShowTip, onMoveTip, onHideTip, onOpenMenu, wish, onWish }) {
   const statsText = itemTipStatsText(a, upgrade)
   const show = (e) => {
     const { x, y } = tipCoordsFromPointer(e)
@@ -818,16 +830,16 @@ function AltRow({ a, upgrade, owned, onShowTip, onMoveTip, onHideTip, onConfirmW
         onBlur={onHideTip}
       >
         <ItemIcon name={a.name} />
-        <span className="alt-name">
-          {a.url ? (
-            <MaybeWikiLink href={a.url} onConfirmWiki={onConfirmWiki} title={a.name}>
-              {a.name}
-            </MaybeWikiLink>
-          ) : (
-            a.name
-          )}
-        </span>
+        <BisItemName
+          name={a.name}
+          className="alt-name zone-link"
+          onHover={show}
+          onMove={onMoveTip}
+          onLeave={onHideTip}
+          onOpenMenu={onOpenMenu}
+        />
         <OwnedBadge owned={owned} />
+        <WishPin name={a.name} pinned={wish} onToggle={onWish} />
       </span>
       {a.haste ? <span className="muted"> (haste +{a.haste}%)</span> : null}
       {(a.ratio_at_upgrade != null || a.ratio_plus10 != null) ? (
@@ -1012,6 +1024,17 @@ export default function App() {
   const [parserFightId, setParserFightId] = useState(null)
   const [parserGroupCollapsed, setParserGroupCollapsed] = useState(false)
   const [currencyCharacter, setCurrencyCharacter] = useState('')
+  const [wishByCharacter, setWishByCharacter] = useState({})
+  const [upgradeProgressByCharacter, setUpgradeProgressByCharacter] = useState({})
+  const [upgradeTierByCharacter, setUpgradeTierByCharacter] = useState({})
+  const [posManualByCharacter, setPosManualByCharacter] = useState({})
+  const [posIgnoredByCharacter, setPosIgnoredByCharacter] = useState({})
+  const [posGoalClasses, setPosGoalClasses] = useState([])
+  const [achievementsByCharacter, setAchievementsByCharacter] = useState({})
+  const [requirementsPane, setRequirementsPane] = useState('upgrades')
+  const [requirementsPlan, setRequirementsPlan] = useState(null)
+  const [posView, setPosView] = useState(null)
+  const [requirementsSortScore, setRequirementsSortScore] = useState(false)
   const [currencyView, setCurrencyView] = useState(null)
   const [currencyStatus, setCurrencyStatus] = useState('idle')
   const [whatsNewSeenId, setWhatsNewSeenId] = useState('')
@@ -1072,6 +1095,7 @@ export default function App() {
   const [searchSort2Dir, setSearchSort2Dir] = useState('desc')
   const [searchSort3, setSearchSort3] = useState('')
   const [searchSort3Dir, setSearchSort3Dir] = useState('desc')
+  const [searchRatioMin, setSearchRatioMin] = useState('')
   const [characterCollapsed, setCharacterCollapsed] = useState({})
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -1385,6 +1409,7 @@ export default function App() {
     setSearchSort2Dir(state.searchSort2Dir === 'asc' ? 'asc' : 'desc')
     setSearchSort3(state.searchSort3 || '')
     setSearchSort3Dir(state.searchSort3Dir === 'asc' ? 'asc' : 'desc')
+    setSearchRatioMin(state.searchRatioMin || '')
     setCharacterCollapsed(state.characterCollapsed || {})
     setSearchItemUpgrade(state.searchItemUpgrade || 0)
     setBuildName(state.buildName || '')
@@ -1396,6 +1421,14 @@ export default function App() {
     setParserFightId(state.parserFightId || null)
     setParserGroupCollapsed(!!state.parserGroupCollapsed)
     setCurrencyCharacter(state.currencyCharacter || '')
+    setWishByCharacter(state.wishByCharacter || {})
+    setUpgradeProgressByCharacter(state.upgradeProgressByCharacter || {})
+    setUpgradeTierByCharacter(state.upgradeTierByCharacter || {})
+    setPosManualByCharacter(state.posManualByCharacter || {})
+    setPosIgnoredByCharacter(state.posIgnoredByCharacter || {})
+    setPosGoalClasses(state.posGoalClasses || [])
+    setAchievementsByCharacter(state.achievementsByCharacter || {})
+    setRequirementsPane(state.requirementsPane === 'pos' ? 'pos' : 'upgrades')
     setWhatsNewSeenId(state.whatsNewSeen || '')
   }, [])
 
@@ -2319,6 +2352,7 @@ export default function App() {
     compareLevel: searchCompareLevel,
     stat: searchStat,
     statMin: searchStatMin,
+    ratioMin: searchRatioMin,
     sorts: [
       { key: searchSort1, dir: searchSort1Dir },
       { key: searchSort2, dir: searchSort2Dir },
@@ -2327,7 +2361,7 @@ export default function App() {
     limit,
   }), [
     searchQ, searchSlot, searchType, searchClass, searchClasses, searchClassMatch, searchCompareLevel,
-    searchStat, searchStatMin,
+    searchStat, searchStatMin, searchRatioMin,
     searchSort1, searchSort1Dir, searchSort2, searchSort2Dir, searchSort3, searchSort3Dir,
   ])
 
@@ -2669,6 +2703,7 @@ export default function App() {
       searchSort2Dir,
       searchSort3,
       searchSort3Dir,
+      searchRatioMin,
       characterCollapsed,
       searchSelectedName: itemDetail?.name || '',
       searchItemUpgrade: itemDetail?.name ? searchCompareLevel : searchItemUpgrade,
@@ -2683,6 +2718,14 @@ export default function App() {
       parserGroupCollapsed,
       currencyCharacter,
       whatsNewSeen: whatsNewSeenId,
+      wishByCharacter,
+      upgradeProgressByCharacter,
+      upgradeTierByCharacter,
+      posManualByCharacter,
+      posIgnoredByCharacter,
+      posGoalClasses,
+      achievementsByCharacter,
+      requirementsPane,
     }, catalogFromMeta(meta))
   }, [
     sessionReady, meta, tab, classes, mode, primaryStats, secondaryStats, tertiaryStats,
@@ -2691,10 +2734,13 @@ export default function App() {
     selectedQuestName, questListCollapsed, questRewardUpgrade, mobQ, mobKind, mobEra,
     selectedMobName, mobListCollapsed, searchQ, searchSlot, searchType, searchClass,
     searchStat, searchStatMin, searchSort1, searchSort1Dir, searchSort2, searchSort2Dir,
-    searchSort3, searchSort3Dir, characterCollapsed, itemDetail, searchItemUpgrade,
+    searchSort3, searchSort3Dir, searchRatioMin, characterCollapsed, itemDetail, searchItemUpgrade,
     searchClasses, searchClassMatch, searchCompareLevel,
     buildName, selectedBuildId, ownedOnly, importMeta, uiSettings, parserLogPath, parserMergePets,
     parserFightId, parserGroupCollapsed, currencyCharacter, whatsNewSeenId,
+    wishByCharacter, upgradeProgressByCharacter, upgradeTierByCharacter,
+    posManualByCharacter, posIgnoredByCharacter, posGoalClasses,
+    achievementsByCharacter, requirementsPane,
   ])
   workspaceSnapshotRef.current = workspaceSnapshot
 
@@ -3013,10 +3059,18 @@ export default function App() {
     }
   }, [tab, currencyCharacter])
 
+  const wishCharacter = (currencyCharacter || '').trim() || characterFromInventoryFile(importMeta?.source || '')
+  const wishNames = wishNamesFor(wishByCharacter, wishCharacter)
+  const toggleWishItem = useCallback((itemName) => {
+    setWishByCharacter((current) => toggleWish(current, wishCharacter, itemName))
+  }, [wishCharacter])
+
   const navItems = [
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
+    { id: 'requirements', label: 'Requirements' },
+    { id: 'wishlist', label: 'Wish list' },
     { id: 'character', label: 'Character' },
     { id: 'currencies', label: 'Currencies' },
     { id: 'quests', label: 'Quest Hub' },
@@ -3041,18 +3095,141 @@ export default function App() {
   })
 
   const renderCharacterItem = useCallback((node, ctx) => (
-    <CatalogItemName
-      name={node.catalogName || node.displayName}
-      label={node.displayName}
-      allowWiki={!node.unknown}
-      className="zone-link character-item-name"
-      {...catalogItemNameProps}
-      openMenu={(item, event, opts) => {
-        catalogItemNameProps.openMenu(item, event, { ...opts, allowWiki: !node.unknown })
-        if (ctx && typeof ctx.onLocate === 'function' && node.key) ctx.onLocate(node.key)
-      }}
-    />
-  ), [catalogItemNameProps])
+    <>
+      <CatalogItemName
+        name={node.catalogName || node.displayName}
+        label={node.displayName}
+        allowWiki={!node.unknown}
+        className="zone-link character-item-name"
+        {...catalogItemNameProps}
+        openMenu={(item, event, opts) => {
+          catalogItemNameProps.openMenu(item, event, { ...opts, allowWiki: !node.unknown })
+          if (ctx && typeof ctx.onLocate === 'function' && node.key) ctx.onLocate(node.key)
+        }}
+      />
+      <WishPin
+        name={node.catalogName || node.displayName}
+        pinned={isWished(wishByCharacter, wishCharacter, node.catalogName || node.displayName)}
+        onToggle={toggleWishItem}
+      />
+    </>
+  ), [catalogItemNameProps, wishByCharacter, wishCharacter, toggleWishItem])
+
+  useEffect(() => {
+    if (tab !== 'requirements' && tab !== 'wishlist') return undefined
+    let cancelled = false
+    const copies = copiesFromImport(importMeta)
+    const items = []
+    const seen = new Set()
+    const addItem = (row) => {
+      const key = String(row.name || '').toLowerCase()
+      if (!key || seen.has(key)) return
+      seen.add(key)
+      items.push(row)
+    }
+    for (const slot of bis?.slots || []) {
+      if (!slot?.name) continue
+      const manual = upgradeTierByCharacter[wishCharacter]?.[slot.name]
+      addItem({
+        id: slot.slot,
+        name: slot.name,
+        slot: slot.slot,
+        score: slot.score,
+        target_tier: clampUpgrade(upgrade),
+        progress: upgradeProgressByCharacter[wishCharacter]?.[slot.name] || 0,
+        ...(manual == null ? {} : { current_tier: manual }),
+      })
+    }
+    for (const name of wishNamesFor(wishByCharacter, wishCharacter)) {
+      const manual = upgradeTierByCharacter[wishCharacter]?.[name]
+      addItem({
+        id: `wish:${name}`,
+        name,
+        slot: '',
+        score: null,
+        target_tier: clampUpgrade(upgrade),
+        progress: upgradeProgressByCharacter[wishCharacter]?.[name] || 0,
+        ...(manual == null ? {} : { current_tier: manual }),
+      })
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const plan = await postUpgradePlan({ character: wishCharacter, items, copies })
+        if (!cancelled) setRequirementsPlan(plan)
+      } catch (err) {
+        if (!cancelled) setError(String(err.message || err))
+      }
+      let offers = []
+      if (wishCharacter) {
+        try {
+          const loot = await getParserLoot(wishCharacter)
+          offers = (loot?.gives || []).map((row) => ({
+            item: row.item,
+            qty: row.qty,
+            npc: row.npc,
+          }))
+        } catch (_) {
+          offers = []
+        }
+      }
+      try {
+        const pos = await postPlaneOfSky({
+          character: wishCharacter,
+          achievements_text: achievementsByCharacter[wishCharacter] || '',
+          offers,
+          owned: copies.map((row) => ({ name: row.name, count: row.count })),
+          manual: posManualByCharacter[wishCharacter] || {},
+          ignored: posIgnoredByCharacter[wishCharacter] || [],
+          goal_classes: [...(classes || []), ...(posGoalClasses || [])],
+          linked_names: items.map((row) => row.name),
+          inventory_runes: inventoryRuneCounts(copies),
+        })
+        if (!cancelled) setPosView(pos)
+      } catch (err) {
+        if (!cancelled) setError(String(err.message || err))
+      }
+    }, 200)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [
+    tab, bis, upgrade, importMeta, wishCharacter, wishByCharacter,
+    upgradeTierByCharacter, upgradeProgressByCharacter, achievementsByCharacter,
+    posManualByCharacter, posIgnoredByCharacter, posGoalClasses, classes,
+  ])
+
+  const setItemProgress = useCallback((name, value) => {
+    const n = Math.max(0, Math.min(1023, Math.trunc(Number(value) || 0)))
+    setUpgradeProgressByCharacter((current) => ({
+      ...current,
+      [wishCharacter]: { ...(current[wishCharacter] || {}), [name]: n },
+    }))
+  }, [wishCharacter])
+
+  const setItemTier = useCallback((name, value) => {
+    setUpgradeTierByCharacter((current) => {
+      const inner = { ...(current[wishCharacter] || {}) }
+      if (value === '' || value == null) delete inner[name]
+      else inner[name] = Math.max(0, Math.min(10, Math.trunc(Number(value) || 0)))
+      return { ...current, [wishCharacter]: inner }
+    })
+  }, [wishCharacter])
+
+  const setPosManual = useCallback((quest, flag) => {
+    setPosManualByCharacter((current) => ({
+      ...current,
+      [wishCharacter]: { ...(current[wishCharacter] || {}), [quest]: flag },
+    }))
+  }, [wishCharacter])
+
+  const ignorePosTest = useCallback((quest) => {
+    setPosIgnoredByCharacter((current) => {
+      const list = current[wishCharacter] || []
+      if (list.includes(quest)) return current
+      return { ...current, [wishCharacter]: [...list, quest] }
+    })
+  }, [wishCharacter])
 
   return (
     <div className="app" data-workspace-ready={sessionReady ? '1' : '0'} data-active-tab={tab}>
@@ -3428,11 +3605,9 @@ export default function App() {
                       {s.name ? <ItemIcon name={s.name} /> : null}
                       {s.name ? (
                         <>
-                        <span
-                          className="bis-item-name"
-                          data-item-tip-trigger="1"
-                          tabIndex={0}
-                          onMouseEnter={(e) => {
+                        <BisItemName
+                          name={s.name}
+                          onHover={(e) => {
                             const { x, y } = tipCoordsFromPointer(e)
                             showHoverTip({
                               name: s.name,
@@ -3442,29 +3617,16 @@ export default function App() {
                               image: itemImageUrl(s.name),
                             })
                           }}
-                          onMouseMove={moveHoverTip}
-                          onFocus={(e) => {
-                            const { x, y } = tipCoordsFromPointer(e)
-                            showHoverTip({
-                              name: s.name,
-                              statsText: itemTipStatsText(s, upgrade),
-                              x,
-                              y,
-                              image: itemImageUrl(s.name),
-                            })
-                          }}
-                          onMouseLeave={hideHoverTip}
-                          onBlur={hideHoverTip}
-                        >
-                          {s.url ? (
-                            <MaybeWikiLink href={s.url} onConfirmWiki={confirmOpenEqlwiki} title={s.name}>
-                              {s.name}
-                            </MaybeWikiLink>
-                          ) : (
-                            s.name
-                          )}
-                        </span>
+                          onMove={moveHoverTip}
+                          onLeave={hideHoverTip}
+                          onOpenMenu={openMobDropMenu}
+                        />
                         <OwnedBadge owned={isOwnedName(s.name, ownedNames, s.itemID)} />
+                        <WishPin
+                          name={s.name}
+                          pinned={isWished(wishByCharacter, wishCharacter, s.name)}
+                          onToggle={toggleWishItem}
+                        />
                         </>
                       ) : (
                         bis?.owned_only ? 'Nothing owned fits this slot.' : '—'
@@ -3502,10 +3664,12 @@ export default function App() {
                               a={a}
                               upgrade={upgrade}
                               owned={isOwnedName(a.name, ownedNames, a.itemID)}
+                              wish={isWished(wishByCharacter, wishCharacter, a.name)}
                               onShowTip={showHoverTip}
                               onMoveTip={moveHoverTip}
                               onHideTip={hideHoverTip}
-                              onConfirmWiki={confirmOpenEqlwiki}
+                              onOpenMenu={openMobDropMenu}
+                              onWish={toggleWishItem}
                             />
                           ))}
                         </ul>
@@ -3514,6 +3678,59 @@ export default function App() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {tab === 'requirements' && (
+            <div className="panel">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Requirements</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                XP and motes use the Currencies ledger for {wishCharacter || 'the character you set on Currencies'}.
+                Turn-in items use the last inventory import. A copy with no +N is not treated as +0.
+              </p>
+              <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem' }}>
+                Import achievements
+                <input
+                  type="file"
+                  accept=".txt,text/plain"
+                  style={{ display: 'none' }}
+                  onChange={(event) => {
+                    const file = event.target.files && event.target.files[0]
+                    event.target.value = ''
+                    if (!file) return
+                    file.text().then((text) => {
+                      setAchievementsByCharacter((current) => ({
+                        ...current,
+                        [wishCharacter]: String(text || '').slice(0, 200000),
+                      }))
+                    }).catch((err) => setError(String(err.message || err)))
+                  }}
+                />
+              </label>
+              <RequirementsPanel
+                plan={requirementsPlan}
+                pos={posView}
+                pane={requirementsPane}
+                onPane={setRequirementsPane}
+                onProgress={setItemProgress}
+                onTier={setItemTier}
+                sortByScore={requirementsSortScore}
+                onSortByScore={setRequirementsSortScore}
+                onManual={setPosManual}
+                onIgnore={ignorePosTest}
+              />
+            </div>
+          )}
+
+          {tab === 'wishlist' && (
+            <div className="panel">
+              <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Wish list</h2>
+              <WishListPanel
+                names={wishNames}
+                plan={requirementsPlan}
+                isOwned={(name) => isOwnedName(name, ownedNames)}
+                onUnpin={toggleWishItem}
+              />
             </div>
           )}
 
@@ -4226,6 +4443,17 @@ export default function App() {
                   />
                 </label>
                 <label>
+                  Damage/Delay min
+                  <input
+                    type="number"
+                    className="item-search-min"
+                    step="0.01"
+                    aria-label="Damage/Delay minimum"
+                    value={searchRatioMin}
+                    onChange={(e) => setSearchRatioMin(e.target.value)}
+                  />
+                </label>
+                <label>
                   Compare at +{searchCompareLevel}
                   <input
                     type="range"
@@ -4247,6 +4475,7 @@ export default function App() {
                       <select value={value} onChange={(e) => setValue(e.target.value)} aria-label={label}>
                         <option value="">None</option>
                         <option value="name">Name</option>
+                        <option value={DAMAGE_DELAY_SORT}>Damage/Delay ratio</option>
                         {(searchResults?.stat_keys || []).map((key) => (
                           <option key={key} value={key}>{searchStatLabel(key)}</option>
                         ))}
@@ -4307,6 +4536,12 @@ export default function App() {
                             {it.classes_str || (it.classes || []).join(', ') || (it.catalog_source === 'eqlwiki' ? 'Non-tools / open for wiki details' : '—')}
                             {it.zone ? ` · ${it.zone}` : ''}
                           </div>
+                          {it.damage_delay_ratio != null ? (
+                            <div className="stats-line">Damage/Delay {Number(it.damage_delay_ratio).toFixed(2)}</div>
+                          ) : null}
+                          {it.damage_delay_note ? (
+                            <div className="muted" style={{ fontSize: '0.75rem' }}>{it.damage_delay_note}</div>
+                          ) : null}
                           {!rowSelected ? (
                             <div className="stats-line">
                               {collapsedPreview
@@ -4316,6 +4551,11 @@ export default function App() {
                           ) : null}
                         </div>
                       </button>
+                      <WishPin
+                        name={it.name}
+                        pinned={isWished(wishByCharacter, wishCharacter, it.name)}
+                        onToggle={toggleWishItem}
+                      />
                       {rowSelected ? (
                         <div className="item-search-expand">
                           {rowStatItem ? (
@@ -5200,46 +5440,19 @@ export default function App() {
       <ZoneModal detail={zoneDetail} onClose={() => setZoneDetail(null)} onConfirmWiki={confirmOpenEqlwiki} />
       <HelpModal markdown={helpMd} onClose={() => setHelpMd(null)} />
 
-      {dropItemMenu ? (
-        <div
-          className="mob-drop-menu"
-          style={{ left: dropItemMenu.x, top: dropItemMenu.y }}
-          role="menu"
-          aria-label={`Open ${dropItemMenu.name}`}
-        >
-          <div className="mob-drop-menu-title">{dropItemMenu.name}</div>
-          <button
-            type="button"
-            role="menuitem"
-            className="mob-drop-menu-item"
-            onClick={() => openItemInSearch(dropItemMenu.name)}
-          >
-            Open in Item Search
-          </button>
-          {dropItemMenu.allowWiki !== false ? (
-            <button
-              type="button"
-              role="menuitem"
-              className="mob-drop-menu-item"
-              onClick={() => {
-                const url = dropItemMenu.url
-                setDropItemMenu(null)
-                openEqlwikiNow(url)
-              }}
-            >
-              Open on eqlwiki
-            </button>
-          ) : null}
-          <button
-            type="button"
-            role="menuitem"
-            className="mob-drop-menu-item"
-            onClick={() => setDropItemMenu(null)}
-          >
-            Close
-          </button>
-        </div>
-      ) : null}
+      <ItemActionMenu
+        menu={dropItemMenu}
+        wishPinned={dropItemMenu ? isWished(wishByCharacter, wishCharacter, dropItemMenu.name) : false}
+        onSearch={(name) => openItemInSearch(name)}
+        onWiki={(url) => {
+          setDropItemMenu(null)
+          openEqlwikiNow(url)
+        }}
+        onWish={(name) => {
+          toggleWishItem(name)
+        }}
+        onClose={() => setDropItemMenu(null)}
+      />
 
       <WikiConfirmMenu menu={wikiConfirm} onOpen={acceptWikiConfirm} onCancel={cancelWikiConfirm} />
 

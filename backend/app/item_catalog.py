@@ -699,9 +699,64 @@ def item_stat_value(item: dict[str, Any], stat: str, level: int | None = None) -
     return _tooltip_stat(item, key)
 
 
+DAMAGE_DELAY_SORT = "damage_delay_ratio"
+
+
+def damage_delay_ratio(item: dict[str, Any], level: int | None = None) -> dict[str, Any]:
+    """Damage ÷ delay at Compare at +N.
+
+    Damage uses ``scale_stats_to_level`` on ``stats_plus0``, the same call
+    ``engine.ratio_at_level`` makes. Delay is not scaled. When that call
+    leaves damage unchanged, the ratio is the base values and ``note`` says so.
+    No damage or no delay means this is not a weapon for the sort.
+    """
+    from .engine import scale_stats_to_level
+
+    lvl = _compare_level(0 if level is None else level)
+    stats0 = item.get("stats_plus0") if isinstance(item.get("stats_plus0"), dict) else {}
+    damage = _lookup_stat(stats0, "dmg")
+    delay = _lookup_stat(stats0, "dly")
+    if damage is None or delay is None or delay == 0:
+        return {
+            "ratio": None,
+            "damage": damage,
+            "delay": delay,
+            "scales": None,
+            "note": None,
+        }
+    scaled = scale_stats_to_level(dict(stats0), lvl)
+    scaled_damage = _lookup_stat(scaled, "dmg")
+    scaled_delay = _lookup_stat(scaled, "dly")
+    if scaled_damage is None:
+        scaled_damage = damage
+    if scaled_delay is None or scaled_delay == 0:
+        scaled_delay = delay
+    at_ten = scale_stats_to_level(dict(stats0), 10)
+    ten_damage = _lookup_stat(at_ten, "dmg")
+    scales = ten_damage is not None and abs(float(ten_damage) - float(damage)) > 1e-9
+    note = None
+    if not scales:
+        used_damage = damage
+        used_delay = delay
+        note = "Damage does not scale with +N in this item's data, so the ratio uses the base values."
+    else:
+        used_damage = scaled_damage
+        used_delay = scaled_delay
+    ratio = round(float(used_damage) / float(used_delay), 2)
+    return {
+        "ratio": ratio,
+        "damage": used_damage,
+        "delay": used_delay,
+        "scales": scales,
+        "note": note,
+    }
+
+
 def _stat_sort_raw(item: dict[str, Any], key: str, level: int | None = None) -> str | float | None:
     if not key or key.casefold() == "name":
         return (item.get("name") or "").casefold()
+    if key.casefold() == DAMAGE_DELAY_SORT:
+        return damage_delay_ratio(item, level).get("ratio")
     return item_stat_value(item, key, level)
 
 
@@ -804,6 +859,7 @@ def search_items(
     compare_level: int = 0,
     stat: str | None = None,
     stat_min: float | None = None,
+    ratio_min: float | None = None,
     sort: str | None = None,
     sort_dir: str | None = None,
     sort2: str | None = None,
@@ -842,12 +898,19 @@ def search_items(
                     continue
                 if stat_min is not None and value < float(stat_min):
                     continue
+            ratio_info = damage_delay_ratio(it, level)
+            if ratio_min is not None and (
+                ratio_info.get("ratio") is None or float(ratio_info["ratio"]) < float(ratio_min)
+            ):
+                continue
             public = _public_item(it)
             skill = item_skill(it)
             if skill:
                 public["skill"] = skill
             public["compare_level"] = level
             public["stats_at_compare"] = stats_at_compare_level(it, level)
+            public["damage_delay_ratio"] = ratio_info.get("ratio")
+            public["damage_delay_note"] = ratio_info.get("note")
             hits.append(public)
         except Exception:
             continue
@@ -885,6 +948,7 @@ def search_items(
         "compare_level": level,
         "stat": (stat or "").strip() or None,
         "stat_min": stat_min,
+        "ratio_min": ratio_min,
         "sort": [key for key, _direction in levels if key],
         "items": page,
         "stat_keys": facets.get("stat_keys") or [],
