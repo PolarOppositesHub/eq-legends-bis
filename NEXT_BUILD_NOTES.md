@@ -4,11 +4,12 @@
 
 ## 1.1.9 — Overlay drag, in-app controls, appearance, DPS/HPS display
 Hotfix on 1.1.8. The frameless meters have nothing to grab, and unlocking a meter that was created locked does not call setMovable. Sync is not in this release.
-- [ ] (A) Unlocked meters show a title bar grip with `-webkit-app-region: drag`. Buttons and controls are no-drag, and content does not cover the grip. Lock calls setMovable and setResizable, hides the grip, and stays click-through. Each overlay saves position and size and restores them on launch, kept on screen if the monitors changed.
-- [ ] (B) Parser page Overlays panel: open and close DPS, Heal, and Alerts, lock or unlock one meter or all of them, and show each meter's current state. Same IPC as the tray menu. The tray still opens the meters.
-- [ ] (C) Appearance saved per overlay, with a live preview: background opacity separate from text opacity, text size, background color, accent color, show or hide the title text while locked, and reset to defaults.
-- [ ] (D) DPS and HPS display to one decimal place (212.3453433 shows as 212.3) on the DPS and Heal overlays, the Parser fight list, fight detail, group and pet rows, saved history, and alert text. One shared formatter. Raw values stay in storage and calculations. Sorting stays on the raw values.
-- [ ] Version **1.1.9** the same way 1.1.8 was bumped, with 1.1.9-only What's new lines. No release publishing.
+- [x] (A) Unlocked meters show a title bar grip with `-webkit-app-region: drag`. Buttons and controls are no-drag, and content does not cover the grip. Lock calls setMovable and setResizable, hides the grip, and stays click-through. Each overlay saves position and size and restores them on launch, kept on screen if the monitors changed.
+- [x] (B) Parser page Overlays panel: open and close DPS, Heal, and Alerts, lock or unlock one meter or all of them, and show each meter's current state. Same IPC as the tray menu. The tray still opens the meters.
+- [x] (C) Appearance saved per overlay, with a live preview: background opacity separate from text opacity, text size, background color, accent color, show or hide the title text while locked, and reset to defaults.
+- [x] (D) DPS and HPS display to one decimal place (212.3453433 shows as 212.3) on the DPS and Heal overlays, the Parser fight list, fight detail, group and pet rows, saved history, and alert text. One shared formatter. Raw values stay in storage and calculations. Sorting stays on the raw values.
+- [x] (E) Meters stay above a borderless or windowed game: setAlwaysOnTop(true, 'screen-saver') with a 'pop-up-menu' fallback, visible on all workspaces including fullscreen, skipTaskbar, and not focusable while locked. Blur, show, lock, display changes, and a 2s timer only raise the window. Blur never closes or hides it. The alert banner can clear its text and leaves the window up. Spoken and file alerts play from a hidden window, not the visible meter. No DLL or graphics injection. The Overlays panel and alert settings say to use borderless/windowed fullscreen. A read-only look at eqclient.ini warns when [VideoMode] Fullscreen=1. The game file is never written.
+- [x] Version **1.1.9** the same way 1.1.8 was bumped, with 1.1.9-only What's new lines. No release publishing.
 
 ## Upcoming (1.1.x only)
 - **1.1.10 Tue Oct 13:** sync phase 1 (event log, local queue, generic sync folder for iCloud/Dropbox, built-in OneDrive, Settings UI)

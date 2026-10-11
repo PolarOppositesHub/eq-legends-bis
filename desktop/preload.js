@@ -24,8 +24,19 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     return () => ipcRenderer.removeListener('eq:inventory-ready', listener);
   },
   openOverlay: (args) => ipcRenderer.invoke('eq:overlay-open', args),
+  closeOverlay: (args) => ipcRenderer.invoke('eq:overlay-close', args),
   setOverlayLock: (args) => ipcRenderer.invoke('eq:overlay-lock', args),
   setOverlayOpacity: (args) => ipcRenderer.invoke('eq:overlay-opacity', args),
+  setOverlayAppearance: (args) => ipcRenderer.invoke('eq:overlay-appearance', args),
+  getOverlayState: () => ipcRenderer.invoke('eq:overlay-state'),
+  getVideoMode: (args) => ipcRenderer.invoke('eq:video-mode', args),
+  onOverlayState: (cb) => {
+    const listener = (_event, state) => {
+      try { cb(state); } catch (_) { /* ignore */ }
+    };
+    ipcRenderer.on('eq:overlay-state', listener);
+    return () => ipcRenderer.removeListener('eq:overlay-state', listener);
+  },
   pickSoundFile: () => ipcRenderer.invoke('eq:pick-sound-file'),
   readSoundFile: (filePath) => ipcRenderer.invoke('eq:read-sound-file', filePath),
   onOverlayConfig: (cb) => {

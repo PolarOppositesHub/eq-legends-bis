@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.8'
+export const WHATS_NEW_ID = '1.1.9'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,14 +23,14 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.8"
+export const WHATS_NEW_TITLE = "What's new in 1.1.9"
 
 export const WHATS_NEW_POINTS = [
-  'A DPS meter and a heal meter can sit on top of the game. Lock makes a meter click-through. Fight scope uses the same fight numbers as the Parser. Zone scope sums damage and heals from saved fights in that zone and does not show a DPS rate. Exclusive fullscreen draws over every window. The meters do not send input to the game.',
-  'Alerts fire for a slow, your death, and a spell wearing off. A raid-target alert matches a name you type against a slain line. Charm break stays off because that line is unverified. A shared alert string only adds rules.',
-  'Class and level follow the newest /who line or “You have gained a level! Welcome to level N!”. You can set them in the Parser header. A newer /who replaces that setting. A level drop says to type /who. Older class sets stay as history.',
-  'Currencies has + and − next to each count, a starting count, Set all counts, and a history of looted, given, used, and counts you set. Before a starting count, loot already seen in the log is shown and is not added to the total.',
-  'An inventory import replaces only the sections in that file. Worn, bags, bank, shared bank, Dragon’s Hoard, and storage each show when they were last updated. A section older than the newest import is marked stale. Equipped gear comes from worn.',
+  'Unlocked overlay meters show a title bar you can drag. Lock hides that bar, and clicks pass through to the game. Each meter remembers where you left it and its size, and comes back on screen if the monitors changed.',
+  'The Parser page opens and closes the DPS, Heal, and Alerts overlays. You can lock or unlock one meter, or all of them, and each row shows whether that meter is open and locked. The tray menu still opens the same meters.',
+  'Each overlay keeps its own background opacity, text opacity, text size, background color, and accent color. Fading the background leaves the text readable. You can hide the title while a meter is locked, and reset that meter. The meter updates as you move a control.',
+  'DPS and HPS show one decimal place, so 212.3453433 shows as 212.3, on the meters, the fight list, fight detail, group and pet rows, saved history, and alert text. The full number stays in the saved fight and in the sort.',
+  'Overlays stay above the game in borderless or windowed mode. For overlays over the game, set EQ Legends to borderless/windowed fullscreen. Exclusive fullscreen hides overlays (sound alerts still work). If eqclient.ini says Fullscreen=1, the Overlays panel says so. Sound and spoken alerts still play.',
 ]
 
 export function currentClassText(current) {
@@ -128,10 +128,26 @@ export function formatDamage(n) {
   return sign + String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-export function formatRate(n) {
+/**
+ * Display-only DPS and HPS. One decimal place.
+ * Storage, API payloads, and sorts keep the raw number.
+ */
+export function formatPerSecond(n) {
   const v = Number(n)
   if (!Number.isFinite(v)) return '0.0'
   return (Math.round(v * 10) / 10).toFixed(1)
+}
+
+export function formatRate(n) {
+  return formatPerSecond(n)
+}
+
+/** Alert text may quote a DPS or HPS figure. Other words stay as written. */
+export function formatAlertRates(text) {
+  return String(text ?? '').replace(
+    /(-?\d+(?:\.\d+)?)(\s*)(DPS|HPS)\b/gi,
+    (_match, num, space, label) => `${formatPerSecond(num)}${space}${label}`,
+  )
 }
 
 export function sourceKindLabel(kind) {

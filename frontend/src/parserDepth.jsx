@@ -7,7 +7,7 @@ import {
   spellStats,
   timelinePeak,
 } from './parserDepth.js'
-import { formatDamage, formatFightTime, formatRate } from './parserView.js'
+import { formatDamage, formatFightTime, formatPerSecond, formatRate } from './parserView.js'
 
 function rateText(value) {
   if (value == null || !Number.isFinite(value)) return '—'
@@ -211,7 +211,7 @@ export function FightTimeline({ timeline, scope, status }) {
   const bin = timeline.bin_seconds || 1
   const peak = timelinePeak(buckets, scope, bin)
   const outgoingLabel = scope === 'pets' ? 'Pets' : (scope === 'self' ? 'You' : 'Outgoing')
-  const summary = `Peak ${outgoingLabel} ${formatRate(peak.outgoing)} DPS at ${formatDamage(peak.outgoingT)}s. Incoming peak ${formatRate(peak.incoming)} DPS at ${formatDamage(peak.incomingT)}s.`
+  const summary = `Peak ${outgoingLabel} ${formatPerSecond(peak.outgoing)} DPS at ${formatDamage(peak.outgoingT)}s. Incoming peak ${formatPerSecond(peak.incoming)} DPS at ${formatDamage(peak.incomingT)}s.`
   return (
     <TimelineChart
       buckets={buckets}
@@ -235,16 +235,19 @@ export function FightTimeline({ timeline, scope, status }) {
   )
 }
 
-export function HealingPanel({ healing, names, onOpenSpell }) {
+export function HealingPanel({ healing, names, duration, onOpenSpell }) {
   const rows = (healing?.rows || []).filter((row) => !names || names.has(String(row.source || '').toLowerCase()))
   if (!rows.length) return <p className="muted">No heals in this scope.</p>
   const sum = (key, pred) => rows.reduce((total, row) => (
     !pred || pred(row) ? total + (Number(row[key]) || 0) : total
   ), 0)
+  const seconds = Number(duration) > 0 ? Number(duration) : 0
+  const hps = seconds ? sum('actual') / seconds : 0
   return (
     <div data-testid="parser-healing">
       <p className="parser-totals">
         Actual {formatDamage(sum('actual'))}
+        {seconds ? ` · ${formatPerSecond(hps)} HPS` : ''}
         {' · full '}
         {formatDamage(sum('full'))}
         {' · overheal '}

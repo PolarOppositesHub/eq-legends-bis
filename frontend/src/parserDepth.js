@@ -10,7 +10,7 @@
 import {
   formatDamage,
   formatDuration,
-  formatRate,
+  formatPerSecond,
   formatTargets,
   formatZone,
   visibleDamage,
@@ -210,6 +210,7 @@ function finishSource(row, fightSeconds) {
   const swings = row.hits + row.misses
   const active = row.hits ? Math.max(1, row.active_seconds) : 0
   row.dps = active ? row.damage / active : 0
+  row.hps = active ? row.heals / active : 0
   row.sdps = fightSeconds > 0 ? row.damage / fightSeconds : 0
   row.hit_pct = swings ? (100 * row.hits) / swings : 0
   row.crit_pct = row.hits ? (100 * row.crits) / row.hits : 0
@@ -588,7 +589,7 @@ export function formatParseText(detail, sources, meta = {}) {
   lines.push(asciiClip(bits.length ? `${head}: ${bits.join(' | ')}` : head))
   const rows = (Array.isArray(sources) ? sources : []).filter((row) => row && !row.nested)
   for (const row of rows.slice(0, 8)) {
-    lines.push(asciiClip(`${row.source}  ${formatDamage(row.damage)} dmg  ${formatRate(row.dps)} DPS`))
+    lines.push(asciiClip(`${row.source}  ${formatDamage(row.damage)} dmg  ${formatPerSecond(row.dps)} DPS`))
     const abilities = Array.isArray(row.abilities) ? row.abilities : []
     for (const ability of abilities.filter((item) => num(item.damage) > 0).slice(0, 6)) {
       lines.push(asciiClip(
@@ -597,7 +598,7 @@ export function formatParseText(detail, sources, meta = {}) {
     }
   }
   lines.push(asciiClip(
-    `Total  ${formatDamage(visibleDamage(rows))} dmg  ${formatRate(visibleRate(rows, detail.duration_seconds))} DPS`,
+    `Total  ${formatDamage(visibleDamage(rows))} dmg  ${formatPerSecond(visibleRate(rows, detail.duration_seconds))} DPS`,
   ))
   return lines.join('\n')
 }
@@ -621,8 +622,8 @@ export function formatParseTsv(detail, sources) {
       num(row.misses),
       num(row.crits),
       num(row.max_hit),
-      formatRate(row.dps),
-      formatRate(row.sdps),
+      formatPerSecond(row.dps),
+      formatPerSecond(row.sdps),
     ].map(tsvCell).join('\t'))
     for (const ability of row.abilities || []) {
       lines.push([
@@ -680,8 +681,8 @@ export function formatParseHtml(detail, sources) {
   for (const row of sources || []) {
     if (!row || row.nested) continue
     body.push(
-      `<tr><td>${htmlEscape(row.source)}</td><td>${formatDamage(row.damage)}</td><td>${formatRate(row.dps)}</td>`
-      + `<td>${formatRate(row.sdps)}</td><td>${num(row.hits)}</td><td>${formatDamage(row.max_hit)}</td></tr>`,
+      `<tr><td>${htmlEscape(row.source)}</td><td>${formatDamage(row.damage)}</td><td>${formatPerSecond(row.dps)}</td>`
+      + `<td>${formatPerSecond(row.sdps)}</td><td>${num(row.hits)}</td><td>${formatDamage(row.max_hit)}</td></tr>`,
     )
     for (const ability of row.abilities || []) {
       body.push(

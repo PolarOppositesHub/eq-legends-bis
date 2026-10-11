@@ -6,7 +6,8 @@ import {
   postParserAlert,
   postParserAlertImport,
 } from './parserApi.js'
-import { AUTO_HIDE_NOTE, FULLSCREEN_NOTE } from './overlayView.js'
+import { AUTO_HIDE_NOTE, FULLSCREEN_NOTE, OVERLAY_GAME_NOTE } from './overlayView.js'
+import { formatAlertRates } from './parserView.js'
 
 const CHARM_NOTE = 'Charm break is unverified. No matching line is in the log corpus, so this rule stays off.'
 
@@ -23,8 +24,6 @@ export function AlertsPanel({ character }) {
   const [name, setName] = useState('')
   const [pattern, setPattern] = useState('')
   const [scope, setScope] = useState('fight')
-  const [locked, setLocked] = useState(false)
-  const [opacity, setOpacity] = useState(0.85)
   const [closeToTray, setCloseToTray] = useState(false)
 
   const refresh = () => {
@@ -67,7 +66,7 @@ export function AlertsPanel({ character }) {
       setNotice('Overlay windows open in the desktop app.')
       return
     }
-    desk.openOverlay({ id, character: character || '', scope, locked, opacity }).catch((err) => {
+    desk.openOverlay({ id, character: character || '', scope }).catch((err) => {
       setNotice(String(err?.message || err))
     })
   }
@@ -80,6 +79,7 @@ export function AlertsPanel({ character }) {
         A shared string only adds rules. It does not delete rules you already have.
       </p>
       <p className="note">{FULLSCREEN_NOTE}</p>
+      <p className="note" data-testid="overlay-game-note">{OVERLAY_GAME_NOTE}</p>
       <p className="note">{AUTO_HIDE_NOTE}</p>
       {notice ? <p className="warn-box" role="alert">{notice}</p> : null}
 
@@ -95,29 +95,6 @@ export function AlertsPanel({ character }) {
           </select>
         </label>
         <label>
-          <input type="checkbox" checked={locked} onChange={(event) => {
-            const next = event.target.checked
-            setLocked(next)
-            desktop()?.setOverlayLock?.({ locked: next })
-          }} />
-          Lock (click-through)
-        </label>
-        <label>
-          Opacity
-          <input
-            aria-label="Overlay opacity"
-            type="range"
-            min="35"
-            max="100"
-            value={Math.round(opacity * 100)}
-            onChange={(event) => {
-              const next = Number(event.target.value) / 100
-              setOpacity(next)
-              desktop()?.setOverlayOpacity?.({ opacity: next })
-            }}
-          />
-        </label>
-        <label>
           <input
             type="checkbox"
             checked={closeToTray}
@@ -130,7 +107,7 @@ export function AlertsPanel({ character }) {
           Close to tray
         </label>
       </div>
-      <p className="muted">Close to tray is off, so the window X still quits. Snap pulls a meter to the screen edge when you move it.</p>
+      <p className="muted">Lock, unlock, and appearance are on the Parser page. Close to tray is off, so the window X still quits. Snap pulls a meter to the screen edge when you move it.</p>
 
       <ul className="parser-loadouts" data-testid="alert-rules">
         {rules.map((rule) => (
@@ -253,7 +230,7 @@ export function AlertsPanel({ character }) {
       {recent.length ? (
         <ul>
           {recent.map((row) => (
-            <li key={`${row.rule_id}:${row.ts}:${row.message}`}>{row.ts} · {row.message}</li>
+            <li key={`${row.rule_id}:${row.ts}:${row.message}`}>{row.ts} · {formatAlertRates(row.message)}</li>
           ))}
         </ul>
       ) : (
