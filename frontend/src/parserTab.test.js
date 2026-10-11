@@ -10,6 +10,7 @@ import {
   PET_LEADER_HINT,
   RAID_SCOPE_NOTE,
   WHATS_NEW_TITLE,
+  currentClassText,
   describeLevelChange,
   formatZone,
   isRebuildBusy,
@@ -331,18 +332,46 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.7 notes", () => {
+test("what's new dialog shows the 1.1.8 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.7")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.7<\/h2>/)
-  assert.match(html, /highest-tier items first/)
-  assert.match(html, /Plane of Sky/)
-  assert.match(html, /token case stays unverified/)
-  assert.match(html, /Wish list/)
-  assert.match(html, /Damage\/Delay/)
-  assert.match(html, /same Item Search and eqlwiki menu/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.6<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.8")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.8<\/h2>/)
+  assert.match(html, /DPS meter/)
+  assert.match(html, /Charm break stays off/)
+  assert.match(html, /type \/who/)
+  assert.match(html, /starting count/)
+  assert.match(html, /Dragon/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.7<\/h2>/.test(html), false)
+})
+
+test('the log character class cell uses the current trio only', () => {
+  const html = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    fights: [sampleFight],
+    selectedFightId: 7,
+    detailStatus: 'ready',
+    character: 'Zasariz',
+    loadouts: [
+      { name: 'Zasariz', classes: 'PAL/DRU/WIZ', level: 36 },
+      { name: 'Zasariz', classes: 'WAR/SHD/PAL', level: 12 },
+    ],
+    current: { classes: 'PAL/DRU/WIZ', level: 36, source: 'who', ts: '2026-09-02T12:00:00', note: 'A newer /who replaced the class override.' },
+    history: [{ classes: 'WAR/SHD/PAL', level: 12, ts: '2026-08-01T12:00:00' }],
+    detail: {
+      id: 7,
+      duration_seconds: 30,
+      totals: { damage: 80, dps: 2.6 },
+      sources: [{ source: 'Zasariz', kind: 'self', damage: 80, dps: 8, sdps: 2.7, pets: [] }],
+    },
+  }))
+  assert.match(html, /PAL\/DRU\/WIZ · 36/)
+  assert.match(html, /WAR\/SHD\/PAL · 12/)
+  assert.equal(html.includes('PAL/DRU/WIZ 36 · WAR/SHD/PAL 12'), false)
+  assert.match(html, /A newer \/who replaced the class override\./)
+  assert.equal(currentClassText({ classes: 'PAL/DRU/WIZ', level: 36 }), 'PAL/DRU/WIZ 36')
 })
 
 test('group panel collapses with a down or right chevron', () => {

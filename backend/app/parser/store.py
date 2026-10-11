@@ -237,6 +237,27 @@ CREATE TABLE IF NOT EXISTS class_loadouts (
     PRIMARY KEY (character, name, classes)
 );
 
+CREATE TABLE IF NOT EXISTS class_overrides (
+    character TEXT PRIMARY KEY,
+    classes TEXT,
+    level INTEGER,
+    ts TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS alert_rules (
+    id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS alert_fires (
+    rule_id TEXT NOT NULL,
+    file_id INTEGER NOT NULL,
+    line_offset INTEGER NOT NULL,
+    ts TEXT,
+    message TEXT,
+    PRIMARY KEY (rule_id, file_id, line_offset)
+);
+
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -951,6 +972,31 @@ class ParserDB:
             (character, name, classes, level, seen_ts),
         )
 
+    def get_override(self, character: str) -> dict | None:
+        row = self.conn.execute(
+            "SELECT classes, level, ts FROM class_overrides WHERE character=?",
+            (character,),
+        ).fetchone()
+        if row is None:
+            return None
+        return {"classes": row["classes"], "level": row["level"], "ts": row["ts"]}
+
+    def set_override(self, character: str, classes: str | None, level: int | None, ts: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO class_overrides(character, classes, level, ts)
+            VALUES(?, ?, ?, ?)
+            ON CONFLICT(character) DO UPDATE SET
+                classes=excluded.classes,
+                level=excluded.level,
+                ts=excluded.ts
+            """,
+            (character, classes, level, ts),
+        )
+
+    def clear_override(self, character: str) -> None:
+        self.conn.execute("DELETE FROM class_overrides WHERE character=?", (character,))
+
     def list_loadouts(self, character: str) -> list[dict]:
         rows = self.conn.execute(
             """
@@ -994,6 +1040,59 @@ class ParserDB:
             """,
             (kind, source, *skip, character),
         )
+
+    def has_log_file(self) -> bool:
+        row = self.conn.execute("SELECT 1 FROM log_files LIMIT 1").fetchone()
+        return row is not None
+
+    def list_alert_rules(self) -> list[dict]:
+        rows = self.conn.execute("SELECT payload FROM alert_rules").fetchall()
+        out = []
+        for row in rows:
+            try:
+                out.append(json.loads(row["payload"]))
+            except json.JSONDecodeError:
+                continue
+        return out
+
+    def save_alert_rule(self, rule: dict) -> None:
+        self.conn.execute(
+            "INSERT INTO alert_rules(id, payload) VALUES(?, ?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
+            (rule["id"], json.dumps(rule)),
+        )
+
+    def alert_already_fired(self, rule_id: str, file_id: int, offset: int) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM alert_fires WHERE rule_id=? AND file_id=? AND line_offset=?",
+            (rule_id, file_id, offset),
+        ).fetchone()
+        return row is not None
+
+    def record_alert_fire(self, rule_id: str, file_id: int, offset: int, ts: str | None, message: str) -> None:
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO alert_fires(rule_id, file_id, line_offset, ts, message)
+            VALUES(?, ?, ?, ?, ?)
+            """,
+            (rule_id, file_id, offset, ts, message[:500]),
+        )
+
+    def last_alert_ts(self, rule_id: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT ts FROM alert_fires WHERE rule_id=? AND ts IS NOT NULL ORDER BY ts DESC LIMIT 1",
+            (rule_id,),
+        ).fetchone()
+        return row["ts"] if row else None
+
+    def recent_alerts(self, limit: int = 30) -> list[dict]:
+        rows = self.conn.execute(
+            """
+            SELECT rule_id, ts, message FROM alert_fires
+            ORDER BY rowid DESC LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [{"rule_id": row["rule_id"], "ts": row["ts"], "message": row["message"]} for row in rows]
 
     def count_events(self, file_id: int | None = None) -> int:
         if file_id is None:

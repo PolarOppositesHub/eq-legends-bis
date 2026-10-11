@@ -271,6 +271,74 @@ def post_group(body: GroupBody) -> dict[str, Any]:
     raise HTTPException(400, "action must be add or remove")
 
 
+class IdentityBody(BaseModel):
+    character: str
+    classes: Any = None
+    level: int | None = None
+    action: str = "set"
+
+
+class AlertRuleBody(BaseModel):
+    rule: dict[str, Any]
+
+
+class AlertShareBody(BaseModel):
+    text: str
+
+
+@router.post("/identity")
+def post_identity(body: IdentityBody) -> dict[str, Any]:
+    character = body.character.strip()
+    if not character:
+        raise HTTPException(400, "character is required")
+    service = get_service()
+    try:
+        if body.action.strip().lower() == "clear":
+            return service.clear_identity(character)
+        return service.set_identity(character, body.classes, body.level)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/meters")
+def get_meters(character: str, scope: str = "fight") -> dict[str, Any]:
+    if not character.strip():
+        raise HTTPException(400, "character is required")
+    service = get_service()
+    with service.read_guard():
+        return service.meters(character.strip(), scope)
+
+
+@router.get("/alerts")
+def get_alerts() -> dict[str, Any]:
+    service = get_service()
+    with service.read_guard():
+        return service.list_alert_rules()
+
+
+@router.post("/alerts")
+def post_alert(body: AlertRuleBody) -> dict[str, Any]:
+    try:
+        return get_service().save_alert_rule(body.rule or {})
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/alerts/import")
+def post_alert_import(body: AlertShareBody) -> dict[str, Any]:
+    try:
+        return get_service().import_alert_share(body.text)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/alerts/recent")
+def get_alert_recent() -> dict[str, Any]:
+    service = get_service()
+    with service.read_guard():
+        return service.recent_alerts()
+
+
 @router.get("/stream")
 async def stream(request: Request) -> StreamingResponse:
     """Server-Sent Events for replay progress and live fight updates."""

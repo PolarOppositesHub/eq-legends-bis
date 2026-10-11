@@ -23,6 +23,37 @@ function CountCells({ row }) {
   )
 }
 
+function currencyRows(view) {
+  return [
+    ...(view?.motes || []),
+    ...(view?.void_touched ? [view.void_touched] : []),
+    ...(view?.wind_runes || []),
+  ]
+}
+
+function CountAdjust({ row, onAdjust }) {
+  return (
+    <span className="currencies-adjust">
+      <button
+        type="button"
+        aria-label={`Decrease ${row.name}`}
+        disabled={!row.anchored}
+        onClick={() => onAdjust && onAdjust(row.name, -1)}
+      >
+        −
+      </button>
+      <button
+        type="button"
+        aria-label={`Increase ${row.name}`}
+        disabled={!row.anchored}
+        onClick={() => onAdjust && onAdjust(row.name, 1)}
+      >
+        +
+      </button>
+    </span>
+  )
+}
+
 export function CurrenciesPanel({
   character,
   onCharacter,
@@ -32,6 +63,8 @@ export function CurrenciesPanel({
   onUse,
   onCondense,
   onUndo,
+  onAdjust,
+  onSetAll,
 }) {
   const [anchorCurrency, setAnchorCurrency] = useState(MOTE_GRADES[0])
   const [anchorCount, setAnchorCount] = useState('0')
@@ -48,6 +81,8 @@ export function CurrenciesPanel({
     ...runes.map((row) => row.name),
   ].filter(Boolean)
   const ledger = (view?.ledger && ledgerName && view.ledger[ledgerName]) || []
+  const rows = currencyRows(view)
+  const needsAnchor = rows.some((row) => row.anchored === false)
 
   return (
     <div className="panel currencies" data-testid="currencies-panel">
@@ -67,9 +102,20 @@ export function CurrenciesPanel({
       </label>
       {status === 'loading' ? <p className="muted">Reading the ledger…</p> : null}
       {view?.warning ? <p className="note" data-testid="currencies-warning">{view.warning}</p> : null}
+      {view?.log_loaded === false ? (
+        <p className="note" data-testid="currencies-no-log">No log is loaded.</p>
+      ) : null}
       {view ? (
         <>
           <p className="note" data-testid="currencies-pending">{view.pending_label}</p>
+          {view.last_pickup_label ? (
+            <p className="note" data-testid="currencies-last-pickup">{view.last_pickup_label}</p>
+          ) : null}
+          {needsAnchor ? (
+            <p className="note" data-testid="currencies-anchor-banner">
+              Set a starting count to start tracking; new loot from the log is added after it.
+            </p>
+          ) : null}
           <button type="button" data-testid="currencies-used-open" onClick={() => setUseOpen(true)}>
             I used
           </button>
@@ -112,7 +158,7 @@ export function CurrenciesPanel({
             }}
           >
             <label>
-              Set currency storage
+              Starting count
               <select aria-label="Anchor currency" value={anchorCurrency} onChange={(event) => setAnchorCurrency(event.target.value)}>
                 {names.map((name) => <option key={name} value={name}>{name}</option>)}
               </select>
@@ -124,8 +170,21 @@ export function CurrenciesPanel({
               value={anchorCount}
               onChange={(event) => setAnchorCount(event.target.value)}
             />
-            <button type="submit">Set count</button>
+            <button type="submit">Starting count</button>
+            <button
+              type="button"
+              data-testid="currencies-set-all"
+              onClick={() => {
+                if (!onSetAll) return
+                const counts = {}
+                for (const row of rows) counts[row.name] = Number(row.storage) || 0
+                onSetAll(counts)
+              }}
+            >
+              Set all counts
+            </button>
           </form>
+          <p className="muted">Combine into next grade turns lower motes into one higher mote. Some XP is lost.</p>
           <table className="currencies-table">
             <thead>
               <tr>
@@ -141,7 +200,9 @@ export function CurrenciesPanel({
                 <tr key={row.name} data-currency={row.name}>
                   <td>
                     {row.name}
+                    <CountAdjust row={row} onAdjust={onAdjust} />
                     {row.item_xp != null ? <span className="muted"> · {row.item_xp} item XP</span> : null}
+                    {row.seen_label ? <span className="note" data-testid="currencies-seen">{row.seen_label}</span> : null}
                     {row.autosold_note ? <span className="badge">{row.autosold_note}</span> : null}
                     {row.condense?.warning ? <span className="note">{row.condense.warning}</span> : null}
                     {row.condense?.needs_confirmed ? <span className="note">{row.condense.note}</span> : null}
@@ -149,11 +210,17 @@ export function CurrenciesPanel({
                   <CountCells row={row} />
                   <td>
                     {row.condense ? (
-                      <button type="button" data-testid="currencies-condense" data-currency={row.name} onClick={() => onCondense && onCondense(row.name)}>
-                        Condense
+                      <button
+                        type="button"
+                        data-testid="currencies-condense"
+                        data-currency={row.name}
+                        title="Turns lower motes into one higher mote. Some XP is lost."
+                        onClick={() => onCondense && onCondense(row.name)}
+                      >
+                        Combine into next grade
                       </button>
                     ) : null}
-                    <button type="button" onClick={() => setLedgerName(row.name)}>Ledger</button>
+                    <button type="button" title="Every change to this count: looted, given, used, or set by you." onClick={() => setLedgerName(row.name)}>History</button>
                   </td>
                 </tr>
               ))}
@@ -161,11 +228,13 @@ export function CurrenciesPanel({
                 <tr key={row.name} data-currency={row.name}>
                   <td>
                     {row.name}
+                    <CountAdjust row={row} onAdjust={onAdjust} />
+                    {row.seen_label ? <span className="note" data-testid="currencies-seen">{row.seen_label}</span> : null}
                     <span className="muted"> · Plane of Sky need is on Requirements</span>
                   </td>
                   <CountCells row={row} />
                   <td>
-                    <button type="button" onClick={() => setLedgerName(row.name)}>Ledger</button>
+                    <button type="button" title="Every change to this count: looted, given, used, or set by you." onClick={() => setLedgerName(row.name)}>History</button>
                   </td>
                 </tr>
               ))}
@@ -173,7 +242,8 @@ export function CurrenciesPanel({
           </table>
           {ledgerName ? (
             <section data-testid="currencies-ledger">
-              <h3>{ledgerName}</h3>
+              <h3>History · {ledgerName}</h3>
+              <p className="muted">Every change to this count: looted, given, used, or set by you.</p>
               {ledger.length ? ledger.map((entry) => (
                 <p key={entry.id}>
                   {entry.reverted ? 'reverted ' : ''}{entry.delta > 0 ? `+${entry.delta}` : entry.delta} · {entry.evidence}
@@ -181,7 +251,7 @@ export function CurrenciesPanel({
                     <button type="button" data-testid="currencies-undo" onClick={() => onUndo && onUndo(entry.id)}>Undo</button>
                   )}
                 </p>
-              )) : <p className="muted">No ledger entries.</p>}
+              )) : <p className="muted">No history yet.</p>}
             </section>
           ) : null}
         </>

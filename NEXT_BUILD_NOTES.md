@@ -1,5 +1,24 @@
 # Next build notes
 
+**Planned as 1.1.8.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0.
+
+## 1.1.8 — Overlay meters, class/level, currencies, inventory sections
+The spec and PR plan still title overlays and alerts as 1.1.5 (SPEC §6.7 and §10.3 items 17–22). That work ships as 1.1.8, with the parser class/level fix, currencies visibility, and section-merge inventory imports. Sync is not in this release. Inventory section events are stored so a later sync can replay them (SYNC_DESIGN). Ask AI is 1.1.13.
+- [x] Overlay: frameless transparent always-on-top DPS and heal meters, fight or zone scope, lock = click-through, saved position, snap, appearance. Auto-hide stays off. Alert engine uses only verified lines (slow, death, mez/pacify fade, user-named raid targets on slain lines). Charm break stays off. Share strings add rules only. Tray menu. No input to the game.
+- [x] Parser class/level: newest timestamp wins. Manual override, then own-character /who, then `You have gained a level! Welcome to level N!`. Level-ups update the current trio. A level drop says `Type /who to refresh classes`. Older trios are history. Manual override in the Parser header, cleared by a newer /who.
+- [x] Currencies: +/− beside the typed box, seen-in-log before a starting count, Set all counts, refresh while open, last pickup time, empty state when no log is loaded. Renames: Starting count, Combine into next grade, History.
+- [x] Inventory import merges by section (worn, bags, bank, shared bank, Dragon's Hoard, storage). A missing section is kept. Clear section and Replace everything. Per-section dates and a stale flag. Owned and equipped read the merged view. Equipped is worn only.
+- [x] Version **1.1.8** the same way 1.1.7 was bumped, with 1.1.8-only What's new lines. No release publishing.
+
+## Upcoming (1.1.x only)
+- **1.1.9 Tue Oct 13:** sync phase 1 (event log, local queue, generic sync folder for iCloud/Dropbox, built-in OneDrive, Settings UI)
+- **1.1.10 Fri Oct 16:** Google Drive provider
+- **1.1.11 Tue Oct 20:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.12 Fri Oct 23:** companion features
+- **1.1.13 Tue Oct 27:** Ask AI
+
+---
+
 **Planned as 1.1.7.** Updater untouched. Never invent item stats, XP values, mote values, log or achievement formats, test names, or formulas. Anything the spec marks UNVERIFIED stays unverified and is labeled in the UI.
 
 ## 1.1.7 — BiS mote paths, Plane of Sky, wish list

@@ -36,6 +36,17 @@ const EXALTATION_RE = /\(Exaltation\)\s*$/i
 const CONTAINER_NAME_RE = /\b(?:bags?|boxes|box|satchels?|backpacks?|pouches|pouch)\b/i
 const SEARCH_STOP = new Set(['of', 'the', 'a', 'an', 'and'])
 
+const CONTAINER_SECTION = {
+  worn: 'worn',
+  general: 'bags',
+  bank: 'bank',
+  sharedbank: 'sharedbank',
+  dragonhorde: 'hoard',
+  depot: 'depot',
+  unknown: 'unknown',
+  keyring: 'storage',
+}
+
 const CONTAINER_PLACE = {
   worn: 'Worn',
   general: 'Bag',
@@ -154,6 +165,14 @@ function recordOwnedLevel(levels, name, tier, { count = 0, id } = {}) {
   if (count) bucket.count += count
 }
 
+function recordOwnedLevelStale(levels, name, tier, options, stale) {
+  recordOwnedLevel(levels, name, tier, options)
+  if (!stale) return
+  const key = ownedNameKey(itemBaseName(name))
+  const bucket = key && levels.get(key)
+  if (bucket) bucket.may_include_stale_section = true
+}
+
 function tierOfName(name) {
   const n = String(name || '').trim().replace(/\*$/, '').trim()
   const match = n.match(/(?:\s*\+\s*(\d+))\s*$/)
@@ -166,10 +185,26 @@ function tierOfName(name) {
  * the +N only. Keyring and equipment add a count only for a name not already
  * counted, so the same worn piece is not counted twice.
  */
+function staleSectionSet(importMeta) {
+  const status = importMeta?.section_status
+  const stale = new Set()
+  if (!status || typeof status !== 'object') return stale
+  for (const [id, row] of Object.entries(status)) {
+    if (row && row.stale) stale.add(id)
+  }
+  return stale
+}
+
+function sectionIsStale(stale, container) {
+  const id = CONTAINER_SECTION[container]
+  return !!(id && stale.has(id))
+}
+
 export function ownedItemLevels(importMeta) {
   const levels = new Map()
   if (!importMeta || typeof importMeta !== 'object') return []
   const counted = new Set()
+  const stale = staleSectionSet(importMeta)
   const hasAll = Array.isArray(importMeta.all_items) && importMeta.all_items.length > 0
   if (hasAll) {
     for (const row of importMeta.all_items) {
@@ -186,38 +221,40 @@ export function ownedItemLevels(importMeta) {
       if (key) counted.add(key)
     }
     for (const row of importMeta.rows || []) {
-      recordOwnedLevel(
+      recordOwnedLevelStale(
         levels,
         row.name_raw || row.name,
         row.tier ?? tierOfName(row.name_raw || row.name),
         { id: row.id || row.itemID },
+        sectionIsStale(stale, row.container_kind),
       )
     }
   } else {
     for (const row of importMeta.rows || []) {
-      recordOwnedLevel(
+      recordOwnedLevelStale(
         levels,
         row.name_raw || row.name,
         row.tier ?? tierOfName(row.name_raw || row.name),
         { count: parseCopyCount(row.count), id: row.id || row.itemID },
+        sectionIsStale(stale, row.container_kind),
       )
     }
   }
   for (const entry of importMeta.keyring || []) {
     const key = ownedNameKey(entry.name)
-    recordOwnedLevel(levels, entry.name, tierOfName(entry.name), {
+    recordOwnedLevelStale(levels, entry.name, tierOfName(entry.name), {
       count: counted.has(key) ? 0 : parseCopyCount(entry.count),
       id: entry.id || entry.itemID,
-    })
+    }, stale.has('storage'))
     if (key) counted.add(key)
   }
   const equipment = importMeta.equipment
   if (equipment && typeof equipment === 'object') {
     for (const name of Object.values(equipment)) {
       const key = ownedNameKey(name)
-      recordOwnedLevel(levels, name, tierOfName(name), {
+      recordOwnedLevelStale(levels, name, tierOfName(name), {
         count: counted.has(key) ? 0 : 1,
-      })
+      }, stale.has('worn'))
       if (key) counted.add(key)
     }
   }
@@ -559,6 +596,10 @@ export function buildCharacterView(importMeta, { hideEmpty = true } = {}) {
   for (const group of keyrings) {
     collectCopies(group.items, 'keyring', [CONTAINER_PLACE.keyring], copies)
   }
+  const stale = staleSectionSet(meta)
+  for (const copy of copies) {
+    copy.mayIncludeStaleSection = sectionIsStale(stale, copy.container)
+  }
 
   return {
     hasImport,
@@ -647,7 +688,8 @@ function finishMergeGroup(group, listed, omitted) {
     return sum + (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 1)
   }, 0)
   if (total < 2) return
-  listed.push({ ...group, total })
+  const stale = group.copies.some((copy) => copy.mayIncludeStaleSection)
+  listed.push({ ...group, total, may_include_stale_section: stale })
 }
 
 function copyNames(copy) {

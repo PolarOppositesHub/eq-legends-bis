@@ -12,10 +12,12 @@ import {
   postParserClearHistory,
   postParserConfig,
   postParserGroup,
+  postParserIdentity,
   postParserLive,
   postParserLoad,
   postParserPet,
 } from './parserApi.js'
+import { CLASS_TOKENS } from './classTokens.js'
 import {
   AbilityList,
   DeathsPanel,
@@ -65,6 +67,7 @@ import {
   formatRate,
   formatTargets,
   formatZone,
+  currentClassText,
   loadoutText,
   loadoutsFor,
   logOptionLabel,
@@ -322,6 +325,102 @@ function FragmentRow({
   )
 }
 
+function IdentityBar({ character, current, history, onSetIdentity, onClearIdentity }) {
+  const slots = Number(current?.level) > 0 && Number(current?.level) < 10 ? 2 : 3
+  const initial = String(current?.classes || '').split('/').filter(Boolean)
+  const [picks, setPicks] = useState(Array.from({ length: 3 }, (_, index) => initial[index] || ''))
+  const [level, setLevel] = useState(current?.level == null ? '' : String(current.level))
+  const [error, setError] = useState('')
+  useEffect(() => {
+    const next = String(current?.classes || '').split('/').filter(Boolean)
+    setPicks(Array.from({ length: 3 }, (_, index) => next[index] || ''))
+    setLevel(current?.level == null ? '' : String(current.level))
+  }, [current?.classes, current?.level, current?.ts, current?.source])
+  if (!character) return null
+  const shown = Number(level) > 0 && Number(level) < 10 ? 2 : slots
+  const taken = new Set(picks.filter(Boolean))
+  return (
+    <form
+      className="parser-toolbar parser-identity"
+      data-testid="parser-identity"
+      onSubmit={async (event) => {
+        event.preventDefault()
+        setError('')
+        const chosen = picks.slice(0, shown).filter(Boolean)
+        try {
+          if (onSetIdentity) await onSetIdentity(chosen, level)
+        } catch (err) {
+          setError(String(err?.message || err))
+        }
+      }}
+    >
+      <span className="muted">
+        Current {currentClassText(current) || 'unknown'}
+        {current?.source === 'manual' ? ' · set here' : ''}
+        {current?.source === 'who' ? ' · /who' : ''}
+        {current?.source === 'level' ? ' · level-up line' : ''}
+      </span>
+      {Array.from({ length: shown }, (_, index) => (
+        <label key={index}>
+          Class {index + 1}
+          <select
+            aria-label={`Class ${index + 1}`}
+            value={picks[index] || ''}
+            onChange={(event) => {
+              const next = picks.slice()
+              next[index] = event.target.value
+              setPicks(next)
+            }}
+          >
+            <option value="">—</option>
+            {CLASS_TOKENS.map(([token, label]) => (
+              <option key={token} value={token} disabled={taken.has(token) && picks[index] !== token}>
+                {token} {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      <label>
+        Level
+        <input
+          aria-label="Class level"
+          type="number"
+          min="1"
+          max="50"
+          value={level}
+          onChange={(event) => setLevel(event.target.value)}
+        />
+      </label>
+      <button type="submit">Set classes</button>
+      <button
+        type="button"
+        onClick={async () => {
+          setError('')
+          try {
+            if (onClearIdentity) await onClearIdentity()
+          } catch (err) {
+            setError(String(err?.message || err))
+          }
+        }}
+      >
+        Clear
+      </button>
+      {current?.note ? <span className="note" data-testid="parser-identity-note">{current.note}</span> : null}
+      {error ? <span className="warn-box" role="alert">{error}</span> : null}
+      {Array.isArray(history) && history.length ? (
+        <ul className="parser-loadouts" data-testid="parser-class-history">
+          {history.map((row) => (
+            <li key={`${row.classes}:${row.level}:${row.ts}`}>
+              {row.classes} · {row.level}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </form>
+  )
+}
+
 export function ParserPanel({
   folder,
   logs,
@@ -351,6 +450,10 @@ export function ParserPanel({
   groupMembers = [],
   allowlist = [],
   loadouts = [],
+  current = null,
+  history = [],
+  onSetIdentity,
+  onClearIdentity,
   petBindings = [],
   character = '',
   onAddAllow,
@@ -542,6 +645,14 @@ export function ParserPanel({
       ) : (
         <p className="note">EQ install folder is not set.</p>
       )}
+
+      <IdentityBar
+        character={character || selected?.character || ''}
+        current={current}
+        history={history}
+        onSetIdentity={onSetIdentity}
+        onClearIdentity={onClearIdentity}
+      />
 
       {logsStatus === 'loading' ? <p className="muted">Looking for logs…</p> : null}
       {logsError ? <p className="warn-box" role="alert">{logsError}</p> : null}
@@ -955,7 +1066,10 @@ export function ParserPanel({
                       {sources.map((row) => {
                         const binding = (Array.isArray(petBindings) ? petBindings : []).find((pet) => pet.pet === row.source)
                         const evidence = petEvidenceLabel(binding?.evidence)
-                        const classesFor = loadoutText(loadoutsFor(row.source, classes))
+                        const mine = character && String(row.source || '').toLowerCase() === String(character).toLowerCase()
+                        const classesFor = mine
+                          ? currentClassText(current)
+                          : loadoutText(loadoutsFor(row.source, classes))
                         const open = !!openSources[row.source]
                         const abilities = Array.isArray(row.abilities) ? row.abilities : []
                         return (
@@ -1538,6 +1652,22 @@ export default function ParserTab({
       groupMembers={roster.group}
       allowlist={roster.allowlist}
       loadouts={roster.loadouts}
+      current={roster.current || null}
+      history={roster.history || []}
+      onSetIdentity={async (classes, level) => {
+        const name = characterRef.current
+        if (!name) return
+        await postParserIdentity({ character: name, classes, level, action: 'set' })
+        const body = await getParserRoster(name)
+        setRoster(body || emptyRoster)
+      }}
+      onClearIdentity={async () => {
+        const name = characterRef.current
+        if (!name) return
+        await postParserIdentity({ character: name, action: 'clear' })
+        const body = await getParserRoster(name)
+        setRoster(body || emptyRoster)
+      }}
       petBindings={roster.pets}
       character={selected?.character || ''}
       groupCollapsed={groupCollapsed}

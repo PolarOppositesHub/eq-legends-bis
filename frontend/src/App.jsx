@@ -21,6 +21,8 @@ import {
   getMobDetail,
   getCurrencies,
   setCurrencyAnchor,
+  adjustCurrency,
+  setAllCurrencyCounts,
   recordCurrencyUsed,
   condenseCurrency,
   undoCurrency,
@@ -57,6 +59,8 @@ import {
   scaleTooltipLines,
 } from './itemUpgradeStats.js'
 import ParserTab from './ParserTab.jsx'
+import { openParserStream } from './parserApi.js'
+import { AlertsPanel } from './AlertsTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
 import { CurrenciesPanel } from './currenciesView.jsx'
@@ -71,6 +75,7 @@ import {
   withChangedFile,
 } from './inventoryImport.js'
 import { CharacterPanel, OwnedBadge } from './characterView.jsx'
+import { applySectionImport, clearSection, localSectionStamp, sectionUpdatedLabel } from './inventorySections.js'
 import {
   createHoverTipSession,
   dismissHover,
@@ -1013,6 +1018,9 @@ export default function App() {
   const [suggestions, setSuggestions] = useState(null)
   const [importMsg, setImportMsg] = useState('')
   const [importMeta, setImportMeta] = useState(null)
+  const [replaceInventory, setReplaceInventory] = useState(false)
+  const replaceInventoryRef = useRef(false)
+  replaceInventoryRef.current = replaceInventory
   const [ownedOnly, setOwnedOnly] = useState(false)
   const [uiSettings, setUiSettings] = useState(() => loadUiSettings())
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -1867,22 +1875,19 @@ export default function App() {
       }
       const eq = parsed.equipment || {}
       const wornUpg = upgradesFromImportHints(eq, parsed.upgrade_hints, parsed.worn)
-      setEquipment(eq)
-      setWornUpgrades(wornUpg)
-      setImportMeta({
-        unmatched_count: parsed.unmatched_count || 0,
-        unmatched: parsed.unmatched || [],
-        all_items: parsed.all_items || [],
-        worn: parsed.worn || [],
+      const stamp = localSectionStamp()
+      const merged = applySectionImport(importMetaRef.current, {
+        ...parsed,
         equipment: eq,
         wornUpgrades: wornUpg,
-        upgrade_hints: parsed.upgrade_hints || {},
-        skipped_count: parsed.skipped_count || 0,
+      }, {
+        ts: stamp,
+        replaceAll: !!opts.replaceAll,
         source: sourceLabel || '',
-        rows: parsed.rows || [],
-        keyring: parsed.keyring || [],
-        unknown_rows: parsed.unknown_rows || [],
       })
+      setEquipment(merged.equipment || {})
+      setWornUpgrades(merged.wornUpgrades || {})
+      setImportMeta(merged)
       const importedCharacter = characterFromInventoryFile(sourceLabel)
       if (importedCharacter) {
         try {
@@ -1896,25 +1901,30 @@ export default function App() {
           /* import succeeded; the ledger can be refreshed from the Currencies tab */
         }
       }
-      const wornN = Object.keys(eq).length
-      const hinted = Object.values(wornUpg).filter((n) => n > 0).length
+      const wornN = Object.keys(merged.equipment || {}).length
+      const hinted = Object.values(merged.wornUpgrades || {}).filter((n) => n > 0).length
+      const sectionNotes = Object.values(merged.section_status || {})
+        .filter((row) => row && row.updated_at === stamp)
+        .map((row) => `${row.title}: ${sectionUpdatedLabel(row)}`)
       setImportMsg(
         `Imported ${wornN} worn slots` +
         (hinted ? ` · ${hinted} at imported +N` : ' · all unmarked names treated as +0') +
         (parsed.skipped_count ? ` · skipped ${parsed.skipped_count} bag/nested lines` : '') +
         (sourceLabel ? ` from ${sourceLabel}` : '') +
-        (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item catalog (see debug)` : '')
+        (parsed.unmatched_count ? ` · ${parsed.unmatched_count} names not in item catalog (see debug)` : '') +
+        (opts.replaceAll ? ' · replaced every section' : '') +
+        (sectionNotes.length ? ` · ${sectionNotes.join('; ')}` : '')
       )
       if (opts.switchTab) setTab(opts.switchTab)
       if (classes.length >= 1) {
         try {
-          const sug = await upgradeSuggestions(suggestionBody(eq, wornUpg))
+          const sug = await upgradeSuggestions(suggestionBody(merged.equipment || {}, merged.wornUpgrades || {}))
           setSuggestions(sug)
         } catch (_) {
           /* import succeeded; upgrade list can be refreshed via Apply / Recalculate */
         }
         try {
-          await runSim(eq, wornUpg)
+          await runSim(merged.equipment || {}, merged.wornUpgrades || {})
         } catch (_) {
           /* runSim sets its own error */
         }
@@ -2089,7 +2099,7 @@ export default function App() {
       }
       setError('')
       try {
-        const ok = await applyInventoryTextRef.current(result.text, result.name, {})
+        const ok = await applyInventoryTextRef.current(result.text, result.name, { replaceAll: replaceInventoryRef.current })
         if (ok) noteImported({ name: result.name })
       } catch (err) {
         setImportMsg('')
@@ -2157,7 +2167,7 @@ export default function App() {
     }
     setError('')
     try {
-      const ok = await applyInventoryText(result.text, result.name, { switchTab: opts.switchTab || 'sim' })
+      const ok = await applyInventoryText(result.text, result.name, { switchTab: opts.switchTab || 'sim', replaceAll: replaceInventory })
       if (ok) noteImported({ name: result.name })
     } catch (e) {
       setImportMsg('')
@@ -2225,7 +2235,7 @@ export default function App() {
         setError(read?.message || 'Could not read Inventory.txt.')
         return
       }
-      const ok = await applyInventoryText(read.text, chosen.name, { switchTab: opts.switchTab })
+      const ok = await applyInventoryText(read.text, chosen.name, { switchTab: opts.switchTab, replaceAll: replaceInventory })
       if (ok) noteImported(chosen)
     } catch (e) {
       setImportMsg('')
@@ -3059,6 +3069,30 @@ export default function App() {
     }
   }, [tab, currencyCharacter])
 
+  useEffect(() => {
+    if (tab !== 'currencies') return undefined
+    const name = (currencyCharacter || '').trim()
+    if (!name) return undefined
+    let cancelled = false
+    const load = () => {
+      getCurrencies(name).then((view) => {
+        if (cancelled) return
+        setCurrencyView(view)
+        setCurrencyStatus('ready')
+      }).catch(() => {})
+    }
+    const timer = setInterval(load, 20000)
+    const stream = openParserStream({
+      fight: () => load(),
+      message: () => load(),
+    })
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      stream.close()
+    }
+  }, [tab, currencyCharacter])
+
   const wishCharacter = (currencyCharacter || '').trim() || characterFromInventoryFile(importMeta?.source || '')
   const wishNames = wishNamesFor(wishByCharacter, wishCharacter)
   const toggleWishItem = useCallback((itemName) => {
@@ -3077,6 +3111,7 @@ export default function App() {
     { id: 'mobs', label: 'Mobs' },
     { id: 'search', label: 'Item Search' },
     { id: 'parser', label: 'Parser' },
+    { id: 'alerts', label: 'Alerts' },
   ]
   const simClassDecision = simulatorRecalcDecision(classes, characterLevel)
 
@@ -3761,6 +3796,14 @@ export default function App() {
                     </button>
                   </>
                 )}
+                <label className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={replaceInventory}
+                    onChange={(event) => setReplaceInventory(event.target.checked)}
+                  />
+                  Replace everything
+                </label>
                 <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
                   Import Inventory.txt
                   <input
@@ -3795,6 +3838,13 @@ export default function App() {
                 renderItemName={renderCharacterItem}
                 collapsed={characterCollapsed}
                 onCollapsedChange={setCharacterCollapsed}
+                onClearSection={(section) => {
+                  const next = clearSection(importMeta, section, localSectionStamp())
+                  if (!next) return
+                  setImportMeta(next)
+                  setEquipment(next.equipment || {})
+                  setWornUpgrades(next.wornUpgrades || {})
+                }}
               />
             </div>
           )}
@@ -4347,7 +4397,31 @@ export default function App() {
                   setError(String(err.message || err))
                 }
               }}
+              onAdjust={async (currency, delta) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await adjustCurrency({ character: who, currency, delta })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
+              onSetAll={async (counts) => {
+                const who = (currencyCharacter || '').trim()
+                if (!who) return
+                try {
+                  const view = await setAllCurrencyCounts({ character: who, counts })
+                  setCurrencyView(view)
+                } catch (err) {
+                  setError(String(err.message || err))
+                }
+              }}
             />
+          )}
+
+          {tab === 'alerts' && (
+            <AlertsPanel character={(String(parserLogPath || '').split(/[/\\]/).pop().match(/^eqlog_([^_]+)_/i) || [])[1] || (currencyCharacter || '').trim()} />
           )}
 
           {tab === 'search' && (
@@ -4761,6 +4835,14 @@ export default function App() {
                       </button>
                     </>
                   )}
+                  <label className="muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={replaceInventory}
+                      onChange={(event) => setReplaceInventory(event.target.checked)}
+                    />
+                    Replace everything
+                  </label>
                   <label className="gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: 8, border: '1px solid #b8962e', background: 'var(--accent)', color: 'var(--accent-text)', fontWeight: 600, cursor: 'pointer' }}>
                     Import Inventory.txt
                     <input

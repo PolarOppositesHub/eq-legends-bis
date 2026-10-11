@@ -1487,3 +1487,14 @@ input[type="text"], select, input[type="range"] {
 }
 .chip-have { color: #d7f5d0; }
 .chip-need { color: #f3d2a2; }
+.character-section-dates { list-style: none; padding: 0; margin: 0.4rem 0; }
+.character-section-dates li { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin: 0.2rem 0; }
+.currencies-adjust { margin-left: 0.35rem; }
+.currencies-adjust button { min-width: 1.8rem; }
+html[data-overlay], html[data-overlay] body, html[data-overlay] #root { background: transparent; margin: 0; }
+.overlay-window { color: #f5f0e6; background: rgba(10, 10, 10, 0.78); border: 1px solid rgba(184, 150, 46, 0.45); border-radius: 8px; padding: 0.45rem 0.6rem; font: 13px/1.35 system-ui, sans-serif; }
+.overlay-title { font-weight: 700; margin-bottom: 0.25rem; }
+.overlay-rows { list-style: none; margin: 0; padding: 0; }
+.overlay-rows li { display: flex; justify-content: space-between; gap: 0.75rem; }
+.overlay-note, .overlay-banner { margin: 0.25rem 0; }
+.parser-identity { align-items: end; }

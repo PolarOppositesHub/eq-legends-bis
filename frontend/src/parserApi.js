@@ -83,13 +83,31 @@ export const getParserFightLines = (id) =>
 export const postParserClearHistory = (character) =>
   req('/api/parser/history/clear', { method: 'POST', body: JSON.stringify({ character }) })
 
+export const postParserIdentity = (body) =>
+  req('/api/parser/identity', { method: 'POST', body: JSON.stringify(body) })
+
+export const getParserMeters = (character, scope = 'fight') => {
+  const q = new URLSearchParams({ character: character || '', scope: scope || 'fight' })
+  return req(`/api/parser/meters?${q}`)
+}
+
+export const getParserAlerts = () => req('/api/parser/alerts')
+
+export const postParserAlert = (rule) =>
+  req('/api/parser/alerts', { method: 'POST', body: JSON.stringify({ rule }) })
+
+export const postParserAlertImport = (text) =>
+  req('/api/parser/alerts/import', { method: 'POST', body: JSON.stringify({ text }) })
+
+export const getParserAlertsRecent = () => req('/api/parser/alerts/recent')
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {
     return { close() {} }
   }
   const source = new EventSource('/api/parser/stream')
-  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message']
+  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message', 'alert']
   for (const type of types) {
     source.addEventListener(type, (ev) => {
       let data = null

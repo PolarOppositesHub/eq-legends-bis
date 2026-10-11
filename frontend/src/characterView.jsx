@@ -6,6 +6,7 @@ import {
   scrollCharacterSlotIntoView,
   searchCharacterCopies,
 } from './characterView.js'
+import { sectionUpdatedLabel } from './inventorySections.js'
 
 export function OwnedBadge({ owned }) {
   if (!owned) return null
@@ -188,12 +189,18 @@ function MergeList({ merge, renderItemName, onLocate, collapsed, onToggle }) {
                     onLocate={onLocate}
                   />
                   <ul>
+                    {group.may_include_stale_section ? (
+                      <span className="note" data-testid="merge-stale-section">may include stale section</span>
+                    ) : null}
                     {group.copies.map((copy) => (
                       <li key={copy.key}>
                         <button type="button" className="zone-link" onClick={() => onLocate(copy.key)}>
                           {copy.place}
                           {Number(copy.copyCount) > 1 ? ` ×${copy.copyCount}` : ''}
                         </button>
+                        {copy.mayIncludeStaleSection ? (
+                          <span className="note">may include stale section</span>
+                        ) : null}
                       </li>
                     ))}
                   </ul>
@@ -240,6 +247,25 @@ function CarriedSection({ section, highlightKey, renderItemName, onLocate, colla
   )
 }
 
+function SectionDates({ status, onClearSection }) {
+  const rows = status && typeof status === 'object' ? Object.entries(status) : []
+  if (!rows.length) return null
+  return (
+    <ul className="character-section-dates" data-testid="character-section-dates">
+      {rows.map(([id, row]) => (
+        <li key={id} data-section={id}>
+          <span>{row.title || id}: {sectionUpdatedLabel(row)}</span>
+          {typeof onClearSection === 'function' ? (
+            <button type="button" data-testid="character-clear-section" data-section={id} onClick={() => onClearSection(id)}>
+              Clear section
+            </button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function CharacterView({
   view,
   hideEmpty,
@@ -252,6 +278,8 @@ export function CharacterView({
   renderItemName,
   collapsed,
   onToggle,
+  sectionStatus,
+  onClearSection,
 }) {
   const otherCount = (view?.otherSections || []).reduce((sum, group) => sum + group.rows.length, 0)
   const locate = typeof onLocate === 'function' ? onLocate : () => {}
@@ -296,6 +324,7 @@ export function CharacterView({
       ) : (query || '').trim() ? (
         <p className="muted">No matching items in this import.</p>
       ) : null}
+      <SectionDates status={sectionStatus} onClearSection={onClearSection} />
       <label className="muted character-hide-empty">
         <input
           type="checkbox"
@@ -463,6 +492,7 @@ export function CharacterPanel({
   renderItemName,
   collapsed,
   onCollapsedChange,
+  onClearSection,
 }) {
   const [hideEmpty, setHideEmpty] = useState(true)
   const [highlightKey, setHighlightKey] = useState('')
@@ -501,6 +531,8 @@ export function CharacterPanel({
       renderItemName={renderItemName}
       collapsed={closed}
       onToggle={toggle}
+      sectionStatus={importMeta?.section_status}
+      onClearSection={onClearSection}
     />
   )
 }
