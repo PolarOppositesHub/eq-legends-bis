@@ -1,5 +1,24 @@
 # Next build notes
 
+**Planned as 1.1.10.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.10 — Sync phase 1 and overlay close
+Sync phase 1. Google Drive is not in this release (1.1.11). The provider interface can take it later. Ask AI stays 1.1.14.
+- [x] Event log per character: append-only events `{id, ts, device_id, source: log|manual|import, type, payload}`. Replay sorted by `(ts, device_id, id)`. Devices merge by union of id. Nothing in the log is overwritten. Currency ledger rows, manual +/− and starting counts, wish list pins, Parser class/level overrides, per-character settings, and inventory section imports (one event per section, newest section wins). If two devices set the same count, the newest set wins and the other stays in History. Log de-dupe id is hash(character, raw line, line timestamp, device_id). Each PC adds only its own log lines. Existing local data migrates into events once, with its original timestamps.
+- [x] Storage: `EQLegendsBiS-sync/manifest.json` and `events/<character>/<device_id>.jsonl`. This device writes only its own file. Write a temp file, then rename. A conflicted-copy file is merged too (union by id). Offline edits sit in a local queue and catch up later. Sync on launch, about every 2 minutes, about 10 seconds after a change, on Sync now, and on quit.
+- [x] Providers this release: Sync folder (iCloud Drive, Dropbox, or any folder) and built-in OneDrive. OneDrive uses Microsoft Graph App Folder (`/me/drive/special/approot`), Entra public client `868f921b-3445-4b09-90bf-13b343145256`, authority `/common`, scopes `Files.ReadWrite.AppFolder offline_access`, the system browser, and loopback `http://localhost:<random port>` with PKCE. Refresh tokens use Electron safeStorage. iCloud tip: Always keep on this device. A placeholder that cannot be read yet says waiting for iCloud to download, not a hard error.
+- [x] Settings: provider, sign in/out or choose folder, device name, last synced, Sync now, and status/errors. Data stays scoped per character.
+- [x] Overlays: Close all on the Parser Overlays panel. The unlocked drag bar Close text becomes a compact X (no-drag, aria-label Close overlay). Closing still saves open false.
+- [x] Version **1.1.10** the same way 1.1.9 was bumped, with 1.1.10-only What's new lines. No release publishing.
+
+## Upcoming (1.1.x only)
+- **1.1.11 Fri Oct 16:** Google Drive provider
+- **1.1.12 Tue Oct 20:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.13 Fri Oct 23:** companion features
+- **1.1.14 Tue Oct 27:** Ask AI
+
+---
+
 **Planned as 1.1.9.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.9 — Overlay drag, in-app controls, appearance, DPS/HPS display

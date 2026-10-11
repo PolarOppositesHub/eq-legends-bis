@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 const test = require('node:test')
 const {
   overlayBrowserOptions,
@@ -8,6 +10,7 @@ const {
   overlayRaisePlan,
   alertPlaybackPlan,
   alertContentDismiss,
+  closedOverlayPatch,
   snapBounds,
   keepOnScreen,
   overlayRoute,
@@ -15,6 +18,15 @@ const {
   appearanceFromRow,
   APPEARANCE_DEFAULTS,
 } = require('./overlayWindows')
+
+test('closing an overlay keeps it closed', () => {
+  const patch = closedOverlayPatch()
+  assert.equal(patch.open, false)
+  assert.equal(Object.keys(patch).length, 1)
+  const main = fs.readFileSync(path.join(__dirname, 'main.js'), 'utf8')
+  assert.match(main, /closedOverlayPatch\(\)/)
+  assert.equal(main.includes('saveOverlay(id, { open: false })'), false)
+})
 
 test('a locked overlay is click-through and not resizable', () => {
   const options = overlayBrowserOptions('dps', { locked: true, x: 12, y: 40, width: 300, height: 200 })

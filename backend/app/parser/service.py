@@ -1063,6 +1063,7 @@ class ParserService:
             current = self._current_locked(character)
         if not self._replaying:
             self.hub.publish({"type": "roster", "character": character})
+        self._notify_identity(character, trio, number, stamp, cleared=False)
         return {"ok": True, "character": character, "current": current}
 
     def clear_identity(self, character: str) -> dict:
@@ -1072,7 +1073,50 @@ class ParserService:
             current = self._current_locked(character)
         if not self._replaying:
             self.hub.publish({"type": "roster", "character": character})
+        self._notify_identity(character, None, None, self._stamp(), cleared=True)
         return {"ok": True, "character": character, "current": current}
+
+    def _notify_identity(self, character: str, classes, level, ts: str, *, cleared: bool) -> None:
+        if getattr(self, "_sync_silent", False):
+            return
+        listener = getattr(self, "sync_listener", None)
+        if listener is None:
+            return
+        try:
+            listener(character, {
+                "ts": ts,
+                "source": "manual",
+                "type": "parser_identity",
+                "payload": {"classes": classes, "level": level, "cleared": cleared},
+            })
+        except Exception:
+            return
+
+    def apply_synced_identity(self, character: str, identity: dict) -> None:
+        """Apply a replayed override when it is newer than the one stored here."""
+        if not isinstance(identity, dict):
+            return
+        with self.db.lock:
+            current = self.db.get_override(character)
+        current_ts = str((current or {}).get("ts") or "")
+        incoming_ts = str(identity.get("ts") or "")
+        if current is not None and incoming_ts < current_ts:
+            return
+        self._sync_silent = True
+        try:
+            if identity.get("cleared"):
+                with self.db.lock:
+                    self.db.clear_override(character)
+                    self.db.commit()
+                return
+            classes = identity.get("classes")
+            level = identity.get("level")
+            stamp = incoming_ts or self._stamp()
+            with self.db.lock:
+                self.db.set_override(character, classes, level if isinstance(level, int) else level, stamp)
+                self.db.commit()
+        finally:
+            self._sync_silent = False
 
     def _current_locked(self, character: str) -> dict | None:
         resolved = resolve_current(self.db.list_level_events(character), self.db.get_override(character))

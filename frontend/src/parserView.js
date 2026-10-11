@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.9'
+export const WHATS_NEW_ID = '1.1.10'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,14 +23,12 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.9"
+export const WHATS_NEW_TITLE = "What's new in 1.1.10"
 
 export const WHATS_NEW_POINTS = [
-  'Unlocked overlay meters show a title bar you can drag. Lock hides that bar, and clicks pass through to the game. Each meter remembers where you left it and its size, and comes back on screen if the monitors changed.',
-  'The Parser page opens and closes the DPS, Heal, and Alerts overlays. You can lock or unlock one meter, or all of them, and each row shows whether that meter is open and locked. The tray menu still opens the same meters.',
-  'Each overlay keeps its own background opacity, text opacity, text size, background color, and accent color. Fading the background leaves the text readable. You can hide the title while a meter is locked, and reset that meter. The meter updates as you move a control.',
-  'DPS and HPS show one decimal place, so 212.3453433 shows as 212.3, on the meters, the fight list, fight detail, group and pet rows, saved history, and alert text. The full number stays in the saved fight and in the sort.',
-  'Overlays stay above the game in borderless or windowed mode. For overlays over the game, set EQ Legends to borderless/windowed fullscreen. Exclusive fullscreen hides overlays (sound alerts still work). If eqclient.ini says Fullscreen=1, the Overlays panel says so. Sound and spoken alerts still play.',
+  'Settings can sync a character’s currency counts, wish list, class and level, and inventory sections with another PC. Choose a Sync folder (iCloud Drive, Dropbox, or any folder you pick) or sign in to OneDrive. Each PC writes only its own file, and the newest count is the one that shows.',
+  'If that folder is in iCloud Drive, mark it Always keep on this device. When iCloud has not downloaded a file yet, sync says waiting for iCloud to download.',
+  'The Parser Overlays panel has Close all. An unlocked meter’s drag bar closes that meter with a compact X. Closing a meter keeps it closed the next time you open the app.',
 ]
 
 export function currentClassText(current) {

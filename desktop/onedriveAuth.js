@@ -1,0 +1,190 @@
+/**
+ * OneDrive sign-in for the public client.
+ * System browser, loopback http://localhost:<port>, PKCE. The refresh token
+ * stays in Electron safeStorage. Tests pass the crypto and file helpers in.
+ */
+const crypto = require('crypto')
+const http = require('http')
+
+const CLIENT_ID = '868f921b-3445-4b09-90bf-13b343145256'
+const AUTHORITY = 'https://login.microsoftonline.com/common'
+const SCOPES = 'Files.ReadWrite.AppFolder offline_access'
+
+function pkcePair(randomBytes = (n) => crypto.randomBytes(n)) {
+  const verifier = randomBytes(32).toString('base64url')
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url')
+  return { verifier, challenge }
+}
+
+function authorizeUrl({ redirectUri, state, challenge }) {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: redirectUri,
+    response_mode: 'query',
+    scope: SCOPES,
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  })
+  return `${AUTHORITY}/oauth2/v2.0/authorize?${params.toString()}`
+}
+
+function tokenUrl() {
+  return `${AUTHORITY}/oauth2/v2.0/token`
+}
+
+/** Display name from the access token Microsoft already issued. Empty if it has none. */
+function accountFromAccessToken(accessToken) {
+  const parts = String(accessToken || '').split('.')
+  if (parts.length < 2) return ''
+  try {
+    const json = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'))
+    return String(json.preferred_username || json.upn || json.unique_name || json.name || '')
+  } catch (_) {
+    return ''
+  }
+}
+
+function tokenRequestBody({ grant, redirectUri, code, verifier, refreshToken }) {
+  const body = new URLSearchParams({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    grant_type: grant,
+  })
+  if (grant === 'authorization_code') {
+    body.set('code', code || '')
+    body.set('redirect_uri', redirectUri || '')
+    body.set('code_verifier', verifier || '')
+  } else {
+    body.set('refresh_token', refreshToken || '')
+  }
+  return body.toString()
+}
+
+function sealRefreshToken(token, deps) {
+  if (!deps.isEncryptionAvailable()) {
+    return { ok: false, error: 'This PC cannot store the OneDrive sign-in safely.' }
+  }
+  deps.writeFile(deps.tokenPath, deps.encryptString(token))
+  return { ok: true }
+}
+
+function openRefreshToken(deps) {
+  if (!deps.exists(deps.tokenPath) || !deps.isEncryptionAvailable()) return ''
+  return deps.decryptString(deps.readFile(deps.tokenPath))
+}
+
+function forgetRefreshToken(deps) {
+  if (deps.exists(deps.tokenPath)) deps.removeFile(deps.tokenPath)
+  return { ok: true }
+}
+
+function listenLoopback(httpLib = http) {
+  return new Promise((resolve, reject) => {
+    const server = httpLib.createServer()
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port
+      resolve({ server, port, redirectUri: `http://localhost:${port}` })
+    })
+  })
+}
+
+function waitForCode(server, state) {
+  return new Promise((resolve, reject) => {
+    const onRequest = (req, res) => {
+      const host = (req.headers && req.headers.host) || 'localhost'
+      let parsed
+      try {
+        parsed = new URL(req.url || '/', `http://${host}`)
+      } catch (err) {
+        res.writeHead(400)
+        res.end('Bad redirect')
+        return
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+      res.end('<p>You can close this window and return to EQ Legends BiS.</p>')
+      server.close()
+      if (parsed.searchParams.get('state') !== state) {
+        reject(new Error('OneDrive sign-in did not match this app.'))
+        return
+      }
+      const error = parsed.searchParams.get('error')
+      if (error) {
+        reject(new Error(parsed.searchParams.get('error_description') || error))
+        return
+      }
+      resolve(parsed.searchParams.get('code') || '')
+    }
+    server.on('request', onRequest)
+  })
+}
+
+async function signInOneDrive(deps) {
+  const { verifier, challenge } = pkcePair(deps.randomBytes)
+  const state = (deps.randomBytes || crypto.randomBytes)(16).toString('hex')
+  const { server, redirectUri } = await listenLoopback(deps.http || http)
+  const codePromise = waitForCode(server, state)
+  const timer = setTimeout(() => {
+    server.close()
+  }, deps.timeoutMs || 180000)
+  try {
+    await deps.openExternal(authorizeUrl({ redirectUri, state, challenge }))
+    const code = await codePromise
+    if (!code) return { ok: false, error: 'OneDrive did not return a code.' }
+    const token = await deps.request(tokenUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenRequestBody({
+        grant: 'authorization_code',
+        redirectUri,
+        code,
+        verifier,
+      }),
+    })
+    const access = token && token.access_token
+    const refresh = token && token.refresh_token
+    if (!access || !refresh) return { ok: false, error: 'OneDrive did not return a refresh token.' }
+    const sealed = sealRefreshToken(refresh, deps)
+    if (!sealed.ok) return sealed
+    const account = token.account || accountFromAccessToken(access) || 'OneDrive'
+    return { ok: true, access_token: access, account }
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) }
+  } finally {
+    clearTimeout(timer)
+    try { server.close() } catch (_) { /* already closed */ }
+  }
+}
+
+async function refreshAccessToken(deps) {
+  const refresh = openRefreshToken(deps)
+  if (!refresh) return { ok: false, signedOut: true }
+  const token = await deps.request(tokenUrl(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: tokenRequestBody({ grant: 'refresh_token', refreshToken: refresh }),
+  })
+  if (!token || !token.access_token) return { ok: false, error: 'OneDrive sign-in expired. Sign in again.' }
+  if (token.refresh_token) sealRefreshToken(token.refresh_token, deps)
+  const account = token.account || accountFromAccessToken(token.access_token) || 'OneDrive'
+  return { ok: true, access_token: token.access_token, account }
+}
+
+module.exports = {
+  CLIENT_ID,
+  AUTHORITY,
+  SCOPES,
+  pkcePair,
+  authorizeUrl,
+  tokenUrl,
+  tokenRequestBody,
+  accountFromAccessToken,
+  sealRefreshToken,
+  openRefreshToken,
+  forgetRefreshToken,
+  listenLoopback,
+  signInOneDrive,
+  refreshAccessToken,
+}

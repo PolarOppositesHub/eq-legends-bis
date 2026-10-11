@@ -1522,7 +1522,14 @@ html[data-overlay], html[data-overlay] body, html[data-overlay] #root {
   border-radius: 8px 8px 0 0;
 }
 .overlay-grip-title { font-weight: 700; pointer-events: none; }
-.overlay-grip-actions { display: flex; gap: 0.3rem; }
+.overlay-grip-actions { display: flex; gap: 0.3rem; align-items: center; }
+.overlay-close {
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  line-height: 1;
+  border-radius: 4px;
+}
 .overlay-no-drag,
 .overlay-grip button,
 .overlay-grip-actions,

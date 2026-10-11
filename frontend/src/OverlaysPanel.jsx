@@ -4,6 +4,7 @@ import {
   EXCLUSIVE_FULLSCREEN_WARNING,
   OVERLAY_CHOICES,
   OVERLAY_GAME_NOTE,
+  closeAllIds,
   overlayAppearance,
 } from './overlayView.js'
 
@@ -121,6 +122,17 @@ export function OverlaysPanel({ character, folder = '', fullscreenWarning = '' }
     desk.setOverlayLock({ id, locked }).catch(fail)
   }
 
+  const closeAll = () => {
+    const desk = desktop()
+    const ids = closeAllIds(rows, OVERLAY_CHOICES)
+    if (!desk?.closeOverlay) {
+      setNotice('Overlay windows open in the desktop app.')
+      return
+    }
+    setNotice('')
+    for (const id of ids) desk.closeOverlay({ id }).catch(fail)
+  }
+
   const lockAll = (locked) => {
     const desk = desktop()
     if (!desk?.setOverlayLock) {
@@ -155,6 +167,7 @@ export function OverlaysPanel({ character, folder = '', fullscreenWarning = '' }
       {videoWarning ? <p className="warn-box" data-testid="overlay-fullscreen-warning">{videoWarning}</p> : null}
       {notice ? <p className="warn-box" role="alert">{notice}</p> : null}
       <div className="overlays-actions">
+        <button type="button" data-testid="overlays-close-all" onClick={closeAll}>Close all</button>
         <button type="button" data-testid="overlays-lock-all" onClick={() => lockAll(true)}>Lock all</button>
         <button type="button" data-testid="overlays-unlock-all" onClick={() => lockAll(false)}>Unlock all</button>
       </div>

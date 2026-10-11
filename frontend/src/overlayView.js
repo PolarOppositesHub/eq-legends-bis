@@ -102,6 +102,20 @@ export function meterRows(payload) {
   })
 }
 
+export function overlayCloseControl(locked) {
+  return {
+    visible: !locked,
+    noDrag: true,
+    label: 'Close overlay',
+    text: '×',
+  }
+}
+
+export function closeAllIds(rows, choices) {
+  const list = Array.isArray(choices) ? choices : []
+  return list.filter((choice) => rows?.[choice.id]?.open).map((choice) => choice.id)
+}
+
 export function overlayIdFromSearch(search) {
   const params = new URLSearchParams(search || '')
   const id = params.get('overlay')
