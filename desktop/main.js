@@ -16,6 +16,7 @@ const fs = require('fs');
 const workspaceStore = require('./workspaceSessionStore');
 const { InventoryFolderWatcher, isInventoryFileName } = require('./inventoryWatcher');
 const overlayLib = require('./overlayWindows');
+const eqclientIni = require('./eqclientIni');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -29,6 +30,8 @@ if (process.platform === 'win32') {
 
 let mainWindow = null;
 let tray = null;
+let alertHost = null;
+let overlayRaiseTimer = null;
 let quitting = false;
 const overlayWindows = new Map();
 
@@ -319,6 +322,9 @@ function showMainUi() {
   setupUpdater();
   ensureTray();
   restoreOverlays();
+  ensureAlertHost();
+  ensureOverlayRaiseLoop();
+  watchOverlayDisplays();
 }
 
 function requestSplashFade() {
@@ -535,37 +541,139 @@ function saveOverlay(id, patch) {
   writeSettings({ overlays });
 }
 
-function applyOverlayLock(win, locked) {
-  const call = overlayLib.clickThroughCall(locked);
+function overlayDisplays() {
+  try { return screen.getAllDisplays(); } catch (_) { return []; }
+}
+
+function overlayConfig(id, saved) {
+  const appearance = overlayLib.appearanceFromRow(saved);
+  return {
+    id,
+    open: saved.open !== false,
+    locked: !!saved.locked,
+    scope: saved.scope === 'zone' ? 'zone' : 'fight',
+    character: saved.character || '',
+    ...appearance,
+  };
+}
+
+function broadcastOverlayState() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const map = overlayLib.readOverlayMap(readSettings());
+  const state = {};
+  for (const id of overlayLib.OVERLAY_IDS) {
+    const row = map[id] || {};
+    const win = overlayWindows.get(id);
+    state[id] = {
+      ...overlayConfig(id, row),
+      open: !!(win && !win.isDestroyed()),
+    };
+  }
+  try { mainWindow.webContents.send('eq:overlay-state', state); } catch (_) { /* ignore */ }
+}
+
+function sendOverlayConfig(win, id, saved) {
+  if (!win || win.isDestroyed()) return;
+  try { win.webContents.send('eq:overlay-config', overlayConfig(id, saved)); } catch (_) { /* ignore */ }
+}
+
+function lockedFor(id) {
+  return !!((overlayLib.readOverlayMap(readSettings())[id] || {}).locked);
+}
+
+function raiseOverlay(win, locked) {
+  if (!win || win.isDestroyed()) return;
+  const plan = overlayLib.overlayRaisePlan('raise', !!locked);
+  if (plan.hide || plan.close) return;
   try {
-    if (call.forward) win.setIgnoreMouseEvents(true, { forward: true });
+    win.setAlwaysOnTop(true, plan.level);
+  } catch (_) {
+    try { win.setAlwaysOnTop(true, plan.fallbackLevel); } catch (_) { /* ignore */ }
+  }
+  try {
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: !!plan.visibleOnFullScreen });
+  } catch (_) { /* ignore */ }
+  try { win.setSkipTaskbar(true); } catch (_) { /* ignore */ }
+  try { win.setFocusable(plan.focusable); } catch (_) { /* ignore */ }
+}
+
+function raiseAllOverlays() {
+  for (const [id, win] of overlayWindows) raiseOverlay(win, lockedFor(id));
+}
+
+function ensureOverlayRaiseLoop() {
+  if (overlayRaiseTimer) return;
+  overlayRaiseTimer = setInterval(raiseAllOverlays, overlayLib.RAISE_INTERVAL_MS);
+}
+
+function watchOverlayDisplays() {
+  if (watchOverlayDisplays.done) return;
+  watchOverlayDisplays.done = true;
+  try {
+    screen.on('display-added', raiseAllOverlays);
+    screen.on('display-removed', raiseAllOverlays);
+    screen.on('display-metrics-changed', raiseAllOverlays);
+  } catch (_) { /* ignore */ }
+}
+
+function applyOverlayLock(win, locked) {
+  const call = overlayLib.lockWindowCalls(locked);
+  try {
+    if (call.ignoreMouse.forward) win.setIgnoreMouseEvents(true, { forward: true });
     else win.setIgnoreMouseEvents(false);
   } catch (_) { /* ignore */ }
-  try { win.setResizable(!locked); } catch (_) { /* ignore */ }
+  try { win.setMovable(call.movable); } catch (_) { /* ignore */ }
+  try { win.setResizable(call.resizable); } catch (_) { /* ignore */ }
+  raiseOverlay(win, locked);
+}
+
+function setOverlayLocked(id, locked) {
+  const saved = { ...(overlayLib.readOverlayMap(readSettings())[id] || {}), locked: !!locked };
+  saveOverlay(id, { locked: !!locked });
+  const win = overlayWindows.get(id);
+  if (win && !win.isDestroyed()) {
+    applyOverlayLock(win, !!locked);
+    sendOverlayConfig(win, id, saved);
+  }
 }
 
 function openOverlayWindow(id, patch = {}) {
   if (!overlayLib.OVERLAY_IDS.includes(id) || !apiPort) return null;
   const saved = { ...(overlayLib.readOverlayMap(readSettings())[id] || {}), ...patch, open: true };
-  saveOverlay(id, {
-    open: true,
-    locked: !!saved.locked,
+  const appearance = overlayLib.appearanceFromRow(saved);
+  const size = overlayLib.defaultSize(id);
+  const placed = overlayLib.keepOnScreen({
     x: saved.x,
     y: saved.y,
-    width: saved.width,
-    height: saved.height,
-    opacity: saved.opacity,
+    width: saved.width || size.width,
+    height: saved.height || size.height,
+  }, overlayDisplays());
+  const record = {
+    open: true,
+    locked: !!saved.locked,
+    x: saved.x == null ? placed.x : placed.x,
+    y: saved.y == null ? placed.y : placed.y,
+    width: placed.width,
+    height: placed.height,
+    opacity: appearance.backgroundOpacity,
     scope: saved.scope === 'zone' ? 'zone' : 'fight',
     character: saved.character || '',
-  });
+    ...appearance,
+  };
+  if (saved.x == null) delete record.x;
+  if (saved.y == null) delete record.y;
+  saveOverlay(id, record);
+  const stored = { ...saved, ...record };
   let win = overlayWindows.get(id);
   if (win && !win.isDestroyed()) {
-    applyOverlayLock(win, !!saved.locked);
+    applyOverlayLock(win, !!stored.locked);
     win.show();
-    try { win.webContents.send('eq:overlay-config', { id, ...saved }); } catch (_) { /* ignore */ }
+    raiseOverlay(win, !!stored.locked);
+    sendOverlayConfig(win, id, stored);
+    broadcastOverlayState();
     return win;
   }
-  const options = overlayLib.overlayBrowserOptions(id, saved);
+  const options = overlayLib.overlayBrowserOptions(id, stored, overlayDisplays());
   win = new BrowserWindow({
     ...options,
     title: 'EQ Legends BiS',
@@ -576,14 +684,28 @@ function openOverlayWindow(id, patch = {}) {
     },
   });
   overlayWindows.set(id, win);
-  applyOverlayLock(win, !!saved.locked);
-  const route = overlayLib.overlayRoute(id, saved.character, saved.scope);
+  applyOverlayLock(win, !!stored.locked);
+  const keepUp = () => {
+    if (!win || win.isDestroyed()) return;
+    const plan = overlayLib.overlayRaisePlan('blur', lockedFor(id));
+    if (plan.hide || plan.close) return;
+    raiseOverlay(win, lockedFor(id));
+  };
+  win.on('blur', keepUp);
+  win.on('show', keepUp);
+  if (stored.x != null && stored.y != null && (options.x !== stored.x || options.y !== stored.y || options.width !== stored.width || options.height !== stored.height)) {
+    saveOverlay(id, { x: options.x, y: options.y, width: options.width, height: options.height });
+  }
+  const route = overlayLib.overlayRoute(id, stored.character, stored.scope);
   win.loadURL(`http://127.0.0.1:${apiPort}${route}`).catch(() => {});
   win.webContents.on('did-finish-load', () => {
-    try { win.webContents.send('eq:overlay-config', { id, ...saved }); } catch (_) { /* ignore */ }
+    const latest = overlayLib.readOverlayMap(readSettings())[id] || stored;
+    sendOverlayConfig(win, id, latest);
   });
   const persist = () => {
-    if (!win || win.isDestroyed() || saved.locked) return;
+    if (!win || win.isDestroyed()) return;
+    const current = overlayLib.readOverlayMap(readSettings())[id] || {};
+    if (current.locked) return;
     const bounds = win.getBounds();
     let area = null;
     try { area = screen.getDisplayMatching(bounds).workArea; } catch (_) { /* ignore */ }
@@ -596,14 +718,27 @@ function openOverlayWindow(id, patch = {}) {
       height: snapped.height,
       open: true,
     });
+    broadcastOverlayState();
   };
   win.on('moved', persist);
   win.on('resized', persist);
   win.on('closed', () => {
     overlayWindows.delete(id);
     if (!quitting) saveOverlay(id, { open: false });
+    broadcastOverlayState();
   });
+  broadcastOverlayState();
   return win;
+}
+
+function closeOverlayWindow(id) {
+  const win = overlayWindows.get(id);
+  if (win && !win.isDestroyed()) {
+    win.close();
+    return;
+  }
+  saveOverlay(id, { open: false });
+  broadcastOverlayState();
 }
 
 function restoreOverlays() {
@@ -611,6 +746,28 @@ function restoreOverlays() {
   for (const id of overlayLib.OVERLAY_IDS) {
     if (map[id] && map[id].open) openOverlayWindow(id);
   }
+}
+
+function ensureAlertHost() {
+  if (!apiPort) return null;
+  if (alertHost && !alertHost.isDestroyed()) return alertHost;
+  alertHost = new BrowserWindow({
+    show: false,
+    skipTaskbar: true,
+    focusable: false,
+    frame: false,
+    width: 320,
+    height: 180,
+    title: 'EQ Legends BiS alerts',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  alertHost.loadURL(`http://127.0.0.1:${apiPort}/?alertHost=1`).catch(() => {});
+  alertHost.on('blur', () => { /* sound host stays open when the game is focused */ });
+  return alertHost;
 }
 
 function ensureTray() {
@@ -631,11 +788,8 @@ function ensureTray() {
       {
         label: 'Unlock meters',
         click: () => {
-          for (const id of overlayLib.OVERLAY_IDS) {
-            const win = overlayWindows.get(id);
-            if (win && !win.isDestroyed()) applyOverlayLock(win, false);
-            saveOverlay(id, { locked: false });
-          }
+          for (const id of overlayLib.OVERLAY_IDS) setOverlayLocked(id, false);
+          broadcastOverlayState();
         },
       },
       { label: 'Quit', click: () => { quitting = true; app.quit(); } },
@@ -655,36 +809,77 @@ function ensureTray() {
 ipcMain.handle('eq:overlay-open', async (_evt, args) => {
   const id = args && args.id;
   ensureTray();
-  openOverlayWindow(id, {
-    character: (args && args.character) || '',
-    scope: args && args.scope === 'zone' ? 'zone' : 'fight',
-    locked: !!(args && args.locked),
-    opacity: args && args.opacity,
-  });
+  const patch = {};
+  if (args && typeof args.character === 'string') patch.character = args.character;
+  if (args && (args.scope === 'zone' || args.scope === 'fight')) patch.scope = args.scope;
+  if (args && typeof args.locked === 'boolean') patch.locked = args.locked;
+  if (args && args.opacity != null) patch.backgroundOpacity = args.opacity;
+  openOverlayWindow(id, patch);
+  return { ok: true };
+});
+
+ipcMain.handle('eq:overlay-close', async (_evt, args) => {
+  const id = args && args.id;
+  if (overlayLib.OVERLAY_IDS.includes(id)) closeOverlayWindow(id);
   return { ok: true };
 });
 
 ipcMain.handle('eq:overlay-lock', async (_evt, args) => {
   const locked = !!(args && args.locked);
-  for (const [id, win] of overlayWindows) {
-    if (win && !win.isDestroyed()) {
-      applyOverlayLock(win, locked);
-      try { win.webContents.send('eq:overlay-config', { id, locked }); } catch (_) { /* ignore */ }
-    }
-    saveOverlay(id, { locked });
-  }
+  const only = args && args.id;
+  const ids = overlayLib.OVERLAY_IDS.includes(only) ? [only] : overlayLib.OVERLAY_IDS;
+  for (const id of ids) setOverlayLocked(id, locked);
+  broadcastOverlayState();
   return { ok: true };
 });
 
 ipcMain.handle('eq:overlay-opacity', async (_evt, args) => {
   const opacity = args && args.opacity;
-  for (const [id, win] of overlayWindows) {
-    saveOverlay(id, { opacity });
-    if (win && !win.isDestroyed()) {
-      try { win.webContents.send('eq:overlay-config', { id, opacity }); } catch (_) { /* ignore */ }
-    }
+  const only = args && args.id;
+  const ids = overlayLib.OVERLAY_IDS.includes(only) ? [only] : overlayLib.OVERLAY_IDS;
+  for (const id of ids) {
+    const saved = overlayLib.readOverlayMap(readSettings())[id] || {};
+    const appearance = overlayLib.appearanceFromRow({ ...saved, backgroundOpacity: opacity, opacity });
+    saveOverlay(id, { ...appearance, opacity: appearance.backgroundOpacity });
+    const win = overlayWindows.get(id);
+    sendOverlayConfig(win, id, { ...saved, ...appearance });
   }
+  broadcastOverlayState();
   return { ok: true };
+});
+
+ipcMain.handle('eq:overlay-appearance', async (_evt, args) => {
+  const id = args && args.id;
+  if (!overlayLib.OVERLAY_IDS.includes(id)) return { ok: false };
+  const saved = overlayLib.readOverlayMap(readSettings())[id] || {};
+  const appearance = args && args.reset
+    ? { ...overlayLib.APPEARANCE_DEFAULTS }
+    : overlayLib.appearanceFromRow({ ...saved, ...args });
+  saveOverlay(id, { ...appearance, opacity: appearance.backgroundOpacity });
+  const win = overlayWindows.get(id);
+  sendOverlayConfig(win, id, { ...saved, ...appearance });
+  broadcastOverlayState();
+  return { ok: true, appearance };
+});
+
+ipcMain.handle('eq:video-mode', async (_evt, args) => {
+  const settings = readSettings();
+  const folder = (args && args.folder) || settings.eqInstallFolder || '';
+  return eqclientIni.readEqClientVideoMode(folder);
+});
+
+ipcMain.handle('eq:overlay-state', async () => {
+  const map = overlayLib.readOverlayMap(readSettings());
+  const state = {};
+  for (const id of overlayLib.OVERLAY_IDS) {
+    const row = map[id] || overlayLib.appearanceFromRow({});
+    const win = overlayWindows.get(id);
+    state[id] = {
+      ...overlayConfig(id, row),
+      open: !!(win && !win.isDestroyed()),
+    };
+  }
+  return state;
 });
 
 ipcMain.handle('eq:pick-sound-file', async () => {
@@ -1076,6 +1271,10 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   quitting = true;
+  if (overlayRaiseTimer) {
+    clearInterval(overlayRaiseTimer);
+    overlayRaiseTimer = null;
+  }
   stopInventoryWatcher();
   stopApi();
 });

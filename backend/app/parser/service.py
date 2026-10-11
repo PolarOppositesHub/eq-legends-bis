@@ -1200,6 +1200,7 @@ class ParserService:
                             "damage": row.get("damage") or 0,
                             "dps": row.get("dps"),
                             "sdps": row.get("sdps"),
+                            "hps": row.get("hps"),
                             "heals": row.get("heals") or 0,
                         })
                 return {

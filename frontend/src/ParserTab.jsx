@@ -64,6 +64,7 @@ import {
   formatDamage,
   formatDuration,
   formatFightTime,
+  formatPerSecond,
   formatRate,
   formatTargets,
   formatZone,
@@ -77,6 +78,7 @@ import {
   visibleDamage,
   visibleRate,
 } from './parserView.js'
+import { OverlaysPanel } from './OverlaysPanel.jsx'
 
 function HistoryControls({
   retentionDays,
@@ -261,8 +263,8 @@ function FragmentRow({
         </td>
         <td>{sourceKindLabel(row.kind)}{binding?.owner ? ` of ${binding.owner}` : ''}</td>
         <td>{formatDamage(row.damage)}</td>
-        <td>{formatRate(row.dps)}</td>
-        <td>{formatRate(row.sdps)}</td>
+        <td>{formatPerSecond(row.dps)}</td>
+        <td>{formatPerSecond(row.sdps)}</td>
         <td>{formatDamage(row.hits)}</td>
         <td>{formatRate(critPct)}%</td>
         <td>{formatDamage(row.max_hit)}</td>
@@ -586,6 +588,8 @@ export function ParserPanel({
         Reads <code>Logs\eqlog_name_server.txt</code> from the EQ install folder.
         Damage, DPS, and SDPS come from that file.
       </p>
+
+      <OverlaysPanel character={character || selected?.character || ''} folder={folder || ''} />
 
       <div className="parser-toolbar">
         <div className="field" style={{ minWidth: 280, flex: '1 1 280px' }}>
@@ -928,7 +932,7 @@ export function ParserPanel({
                         </td>
                         <td>{formatDuration(fight.duration_seconds)}</td>
                         <td>{formatDamage(fight.damage)}</td>
-                        <td>{formatRate(fight.your_dps)}</td>
+                        <td>{formatPerSecond(fight.your_dps)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1043,7 +1047,7 @@ export function ParserPanel({
                 <p className="parser-totals" data-testid="parser-totals">
                   Total damage {formatDamage(visibleDamage(sources))}
                   {' · '}
-                  {formatRate(visibleRate(sources, detail.duration_seconds))} DPS
+                  {formatPerSecond(visibleRate(sources, detail.duration_seconds))} DPS
                   {' · '}
                   {formatDuration(detail.duration_seconds)}
                 </p>
@@ -1105,7 +1109,7 @@ export function ParserPanel({
               <p className="muted">No damage from you, your pet, or your group in this fight.</p>
             ) : null}
             {detail && detailTab === 'healing' ? (
-              <HealingPanel healing={detail.healing} names={scoped} onOpenSpell={openSpell} />
+              <HealingPanel healing={detail.healing} names={scoped} duration={detail.duration_seconds} onOpenSpell={openSpell} />
             ) : null}
             {detail && detailTab === 'tanking' ? (
               <TankingPanel tanking={detail.tanking} names={scoped} />

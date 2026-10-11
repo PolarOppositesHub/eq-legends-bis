@@ -3,6 +3,8 @@ import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ParserPanel } from './ParserTab.jsx'
+import { OverlaysPanel } from './OverlaysPanel.jsx'
+import { EXCLUSIVE_FULLSCREEN_WARNING, OVERLAY_GAME_NOTE } from './overlayView.js'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import {
   LEVEL_LOADOUT_NOTE,
@@ -10,6 +12,7 @@ import {
   PET_LEADER_HINT,
   RAID_SCOPE_NOTE,
   WHATS_NEW_TITLE,
+  formatPerSecond,
   currentClassText,
   describeLevelChange,
   formatZone,
@@ -148,13 +151,13 @@ test('merge-pets toggle nests pets when on and lists them separately when off', 
 
   assert.match(onHtml, /data-testid="parser-merge-pets"/)
   assert.match(onHtml, /Merge pets/)
-  assert.match(onHtml, /<input[^>]*checked=""[^>]*>/)
+  assert.match(onHtml.split('data-testid="parser-merge-pets"')[1], /<input[^>]*checked=""[^>]*>/)
   assert.match(onHtml, /data-source="a warder" data-nested="1"/)
   assert.match(onHtml, /data-source="Zasariz" data-nested="0"/)
   assert.match(onHtml, /data-source="Amop" data-nested="0"/)
   assert.match(onHtml, /↳ a warder/)
 
-  assert.equal(/<input[^>]*checked=""/.test(offHtml), false)
+  assert.equal(/checked=""/.test(offHtml.split('data-testid="parser-merge-pets"')[1].split('</label>')[0]), false)
   assert.match(offHtml, /data-source="a warder" data-nested="0"/)
   assert.equal(offHtml.includes('data-nested="1"'), false)
   assert.match(offHtml, />Pet</)
@@ -332,17 +335,75 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.8 notes", () => {
+test("what's new dialog shows the 1.1.9 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.8")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.8<\/h2>/)
-  assert.match(html, /DPS meter/)
-  assert.match(html, /Charm break stays off/)
-  assert.match(html, /type \/who/)
-  assert.match(html, /starting count/)
-  assert.match(html, /Dragon/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.7<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.9")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.9<\/h2>/)
+  assert.match(html, /title bar/)
+  assert.match(html, /Lock hides that bar/)
+  assert.match(html, /background opacity/)
+  assert.match(html, /212\.3/)
+  assert.match(html, /borderless\/windowed fullscreen/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.8<\/h2>/.test(html), false)
+})
+
+test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {
+  const html = markup(React.createElement(OverlaysPanel, {
+    fullscreenWarning: EXCLUSIVE_FULLSCREEN_WARNING,
+  }))
+  assert.match(html, new RegExp(OVERLAY_GAME_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(html, /data-testid="overlay-fullscreen-warning"/)
+  assert.match(html, /Fullscreen=0/)
+  assert.match(html, /Alt\+Enter/)
+  const quiet = markup(React.createElement(OverlaysPanel, {}))
+  assert.equal(quiet.includes('data-testid="overlay-fullscreen-warning"'), false)
+  assert.match(quiet, /borderless\/windowed fullscreen/)
+})
+
+test('parser DPS and HPS show one decimal while the raw rate stays sortable', () => {
+  assert.equal(formatPerSecond(212.3453433), '212.3')
+  const html = markup(panel({
+    logs: [{ path: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt', name: 'eqlog_Zasariz_qeynos.txt', character: 'Zasariz', server: 'qeynos' }],
+    logsStatus: 'ready',
+    selectedPath: 'C:\\EQ\\Logs\\eqlog_Zasariz_qeynos.txt',
+    character: 'Zasariz',
+    fights: [{
+      id: 3,
+      start_ts: '2026-08-04T22:00:01',
+      zone: 'Befallen',
+      targets: ['a rat'],
+      duration_seconds: 10,
+      damage: 2123,
+      your_dps: 212.3453433,
+    }],
+    selectedFightId: 3,
+    detailStatus: 'ready',
+    detail: {
+      id: 3,
+      duration_seconds: 10,
+      targets: ['a rat'],
+      zone: 'Befallen',
+      sources: [
+        { source: 'Zasariz', kind: 'self', damage: 2000, dps: 212.3453433, sdps: 200, hits: 4, crits: 1, max_hit: 80, heals: 100, pets: [] },
+        { source: 'a warder', kind: 'pet', owner: 'Zasariz', damage: 123, dps: 12.06, sdps: 12.3, hits: 1, crits: 0, max_hit: 123, pets: [], nested: true },
+      ],
+      healing: { rows: [{ source: 'Zasariz', target: 'Zasariz', spell: 'Valor', actual: 100, full: 100, overheal: 0, hits: 1, crits: 0 }] },
+    },
+  }))
+  assert.match(html, /data-testid="overlays-panel"/)
+  assert.match(html, /Open DPS/)
+  assert.match(html, /Open Heal/)
+  assert.match(html, /Open Alerts/)
+  assert.match(html, /Lock all/)
+  assert.match(html, /Unlock all/)
+  assert.match(html, /Reset to defaults/)
+  assert.match(html, /Closed · Unlocked/)
+  assert.match(html, />212\.3</)
+  assert.equal(html.includes('212.3453433'), false)
+  const ordered = [212.31, 212.3453433].sort((a, b) => b - a)
+  assert.equal(ordered[0], 212.3453433)
+  assert.equal(formatPerSecond(ordered[0]), formatPerSecond(ordered[1]))
 })
 
 test('the log character class cell uses the current trio only', () => {

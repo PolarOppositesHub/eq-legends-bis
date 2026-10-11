@@ -100,6 +100,7 @@ class SourceAgg:
             "dot": self.dot,
             "ds": self.ds,
             "dps": self.damage / active if self.damage else 0.0,
+            "hps": self.heals / active if self.heals else 0.0,
             "sdps": self.damage / fight_seconds if self.damage else 0.0,
             "active_seconds": active if self.hits else 0.0,
             "hit_pct": (100.0 * self.hits / swings) if swings else 0.0,
@@ -669,6 +670,7 @@ def merge_pet_rows(rows: list[dict]) -> list[dict]:
                     "dot": 0,
                     "ds": 0,
                     "dps": 0.0,
+                    "hps": 0.0,
                     "sdps": 0.0,
                     "active_seconds": 0.0,
                     "hit_pct": 0.0,
@@ -692,6 +694,7 @@ def merge_pet_rows(rows: list[dict]) -> list[dict]:
         # combined active window.
         if name in pets_for or host.get("kind") == "pet":
             host["dps"] = (host["damage"] / active) if host["damage"] else 0.0
+            host["hps"] = (host["heals"] / active) if host.get("heals") else 0.0
         host["hit_pct"] = (100.0 * host["hits"] / swings) if swings else 0.0
         host["crit_pct"] = (100.0 * host["crits"] / host["hits"]) if host["hits"] else 0.0
         host["pets"] = pets_for.get(name, [])
