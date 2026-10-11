@@ -65,6 +65,9 @@ import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
 import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
+import { SyncBridge } from './SyncBridge.jsx'
+import { SyncSettingsHost } from './SyncSettings.jsx'
+import { snapshotFromWorkspace } from './syncSettings.js'
 import { simulatorRecalcDecision } from './simulatorClasses.js'
 import { InventoryWatchStatus } from './inventoryImport.jsx'
 import {
@@ -3094,6 +3097,35 @@ export default function App() {
   }, [tab, currencyCharacter])
 
   const wishCharacter = (currencyCharacter || '').trim() || characterFromInventoryFile(importMeta?.source || '')
+  const syncSnapshot = useMemo(() => snapshotFromWorkspace({
+    wishByCharacter,
+    upgradeProgressByCharacter,
+    upgradeTierByCharacter,
+    posManualByCharacter,
+    posIgnoredByCharacter,
+    achievementsByCharacter,
+    importMeta,
+    inventoryCharacter: wishCharacter,
+  }), [
+    wishByCharacter,
+    upgradeProgressByCharacter,
+    upgradeTierByCharacter,
+    posManualByCharacter,
+    posIgnoredByCharacter,
+    achievementsByCharacter,
+    importMeta,
+    wishCharacter,
+  ])
+  const applySync = useCallback((next) => {
+    if (!next) return
+    if (next.wishByCharacter) setWishByCharacter(next.wishByCharacter)
+    if (next.upgradeProgressByCharacter) setUpgradeProgressByCharacter(next.upgradeProgressByCharacter)
+    if (next.upgradeTierByCharacter) setUpgradeTierByCharacter(next.upgradeTierByCharacter)
+    if (next.posManualByCharacter) setPosManualByCharacter(next.posManualByCharacter)
+    if (next.posIgnoredByCharacter) setPosIgnoredByCharacter(next.posIgnoredByCharacter)
+    if (next.achievementsByCharacter) setAchievementsByCharacter(next.achievementsByCharacter)
+    if (next.importMeta) setImportMeta(next.importMeta)
+  }, [])
   const wishNames = wishNamesFor(wishByCharacter, wishCharacter)
   const toggleWishItem = useCallback((itemName) => {
     setWishByCharacter((current) => toggleWish(current, wishCharacter, itemName))
@@ -3268,6 +3300,7 @@ export default function App() {
 
   return (
     <div className="app" data-workspace-ready={sessionReady ? '1' : '0'} data-active-tab={tab}>
+      <SyncBridge snapshot={syncSnapshot} onApply={applySync} enabled={sessionReady} />
       <LoadingOverlay
         open={loadJobs.length > 0}
         jobs={loadJobs}
@@ -5430,6 +5463,7 @@ export default function App() {
                   Enabled
                 </label>
               </div>
+              <SyncSettingsHost />
               <div className="settings-row">
                 <div>
                   <label>Working session</label>

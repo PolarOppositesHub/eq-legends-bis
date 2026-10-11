@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     ipcRenderer.on('eq:overlay-config', listener);
     return () => ipcRenderer.removeListener('eq:overlay-config', listener);
   },
+  syncTouch: () => ipcRenderer.invoke('eq:sync-touch'),
+  pickSyncFolder: () => ipcRenderer.invoke('eq:pick-sync-folder'),
+  signInOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-in'),
+  signOutOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-out'),
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

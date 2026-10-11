@@ -3,6 +3,7 @@ import test from 'node:test'
 import { ownedNameSet } from './characterView.js'
 import {
   applySectionImport,
+  applySyncedSections,
   clearSection,
   migrateSnapshot,
   sectionUpdatedLabel,
@@ -105,4 +106,27 @@ test('an old single snapshot is dated at its original import time', () => {
   assert.equal(migrated.section_events[0].ts, T1)
   assert.equal(migrated.section_events.every((event) => event.type === 'inventory_section'), true)
   assert.ok(migrated.section_events.some((event) => event.payload.section === 'hoard'))
+})
+
+test('a synced section event unions by id and the newest section wins', () => {
+  const local = applySectionImport(null, parsed({}), { ts: T1 })
+  const remote = [{
+    id: 'remote-worn',
+    ts: T2,
+    device_id: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    source: 'import',
+    type: 'inventory_section',
+    payload: {
+      section: 'worn',
+      rows: [{ name: 'New Cloak', container_kind: 'worn', parent_idx: null }],
+      equipment: { BACK: 'New Cloak' },
+      worn: ['New Cloak'],
+    },
+  }]
+  const merged = applySyncedSections(local, remote)
+  assert.equal(merged.section_events.some((event) => event.id === 'remote-worn'), true)
+  assert.ok(merged.section_events.length > 1)
+  assert.equal(merged.equipment.BACK, 'New Cloak')
+  const again = applySyncedSections(merged, remote)
+  assert.equal(again.section_events.filter((event) => event.id === 'remote-worn').length, 1)
 })

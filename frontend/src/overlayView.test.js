@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import OverlayApp from './OverlayApp.jsx'
 import { formatAlertRates, formatPerSecond } from './parserView.js'
-import { alertSoundRoute, dismissAlertContent, meterRows, overlayChromeStyle, overlayIdFromSearch } from './overlayView.js'
+import {
+  OVERLAY_CHOICES,
+  alertSoundRoute,
+  closeAllIds,
+  dismissAlertContent,
+  meterRows,
+  overlayChromeStyle,
+  overlayCloseControl,
+  overlayIdFromSearch,
+} from './overlayView.js'
 
 test('zone meter rows sum damage and heals and leave DPS off', () => {
   const rows = meterRows({
@@ -61,6 +73,26 @@ test('alert sounds play from a hidden window and a banner dismiss leaves the win
   assert.equal(dismissed.hideWindow, false)
   assert.equal(dismissed.closeWindow, false)
   assert.equal(dismissed.contentVisible, false)
+})
+
+test('the unlocked drag bar closes with an X and Close all targets open meters', () => {
+  const unlocked = overlayCloseControl(false)
+  assert.equal(unlocked.visible, true)
+  assert.equal(unlocked.noDrag, true)
+  assert.equal(unlocked.label, 'Close overlay')
+  assert.equal(unlocked.text, '×')
+  assert.equal(overlayCloseControl(true).visible, false)
+  const html = renderToStaticMarkup(React.createElement(OverlayApp))
+  assert.match(html, /aria-label="Close overlay"/)
+  assert.match(html, /overlay-no-drag/)
+  assert.match(html, /data-testid="overlay-close"/)
+  assert.equal(html.includes('>Close<'), false)
+  const ids = closeAllIds({
+    dps: { open: true },
+    heal: { open: false },
+    alert: { open: true },
+  }, OVERLAY_CHOICES)
+  assert.deepEqual(ids, ['dps', 'alert'])
 })
 
 test('overlay route ids are the three windows', () => {

@@ -295,6 +295,11 @@ function alertContentDismiss() {
   return { hideWindow: false, closeWindow: false, contentVisible: false }
 }
 
+/** Closing a meter keeps the saved row and records that it is not open. */
+function closedOverlayPatch() {
+  return { open: false }
+}
+
 module.exports = {
   OVERLAY_IDS,
   APPEARANCE_DEFAULTS,
@@ -308,6 +313,7 @@ module.exports = {
   overlayRaisePlan,
   alertPlaybackPlan,
   alertContentDismiss,
+  closedOverlayPatch,
   snapBounds,
   keepOnScreen,
   overlayRoute,

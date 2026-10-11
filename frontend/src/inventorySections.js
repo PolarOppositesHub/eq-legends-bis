@@ -318,6 +318,44 @@ function itemsFrom(rows, keyring) {
   return items
 }
 
+export function unionEventsById(events) {
+  const seen = new Set()
+  const out = []
+  for (const event of events || []) {
+    if (!event || !event.id || seen.has(event.id)) continue
+    seen.add(event.id)
+    out.push(event)
+  }
+  return out
+}
+
+/** Union section events by id, then replay. The newest section wins; older events stay. */
+export function applySyncedSections(previous, remoteEvents) {
+  const prior = previous ? migrateSnapshot(previous) : null
+  const events = unionEventsById([...(prior?.section_events || []), ...(remoteEvents || [])])
+  if (!events.length) return prior
+  const view = project(events)
+  const base = prior || {
+    unmatched_count: 0,
+    unmatched: [],
+    skipped_count: 0,
+    source: '',
+  }
+  return {
+    ...base,
+    equipment: view.equipment,
+    wornUpgrades: view.wornUpgrades,
+    upgrade_hints: view.upgrade_hints,
+    worn: view.worn,
+    rows: view.rows,
+    keyring: view.keyring,
+    unknown_rows: view.unknown_rows,
+    all_items: view.all_items,
+    section_events: events,
+    section_status: view.section_status,
+  }
+}
+
 function makeEvent({ ts, source, section, chunk, empty = false, n = 0 }) {
   return {
     id: `inventory_section:${section}:${ts}:${n}`,

@@ -24,6 +24,7 @@ from .parser.api import busy_response as parser_busy_response
 from .parser.api import router as parser_router
 from .currencies_api import router as currencies_router
 from .requirements_api import router as requirements_router
+from .sync_api import router as sync_router
 from .parser.service import ParserBusy
 from .version import __version__
 
@@ -825,6 +826,7 @@ def _mount_spa() -> None:
 app.include_router(parser_router)
 app.include_router(currencies_router)
 app.include_router(requirements_router)
+app.include_router(sync_router)
 
 
 @app.exception_handler(ParserBusy)

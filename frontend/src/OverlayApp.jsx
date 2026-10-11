@@ -8,6 +8,7 @@ import {
   meterRows,
   overlayAppearance,
   overlayChromeStyle,
+  overlayCloseControl,
   overlayIdFromSearch,
 } from './overlayView.js'
 
@@ -79,6 +80,7 @@ export default function OverlayApp() {
   const title = id === 'heal' ? 'Heal meter' : id === 'alert' ? 'Alerts' : 'DPS meter'
   const chrome = overlayChromeStyle(look)
   const showTitle = locked && look.showTitleWhenLocked
+  const closeControl = overlayCloseControl(locked)
   const gripStyle = {
     backgroundColor: chrome.backgroundColor,
     color: chrome.color,
@@ -109,13 +111,17 @@ export default function OverlayApp() {
             >
               Lock
             </button>
-            <button
-              type="button"
-              className="overlay-no-drag"
-              onClick={() => desktop()?.closeOverlay?.({ id })}
-            >
-              Close
-            </button>
+            {closeControl.visible ? (
+              <button
+                type="button"
+                className="overlay-no-drag overlay-close"
+                aria-label={closeControl.label}
+                data-testid="overlay-close"
+                onClick={() => desktop()?.closeOverlay?.({ id })}
+              >
+                {closeControl.text}
+              </button>
+            ) : null}
           </span>
         </header>
       )}

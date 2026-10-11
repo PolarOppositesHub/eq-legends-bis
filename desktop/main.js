@@ -6,10 +6,11 @@
  * Updater: electron-updater → GitHub Releases
  * PolarOppositesHub/eq-legends-bis (see PACKAGING.md).
  */
-const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme, Tray, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme, Tray, nativeImage, screen, safeStorage } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
+const https = require('https');
 const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -17,6 +18,8 @@ const workspaceStore = require('./workspaceSessionStore');
 const { InventoryFolderWatcher, isInventoryFileName } = require('./inventoryWatcher');
 const overlayLib = require('./overlayWindows');
 const eqclientIni = require('./eqclientIni');
+const onedriveAuth = require('./onedriveAuth');
+const { SYNC_INTERVAL_MS, planSync } = require('./syncSchedule');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -78,6 +81,13 @@ let splashFadeTimer = null;
 let apiReady = false;
 let appUiShown = false;
 let updaterStarted = false;
+let syncDebounce = null;
+let syncInterval = null;
+let syncWatch = null;
+let syncWatchPath = '';
+let syncing = false;
+let ignoreWatchUntil = 0;
+let quitSyncStarted = false;
 
 function resourcesRoot() {
   if (isDev) {
@@ -724,7 +734,7 @@ function openOverlayWindow(id, patch = {}) {
   win.on('resized', persist);
   win.on('closed', () => {
     overlayWindows.delete(id);
-    if (!quitting) saveOverlay(id, { open: false });
+    if (!quitting) saveOverlay(id, overlayLib.closedOverlayPatch());
     broadcastOverlayState();
   });
   broadcastOverlayState();
@@ -737,7 +747,7 @@ function closeOverlayWindow(id) {
     win.close();
     return;
   }
-  saveOverlay(id, { open: false });
+  saveOverlay(id, overlayLib.closedOverlayPatch());
   broadcastOverlayState();
 }
 
@@ -1222,6 +1232,263 @@ ipcMain.handle('eq:check-updates', async () => {
   }
 });
 
+function requestJson(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const lib = String(url).startsWith('https:') ? https : http;
+    const req = lib.request(url, {
+      method: options.method || 'GET',
+      headers: options.headers || {},
+    }, (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => {
+        const raw = Buffer.concat(chunks).toString('utf8');
+        try {
+          resolve(raw ? JSON.parse(raw) : {});
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(30000, () => req.destroy(new Error('OneDrive request timed out')));
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
+
+function postJson(pathname, body, timeoutMs = 30000) {
+  return new Promise((resolve, reject) => {
+    if (!apiPort) {
+      reject(new Error('API is not running'));
+      return;
+    }
+    const data = Buffer.from(JSON.stringify(body || {}));
+    const req = http.request({
+      hostname: '127.0.0.1',
+      port: apiPort,
+      path: pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length,
+      },
+    }, (res) => {
+      let raw = '';
+      res.on('data', (chunk) => { raw += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw || '{}')); } catch (_) { resolve({}); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error('sync request timed out')));
+    req.write(data);
+    req.end();
+  });
+}
+
+function getJson(pathname, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    if (!apiPort) {
+      reject(new Error('API is not running'));
+      return;
+    }
+    const req = http.get(`http://127.0.0.1:${apiPort}${pathname}`, (res) => {
+      let raw = '';
+      res.on('data', (chunk) => { raw += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw || '{}')); } catch (_) { resolve({}); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error('sync status timed out')));
+  });
+}
+
+function oneDriveDeps() {
+  const tokenPath = path.join(app.getPath('userData'), 'sync', 'onedrive-refresh.bin');
+  return {
+    openExternal: (url) => shell.openExternal(url),
+    request: requestJson,
+    http,
+    randomBytes: (n) => crypto.randomBytes(n),
+    timeoutMs: 180000,
+    tokenPath,
+    isEncryptionAvailable: () => {
+      try { return safeStorage.isEncryptionAvailable(); } catch (_) { return false; }
+    },
+    encryptString: (value) => safeStorage.encryptString(value),
+    decryptString: (buf) => safeStorage.decryptString(buf),
+    writeFile: (file, buf) => {
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, buf);
+    },
+    readFile: (file) => fs.readFileSync(file),
+    exists: (file) => fs.existsSync(file),
+    removeFile: (file) => {
+      try { fs.unlinkSync(file); } catch (_) { /* already gone */ }
+    },
+  };
+}
+
+function stopSyncWatch() {
+  if (syncWatch) {
+    try { syncWatch.close(); } catch (_) { /* ignore */ }
+    syncWatch = null;
+  }
+  syncWatchPath = '';
+}
+
+function startSyncWatch(folder, force = false) {
+  const root = path.join(String(folder || ''), 'EQLegendsBiS-sync');
+  const target = folder && fs.existsSync(root) ? root : String(folder || '');
+  if (!target || !fs.existsSync(target)) return;
+  if (!force && target === syncWatchPath && syncWatch) return;
+  stopSyncWatch();
+  const watchers = [];
+  const onEvent = () => {
+    if (syncing || Date.now() < ignoreWatchUntil) return;
+    scheduleSync('watch');
+  };
+  const arm = (dir, recursive) => {
+    try {
+      const watcher = fs.watch(dir, { persistent: false, recursive }, onEvent);
+      watcher.on('error', () => {});
+      watchers.push(watcher);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+  if (!arm(target, true)) {
+    const walk = (dir) => {
+      if (!arm(dir, false)) return;
+      let entries = [];
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
+      for (const entry of entries) {
+        if (entry.isDirectory()) walk(path.join(dir, entry.name));
+      }
+    };
+    walk(target);
+  }
+  if (!watchers.length) return;
+  syncWatch = {
+    close() {
+      for (const watcher of watchers) {
+        try { watcher.close(); } catch (_) { /* ignore */ }
+      }
+    },
+  };
+  syncWatchPath = target;
+}
+
+async function refreshSyncWatch() {
+  try {
+    const status = await getJson('/api/sync/status');
+    if (status && status.provider === 'folder' && status.folder) startSyncWatch(status.folder, true);
+    else stopSyncWatch();
+  } catch (_) { /* sidecar may be stopping */ }
+}
+
+function stopSyncSchedule() {
+  if (syncDebounce) {
+    clearTimeout(syncDebounce);
+    syncDebounce = null;
+  }
+  if (syncInterval) {
+    clearInterval(syncInterval);
+    syncInterval = null;
+  }
+  stopSyncWatch();
+}
+
+async function runSync(reason) {
+  if (!apiPort || !apiReady) return { ok: false };
+  syncing = true;
+  try {
+    const status = await postJson('/api/sync/now', {}, reason === 'quit' ? 4000 : 30000);
+    ignoreWatchUntil = Date.now() + 2500;
+    if (reason !== 'quit') await refreshSyncWatch();
+    return status;
+  } catch (err) {
+    mainLog('warn', 'sync', reason, err && err.message ? err.message : err);
+    return { ok: false, error: String(err && err.message ? err.message : err) };
+  } finally {
+    syncing = false;
+  }
+}
+
+function scheduleSync(reason) {
+  const plan = planSync(reason);
+  if (!plan.run || reason === 'interval') return;
+  if (syncDebounce) clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(() => {
+    syncDebounce = null;
+    runSync(reason);
+  }, plan.delayMs);
+}
+
+async function startSyncSchedule() {
+  try {
+    const deps = oneDriveDeps();
+    if (deps.exists(deps.tokenPath)) {
+      const refreshed = await onedriveAuth.refreshAccessToken(deps);
+      if (refreshed.ok && refreshed.access_token) {
+        await postJson('/api/sync/onedrive', {
+          access_token: refreshed.access_token,
+          account: refreshed.account || '',
+        });
+      }
+    }
+  } catch (err) {
+    mainLog('warn', 'onedrive refresh', err && err.message ? err.message : err);
+  }
+  scheduleSync('launch');
+  syncInterval = setInterval(() => {
+    runSync('interval');
+  }, SYNC_INTERVAL_MS);
+  refreshSyncWatch();
+}
+
+ipcMain.handle('eq:sync-touch', async () => {
+  scheduleSync('change');
+  return { ok: true };
+});
+
+ipcMain.handle('eq:pick-sync-folder', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Choose a sync folder',
+    properties: ['openDirectory', 'createDirectory'],
+  });
+  if (result.canceled || !result.filePaths || !result.filePaths[0]) return { ok: false, canceled: true };
+  const folder = result.filePaths[0];
+  startSyncWatch(folder);
+  return { ok: true, folder };
+});
+
+ipcMain.handle('eq:onedrive-sign-in', async () => {
+  const result = await onedriveAuth.signInOneDrive(oneDriveDeps());
+  if (!result.ok) return { ok: false, error: result.error || 'OneDrive sign-in failed.' };
+  try {
+    await postJson('/api/sync/onedrive', {
+      access_token: result.access_token,
+      account: result.account || '',
+    });
+    scheduleSync('now');
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) };
+  }
+  return { ok: true, account: result.account || '' };
+});
+
+ipcMain.handle('eq:onedrive-sign-out', async () => {
+  onedriveAuth.forgetRefreshToken(oneDriveDeps());
+  try {
+    await postJson('/api/sync/onedrive/sign-out', {});
+  } catch (_) { /* the settings page posts sign-out as well */ }
+  return { ok: true };
+});
+
 app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return;
   // Drop the stock File/Edit/View menu — in-app Quit + window chrome still exit.
@@ -1253,6 +1520,7 @@ app.whenReady().then(async () => {
     await waitForHealth();
     apiReady = true;
     showMainUi();
+    startSyncSchedule().catch((err) => mainLog('warn', 'sync schedule', err && err.message ? err.message : err));
   } catch (e) {
     dialog.showErrorBox(
       'EQ Legends BiS',
@@ -1265,18 +1533,27 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   stopInventoryWatcher();
-  stopApi();
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
   quitting = true;
   if (overlayRaiseTimer) {
     clearInterval(overlayRaiseTimer);
     overlayRaiseTimer = null;
   }
   stopInventoryWatcher();
-  stopApi();
+  stopSyncSchedule();
+  if (quitSyncStarted || !apiReady || !apiPort) {
+    stopApi();
+    return;
+  }
+  event.preventDefault();
+  quitSyncStarted = true;
+  runSync('quit').finally(() => {
+    stopApi();
+    app.quit();
+  });
 });
 
 app.on('activate', () => {

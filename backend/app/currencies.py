@@ -317,6 +317,7 @@ class CurrencyBook:
             "bags_after": bags_after,
         }
         state["entries"].append(entry)
+        self._notify_currency(entry)
         return entry
 
     def _keys(self, state: dict[str, Any]) -> set[str]:
@@ -358,6 +359,90 @@ class CurrencyBook:
         except (TypeError, ValueError):
             return 0
 
+    def _notify_currency(self, entry: dict[str, Any]) -> None:
+        """Tell sync about a new row. Sync must not call back into the book."""
+        if getattr(self, "_sync_silent", False):
+            return
+        listener = getattr(self, "sync_listener", None)
+        character = getattr(self, "_notify_character", None)
+        if listener is None or not character:
+            return
+        source = str(entry.get("source") or "manual")
+        if source.startswith("log"):
+            mapped = "log"
+        elif source == "inventory_reconcile":
+            mapped = "import"
+        else:
+            mapped = "manual"
+        try:
+            listener(character, {
+                "id": entry.get("id"),
+                "ts": entry.get("ts"),
+                "source": mapped,
+                "type": "currency",
+                "payload": {"entry": dict(entry), "raw": entry.get("raw") or None},
+            })
+        except Exception:
+            return
+
+    def _notify_revert(self, entry_ids: list[str], ts: str) -> None:
+        if getattr(self, "_sync_silent", False):
+            return
+        listener = getattr(self, "sync_listener", None)
+        character = getattr(self, "_notify_character", None)
+        if listener is None or not character:
+            return
+        for entry_id in entry_ids:
+            try:
+                listener(character, {
+                    "id": f"revert:{entry_id}:{ts}",
+                    "ts": ts,
+                    "source": "manual",
+                    "type": "currency_revert",
+                    "payload": {"entry_id": entry_id},
+                })
+            except Exception:
+                return
+
+    def import_external_entry(self, character: str, entry: dict[str, Any]) -> bool:
+        """Add a replayed ledger row. An id that is already stored is not rewritten."""
+        entry_id = str(entry.get("id") or "")
+        if not entry_id:
+            return False
+        with self._lock:
+            self._sync_silent = True
+            try:
+                _key, state = self._resolve(character, create=True)
+                current = next((row for row in state["entries"] if row.get("id") == entry_id), None)
+                if current is not None:
+                    if entry.get("reverted") and not current.get("reverted"):
+                        current["reverted"] = True
+                        self._save()
+                    return False
+                seq = int(state.get("next_seq") or 1)
+                state["next_seq"] = seq + 1
+                state["entries"].append({
+                    "id": entry_id,
+                    "seq": seq,
+                    "ts": entry.get("ts") or _stamp(),
+                    "currency": entry.get("currency"),
+                    "delta": int(entry.get("delta") or 0),
+                    "source": entry.get("source") or "manual",
+                    "evidence": entry.get("evidence") or "",
+                    "anchor": bool(entry.get("anchor")),
+                    "count": entry.get("count"),
+                    "autosold": bool(entry.get("autosold")),
+                    "event_key": entry.get("event_key"),
+                    "group": entry.get("group"),
+                    "reverted": bool(entry.get("reverted")),
+                    "bags_before": entry.get("bags_before"),
+                    "bags_after": entry.get("bags_after"),
+                })
+                self._save()
+                return True
+            finally:
+                self._sync_silent = False
+
     def set_anchor(self, character: str, currency: str, count: int, ts: str | None = None) -> dict[str, Any]:
         if currency_kind(currency) is None:
             raise ValueError("unknown currency")
@@ -371,6 +456,7 @@ class CurrencyBook:
         if _parse_stamp(stamp) is None:
             raise ValueError("timestamp must be YYYY-MM-DDTHH:MM:SS")
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             entry = self._entry(
                 state,
@@ -388,6 +474,7 @@ class CurrencyBook:
     def sync(self, character: str, events: list[dict[str, Any]]) -> None:
         """Apply loot, given, and offer lines. Merge lines only feed the pending chip."""
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             merges: list[dict[str, Any]] = []
             seen: set[str] = set()
@@ -531,6 +618,7 @@ class CurrencyBook:
         if _parse_stamp(stamp) is None:
             raise ValueError("timestamp must be YYYY-MM-DDTHH:MM:SS")
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             if self._anchor(state, currency) is None:
                 raise ValueError("set a starting count first")
@@ -572,6 +660,7 @@ class CurrencyBook:
         if _parse_stamp(stamp) is None:
             raise ValueError("timestamp must be YYYY-MM-DDTHH:MM:SS")
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             entry = None
             if amount:
@@ -603,6 +692,7 @@ class CurrencyBook:
         if _parse_stamp(stamp) is None:
             raise ValueError("timestamp must be YYYY-MM-DDTHH:MM:SS")
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             if self._anchor(state, currency) is None:
                 raise ValueError("Set a currency storage count first.")
@@ -647,6 +737,7 @@ class CurrencyBook:
 
     def undo(self, character: str, entry_id: str) -> dict[str, Any]:
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=False)
             match = next((e for e in state["entries"] if e["id"] == entry_id), None)
             if match is None:
@@ -656,13 +747,17 @@ class CurrencyBook:
                 e for e in state["entries"]
                 if e["id"] == entry_id or (group and e.get("group") == group)
             ]
+            changed: list[str] = []
             for entry in targets:
                 if entry.get("reverted"):
                     continue
                 entry["reverted"] = True
+                changed.append(entry["id"])
                 if entry["source"] == "inventory_reconcile" and entry.get("bags_before") is not None:
                     state["bag_import"][entry["currency"]] = int(entry["bags_before"])
             self._save()
+            if changed:
+                self._notify_revert(changed, _stamp())
             return {"ok": True, "reverted": [e["id"] for e in targets]}
 
     def reconcile(
@@ -685,6 +780,7 @@ class CurrencyBook:
                 continue
         created: list[dict[str, Any]] = []
         with self._lock:
+            self._notify_character = character
             _key, state = self._resolve(character, create=True)
             previous_at = state.get("bag_import_at")
             for name, new in observed.items():
