@@ -131,7 +131,8 @@ export const APP_HELP = {
         'Shows what the last Inventory.txt import has you wearing: each worn row, its +N tier, and its sockets.',
         'Bags, bank, shared bank, Dragon\'s Hoard, storage (Equipment, Augmentation, and Activated), and depot are listed under those trees. Each section header collapses, and that choice is remembered. Empty slots can be hidden. Search is the bar at the top of this tab. A result is one copy, with the bag, bank, slot, or other container it is in. Click a result to scroll to that slot.',
         'Hover a name for the same catalog stat popup used elsewhere. Click it for Item Search or eqlwiki. A name with no wiki page does not offer eqlwiki. An item icon sits to the left of each name. Stats are not invented.',
-        'Items that can be merged lists the same equipable item in more than one place. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, equipable items are mergeable except exaltations, and non-equipable items, bags, and boxes are not. A stack whose Count is greater than 1 in one slot is left out. Dragon\'s Hoard and storage copies count as places. If the export has no Hoard rows, open the Dragon\'s Hoard window before running /outputfile inventory.',
+        'An import replaces only the sections in that file. A section left out keeps its previous rows. Each section shows Last updated, and a section older than the newest import is marked stale. Clear section removes one section. Replace everything drops sections the file does not contain.',
+        'Items that can be merged lists the same equipable item in more than one place. eqlwiki Item Upgrade System says all gear can be upgraded by merging an item of the same name, or a Mote of Potential. It does not say whether bags, other non-equipable items, or exaltations can be merged. Where the wiki is silent, equipable items are mergeable except exaltations, and non-equipable items, bags, and boxes are not. A stack whose Count is greater than 1 in one slot is left out. Dragon\'s Hoard and storage copies count as places. Copies in a stale section still count, and the group says may include stale section. If the export has no Hoard rows, open the Dragon\'s Hoard window before running /outputfile inventory.',
         'Rows the parser does not recognise stay under Other sections, with the header and line text from the file.',
       ],
     },
@@ -140,10 +141,10 @@ export const APP_HELP = {
       title: 'Currencies',
       body: [
         'Tracks the 10 mote grades, the 15 Wind Runes, and Void-Touched Potential for one character.',
-        'Set a currency storage count. Later log loot and given lines add, and an offer line subtracts, after that time. Auto-sold motes count 0 and are marked auto-sold, not kept. Lines before the count are ignored.',
+        'Set a starting count. Later log loot and given lines add, and an offer line subtracts, after that time. Auto-sold motes count 0 and are marked auto-sold, not kept. Lines before the count are ignored. Before a starting count, Seen in log is shown and is not added to the total. + and − change a count that already has a starting count. Set all counts writes a starting count for every currency at the storage number on screen.',
         'A merge line does not name the mote. It shows Pending: N merges since last check until you record I used.',
         'An inventory import sets bag counts. Bags from the import plus currency storage is the total. A drop with no matching ledger entry can be undone.',
-        'Condense turns 2 of a grade into 1 of the next, up to Grand → Ascendant, and warns when item XP is lost. This ledger does not plan Void-Touched spending. Requirements uses these totals and spends Void-Touched on the highest-tier items first. Wind Rune need for Plane of Sky is on Requirements.',
+        'Combine into next grade turns lower motes into one higher mote. Some XP is lost. History lists every change: looted, given, used, or set by you. This ledger does not plan Void-Touched spending. Requirements uses these totals and spends Void-Touched on the highest-tier items first. Wind Rune need for Plane of Sky is on Requirements.',
       ],
     },
     {

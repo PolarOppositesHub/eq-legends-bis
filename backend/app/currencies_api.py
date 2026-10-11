@@ -39,6 +39,19 @@ class UndoBody(BaseModel):
     entry_id: str
 
 
+class AdjustBody(BaseModel):
+    character: str
+    currency: str
+    delta: int
+    ts: str | None = None
+
+
+class SetAllBody(BaseModel):
+    character: str
+    counts: dict[str, Any] = Field(default_factory=dict)
+    ts: str | None = None
+
+
 class ReconcileBody(BaseModel):
     character: str
     bag_counts: dict[str, Any] = Field(default_factory=dict)
@@ -71,7 +84,38 @@ def get_currencies(character: str = Query(default="")) -> dict[str, Any]:
     if not (character or "").strip():
         raise HTTPException(400, "character is required")
     warning = _sync(character)
-    return _view_or_400(character, warning)
+    view = _view_or_400(character, warning)
+    view["log_loaded"] = _log_loaded()
+    return view
+
+
+def _log_loaded() -> bool | None:
+    try:
+        service = get_service()
+        with service.read_guard():
+            return service.db.has_log_file()
+    except ParserBusy:
+        return None
+    except Exception:
+        return None
+
+
+@router.post("/adjust")
+def post_adjust(body: AdjustBody) -> dict[str, Any]:
+    try:
+        get_book().adjust(body.character, body.currency, body.delta, body.ts)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return _view_or_400(body.character)
+
+
+@router.post("/set-all")
+def post_set_all(body: SetAllBody) -> dict[str, Any]:
+    try:
+        get_book().set_anchors(body.character, body.counts, body.ts)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return _view_or_400(body.character)
 
 
 @router.post("/anchor")

@@ -148,6 +148,9 @@ _PET_LEADER = re.compile(
 _SAY = re.compile(r"^(?P<speaker>.+) says, '(?P<body>.*)'$")
 _CHARM = re.compile(r"^(?P<mob>.+) has been charmed\.$")
 _CHARM_BREAK = re.compile(r"^Your Charm spell has worn off(?: of (?P<mob>.+))?\.$")
+# Verified in the owner's log and SPEC §5.1. Charm is a different, unverified line.
+_SPELL_FADE = re.compile(r"^Your (?P<spell>.+?) spell has worn off of (?P<mob>.+)\.$")
+_SLOW = re.compile(r"^(?P<mob>.+)'s limbs move slower!$")
 _WHO = re.compile(
     r"^\[(?P<level>\d+) (?P<classes>[A-Z]{3}(?:/[A-Z]{3}){0,5})\] "
     r"(?P<name>\S+) \((?P<race>[^)]+)\)"
@@ -822,6 +825,17 @@ def _other(msg: str, mods: tuple[str, ...]) -> ParsedEvent | None:
     match = _CHARM.match(msg)
     if match:
         return _event("charm", source="You", target=match.group("mob"), pet=match.group("mob"), evidence="charm")
+    match = _SLOW.match(msg)
+    if match:
+        return _event("slow", source=match.group("mob"), target=match.group("mob"))
+    match = _SPELL_FADE.match(msg)
+    if match and match.group("spell") != "Charm":
+        return _event(
+            "spell_fade",
+            source="You",
+            spell=match.group("spell"),
+            target=match.group("mob"),
+        )
     match = _CHARM_BREAK.match(msg)
     if match:
         return _event("charm_break", source="You", target=match.group("mob"), pet=match.group("mob"))

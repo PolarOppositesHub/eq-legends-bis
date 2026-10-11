@@ -23,6 +23,18 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     ipcRenderer.on('eq:inventory-ready', listener);
     return () => ipcRenderer.removeListener('eq:inventory-ready', listener);
   },
+  openOverlay: (args) => ipcRenderer.invoke('eq:overlay-open', args),
+  setOverlayLock: (args) => ipcRenderer.invoke('eq:overlay-lock', args),
+  setOverlayOpacity: (args) => ipcRenderer.invoke('eq:overlay-opacity', args),
+  pickSoundFile: () => ipcRenderer.invoke('eq:pick-sound-file'),
+  readSoundFile: (filePath) => ipcRenderer.invoke('eq:read-sound-file', filePath),
+  onOverlayConfig: (cb) => {
+    const listener = (_event, config) => {
+      try { cb(config); } catch (_) { /* ignore */ }
+    };
+    ipcRenderer.on('eq:overlay-config', listener);
+    return () => ipcRenderer.removeListener('eq:overlay-config', listener);
+  },
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

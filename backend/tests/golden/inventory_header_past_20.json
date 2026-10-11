@@ -53,6 +53,9 @@
       "wearable": true
     }
   ],
+  "sections_present": [
+    "worn"
+  ],
   "server": null,
   "skipped": [],
   "skipped_count": 0,

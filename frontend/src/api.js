@@ -93,6 +93,10 @@ export const getCurrencies = (character) => {
 }
 export const setCurrencyAnchor = (body) =>
   req('/api/currencies/anchor', { method: 'POST', body: JSON.stringify(body) })
+export const adjustCurrency = (body) =>
+  req('/api/currencies/adjust', { method: 'POST', body: JSON.stringify(body) })
+export const setAllCurrencyCounts = (body) =>
+  req('/api/currencies/set-all', { method: 'POST', body: JSON.stringify(body) })
 export const recordCurrencyUsed = (body) =>
   req('/api/currencies/used', { method: 'POST', body: JSON.stringify(body) })
 export const condenseCurrency = (body) =>

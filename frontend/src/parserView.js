@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.7'
+export const WHATS_NEW_ID = '1.1.8'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,15 +23,22 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.7"
+export const WHATS_NEW_TITLE = "What's new in 1.1.8"
 
 export const WHATS_NEW_POINTS = [
-  'Best in Slot lists the XP to your target +N, the motes that takes, the cheapest path from the motes you already hold, and what is still missing. Void-Touched Potential is used on the highest-tier items first.',
-  'Plane of Sky shows the tests still open, the Wind Runes and turn-in items you hold, and which classes are closest to unlocking. A granted unlock is labeled. The token case stays unverified.',
-  'Pin an item from Item Search, Best in Slot, Character, or the item menu. The Wish list shows whether you own it and the mote path for that character.',
-  'Item Search can sort and filter by Damage/Delay, which is damage divided by delay. Compare at +N uses the same scaling as the rest of the app. The ratio is shown to two decimals.',
-  'Click a Best in Slot item for the same Item Search and eqlwiki menu used elsewhere. Hover still shows the stat popup.',
+  'A DPS meter and a heal meter can sit on top of the game. Lock makes a meter click-through. Fight scope uses the same fight numbers as the Parser. Zone scope sums damage and heals from saved fights in that zone and does not show a DPS rate. Exclusive fullscreen draws over every window. The meters do not send input to the game.',
+  'Alerts fire for a slow, your death, and a spell wearing off. A raid-target alert matches a name you type against a slain line. Charm break stays off because that line is unverified. A shared alert string only adds rules.',
+  'Class and level follow the newest /who line or “You have gained a level! Welcome to level N!”. You can set them in the Parser header. A newer /who replaces that setting. A level drop says to type /who. Older class sets stay as history.',
+  'Currencies has + and − next to each count, a starting count, Set all counts, and a history of looted, given, used, and counts you set. Before a starting count, loot already seen in the log is shown and is not added to the total.',
+  'An inventory import replaces only the sections in that file. Worn, bags, bank, shared bank, Dragon’s Hoard, and storage each show when they were last updated. A section older than the newest import is marked stale. Equipped gear comes from worn.',
 ]
+
+export function currentClassText(current) {
+  if (!current || typeof current !== 'object') return ''
+  const classes = typeof current.classes === 'string' ? current.classes.trim() : ''
+  const level = current.level == null || current.level === '' ? '' : String(current.level)
+  return [classes, level].filter(Boolean).join(' ')
+}
 
 export const CREDITS = [
   {

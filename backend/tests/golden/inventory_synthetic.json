@@ -653,6 +653,14 @@
       "wearable": false
     }
   ],
+  "sections_present": [
+    "bags",
+    "bank",
+    "depot",
+    "sharedbank",
+    "storage",
+    "worn"
+  ],
   "server": null,
   "skipped": [
     {

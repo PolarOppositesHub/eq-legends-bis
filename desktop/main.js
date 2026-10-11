@@ -6,7 +6,7 @@
  * Updater: electron-updater → GitHub Releases
  * PolarOppositesHub/eq-legends-bis (see PACKAGING.md).
  */
-const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme, Tray, nativeImage, screen } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const workspaceStore = require('./workspaceSessionStore');
 const { InventoryFolderWatcher, isInventoryFileName } = require('./inventoryWatcher');
+const overlayLib = require('./overlayWindows');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -27,6 +28,9 @@ if (process.platform === 'win32') {
 }
 
 let mainWindow = null;
+let tray = null;
+let quitting = false;
+const overlayWindows = new Map();
 
 // One app per user. A second launch (double-clicked shortcut during a slow
 // first start) would spawn a second sidecar on the same parser.db and start a
@@ -313,6 +317,8 @@ function showMainUi() {
     console.error('[eq] load UI', e);
   });
   setupUpdater();
+  ensureTray();
+  restoreOverlays();
 }
 
 function requestSplashFade() {
@@ -421,6 +427,17 @@ async function createWindow({ playIntro = false } = {}) {
     splashDone = true;
     await mainWindow.loadFile(splashHtml, { query: { src: 'skip' } });
   }
+  mainWindow.on('close', (event) => {
+    if (!quitting && readSettings().closeToTray === true) {
+      event.preventDefault();
+      mainWindow.hide();
+      ensureTray();
+      return;
+    }
+    for (const win of overlayWindows.values()) {
+      if (win && !win.isDestroyed()) win.close();
+    }
+  });
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -510,6 +527,188 @@ function setupUpdater() {
   }
 }
 
+
+function saveOverlay(id, patch) {
+  const current = readSettings();
+  const overlays = { ...(current.overlays || {}) };
+  overlays[id] = { ...(overlays[id] || {}), ...patch };
+  writeSettings({ overlays });
+}
+
+function applyOverlayLock(win, locked) {
+  const call = overlayLib.clickThroughCall(locked);
+  try {
+    if (call.forward) win.setIgnoreMouseEvents(true, { forward: true });
+    else win.setIgnoreMouseEvents(false);
+  } catch (_) { /* ignore */ }
+  try { win.setResizable(!locked); } catch (_) { /* ignore */ }
+}
+
+function openOverlayWindow(id, patch = {}) {
+  if (!overlayLib.OVERLAY_IDS.includes(id) || !apiPort) return null;
+  const saved = { ...(overlayLib.readOverlayMap(readSettings())[id] || {}), ...patch, open: true };
+  saveOverlay(id, {
+    open: true,
+    locked: !!saved.locked,
+    x: saved.x,
+    y: saved.y,
+    width: saved.width,
+    height: saved.height,
+    opacity: saved.opacity,
+    scope: saved.scope === 'zone' ? 'zone' : 'fight',
+    character: saved.character || '',
+  });
+  let win = overlayWindows.get(id);
+  if (win && !win.isDestroyed()) {
+    applyOverlayLock(win, !!saved.locked);
+    win.show();
+    try { win.webContents.send('eq:overlay-config', { id, ...saved }); } catch (_) { /* ignore */ }
+    return win;
+  }
+  const options = overlayLib.overlayBrowserOptions(id, saved);
+  win = new BrowserWindow({
+    ...options,
+    title: 'EQ Legends BiS',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  overlayWindows.set(id, win);
+  applyOverlayLock(win, !!saved.locked);
+  const route = overlayLib.overlayRoute(id, saved.character, saved.scope);
+  win.loadURL(`http://127.0.0.1:${apiPort}${route}`).catch(() => {});
+  win.webContents.on('did-finish-load', () => {
+    try { win.webContents.send('eq:overlay-config', { id, ...saved }); } catch (_) { /* ignore */ }
+  });
+  const persist = () => {
+    if (!win || win.isDestroyed() || saved.locked) return;
+    const bounds = win.getBounds();
+    let area = null;
+    try { area = screen.getDisplayMatching(bounds).workArea; } catch (_) { /* ignore */ }
+    const snapped = overlayLib.snapBounds(bounds, area);
+    if (snapped && (snapped.x !== bounds.x || snapped.y !== bounds.y)) win.setBounds(snapped);
+    saveOverlay(id, {
+      x: snapped.x,
+      y: snapped.y,
+      width: snapped.width,
+      height: snapped.height,
+      open: true,
+    });
+  };
+  win.on('moved', persist);
+  win.on('resized', persist);
+  win.on('closed', () => {
+    overlayWindows.delete(id);
+    if (!quitting) saveOverlay(id, { open: false });
+  });
+  return win;
+}
+
+function restoreOverlays() {
+  const map = overlayLib.readOverlayMap(readSettings());
+  for (const id of overlayLib.OVERLAY_IDS) {
+    if (map[id] && map[id].open) openOverlayWindow(id);
+  }
+}
+
+function ensureTray() {
+  if (tray) return;
+  try {
+    const iconPath = resolveAppIcon();
+    let image = iconPath ? nativeImage.createFromPath(iconPath) : null;
+    if (!image || image.isEmpty()) {
+      image = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+    }
+    tray = new Tray(image);
+    tray.setToolTip('EQ Legends BiS');
+    tray.setContextMenu(Menu.buildFromTemplate([
+      { label: 'Show EQ Legends BiS', click: () => { if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } } },
+      { label: 'DPS meter', click: () => openOverlayWindow('dps') },
+      { label: 'Heal meter', click: () => openOverlayWindow('heal') },
+      { label: 'Alert banner', click: () => openOverlayWindow('alert') },
+      {
+        label: 'Unlock meters',
+        click: () => {
+          for (const id of overlayLib.OVERLAY_IDS) {
+            const win = overlayWindows.get(id);
+            if (win && !win.isDestroyed()) applyOverlayLock(win, false);
+            saveOverlay(id, { locked: false });
+          }
+        },
+      },
+      { label: 'Quit', click: () => { quitting = true; app.quit(); } },
+    ]));
+    tray.on('click', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  } catch (err) {
+    console.log('[eq] tray unavailable', err && err.message);
+    tray = null;
+  }
+}
+
+ipcMain.handle('eq:overlay-open', async (_evt, args) => {
+  const id = args && args.id;
+  ensureTray();
+  openOverlayWindow(id, {
+    character: (args && args.character) || '',
+    scope: args && args.scope === 'zone' ? 'zone' : 'fight',
+    locked: !!(args && args.locked),
+    opacity: args && args.opacity,
+  });
+  return { ok: true };
+});
+
+ipcMain.handle('eq:overlay-lock', async (_evt, args) => {
+  const locked = !!(args && args.locked);
+  for (const [id, win] of overlayWindows) {
+    if (win && !win.isDestroyed()) {
+      applyOverlayLock(win, locked);
+      try { win.webContents.send('eq:overlay-config', { id, locked }); } catch (_) { /* ignore */ }
+    }
+    saveOverlay(id, { locked });
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('eq:overlay-opacity', async (_evt, args) => {
+  const opacity = args && args.opacity;
+  for (const [id, win] of overlayWindows) {
+    saveOverlay(id, { opacity });
+    if (win && !win.isDestroyed()) {
+      try { win.webContents.send('eq:overlay-config', { id, opacity }); } catch (_) { /* ignore */ }
+    }
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('eq:pick-sound-file', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Choose a .wav or .mp3',
+    properties: ['openFile'],
+    filters: [{ name: 'Sound', extensions: ['wav', 'mp3'] }],
+  });
+  if (result.canceled || !result.filePaths || !result.filePaths[0]) return { ok: false, canceled: true };
+  return { ok: true, path: result.filePaths[0] };
+});
+
+ipcMain.handle('eq:read-sound-file', async (_evt, filePath) => {
+  const target = String(filePath || '');
+  if (!/\.(wav|mp3)$/i.test(target)) return null;
+  try {
+    const st = fs.statSync(target);
+    if (!st.isFile() || st.size > 8 * 1024 * 1024) return null;
+    const mime = /\.mp3$/i.test(target) ? 'audio/mpeg' : 'audio/wav';
+    return `data:${mime};base64,${fs.readFileSync(target).toString('base64')}`;
+  } catch (_) {
+    return null;
+  }
+});
 
 ipcMain.on('eq:splash-finished', () => {
   finishSplash();
@@ -604,6 +803,7 @@ function settingsView(s) {
   const src = s || {};
   return {
     ok: true,
+    closeToTray: src.closeToTray === true,
     eqInstallFolder: src.eqInstallFolder || '',
     lastInventoryPath: src.lastInventoryPath || '',
     lastInventoryName: src.lastInventoryName || '',
@@ -875,6 +1075,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  quitting = true;
   stopInventoryWatcher();
   stopApi();
 });

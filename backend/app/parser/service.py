@@ -11,8 +11,16 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
+from .alerts import (
+    cooldown_blocks,
+    default_rules,
+    match_rule,
+    share_decode,
+    share_encode,
+)
 from .breakdown import Breakdown
 from .classify import classify_log_line
+from .identity import normalize_override, resolve_current
 from .discover import (
     DEFAULT_EQ_INSTALL,
     default_user_data,
@@ -99,6 +107,13 @@ def read_log_range(path: Path, start_offset: int, end_offset: int) -> list[dict]
     return lines
 
 
+def _log_message(line: str) -> str:
+    text = line or ""
+    if text.startswith("[") and "] " in text:
+        return text.split("] ", 1)[1].strip()
+    return text.strip()
+
+
 def _skeleton(message: str) -> str:
     import re
     text = re.sub(r"\d+(?:\.\d+)?", "N", message)
@@ -117,6 +132,7 @@ class ParserService:
         self.user_data = Path(user_data) if user_data else default_user_data()
         self.user_data.mkdir(parents=True, exist_ok=True)
         self.db = ParserDB(db_path or (self.user_data / "parser.db"))
+        self._ensure_alert_rules()
         stored_idle = self.db.get_setting("idle_seconds")
         self.idle = float(stored_idle) if stored_idle else idle_seconds
         saved_folder = read_eq_install(self.user_data)
@@ -469,12 +485,17 @@ class ParserService:
             try:
                 for line in batch.lines:
                     _ts, event = classify_log_line(line.text)
+                    msg = _log_message(line.text)
                     if event is None:
+                        self.consider_alerts(file_id, line.offset, None, msg)
                         continue
                     if not self.db.insert_event(file_id, generation, line.offset, event):
                         continue
                     self.db.insert_specialized(file_id, generation, line.offset, character, event)
                     seg.observe(event, line.offset)
+                    self.consider_alerts(file_id, line.offset, event, event.text or msg)
+                    if event.kind in {"who", "level"} and not self._replaying:
+                        self.hub.publish({"type": "roster", "character": character})
                 if seg.fight is not None and seg.fight.open:
                     self.db.save_fight(file_id, generation, seg.fight)
                     self._emit_fight(seg.fight.summary())
@@ -525,18 +546,20 @@ class ParserService:
                 for offset, text in iter_log_bytes(path):
                     lines += 1
                     _ts, event = classify_log_line(text)
+                    msg = _log_message(text)
                     if event is None:
                         unclassified += 1
-                        msg = text.split("] ", 1)[-1].strip()
                         key = _skeleton(msg)
                         shapes[key] += 1
                         examples.setdefault(key, msg[:180])
+                        self.consider_alerts(file_id, offset, None, msg)
                     else:
                         classified += 1
                         if self.db.insert_event(file_id, generation, offset, event):
                             inserted += 1
                             self.db.insert_specialized(file_id, generation, offset, character, event)
                             seg.observe(event, offset)
+                            self.consider_alerts(file_id, offset, event, event.text or msg)
                         else:
                             duplicate += 1
                     if lines % CHUNK_LINES == 0:
@@ -1017,6 +1040,44 @@ class ParserService:
             self.db.commit()
         return {"ok": True, "character": character, "member": member, "removed": True}
 
+    def _ensure_alert_rules(self) -> None:
+        existing = {rule.get("id") for rule in self.db.list_alert_rules()}
+        for rule in default_rules():
+            if rule["id"] not in existing:
+                self.db.save_alert_rule(rule)
+        self.db.commit()
+
+    def _stamp(self) -> str:
+        now = self.clock()
+        if isinstance(now, datetime):
+            return now.strftime("%Y-%m-%dT%H:%M:%S")
+        return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    def set_identity(self, character: str, classes, level) -> dict:
+        from ..item_catalog import _CLASS_TOKEN_TO_NAME
+        trio, number = normalize_override(classes, level, _CLASS_TOKEN_TO_NAME)
+        stamp = self._stamp()
+        with self.db.lock:
+            self.db.set_override(character, trio, number, stamp)
+            self.db.commit()
+            current = self._current_locked(character)
+        if not self._replaying:
+            self.hub.publish({"type": "roster", "character": character})
+        return {"ok": True, "character": character, "current": current}
+
+    def clear_identity(self, character: str) -> dict:
+        with self.db.lock:
+            self.db.clear_override(character)
+            self.db.commit()
+            current = self._current_locked(character)
+        if not self._replaying:
+            self.hub.publish({"type": "roster", "character": character})
+        return {"ok": True, "character": character, "current": current}
+
+    def _current_locked(self, character: str) -> dict | None:
+        resolved = resolve_current(self.db.list_level_events(character), self.db.get_override(character))
+        return resolved["current"]
+
     def roster(self, character: str) -> dict:
         with self.db.lock:
             group = self.db.list_group(character)
@@ -1024,6 +1085,9 @@ class ParserService:
             candidates = self.db.list_candidates(character, "open")
             loadouts = self.db.list_loadouts(character)
             pets = self.list_pets_locked(character)
+            observations = self.db.list_level_events(character)
+            manual = self.db.get_override(character)
+            resolved = resolve_current(observations, manual)
         return {
             "character": character,
             "group": [{"name": name, "via": "log"} for name in group],
@@ -1031,7 +1095,144 @@ class ParserService:
             "candidates": candidates,
             "loadouts": loadouts,
             "pets": pets,
+            "current": resolved["current"],
+            "history": resolved["history"],
         }
+
+    def consider_alerts(self, file_id: int, offset: int, event, message: str) -> list[dict]:
+        """Fire each matching rule once per log offset. A second replay adds nothing."""
+        fired: list[dict] = []
+        ts = None
+        if event is not None and getattr(event, "ts", None) is not None:
+            ts = event.ts.strftime("%Y-%m-%dT%H:%M:%S")
+        text = message or (getattr(event, "text", "") if event is not None else "")
+        for rule in self.db.list_alert_rules():
+            rule_id = str(rule.get("id") or "")
+            if not rule_id or self.db.alert_already_fired(rule_id, file_id, offset):
+                continue
+            alert = match_rule(rule, event, text)
+            if not alert:
+                continue
+            if cooldown_blocks(self.db.last_alert_ts(rule_id), ts, int(rule.get("cooldown") or 0)):
+                continue
+            self.db.record_alert_fire(rule_id, file_id, offset, ts, alert)
+            fired.append({
+                "rule_id": rule_id,
+                "name": rule.get("name") or "Alert",
+                "message": alert,
+                "ts": ts,
+                "sound": rule.get("sound") or "speech",
+                "sound_file": rule.get("sound_file") or "",
+            })
+        if fired and not self._replaying:
+            self.hub.publish({"type": "alert", "alerts": fired})
+        return fired
+
+    def list_alert_rules(self) -> dict:
+        with self.db.lock:
+            rules = self.db.list_alert_rules()
+        return {"rules": rules, "share": share_encode(rules)}
+
+    def save_alert_rule(self, rule: dict) -> dict:
+        rule_id = str(rule.get("id") or "").strip()
+        if not rule_id:
+            raise ValueError("id is required")
+        with self.db.lock:
+            current = {row.get("id"): row for row in self.db.list_alert_rules()}
+            existing = current.get(rule_id) or {}
+            if existing.get("gated") or existing.get("kind") == "charm_break":
+                rule = dict(existing)
+                rule["enabled"] = False
+                rule["gated"] = True
+            else:
+                rule = dict(rule)
+                rule["id"] = rule_id
+                if existing.get("builtin"):
+                    rule["builtin"] = True
+                    rule["kind"] = existing.get("kind")
+            self.db.save_alert_rule(rule)
+            self.db.commit()
+            rules = self.db.list_alert_rules()
+        return {"ok": True, "rules": rules}
+
+    def import_alert_share(self, text: str) -> dict:
+        incoming = share_decode(text)
+        with self.db.lock:
+            have = {row.get("id") for row in self.db.list_alert_rules()}
+            added = 0
+            for rule in incoming:
+                if rule["id"] in have or rule.get("builtin"):
+                    continue
+                rule["builtin"] = False
+                self.db.save_alert_rule(rule)
+                have.add(rule["id"])
+                added += 1
+            self.db.commit()
+            rules = self.db.list_alert_rules()
+        return {"ok": True, "added": added, "rules": rules}
+
+    def recent_alerts(self) -> dict:
+        with self.db.lock:
+            rows = self.db.recent_alerts()
+        return {"alerts": rows}
+
+    def meters(self, character: str, scope: str = "fight") -> dict:
+        """DPS and heals from stored fight rows. Zone scope sums those integers.
+
+        Fight DPS uses the same active-time and fight-time rates as the Parser
+        tab. Zone scope does not invent a rate; it sums damage and heals.
+        """
+        scope = "zone" if scope == "zone" else "fight"
+        with self.db.lock:
+            fights = self.db.list_fights(character=character, limit=200)
+            if not fights:
+                return {"scope": scope, "zone": None, "fight_id": None, "rows": [], "empty": True}
+            latest = fights[0]
+            zone = latest.get("zone")
+            if scope == "fight":
+                detail = self.fight_detail(int(latest["id"]), merge_pets=True)
+                rows = []
+                if detail:
+                    for row in detail.get("sources") or []:
+                        rows.append({
+                            "source": row.get("source"),
+                            "kind": row.get("kind"),
+                            "damage": row.get("damage") or 0,
+                            "dps": row.get("dps"),
+                            "sdps": row.get("sdps"),
+                            "heals": row.get("heals") or 0,
+                        })
+                return {
+                    "scope": "fight",
+                    "zone": zone,
+                    "fight_id": latest.get("id"),
+                    "open": bool(latest.get("open")),
+                    "rows": rows,
+                    "empty": not rows,
+                    "note": "DPS is this fight. Heals are the actual amount, not the parenthetical full amount.",
+                }
+            ids = [int(fight["id"]) for fight in fights if fight.get("zone") == zone]
+            totals: dict[str, dict] = {}
+            for fight_id in ids:
+                for src in self.db.fight_source_rows(fight_id):
+                    name = src["source"]
+                    bucket = totals.setdefault(name, {
+                        "source": name,
+                        "kind": src["source_kind"],
+                        "damage": 0,
+                        "heals": 0,
+                    })
+                    bucket["damage"] += int(src["damage"] or 0)
+                    bucket["heals"] += int(src["heals"] or 0)
+            rows = sorted(totals.values(), key=lambda row: (-row["damage"], row["source"] or ""))
+            return {
+                "scope": "zone",
+                "zone": zone,
+                "fight_id": None,
+                "rows": rows,
+                "empty": not rows,
+                "note": "Totals are the sum of saved fights in this zone. DPS stays on the fight meter.",
+            }
 
     def list_pets_locked(self, character: str) -> list[dict]:
         rows = self.db.conn.execute(

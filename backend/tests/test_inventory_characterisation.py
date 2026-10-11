@@ -22,6 +22,11 @@ from this fixture is unchanged.
 A bag or box name is a container. A worn sheet row or a catalog wearable
 slot is wearable, except exaltations and containers. Hoard N is not in
 this fixture.
+
+1.1.8 adds sections_present: which inventory sections the file actually
+contains (worn, bags, bank, shared bank, hoard, depot, storage). The
+item rows themselves are unchanged. Section merge uses this list so a
+file without Dragon's Hoard does not wipe a hoard imported earlier.
 """
 from __future__ import annotations
 

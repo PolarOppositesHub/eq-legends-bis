@@ -567,6 +567,15 @@ def parse_inventory_tsv(
     keyring_raw: list[dict[str, Any]] = []
     unknown_rows: list[dict[str, Any]] = []
     saw_known_header = False
+    sections_present: set[str] = set()
+    _SECTION_OF_KIND = {
+        "worn": "worn",
+        "general": "bags",
+        "bank": "bank",
+        "sharedbank": "sharedbank",
+        "dragonhorde": "hoard",
+        "depot": "depot",
+    }
 
     for section in _scan_sections(lines):
         kind = section["kind"]
@@ -582,6 +591,7 @@ def parse_inventory_tsv(
         saw_known_header = True
         columns = section["columns"] or {}
         if kind == "keyring":
+            sections_present.add("storage")
             for raw, line_no in section["records"]:
                 cols = raw.split("\t")
                 ring = _cell(cols, columns, "keyring")
@@ -663,6 +673,9 @@ def parse_inventory_tsv(
                 line=line_no,
             )
             container = row["container_kind"]
+            section_id = _SECTION_OF_KIND.get(container)
+            if section_id:
+                sections_present.add(section_id)
             if container == "unknown":
                 unknown_rows.append(_unknown_row(section, raw, line_no))
             rows.append(row)
@@ -795,6 +808,7 @@ def parse_inventory_tsv(
         "rows": rows,
         "keyring": keyring,
         "unknown_rows": unknown_rows,
+        "sections_present": sorted(sections_present),
         "motes": motes,
         "void_touched": void_touched,
         "wind_runes": wind_runes,

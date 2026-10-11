@@ -191,6 +191,30 @@ class CurrencyLedgerTests(unittest.TestCase):
         self.assertEqual(self._row(MINOR)["storage"], 3)
         self.assertEqual(self._view()["pending_merges"], 0)
 
+    def test_seen_in_log_before_a_starting_count_does_not_change_storage(self):
+        self.book.sync(self.character, [
+            {"key": "loot:early", "kind": "loot", "ts": "2026-08-04T21:00:00", "item": CAZA, "qty": 2, "mode": "stored_currency"},
+            {"key": "loot:later", "kind": "loot", "ts": "2026-08-04T21:05:00", "item": CAZA, "qty": 1, "mode": "bag"},
+        ])
+        row = self._row(CAZA)
+        self.assertEqual(row["storage"], 0)
+        self.assertFalse(row["anchored"])
+        self.assertEqual(row["seen_label"], "Seen in log since 2026-08-04: +3")
+        view = self._view()
+        self.assertEqual(view["last_pickup_label"], "Last picked up from log: 2026-08-04 21:05:00")
+        self._anchor(CAZA, 4, "2026-08-04T22:00:00")
+        self.book.sync(self.character, [
+            {"key": "loot:after", "kind": "loot", "ts": "2026-08-04T22:10:00", "item": CAZA, "qty": 1, "mode": "stored_currency"},
+        ])
+        tracked = self._row(CAZA)
+        self.assertEqual(tracked["storage"], 5)
+        self.assertIsNone(tracked["seen_label"])
+        self.book.adjust(self.character, CAZA, -1, "2026-08-04T22:11:00")
+        self.assertEqual(self._row(CAZA)["storage"], 4)
+        self.book.set_anchors(self.character, {GEZA: 2, CAZA: 1}, "2026-08-04T22:12:00")
+        self.assertEqual(self._row(GEZA)["storage"], 2)
+        self.assertEqual(self._row(CAZA)["storage"], 1)
+
 
 class CurrencyReplayTests(unittest.TestCase):
     def test_parser_replay_feeds_the_ledger(self):

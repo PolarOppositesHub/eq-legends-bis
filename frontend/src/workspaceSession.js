@@ -6,11 +6,12 @@
  * would crash the UI after a catalog change.
  */
 import { canonicalItemName } from './itemNames.js'
+import { SECTION_ORDER, migrateSnapshot, sectionStatusFromEvents } from './inventorySections.js'
 import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser']
+export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser', 'alerts']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -580,6 +581,37 @@ function sanitizeCollapsed(raw) {
   return out
 }
 
+function sanitizeSectionEvents(raw, slots) {
+  if (!Array.isArray(raw)) return []
+  const out = []
+  for (const event of raw) {
+    if (out.length >= 80) break
+    if (!event || typeof event !== 'object' || event.type !== 'inventory_section') continue
+    const payload = event.payload && typeof event.payload === 'object' ? event.payload : {}
+    const section = payload.section
+    if (!SECTION_ORDER.includes(section)) continue
+    const worn = section === 'worn'
+    out.push({
+      id: pickText(event.id, 160) || `inventory_section:${section}:${out.length}`,
+      ts: pickText(event.ts, 40),
+      source: event.source === 'manual' ? 'manual' : 'import',
+      type: 'inventory_section',
+      payload: {
+        section,
+        empty: !!payload.empty,
+        rows: sanitizeTreeRows(payload.rows).slice(0, 2000),
+        keyring: sanitizeKeyring(payload.keyring),
+        unknown_rows: sanitizeUnknownRows(payload.unknown_rows),
+        equipment: worn ? pickNameMap(payload.equipment, slots, null) : {},
+        wornUpgrades: worn ? pickUpgradeMap(payload.wornUpgrades, slots) : {},
+        upgrade_hints: worn ? pickUpgradeMap(payload.upgrade_hints, slots) : {},
+        worn: [],
+      },
+    })
+  }
+  return out
+}
+
 function sanitizeImportMeta(raw, slots, itemExists) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const equipment = pickNameMap(raw.equipment, slots, null)
@@ -608,6 +640,23 @@ function sanitizeImportMeta(raw, slots, itemExists) {
   const rows = sanitizeTreeRows(raw.rows)
   const keyring = sanitizeKeyring(raw.keyring)
   const unknownRows = sanitizeUnknownRows(raw.unknown_rows)
+  const importedAt = pickText(raw.imported_at, 40)
+  let sectionEvents = sanitizeSectionEvents(raw.section_events, slots)
+  if (
+    !sectionEvents.length
+    && (rows.length || keyring.length || Object.keys(equipment).length || unknownRows.length)
+  ) {
+    const migrated = migrateSnapshot({
+      imported_at: importedAt,
+      rows,
+      keyring,
+      unknown_rows: unknownRows,
+      equipment,
+      wornUpgrades,
+      upgrade_hints: pickUpgradeMap(raw.upgrade_hints, slots),
+    })
+    sectionEvents = sanitizeSectionEvents(migrated && migrated.section_events, slots)
+  }
   if (
     !Object.keys(equipment).length
     && !allItems.length
@@ -616,6 +665,7 @@ function sanitizeImportMeta(raw, slots, itemExists) {
     && !rows.length
     && !keyring.length
     && !unknownRows.length
+    && !sectionEvents.length
   ) {
     return null
   }
@@ -635,6 +685,9 @@ function sanitizeImportMeta(raw, slots, itemExists) {
     rows,
     keyring,
     unknown_rows: unknownRows,
+    imported_at: importedAt,
+    section_events: sectionEvents,
+    section_status: sectionStatusFromEvents(sectionEvents),
   }
 }
 

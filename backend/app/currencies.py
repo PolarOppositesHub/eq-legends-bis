@@ -207,6 +207,12 @@ def _countdown_label(now: datetime, nxt: datetime) -> str:
     return f"{left} · resets {_ct_clock(nxt)}"
 
 
+def _pickup_label(stamp: str | None) -> str | None:
+    if not stamp or len(stamp) < 19:
+        return None
+    return f"Last picked up from log: {stamp[:10]} {stamp[11:19]}"
+
+
 def _stamp(moment: datetime | None = None) -> str:
     moment = moment or datetime.now()
     if moment.tzinfo is not None:
@@ -417,7 +423,21 @@ class CurrencyBook:
         if _parse_stamp(stamp if isinstance(stamp, str) else None) is None:
             return
         anchor = self._anchor(state, item)
-        if anchor is None or stamp < anchor["ts"]:
+        qty = event.get("qty")
+        try:
+            preview = int(qty if qty is not None else 1)
+        except (TypeError, ValueError):
+            preview = 0
+        unapplied = anchor is None or stamp < anchor["ts"]
+        if unapplied:
+            if kind == "loot" and mode in _ADD_MODES and preview > 0:
+                self._remember_seen(state, item, stamp, preview)
+                self._remember_pickup(state, stamp)
+            elif kind == "loot" and mode == "given" and preview > 0:
+                self._remember_seen(state, item, stamp, preview)
+                self._remember_pickup(state, stamp)
+            elif kind == "loot" and mode == "autosold":
+                self._remember_pickup(state, stamp)
             return
         qty = event.get("qty")
         try:
@@ -451,6 +471,7 @@ class CurrencyBook:
                 autosold=True,
                 event_key=key,
             )
+            self._remember_pickup(state, stamp)
             return
         if mode == "given":
             self._entry(
@@ -462,6 +483,7 @@ class CurrencyBook:
                 evidence=f"You have been given: {item}",
                 event_key=key,
             )
+            self._remember_pickup(state, stamp)
             return
         if mode in _ADD_MODES:
             where = {
@@ -479,6 +501,62 @@ class CurrencyBook:
                 evidence=f"{where}: {amount} {item}",
                 event_key=key,
             )
+            self._remember_pickup(state, stamp)
+
+    def _remember_seen(self, state: dict[str, Any], currency: str, stamp: str, amount: int) -> None:
+        seen = state.setdefault("seen", {})
+        row = dict(seen.get(currency) or {"since": stamp, "plus": 0, "last_ts": stamp})
+        if stamp < (row.get("since") or stamp):
+            row["since"] = stamp
+        if stamp > (row.get("last_ts") or ""):
+            row["last_ts"] = stamp
+        row["plus"] = int(row.get("plus") or 0) + int(amount)
+        seen[currency] = row
+
+    def _remember_pickup(self, state: dict[str, Any], stamp: str) -> None:
+        if stamp and stamp > (state.get("last_pickup") or ""):
+            state["last_pickup"] = stamp
+
+    def adjust(self, character: str, currency: str, delta: int, ts: str | None = None) -> dict[str, Any]:
+        """Add or subtract 1 (or more) from a count that already has a starting count."""
+        if currency_kind(currency) is None:
+            raise ValueError("unknown currency")
+        try:
+            amount = int(delta)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("count must be a whole number") from exc
+        if amount == 0:
+            raise ValueError("adjustment must not be zero")
+        stamp = ts or _stamp()
+        if _parse_stamp(stamp) is None:
+            raise ValueError("timestamp must be YYYY-MM-DDTHH:MM:SS")
+        with self._lock:
+            _key, state = self._resolve(character, create=True)
+            if self._anchor(state, currency) is None:
+                raise ValueError("set a starting count first")
+            storage = self.storage_count(state, currency)
+            if storage + amount < 0:
+                raise ValueError("count must be zero or more")
+            sign = f"+{amount}" if amount > 0 else str(amount)
+            entry = self._entry(
+                state,
+                currency=currency,
+                delta=amount,
+                source="manual",
+                ts=stamp,
+                evidence=f"Adjusted by {sign}",
+            )
+            self._save()
+            return self._public_entry(entry)
+
+    def set_anchors(self, character: str, counts: dict[str, Any], ts: str | None = None) -> dict[str, Any]:
+        """Set a starting count for each named currency in one action."""
+        if not isinstance(counts, dict) or not counts:
+            raise ValueError("counts are required")
+        saved = []
+        for name, count in counts.items():
+            saved.append(self.set_anchor(character, str(name), count, ts))
+        return {"ok": True, "set": len(saved)}
 
     def use(self, character: str, currency: str, qty: int, ts: str | None = None) -> dict[str, Any]:
         """Record 'I used: [grade] x [n]' and clear the pending-merge chip."""
@@ -690,6 +768,7 @@ class CurrencyBook:
                 ledger.setdefault(entry["currency"], []).append(self._public_entry(entry))
             for rows in ledger.values():
                 rows.sort(key=lambda row: (row["ts"], row["seq"]), reverse=True)
+            last_pickup = state.get("last_pickup")
         motes = [row for row in currencies if row["kind"] == "mote"]
         void_row = next(row for row in currencies if row["kind"] == "void_touched")
         runes = [row for row in currencies if row["kind"] == "wind_rune"]
@@ -711,7 +790,17 @@ class CurrencyBook:
             "wind_runes": runes,
             "ledger": ledger,
             "rule": "Bags (from import) + Currency storage = Total.",
+            "last_pickup": last_pickup,
+            "last_pickup_label": _pickup_label(last_pickup),
         }
+
+    def _seen_label(self, state: dict[str, Any], name: str) -> str | None:
+        row = (state.get("seen") or {}).get(name) or {}
+        plus = int(row.get("plus") or 0)
+        since = row.get("since") or ""
+        if plus <= 0 or len(since) < 10:
+            return None
+        return f"Seen in log since {since[:10]}: +{plus}"
 
     def _currency_view(
         self,
@@ -745,6 +834,7 @@ class CurrencyBook:
             "total": total,
             "total_item_xp": (total * int(item_xp)) if item_xp is not None else None,
             "anchored": anchor is not None,
+            "seen_label": self._seen_label(state, name) if anchor is None else None,
             "autosold": autosold,
             "autosold_note": "auto-sold, not kept" if autosold else None,
             "need": None,
