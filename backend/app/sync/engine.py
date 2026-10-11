@@ -35,6 +35,7 @@ from .providers import (
     ONEDRIVE_AUTHORITY,
     ONEDRIVE_CLIENT_ID,
     ONEDRIVE_SCOPES,
+    ONEDRIVE_SIGN_IN,
     FolderProvider,
     OneDriveProvider,
     default_graph_transport,
@@ -53,6 +54,7 @@ class SyncEngine:
         self.clock = clock or _stamp_now
         self._access_token = ""
         self._transport = None
+        self._graph_session: dict[str, Any] = {}
         self._bound: Any = None
         self.state = self._load_state(device_id)
         self._remote: dict[str, list[dict[str, Any]]] = {}
@@ -86,6 +88,7 @@ class SyncEngine:
         data.setdefault("error", "")
         data.setdefault("message", "")
         data.setdefault("auth_expired", False)
+        data.setdefault("reauth", False)
         return data
 
     def _save_state(self) -> None:
@@ -112,6 +115,7 @@ class SyncEngine:
             "error": self.state.get("error") or "",
             "message": self.state.get("message") or "",
             "auth_expired": bool(self.state.get("auth_expired")),
+            "reauth": bool(self.state.get("reauth")),
             "pending": pending,
             "migrated": bool(self.state.get("migrated")),
             "icloud_tip": ICLOUD_TIP if provider == "folder" else "",
@@ -133,7 +137,7 @@ class SyncEngine:
         if provider is not None:
             if provider not in {"", "folder", "onedrive"}:
                 if provider == "google":
-                    raise SyncError("Google Drive sync is planned for 1.1.12 and is not in this version.")
+                    raise SyncError("Google Drive sync is planned for 1.1.13 and is not in this version.")
                 raise SyncError("Choose Sync folder or OneDrive.")
             self.state["provider"] = provider
         if folder is not None:
@@ -163,17 +167,50 @@ class SyncEngine:
         self.state["account"] = account or self.state.get("account") or ""
         self.state["error"] = ""
         self.state["auth_expired"] = False
+        self.state["reauth"] = False
         self._save_state()
         return self.status()
 
     def clear_onedrive_session(self) -> dict[str, Any]:
         self._access_token = ""
+        self._graph_session.clear()
         self.state["account"] = ""
+        self.state["error"] = ""
+        self.state["auth_expired"] = False
+        self.state["reauth"] = False
         if self.state.get("provider") == "onedrive":
             self.state["status"] = "idle"
             self.state["message"] = ""
         self._save_state()
         return self.status()
+
+    def note_onedrive_error(self, error: str, *, auth_expired: bool = False, reauth: bool = False) -> dict[str, Any]:
+        text = " ".join(str(error or "").split())
+        if not text:
+            return self.status()
+        self.state["status"] = "error"
+        self.state["error"] = text
+        self.state["message"] = ""
+        self.state["auth_expired"] = bool(auth_expired)
+        self.state["reauth"] = bool(reauth)
+        self._save_state()
+        return self.status()
+
+    def test_onedrive(self) -> dict[str, Any]:
+        if str(self.state.get("provider") or "") != "onedrive" or not self._access_token:
+            return {"ok": False, "message": ONEDRIVE_SIGN_IN}
+        provider = self._provider()
+        try:
+            return provider.test_connection()
+        except SyncAuthExpired as exc:
+            self.state["status"] = "error"
+            self.state["error"] = str(exc)
+            self.state["auth_expired"] = True
+            self.state["message"] = ""
+            self._save_state()
+            return {"ok": False, "message": str(exc), "auth_expired": True}
+        except SyncError as exc:
+            return {"ok": False, "message": str(exc)}
 
     def _provider(self) -> Any:
         if self._bound is not None:
@@ -186,10 +223,10 @@ class SyncEngine:
             return FolderProvider(folder)
         if kind == "onedrive":
             if not self._access_token:
-                raise SyncError("Sign in to OneDrive.")
+                raise SyncError(ONEDRIVE_SIGN_IN)
             if self._transport is None:
                 self._transport = default_graph_transport()
-            return OneDriveProvider(self._transport, self._access_token)
+            return OneDriveProvider(self._transport, self._access_token, session=self._graph_session)
         if kind == "google":
             return provider_for("google")
         raise SyncError("Choose Sync folder or OneDrive.")

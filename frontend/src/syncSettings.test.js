@@ -4,8 +4,12 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { SyncSettings } from './SyncSettings.jsx'
 import {
+  CONNECTED_APP_FOLDER,
   ICLOUD_TIP,
   ICLOUD_WAITING,
+  SIGN_IN_TEXT,
+  UPDATE_SIGN_IN_TEXT,
+  connectionResultText,
   formatSyncedAt,
   mergeProjection,
   snapshotFromWorkspace,
@@ -33,6 +37,7 @@ test('sync folder settings include the iCloud keep-on-device tip', () => {
   assert.match(html, /data-testid="sync-now"/)
   assert.match(html, /Choose folder/)
   assert.equal(html.includes('Sign in'), false)
+  assert.equal(html.includes('Test connection'), false)
 })
 
 test('OneDrive settings offer sign in until an account is stored', () => {
@@ -48,6 +53,8 @@ test('OneDrive settings offer sign in until an account is stored', () => {
   assert.match(signedIn, /data-testid="sync-sign-out"/)
   assert.match(signedIn, /Last synced 2026-10-11 12:00:00/)
   assert.equal(syncStatusText({ message: ICLOUD_WAITING, error: 'nope' }), ICLOUD_WAITING)
+  assert.match(signedOut, /data-testid="sync-test-connection"/)
+  assert.match(signedOut, /Test connection/)
 })
 
 test('Sync now shows syncing, the local time, and the error', () => {
@@ -82,6 +89,54 @@ test('Sync now shows syncing, the local time, and the error', () => {
   assert.equal(syncFailureText({ ok: true, status: 'ok', error: '' }), '')
   assert.equal(formatSyncedAt(new Date('not-a-date')), '')
   assert.notEqual(formatSyncedAt(new Date('2026-10-11T15:45:00')), '')
+})
+
+test('OneDrive Test connection shows connected, Graph errors, and the sign-in prompts', () => {
+  const connected = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'OneDrive' },
+    deviceName: 'Home PC',
+    connectionText: CONNECTED_APP_FOLDER,
+  }))
+  assert.match(connected, /data-testid="sync-test-connection"/)
+  assert.match(connected, /data-testid="sync-connection"/)
+  assert.match(connected, /Connected to OneDrive App Folder/)
+
+  const graphError = 'OneDrive Graph 401 InvalidAuthenticationToken: IDX14100: JWT is not well formed, there are no dots (.).'
+  const failed = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: '' },
+    deviceName: 'Home PC',
+    connectionText: graphError,
+  }))
+  assert.match(failed, /data-testid="sync-connection"/)
+  assert.match(failed, /401/)
+  assert.match(failed, /InvalidAuthenticationToken/)
+  assert.match(failed, /IDX14100/)
+
+  const testing = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'OneDrive' },
+    deviceName: 'Home PC',
+    testingConnection: true,
+  }))
+  assert.match(testing, /Testing…/)
+
+  const signedOut = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: '', error: SIGN_IN_TEXT },
+    deviceName: 'Home PC',
+  }))
+  assert.match(signedOut, new RegExp(SIGN_IN_TEXT))
+  assert.equal(signedOut.includes('expired'), false)
+
+  const update = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'OneDrive', reauth: true, error: UPDATE_SIGN_IN_TEXT },
+    deviceName: 'Home PC',
+  }))
+  assert.match(update, /data-testid="sync-sign-in"/)
+  assert.match(update, /Sign in to OneDrive again to finish the update/)
+  assert.equal(connectionResultText({ ok: true, message: CONNECTED_APP_FOLDER }), CONNECTED_APP_FOLDER)
+  assert.equal(
+    connectionResultText({ ok: false, message: graphError }),
+    graphError,
+  )
 })
 
 test('workspace snapshot is per character and a projection can add a pin', () => {

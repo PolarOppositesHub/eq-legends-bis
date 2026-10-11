@@ -71,6 +71,12 @@ class OneDriveBody(BaseModel):
     account: str = ""
 
 
+class OneDriveNotice(BaseModel):
+    error: str = ""
+    auth_expired: bool = False
+    reauth: bool = False
+
+
 class SnapshotBody(BaseModel):
     characters: dict[str, Any] = Field(default_factory=dict)
 
@@ -155,6 +161,16 @@ def sync_onedrive(body: OneDriveBody) -> dict[str, Any]:
 @router.post("/onedrive/sign-out")
 def sync_onedrive_out() -> dict[str, Any]:
     return get_engine().clear_onedrive_session()
+
+
+@router.post("/onedrive/notice")
+def sync_onedrive_notice(body: OneDriveNotice) -> dict[str, Any]:
+    return get_engine().note_onedrive_error(body.error, auth_expired=body.auth_expired, reauth=body.reauth)
+
+
+@router.post("/onedrive/test")
+def sync_onedrive_test() -> dict[str, Any]:
+    return get_engine().test_onedrive()
 
 
 @router.post("/capture")

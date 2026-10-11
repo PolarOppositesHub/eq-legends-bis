@@ -1533,6 +1533,7 @@ function oneDriveDeps() {
     removeFile: (file) => {
       try { fs.unlinkSync(file); } catch (_) { /* already gone */ }
     },
+    log: (message) => mainLog('warn', 'onedrive', message),
   };
 }
 
@@ -1651,11 +1652,25 @@ async function startSyncSchedule() {
     const deps = oneDriveDeps();
     if (deps.exists(deps.tokenPath)) {
       const refreshed = await onedriveAuth.refreshAccessToken(deps);
-      if (refreshed.ok && refreshed.access_token) {
+      const outcome = lifecycle.classifyRefresh(refreshed);
+      if (outcome.action === 'post') {
         await postJson('/api/sync/onedrive', {
           access_token: refreshed.access_token,
           account: refreshed.account || '',
         });
+      } else if (outcome.error) {
+        let provider = '';
+        try {
+          const status = await getJson('/api/sync/status');
+          provider = status && status.provider ? status.provider : '';
+        } catch (_) { /* a folder sync should not be overwritten by this notice */ }
+        if (provider !== 'folder') {
+          await postJson('/api/sync/onedrive/notice', {
+            error: outcome.error,
+            auth_expired: outcome.auth_expired,
+            reauth: outcome.reauth,
+          });
+        }
       }
     }
   } catch (err) {

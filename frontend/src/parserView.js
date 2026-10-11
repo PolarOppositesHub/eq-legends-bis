@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.11'
+export const WHATS_NEW_ID = '1.1.12'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,13 +23,13 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.11"
+export const WHATS_NEW_TITLE = "What's new in 1.1.12"
 
 export const WHATS_NEW_POINTS = [
-  'OneDrive sync now actually syncs. After you sign in, currency counts, wish list pins, class and level, and inventory sections upload and download. If the sign-in expires, the app refreshes it once. If that fails, Settings says to sign in again.',
-  'Sync now shows progress and results. The button says Syncing… while it runs, then Synced at the local time, or the error text. A sync failure shows in Settings.',
-  'Closing the app fully exits. The window X quits unless you set X button to Minimize to tray. The first time the app stays in the tray, a notice says how to open it again.',
-  'Reopening while running focuses the app. A second launch brings the window forward. The tray menu Open EQ Legends BiS, and a double-click on the tray icon, do the same.',
+  'OneDrive sign-in asks Microsoft for the App Folder with the full Graph permission. If you already signed in, sign in once more to finish the update.',
+  'Before a sync, the app opens the OneDrive App Folder so a personal Microsoft account has a place to store characters.',
+  'If OneDrive or Microsoft Graph refuses the connection, Settings shows the status and Microsoft\'s error code and message. Test connection in Settings > Sync checks the App Folder and shows the result.',
+  'Sign in to OneDrive is shown when this PC has no saved sign-in. Expired is shown only when a saved sign-in cannot be refreshed.',
 ]
 
 export function currentClassText(current) {

@@ -7,6 +7,8 @@ const X_TRAY = 'tray'
 const TRAY_NOTICE_TITLE = 'EQ Legends BiS'
 const TRAY_NOTICE = 'EQ Legends BiS is still open in the tray. Use Open EQ Legends BiS to show the window, or Quit to exit.'
 const AUTH_EXPIRED_TEXT = 'OneDrive sign-in expired. Sign in again.'
+const SIGN_IN_TEXT = 'Sign in to OneDrive'
+const UPDATE_SIGN_IN_TEXT = 'Sign in to OneDrive again to finish the update'
 
 function xButtonAction(settings) {
   const src = settings || {}
@@ -70,8 +72,40 @@ function isAuthExpiredStatus(status) {
 }
 
 /**
+ * A saved refresh token can be posted, or it needs a Settings notice.
+ * Expired is only for a refresh Microsoft actually rejected.
+ */
+function classifyRefresh(refreshed) {
+  if (refreshed && refreshed.ok === true && refreshed.access_token) {
+    return { action: 'post', auth_expired: false, reauth: false, error: '' }
+  }
+  if (refreshed && refreshed.signedOut) {
+    return {
+      action: 'notice',
+      auth_expired: false,
+      reauth: false,
+      error: refreshed.error || SIGN_IN_TEXT,
+    }
+  }
+  if (refreshed && refreshed.needsUpdate) {
+    return {
+      action: 'notice',
+      auth_expired: false,
+      reauth: true,
+      error: refreshed.error || UPDATE_SIGN_IN_TEXT,
+    }
+  }
+  return {
+    action: 'notice',
+    auth_expired: true,
+    reauth: false,
+    error: (refreshed && refreshed.error) || AUTH_EXPIRED_TEXT,
+  }
+}
+
+/**
  * One Graph 401 refreshes the OneDrive token, posts it, and retries the sync once.
- * A failed refresh is the sign-in message and does not retry again.
+ * No saved token says Sign in to OneDrive. Expired is only a failed refresh.
  */
 async function syncWithAuthRefresh({ sync, refresh, postToken }) {
   const first = await sync()
@@ -79,11 +113,19 @@ async function syncWithAuthRefresh({ sync, refresh, postToken }) {
   let refreshed
   try {
     refreshed = await refresh()
-  } catch (_) {
-    return { ok: false, status: 'error', error: AUTH_EXPIRED_TEXT, auth_expired: true }
+  } catch (err) {
+    const message = String(err && err.message ? err.message : err)
+    return { ok: false, status: 'error', error: message, auth_expired: false }
   }
-  if (!refreshed || refreshed.ok !== true || !refreshed.access_token) {
-    return { ok: false, status: 'error', error: AUTH_EXPIRED_TEXT, auth_expired: true }
+  const outcome = classifyRefresh(refreshed)
+  if (outcome.action !== 'post') {
+    return {
+      ok: false,
+      status: 'error',
+      error: outcome.error,
+      auth_expired: outcome.auth_expired,
+      reauth: outcome.reauth,
+    }
   }
   await postToken({
     access_token: refreshed.access_token,
@@ -98,6 +140,8 @@ module.exports = {
   TRAY_NOTICE_TITLE,
   TRAY_NOTICE,
   AUTH_EXPIRED_TEXT,
+  SIGN_IN_TEXT,
+  UPDATE_SIGN_IN_TEXT,
   xButtonAction,
   shouldMinimizeToTray,
   shouldShowTrayNotice,
@@ -106,5 +150,6 @@ module.exports = {
   shouldReclaimSidecar,
   listenerPidFromListing,
   isAuthExpiredStatus,
+  classifyRefresh,
   syncWithAuthRefresh,
 }

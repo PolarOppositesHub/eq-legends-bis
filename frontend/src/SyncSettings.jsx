@@ -3,6 +3,7 @@ import {
   ICLOUD_TIP,
   ICLOUD_WAITING,
   SYNC_PROVIDERS,
+  connectionResultText,
   formatSyncedAt,
   syncFailureText,
   syncStatusText,
@@ -17,10 +18,13 @@ export function SyncSettings({
   onSignIn,
   onSignOut,
   onSyncNow,
+  onTestConnection,
   onDeviceNameCommit,
   syncing = false,
   syncedAt = '',
   syncError = '',
+  connectionText = '',
+  testingConnection = false,
 }) {
   const provider = status?.provider === 'onedrive' ? 'onedrive' : (status?.provider === 'folder' ? 'folder' : '')
   const line = syncError || syncStatusText(status)
@@ -68,11 +72,25 @@ export function SyncSettings({
         {provider === 'onedrive' && (
           <div style={{ marginTop: '0.45rem' }}>
             {status?.account ? <p className="muted" data-testid="sync-account">{status.account}</p> : null}
+            {(!status?.account || status?.reauth) ? (
+              <button type="button" data-testid="sync-sign-in" onClick={() => onSignIn?.()}>Sign in</button>
+            ) : null}
             {status?.account ? (
               <button type="button" data-testid="sync-sign-out" onClick={() => onSignOut?.()}>Sign out</button>
-            ) : (
-              <button type="button" data-testid="sync-sign-in" onClick={() => onSignIn?.()}>Sign in</button>
-            )}
+            ) : null}
+            <div style={{ marginTop: '0.45rem' }}>
+              <button
+                type="button"
+                data-testid="sync-test-connection"
+                disabled={!!testingConnection}
+                onClick={() => { if (!testingConnection) onTestConnection?.() }}
+              >
+                {testingConnection ? 'Testing…' : 'Test connection'}
+              </button>
+            </div>
+            {connectionText ? (
+              <p className="note" role="status" data-testid="sync-connection">{connectionText}</p>
+            ) : null}
           </div>
         )}
         <div style={{ marginTop: '0.45rem' }}>
@@ -113,6 +131,8 @@ export function SyncSettingsHost() {
   const [syncing, setSyncing] = useState(false)
   const [syncedAt, setSyncedAt] = useState('')
   const [syncError, setSyncError] = useState('')
+  const [connectionText, setConnectionText] = useState('')
+  const [testingConnection, setTestingConnection] = useState(false)
 
   const load = async () => {
     try {
@@ -188,6 +208,20 @@ export function SyncSettingsHost() {
         }
         await load()
       }}
+      onTestConnection={async () => {
+        setTestingConnection(true)
+        setConnectionText('')
+        try {
+          const response = await fetch('/api/sync/onedrive/test', { method: 'POST' })
+          let body = null
+          try { body = await response.json() } catch (_) { body = null }
+          setConnectionText(connectionResultText(body, response.ok ? 0 : response.status))
+        } catch (err) {
+          setConnectionText(String(err?.message || err || 'OneDrive connection test failed.'))
+        } finally {
+          setTestingConnection(false)
+        }
+      }}
       onSignOut={async () => {
         try {
           await desktop()?.signOutOneDrive?.()
@@ -233,6 +267,8 @@ export function SyncSettingsHost() {
       syncing={syncing}
       syncedAt={syncedAt}
       syncError={syncError}
+      connectionText={connectionText}
+      testingConnection={testingConnection}
     />
   )
 }

@@ -1,5 +1,23 @@
 # Next build notes
 
+**Planned as 1.1.12.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.12 — OneDrive personal accounts and Graph errors
+Hotfix on 1.1.11. A personal Microsoft account (msn.com) could refresh an access token, and Graph still returned 401 on the App Folder. The app threw away Graph's JSON body and WWW-Authenticate header, so the code was unknown. Google Drive is not in this release (1.1.13). The custom title bar is not in this release (1.1.13).
+- [x] On any Graph error, keep `error.code` and `error.message` from the JSON body and `error` / `error_description` from WWW-Authenticate. Log them on the sidecar logger `eq.sync.graph` (eq-api.log). Never log the access token. Put the code and message in the Settings error text. A failed token refresh logs and shows Microsoft's `error` and `error_description`.
+- [x] Request `https://graph.microsoft.com/Files.ReadWrite.AppFolder offline_access` on the authorize URL and both token grants, in `onedriveAuth.js` and `ONEDRIVE_SCOPES`. Before listing events, `GET /me/drive/special/approot` once per access token. Authority stays `/common`. Authorization stays `Bearer <token>`.
+- [x] No refresh token says Sign in to OneDrive. Expired only when a refresh is rejected. A token issued for the old short scope says Sign in to OneDrive again to finish the update. Settings > Sync has Test connection for OneDrive.
+- [x] Version **1.1.12** the same way 1.1.11 was bumped, with 1.1.12-only What's new lines. No release publishing.
+- [ ] Custom title bar. Not in 1.1.12.
+
+## Upcoming (1.1.x only)
+- **1.1.13 Tue Oct 13:** Google Drive + custom title bar. The OneDrive personal-account fix shipped in 1.1.12, so it is not carried here.
+- **1.1.14 Fri Oct 16:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.15 Tue Oct 20:** companion features
+- **1.1.16 Fri Oct 23:** Ask AI
+
+---
+
 **Planned as 1.1.11.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.11 — OneDrive sync actually syncs, and closing the app exits

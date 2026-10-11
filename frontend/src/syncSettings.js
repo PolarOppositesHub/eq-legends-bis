@@ -8,6 +8,9 @@ import { applySyncedSections } from './inventorySections.js'
 
 export const ICLOUD_TIP = 'If this folder is in iCloud Drive, mark it Always keep on this device.'
 export const ICLOUD_WAITING = 'waiting for iCloud to download'
+export const CONNECTED_APP_FOLDER = 'Connected to OneDrive App Folder'
+export const SIGN_IN_TEXT = 'Sign in to OneDrive'
+export const UPDATE_SIGN_IN_TEXT = 'Sign in to OneDrive again to finish the update'
 
 export const SYNC_PROVIDERS = [
   { id: 'folder', label: 'Sync folder' },
@@ -121,6 +124,14 @@ export function formatSyncedAt(date) {
   const value = date instanceof Date ? date : new Date(date)
   if (Number.isNaN(value.getTime())) return ''
   return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+/** Plain text for the OneDrive Test connection button. */
+export function connectionResultText(body, httpStatus) {
+  if (body && body.ok === true) return String(body.message || CONNECTED_APP_FOLDER)
+  if (body && (body.message || body.error)) return String(body.message || body.error)
+  if (httpStatus) return `Graph ${httpStatus}`
+  return 'OneDrive connection test failed.'
 }
 
 /** Text to show when a sync call failed. Empty when the call succeeded or is waiting on iCloud. */

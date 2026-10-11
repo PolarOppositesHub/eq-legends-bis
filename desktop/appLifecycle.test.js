@@ -42,10 +42,10 @@ test('Windows kills an orphaned backend tree with taskkill /PID /T /F', () => {
 
 test('a stale backend is reclaimed only when the health check is this app', () => {
   const recorded = { pid: 4321, port: 8765 }
-  assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true, version: '1.1.11' }), true)
+  assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true, version: '1.1.12' }), true)
   assert.equal(lifecycle.shouldReclaimSidecar(recorded, null), false)
   assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true }), false)
-  assert.equal(lifecycle.shouldReclaimSidecar({ port: 8765 }, { ok: true, version: '1.1.11' }), false)
+  assert.equal(lifecycle.shouldReclaimSidecar({ port: 8765 }, { ok: true, version: '1.1.12' }), false)
   const netstat = '  TCP    127.0.0.1:8765    0.0.0.0:0    LISTENING    4321\r\n  TCP    127.0.0.1:87650   0.0.0.0:0    LISTENING    99'
   assert.equal(lifecycle.listenerPidFromListing(netstat, 8765), 4321)
   const ss = 'LISTEN 0 128 127.0.0.1:8765 0.0.0.0:* users:(("python",pid=4321,fd=5))'
@@ -77,7 +77,7 @@ test('a 401 refreshes the OneDrive token once and retries once', async () => {
   assert.deepEqual(posted, { access_token: 'new-token', account: 'Josh' })
 })
 
-test('a failed OneDrive refresh shows the sign-in message and does not retry', async () => {
+test('a failed OneDrive refresh shows Microsoft\'s error and does not retry', async () => {
   let syncs = 0
   let refreshes = 0
   const failed = await lifecycle.syncWithAuthRefresh({
@@ -87,7 +87,7 @@ test('a failed OneDrive refresh shows the sign-in message and does not retry', a
     },
     refresh: async () => {
       refreshes += 1
-      return { ok: false, error: 'expired' }
+      return { ok: false, error: 'invalid_grant: AADSTS70008: The refresh token has expired due to inactivity.' }
     },
     postToken: async () => {
       throw new Error('should not post')
@@ -95,8 +95,40 @@ test('a failed OneDrive refresh shows the sign-in message and does not retry', a
   })
   assert.equal(syncs, 1)
   assert.equal(refreshes, 1)
-  assert.equal(failed.error, 'OneDrive sign-in expired. Sign in again.')
+  assert.match(failed.error, /^invalid_grant: AADSTS70008:/)
   assert.equal(failed.auth_expired, true)
+
+  const generic = await lifecycle.syncWithAuthRefresh({
+    sync: async () => ({ status: 'error', auth_expired: true }),
+    refresh: async () => ({ ok: false }),
+    postToken: async () => {
+      throw new Error('should not post')
+    },
+  })
+  assert.equal(generic.error, 'OneDrive sign-in expired. Sign in again.')
+  assert.equal(generic.auth_expired, true)
+
+  const signedOut = await lifecycle.syncWithAuthRefresh({
+    sync: async () => ({ status: 'error', auth_expired: true }),
+    refresh: async () => ({ ok: false, signedOut: true, error: 'Sign in to OneDrive' }),
+    postToken: async () => {
+      throw new Error('should not post')
+    },
+  })
+  assert.equal(signedOut.error, 'Sign in to OneDrive')
+  assert.equal(signedOut.auth_expired, false)
+  assert.equal(signedOut.error.includes('expired'), false)
+
+  const update = await lifecycle.syncWithAuthRefresh({
+    sync: async () => ({ status: 'error', auth_expired: true }),
+    refresh: async () => ({ ok: false, needsUpdate: true, error: 'Sign in to OneDrive again to finish the update' }),
+    postToken: async () => {
+      throw new Error('should not post')
+    },
+  })
+  assert.equal(update.error, 'Sign in to OneDrive again to finish the update')
+  assert.equal(update.auth_expired, false)
+  assert.equal(update.reauth, true)
 
   const thrown = await lifecycle.syncWithAuthRefresh({
     sync: async () => ({ status: 'error', auth_expired: true }),
@@ -107,7 +139,8 @@ test('a failed OneDrive refresh shows the sign-in message and does not retry', a
       throw new Error('should not post')
     },
   })
-  assert.equal(thrown.error, 'OneDrive sign-in expired. Sign in again.')
+  assert.equal(thrown.error, 'network down')
+  assert.equal(thrown.auth_expired, false)
 })
 
 test('the shell quits on the window X, opens from the tray, and reclaims a stale backend', () => {
