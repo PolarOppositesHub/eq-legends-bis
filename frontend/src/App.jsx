@@ -67,6 +67,7 @@ import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
 import { SyncBridge } from './SyncBridge.jsx'
 import { SyncSettingsHost } from './SyncSettings.jsx'
+import { CloseActionSettingHost } from './CloseActionSetting.jsx'
 import { snapshotFromWorkspace } from './syncSettings.js'
 import { simulatorRecalcDecision } from './simulatorClasses.js'
 import { InventoryWatchStatus } from './inventoryImport.jsx'
@@ -5488,12 +5489,13 @@ export default function App() {
                   )}
                 </div>
               </div>
+              {isDesktopApp && <CloseActionSettingHost />}
               {isDesktopApp && (
                 <div className="settings-row">
                   <div>
                     <label>Quit application</label>
                     <span className="muted">
-                      Closes the planner (same as the window X or Alt+F4). The stock File menu is hidden.
+                      Closes the planner. The window X quits unless Minimize to tray is selected. Alt+F4 quits. The stock File menu is hidden.
                     </span>
                   </div>
                   <button type="button" className="quit-app-btn" onClick={quitDesktopApp}>

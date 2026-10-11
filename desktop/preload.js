@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     return () => ipcRenderer.removeListener('eq:overlay-config', listener);
   },
   syncTouch: () => ipcRenderer.invoke('eq:sync-touch'),
+  syncNow: () => ipcRenderer.invoke('eq:sync-now'),
   pickSyncFolder: () => ipcRenderer.invoke('eq:pick-sync-folder'),
   signInOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-in'),
   signOutOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-out'),

@@ -115,3 +115,19 @@ export function syncStatusText(status) {
   if (status.status === 'offline') return 'Offline. Changes stay on this PC until sync can reach the folder or OneDrive.'
   return ''
 }
+
+/** Local clock time for the Sync now result. Empty when the date is not usable. */
+export function formatSyncedAt(date) {
+  const value = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(value.getTime())) return ''
+  return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+/** Text to show when a sync call failed. Empty when the call succeeded or is waiting on iCloud. */
+export function syncFailureText(result) {
+  if (!result || typeof result !== 'object') return 'Sync failed.'
+  if (result.ok === false || result.status === 'error' || result.status === 'offline') {
+    return String(result.error || result.message || 'Sync failed.')
+  }
+  return ''
+}

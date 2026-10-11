@@ -107,7 +107,7 @@ export function AlertsPanel({ character }) {
           Close to tray
         </label>
       </div>
-      <p className="muted">Lock, unlock, and appearance are on the Parser page. Close to tray is off, so the window X still quits. Snap pulls a meter to the screen edge when you move it.</p>
+      <p className="muted">Lock, unlock, and appearance are on the Parser page. The window X quits unless Close to tray is checked. Settings has the same choice. Snap pulls a meter to the screen edge when you move it.</p>
 
       <ul className="parser-loadouts" data-testid="alert-rules">
         {rules.map((rule) => (

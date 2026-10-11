@@ -6,8 +6,10 @@ import { SyncSettings } from './SyncSettings.jsx'
 import {
   ICLOUD_TIP,
   ICLOUD_WAITING,
+  formatSyncedAt,
   mergeProjection,
   snapshotFromWorkspace,
+  syncFailureText,
   syncStatusText,
 } from './syncSettings.js'
 
@@ -46,6 +48,40 @@ test('OneDrive settings offer sign in until an account is stored', () => {
   assert.match(signedIn, /data-testid="sync-sign-out"/)
   assert.match(signedIn, /Last synced 2026-10-11 12:00:00/)
   assert.equal(syncStatusText({ message: ICLOUD_WAITING, error: 'nope' }), ICLOUD_WAITING)
+})
+
+test('Sync now shows syncing, the local time, and the error', () => {
+  const syncing = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'josh@example.com' },
+    deviceName: 'Home PC',
+    syncing: true,
+  }))
+  assert.match(syncing, /Syncing…/)
+  assert.match(syncing, /disabled/)
+  assert.match(syncing, /aria-busy="true"/)
+  assert.equal(syncing.includes('>Sync now<'), false)
+
+  const done = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'folder', folder: 'C:\\sync' },
+    deviceName: 'Home PC',
+    syncedAt: '3:45 PM',
+  }))
+  assert.match(done, /data-testid="sync-synced-at"/)
+  assert.match(done, /Synced at 3:45 PM/)
+  assert.match(done, />Sync now</)
+  assert.equal(done.includes('Syncing'), false)
+
+  const failed = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'josh@example.com' },
+    deviceName: 'Home PC',
+    syncError: 'OneDrive sign-in expired. Sign in again.',
+  }))
+  assert.match(failed, /data-testid="sync-status"/)
+  assert.match(failed, /OneDrive sign-in expired\. Sign in again\./)
+  assert.equal(syncFailureText({ ok: false, error: 'Sync is not ready.' }), 'Sync is not ready.')
+  assert.equal(syncFailureText({ ok: true, status: 'ok', error: '' }), '')
+  assert.equal(formatSyncedAt(new Date('not-a-date')), '')
+  assert.notEqual(formatSyncedAt(new Date('2026-10-11T15:45:00')), '')
 })
 
 test('workspace snapshot is per character and a projection can add a pin', () => {
