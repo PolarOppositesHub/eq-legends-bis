@@ -26,9 +26,15 @@ from app.sync.engine import SyncEngine  # noqa: E402
 from app.sync.layout import SYNC_DIR_NAME  # noqa: E402
 from app.sync.model import encode_jsonl, log_event_id, make_event  # noqa: E402
 from app.sync.providers import (  # noqa: E402
+    CONNECTED_APP_FOLDER,
     GRAPH_API,
-    ONEDRIVE_SIGN_IN_EXPIRED,
+    ONEDRIVE_SCOPES,
+    ONEDRIVE_SIGN_IN,
+    ONEDRIVE_UPDATE_SIGN_IN,
+    GraphResponse,
     UrllibGraphTransport,
+    describe_graph_error,
+    log_graph_error,
     set_graph_base_url_for_tests,
 )
 import app.sync_api as sync_api  # noqa: E402
@@ -46,6 +52,8 @@ class _Store:
         self.calls: list[tuple[str, str, str | None, bytes]] = []
         self.token = TOKEN
         self.force_unauthorized = False
+        self.unauthorized_body = b'{"error":"invalid_token"}'
+        self.unauthorized_header = ""
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -66,7 +74,12 @@ class _Handler(BaseHTTPRequestHandler):
         path = unquote(self.path.split("?", 1)[0])
         store.calls.append((method, path, auth, body))
         if store.force_unauthorized or auth != f"Bearer {store.token}":
-            self._send(401, b'{"error":"invalid_token"}')
+            extra = {"WWW-Authenticate": store.unauthorized_header} if store.unauthorized_header else None
+            self._send(401, store.unauthorized_body or b'{"error":"invalid_token"}', extra)
+            return
+        bare = path.rstrip("/")
+        if method == "GET" and bare.endswith("/me/drive/special/approot"):
+            self._send(200, b'{"name":"EQ Legends BiS","folder":{}}')
             return
         kind, relative = _split(path)
         if kind == "children" and method == "GET":
@@ -88,9 +101,11 @@ class _Handler(BaseHTTPRequestHandler):
             return
         self._send(404, b"")
 
-    def _send(self, status: int, payload: bytes) -> None:
+    def _send(self, status: int, payload: bytes, extra: dict[str, str] | None = None) -> None:
         payload = payload or b""
         self.send_response(status)
+        for key, value in (extra or {}).items():
+            self.send_header(key, value)
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -193,6 +208,21 @@ class OneDriveTransportTests(unittest.TestCase):
             self.assertTrue(any(("b" * 32) + ".jsonl" in path for path in downloads))
             self.assertTrue(any(("a" * 32) + ".jsonl" in path for path in uploads))
             self.assertTrue(all(auth == f"Bearer {TOKEN}" for _m, _p, auth, _b in store.calls))
+
+            def approot_calls() -> list[str]:
+                return [
+                    path for method, path, _auth, _body in store.calls
+                    if method == "GET" and path.rstrip("/").endswith("/me/drive/special/approot")
+                ]
+
+            self.assertEqual(len(approot_calls()), 1)
+            checked = self.client.post("/api/sync/onedrive/test")
+            self.assertEqual(checked.status_code, 200, checked.text)
+            self.assertEqual(checked.json()["message"], CONNECTED_APP_FOLDER)
+            self.assertEqual(len(approot_calls()), 2)
+            again = self.client.post("/api/sync/now")
+            self.assertEqual(again.json()["status"], "ok", again.text)
+            self.assertEqual(len(approot_calls()), 2)
         finally:
             server.shutdown()
             server.server_close()
@@ -215,13 +245,110 @@ class OneDriveTransportTests(unittest.TestCase):
             body = synced.json()
             self.assertEqual(body["status"], "error")
             self.assertTrue(body["auth_expired"])
-            self.assertEqual(body["error"], ONEDRIVE_SIGN_IN_EXPIRED)
+            self.assertIn("invalid_token", body["error"])
+            self.assertIn("401", body["error"])
             own = f"{SYNC_DIR_NAME}/events/Zasariz/{'a' * 32}.jsonl"
             self.assertNotIn(own, store.files)
         finally:
             server.shutdown()
             server.server_close()
             thread.join(timeout=3)
+
+    def test_graph_401_json_error_reaches_status_and_the_sidecar_log(self) -> None:
+        store = _Store()
+        store.force_unauthorized = True
+        store.unauthorized_body = json.dumps({
+            "error": {
+                "code": "InvalidAuthenticationToken",
+                "message": "IDX14100: JWT is not well formed, there are no dots (.).",
+            }
+        }).encode("utf-8")
+        store.unauthorized_header = 'Bearer error="invalid_token", error_description="The access token is invalid"'
+        server = _Server(store)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            port = server.server_address[1]
+            set_graph_base_url_for_tests(f"http://127.0.0.1:{port}")
+            signed = self.client.post("/api/sync/onedrive", json={"access_token": TOKEN, "account": "OneDrive"})
+            self.assertEqual(signed.status_code, 200, signed.text)
+            with self.assertLogs("eq.sync.graph", level="WARNING") as logs:
+                synced = self.client.post("/api/sync/now")
+            self.assertEqual(synced.status_code, 200, synced.text)
+            body = synced.json()
+            self.assertEqual(body["status"], "error")
+            self.assertTrue(body["auth_expired"])
+            self.assertIn("InvalidAuthenticationToken", body["error"])
+            self.assertIn("IDX14100", body["error"])
+            self.assertIn("WWW-Authenticate", body["error"])
+            self.assertIn("invalid_token", body["error"])
+            self.assertIn("The access token is invalid", body["error"])
+            logged = "\n".join(logs.output)
+            self.assertIn("InvalidAuthenticationToken", logged)
+            self.assertIn("IDX14100", logged)
+            self.assertIn("WWW-Authenticate", logged)
+            self.assertNotIn(TOKEN, logged)
+            self.assertNotIn("Bearer " + TOKEN, logged)
+            tested = self.client.post("/api/sync/onedrive/test")
+            self.assertIn("InvalidAuthenticationToken", tested.json()["message"])
+            self.assertFalse(tested.json()["ok"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_no_token_says_sign_in_and_not_expired(self) -> None:
+        self.engine.configure(provider="onedrive")
+        synced = self.client.post("/api/sync/now")
+        body = synced.json()
+        self.assertEqual(body["error"], ONEDRIVE_SIGN_IN)
+        self.assertNotIn("expired", body["error"].lower())
+        self.assertFalse(body["auth_expired"])
+        notice = self.client.post("/api/sync/onedrive/notice", json={
+            "error": ONEDRIVE_UPDATE_SIGN_IN,
+            "auth_expired": False,
+            "reauth": True,
+        })
+        noted = notice.json()
+        self.assertEqual(noted["error"], ONEDRIVE_UPDATE_SIGN_IN)
+        self.assertFalse(noted["auth_expired"])
+        self.assertTrue(noted["reauth"])
+        checked = self.client.post("/api/sync/onedrive/test")
+        self.assertEqual(checked.json()["message"], ONEDRIVE_SIGN_IN)
+
+
+class GraphErrorParseTests(unittest.TestCase):
+    def test_json_body_and_www_authenticate_are_parsed_and_logged_without_the_token(self) -> None:
+        self.assertEqual(
+            ONEDRIVE_SCOPES,
+            "https://graph.microsoft.com/Files.ReadWrite.AppFolder offline_access",
+        )
+        body = json.dumps({
+            "error": {
+                "code": "InvalidAuthenticationToken",
+                "message": "CompactToken parsing failed secret-token-value",
+            }
+        }).encode("utf-8")
+        header = 'Bearer realm="", error="invalid_token", error_description="The access token is invalid"'
+        response = GraphResponse(401, body, {"WWW-Authenticate": header})
+        detail = describe_graph_error(response)
+        self.assertIn("401", detail)
+        self.assertIn("InvalidAuthenticationToken", detail)
+        self.assertIn("CompactToken parsing failed", detail)
+        self.assertIn("WWW-Authenticate invalid_token: The access token is invalid", detail)
+        with self.assertLogs("eq.sync.graph", level="WARNING") as logs:
+            log_graph_error(
+                "GET",
+                "https://graph.microsoft.com/v1.0/me/drive/special/approot",
+                401,
+                detail,
+                "secret-token-value",
+            )
+        logged = logs.output[0]
+        self.assertIn("InvalidAuthenticationToken", logged)
+        self.assertIn("approot", logged)
+        self.assertNotIn("secret-token-value", logged)
+        self.assertNotIn("Bearer secret-token-value", logged)
 
 
 if __name__ == "__main__":

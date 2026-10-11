@@ -19,7 +19,7 @@ Sync is off unless you turn it on.
 If you sign in, the app stores its sync files only in:
 
 - Your own Google Drive hidden app-data folder, using the scope `https://www.googleapis.com/auth/drive.appdata`, and/or
-- Your own OneDrive App Folder, using Microsoft Graph `Files.ReadWrite.AppFolder` and `offline_access`.
+- Your own OneDrive App Folder, using Microsoft Graph `https://graph.microsoft.com/Files.ReadWrite.AppFolder` and `offline_access`.
 
 It cannot see or access any other files in your Drive or OneDrive.
 

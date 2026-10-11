@@ -86,6 +86,12 @@ def _log_config(log_dir: Path | None) -> dict:
         config["loggers"].setdefault(name, {"level": "INFO"})
         config["loggers"][name].setdefault("handlers", [])
         config["loggers"][name]["handlers"].append("file")
+    # Graph error.code, error.message, and WWW-Authenticate land in eq-api.log.
+    config["loggers"]["eq.sync.graph"] = {
+        "level": "INFO",
+        "handlers": ["file"],
+        "propagate": False,
+    }
     return config
 
 

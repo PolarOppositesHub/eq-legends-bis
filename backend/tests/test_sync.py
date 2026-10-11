@@ -361,6 +361,12 @@ class SyncTests(unittest.TestCase):
             self.assertEqual(wishes, ["Mask of Song", "Cloak of Flames"])
             authed = [headers for _method, _url, headers, _body in graph.calls]
             self.assertTrue(all(row.get("Authorization") == "Bearer test-token" for row in authed))
+            device.sync()
+            approot = [
+                url for method, url, _headers, _body in graph.calls
+                if method == "GET" and url.split("?", 1)[0].rstrip("/").endswith("/me/drive/special/approot")
+            ]
+            self.assertEqual(approot, [f"{GRAPH_ROOT}"])
 
     def test_google_provider_is_not_built(self):
         with self.assertRaises(SyncError):
@@ -378,7 +384,14 @@ class MockGraph:
     def request(self, method: str, url: str, headers: dict, body: bytes | None = None) -> GraphResponse:
         self.calls.append((method, url, headers, body))
         if headers.get("Authorization") != "Bearer test-token":
-            return GraphResponse(401, b"")
+            return GraphResponse(
+                401,
+                b'{"error":{"code":"InvalidAuthenticationToken","message":"bad token"}}',
+                {"WWW-Authenticate": 'Bearer error="invalid_token", error_description="The access token is invalid"'},
+            )
+        bare = url.split("?", 1)[0].rstrip("/")
+        if method == "GET" and bare.endswith("/me/drive/special/approot"):
+            return GraphResponse(200, b'{"id":"approot","name":"app","folder":{}}')
         kind, path = _split_graph(url)
         if method == "GET" and kind == "children":
             names = _children(self.files, path)
@@ -431,7 +444,14 @@ class OneDriveDirectTests(unittest.TestCase):
         provider = OneDriveProvider(graph, "test-token")
         pulled = provider.pull()
         self.assertIn("Zasariz", pulled["events"])
+        self.assertTrue(graph.calls[0][1].split("?", 1)[0].rstrip("/").endswith("/me/drive/special/approot"))
         self.assertTrue(any("/me/drive/special/approot:" in url for _m, url, _h, _b in graph.calls))
+        provider.pull()
+        approot = [
+            url for method, url, _h, _b in graph.calls
+            if method == "GET" and url.split("?", 1)[0].rstrip("/").endswith("/me/drive/special/approot")
+        ]
+        self.assertEqual(len(approot), 1)
 
 
 if __name__ == "__main__":
