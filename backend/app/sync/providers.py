@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import quote
@@ -10,6 +12,7 @@ from urllib.parse import quote
 from .layout import (
     ICLOUD_WAITING,
     SYNC_DIR_NAME,
+    SyncAuthExpired,
     SyncError,
     SyncOffline,
     WaitingForCloud,
@@ -27,10 +30,16 @@ from .layout import (
 )
 from .model import union_events
 
-GRAPH_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot"
+GRAPH_API = "https://graph.microsoft.com/v1.0"
+GRAPH_ROOT = f"{GRAPH_API}/me/drive/special/approot"
 ONEDRIVE_CLIENT_ID = "868f921b-3445-4b09-90bf-13b343145256"
 ONEDRIVE_AUTHORITY = "https://login.microsoftonline.com/common"
 ONEDRIVE_SCOPES = "Files.ReadWrite.AppFolder offline_access"
+ONEDRIVE_SIGN_IN_EXPIRED = "OneDrive sign-in expired. Sign in again."
+GRAPH_TIMEOUT_SECONDS = 30
+
+# Tests point the default transport at a local fake Graph server. Production leaves this unset.
+_graph_base_for_tests: str | None = None
 
 
 class GraphResponse:
@@ -49,6 +58,63 @@ class GraphTransport(Protocol):
     ) -> GraphResponse: ...
 
 
+def set_graph_base_url_for_tests(url: str | None) -> None:
+    """Override the Graph host for tests. Production never calls this."""
+    global _graph_base_for_tests
+    _graph_base_for_tests = url.rstrip("/") if url else None
+
+
+def default_graph_transport() -> "UrllibGraphTransport":
+    """The transport production uses when the caller does not inject one."""
+    return UrllibGraphTransport(base_url=_graph_base_for_tests)
+
+
+class UrllibGraphTransport:
+    """Microsoft Graph over urllib. JSON listings and raw file bytes. No extra packages."""
+
+    def __init__(self, *, base_url: str | None = None, timeout: float = GRAPH_TIMEOUT_SECONDS) -> None:
+        self.base_url = (base_url or GRAPH_API).rstrip("/")
+        self.timeout = timeout
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        body: bytes | None = None,
+    ) -> GraphResponse:
+        target = self._resolve(url)
+        request = urllib.request.Request(
+            target,
+            data=body,
+            headers=dict(headers or {}),
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                payload = response.read()
+                status = int(getattr(response, "status", response.getcode()))
+                return GraphResponse(status, payload)
+        except urllib.error.HTTPError as exc:
+            try:
+                payload = exc.read()
+            except Exception:
+                payload = b""
+            return GraphResponse(int(exc.code), payload or b"")
+        except TimeoutError as exc:
+            raise OSError("OneDrive timed out.") from exc
+        except urllib.error.URLError as exc:
+            raise OSError(f"OneDrive could not be reached: {exc.reason}") from exc
+
+    def _resolve(self, url: str) -> str:
+        production = GRAPH_API.rstrip("/")
+        if self.base_url == production:
+            return url
+        if url.startswith(production):
+            return self.base_url + url[len(production):]
+        return url
+
+
 class SyncProvider(Protocol):
     kind: str
 
@@ -60,13 +126,13 @@ class SyncProvider(Protocol):
 
 
 def provider_for(kind: str, **kwargs: Any) -> SyncProvider:
-    """Build a provider. ``google`` is reserved for 1.1.11."""
+    """Build a provider. ``google`` is reserved for 1.1.12."""
     if kind == "folder":
         return FolderProvider(kwargs["root"])
     if kind == "onedrive":
         return OneDriveProvider(kwargs["transport"], kwargs.get("token") or "")
     if kind == "google":
-        raise SyncError("Google Drive sync is planned for 1.1.11 and is not in this version.")
+        raise SyncError("Google Drive sync is planned for 1.1.12 and is not in this version.")
     raise SyncError("Choose Sync folder or OneDrive.")
 
 
@@ -175,7 +241,7 @@ def _graph_path(relative: str, suffix: str) -> str:
 
 
 class OneDriveProvider:
-    """Microsoft Graph App Folder. Tests pass a fake transport; no network is required."""
+    """Microsoft Graph App Folder. Tests may inject a fake transport."""
 
     kind = "onedrive"
 
@@ -199,7 +265,7 @@ class OneDriveProvider:
         except OSError as exc:
             raise SyncOffline("Offline. Changes stay on this PC until OneDrive is reachable.") from exc
         if response.status == 401:
-            raise SyncError("OneDrive sign-in expired. Sign in again.")
+            raise SyncAuthExpired(ONEDRIVE_SIGN_IN_EXPIRED)
         return response
 
     def pull(self) -> dict[str, Any]:

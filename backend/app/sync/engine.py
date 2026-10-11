@@ -14,6 +14,7 @@ from typing import Any, Callable
 from .layout import (
     ICLOUD_TIP,
     ICLOUD_WAITING,
+    SyncAuthExpired,
     SyncError,
     SyncOffline,
     WaitingForCloud,
@@ -36,6 +37,7 @@ from .providers import (
     ONEDRIVE_SCOPES,
     FolderProvider,
     OneDriveProvider,
+    default_graph_transport,
     provider_for,
 )
 
@@ -83,6 +85,7 @@ class SyncEngine:
         data.setdefault("status", "idle")
         data.setdefault("error", "")
         data.setdefault("message", "")
+        data.setdefault("auth_expired", False)
         return data
 
     def _save_state(self) -> None:
@@ -108,6 +111,7 @@ class SyncEngine:
             "status": self.state.get("status") or "idle",
             "error": self.state.get("error") or "",
             "message": self.state.get("message") or "",
+            "auth_expired": bool(self.state.get("auth_expired")),
             "pending": pending,
             "migrated": bool(self.state.get("migrated")),
             "icloud_tip": ICLOUD_TIP if provider == "folder" else "",
@@ -129,7 +133,7 @@ class SyncEngine:
         if provider is not None:
             if provider not in {"", "folder", "onedrive"}:
                 if provider == "google":
-                    raise SyncError("Google Drive sync is planned for 1.1.11 and is not in this version.")
+                    raise SyncError("Google Drive sync is planned for 1.1.12 and is not in this version.")
                 raise SyncError("Choose Sync folder or OneDrive.")
             self.state["provider"] = provider
         if folder is not None:
@@ -153,9 +157,12 @@ class SyncEngine:
         self._access_token = access_token or ""
         if transport is not None:
             self._transport = transport
+        else:
+            self._transport = default_graph_transport()
         self.state["provider"] = "onedrive"
         self.state["account"] = account or self.state.get("account") or ""
         self.state["error"] = ""
+        self.state["auth_expired"] = False
         self._save_state()
         return self.status()
 
@@ -181,7 +188,7 @@ class SyncEngine:
             if not self._access_token:
                 raise SyncError("Sign in to OneDrive.")
             if self._transport is None:
-                raise SyncError("OneDrive is not connected from this app session.")
+                self._transport = default_graph_transport()
             return OneDriveProvider(self._transport, self._access_token)
         if kind == "google":
             return provider_for("google")
@@ -551,36 +558,21 @@ class SyncEngine:
             self.state["status"] = "idle"
             self.state["error"] = ""
             self.state["message"] = ""
+            self.state["auth_expired"] = False
             self._save_state()
             return self.status()
         try:
             provider = self._provider()
         except SyncError as exc:
-            self.state["status"] = "error"
-            self.state["error"] = str(exc)
-            self.state["message"] = ""
-            self._save_state()
-            return self.status()
+            return self._fail(exc)
         try:
             pulled = provider.pull()
         except SyncOffline as exc:
-            self.state["status"] = "offline"
-            self.state["error"] = str(exc)
-            self.state["message"] = ""
-            self._save_state()
-            return self.status()
+            return self._offline(exc)
         except WaitingForCloud:
-            self.state["status"] = "waiting"
-            self.state["error"] = ""
-            self.state["message"] = ICLOUD_WAITING
-            self._save_state()
-            return self.status()
+            return self._waiting()
         except SyncError as exc:
-            self.state["status"] = "error"
-            self.state["error"] = str(exc)
-            self.state["message"] = ""
-            self._save_state()
-            return self.status()
+            return self._fail(exc)
 
         remote = pulled.get("events") or {}
         self._remote = {key: union_events([rows]) for key, rows in remote.items()}
@@ -605,23 +597,11 @@ class SyncEngine:
                 self.clock(),
             )
         except SyncOffline as exc:
-            self.state["status"] = "offline"
-            self.state["error"] = str(exc)
-            self.state["message"] = ""
-            self._save_state()
-            return self.status()
+            return self._offline(exc)
         except WaitingForCloud:
-            self.state["status"] = "waiting"
-            self.state["error"] = ""
-            self.state["message"] = ICLOUD_WAITING
-            self._save_state()
-            return self.status()
+            return self._waiting()
         except SyncError as exc:
-            self.state["status"] = "error"
-            self.state["error"] = str(exc)
-            self.state["message"] = ""
-            self._save_state()
-            return self.status()
+            return self._fail(exc)
 
         if written_ids:
             remaining: dict[str, list[dict[str, Any]]] = {}
@@ -635,12 +615,37 @@ class SyncEngine:
         now = self.clock()
         self.state["last_synced"] = now
         self.state["error"] = ""
+        self.state["auth_expired"] = False
         if waiting:
             self.state["status"] = "waiting"
             self.state["message"] = ICLOUD_WAITING
         else:
             self.state["status"] = "ok"
             self.state["message"] = ""
+        self._save_state()
+        return self.status()
+
+    def _fail(self, exc: SyncError) -> dict[str, Any]:
+        self.state["status"] = "error"
+        self.state["error"] = str(exc)
+        self.state["message"] = ""
+        self.state["auth_expired"] = isinstance(exc, SyncAuthExpired)
+        self._save_state()
+        return self.status()
+
+    def _offline(self, exc: SyncOffline) -> dict[str, Any]:
+        self.state["status"] = "offline"
+        self.state["error"] = str(exc)
+        self.state["message"] = ""
+        self.state["auth_expired"] = False
+        self._save_state()
+        return self.status()
+
+    def _waiting(self) -> dict[str, Any]:
+        self.state["status"] = "waiting"
+        self.state["error"] = ""
+        self.state["message"] = ICLOUD_WAITING
+        self.state["auth_expired"] = False
         self._save_state()
         return self.status()
 

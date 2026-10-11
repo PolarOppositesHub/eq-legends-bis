@@ -36,6 +36,10 @@ class SyncError(Exception):
     """A sync problem the Settings screen can show."""
 
 
+class SyncAuthExpired(SyncError):
+    """Graph returned 401. The desktop shell may refresh the token and retry once."""
+
+
 def character_folder_name(name: str) -> str:
     text = (name or "").strip()
     if not text or len(text) > 80:

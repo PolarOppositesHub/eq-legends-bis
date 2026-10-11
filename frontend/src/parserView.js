@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.10'
+export const WHATS_NEW_ID = '1.1.11'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,12 +23,13 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.10"
+export const WHATS_NEW_TITLE = "What's new in 1.1.11"
 
 export const WHATS_NEW_POINTS = [
-  'Settings can sync a character’s currency counts, wish list, class and level, and inventory sections with another PC. Choose a Sync folder (iCloud Drive, Dropbox, or any folder you pick) or sign in to OneDrive. Each PC writes only its own file, and the newest count is the one that shows.',
-  'If that folder is in iCloud Drive, mark it Always keep on this device. When iCloud has not downloaded a file yet, sync says waiting for iCloud to download.',
-  'The Parser Overlays panel has Close all. An unlocked meter’s drag bar closes that meter with a compact X. Closing a meter keeps it closed the next time you open the app.',
+  'OneDrive sync now actually syncs. After you sign in, currency counts, wish list pins, class and level, and inventory sections upload and download. If the sign-in expires, the app refreshes it once. If that fails, Settings says to sign in again.',
+  'Sync now shows progress and results. The button says Syncing… while it runs, then Synced at the local time, or the error text. A sync failure shows in Settings.',
+  'Closing the app fully exits. The window X quits unless you set X button to Minimize to tray. The first time the app stays in the tray, a notice says how to open it again.',
+  'Reopening while running focuses the app. A second launch brings the window forward. The tray menu Open EQ Legends BiS, and a double-click on the tray icon, do the same.',
 ]
 
 export function currentClassText(current) {

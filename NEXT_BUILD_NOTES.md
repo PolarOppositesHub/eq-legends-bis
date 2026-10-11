@@ -1,5 +1,23 @@
 # Next build notes
 
+**Planned as 1.1.11.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.11 — OneDrive sync actually syncs, and closing the app exits
+Hotfix on 1.1.10. OneDrive sign-in saved a token, but every sync said OneDrive is not connected because no Graph transport was built. The window X left the process in the tray with no way to open it again. Google Drive is not in this release (1.1.12). The custom title bar is not in this release (1.1.12). Ask AI stays 1.1.15.
+- [x] Default Microsoft Graph transport (urllib, standard library only) when no test transport is injected. A 401 refreshes the token once through the desktop sign-in, then retries. If the refresh fails, Settings says to sign in again.
+- [x] Sync now shows Syncing…, then Synced at the local time, or the error text. Sync failures show in Settings.
+- [x] The window X quits unless X button is Minimize to tray. The first time the app stays in the tray, a notice explains how to open it again. Tray menu Open EQ Legends BiS and a double-click show the window. A second launch focuses the running app. Quit closes overlays, the tray, and the backend. On Windows an orphaned backend is stopped with taskkill /PID /T /F. A stale backend found at startup from the pid file or a health check is stopped so this launch can start fresh.
+- [x] Version **1.1.11** the same way 1.1.10 was bumped, with 1.1.11-only What's new lines. No release publishing.
+- [ ] Custom title bar. Not in 1.1.11. The 1.0.19 chrome work never drew one.
+
+## Upcoming (1.1.x only)
+- **1.1.12 Tue Oct 13:** Google Drive + custom title bar. Window X, tray, and single-instance fixes shipped in 1.1.11, so they are not carried here.
+- **1.1.13 Fri Oct 16:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.14 Tue Oct 20:** companion features
+- **1.1.15 Fri Oct 23:** Ask AI
+
+---
+
 **Planned as 1.1.10.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.10 — Sync phase 1 and overlay close

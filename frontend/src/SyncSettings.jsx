@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { ICLOUD_TIP, ICLOUD_WAITING, SYNC_PROVIDERS, syncStatusText } from './syncSettings.js'
+import {
+  ICLOUD_TIP,
+  ICLOUD_WAITING,
+  SYNC_PROVIDERS,
+  formatSyncedAt,
+  syncFailureText,
+  syncStatusText,
+} from './syncSettings.js'
 
 export function SyncSettings({
   status,
@@ -11,10 +18,13 @@ export function SyncSettings({
   onSignOut,
   onSyncNow,
   onDeviceNameCommit,
+  syncing = false,
+  syncedAt = '',
+  syncError = '',
 }) {
   const provider = status?.provider === 'onedrive' ? 'onedrive' : (status?.provider === 'folder' ? 'folder' : '')
-  const line = syncStatusText(status)
-  const waiting = status?.message === ICLOUD_WAITING
+  const line = syncError || syncStatusText(status)
+  const waiting = !syncError && status?.message === ICLOUD_WAITING
   return (
     <div className="settings-row" data-testid="sync-settings">
       <div>
@@ -66,8 +76,19 @@ export function SyncSettings({
           </div>
         )}
         <div style={{ marginTop: '0.45rem' }}>
-          <button type="button" data-testid="sync-now" onClick={() => onSyncNow?.()}>Sync now</button>
+          <button
+            type="button"
+            data-testid="sync-now"
+            disabled={!!syncing}
+            aria-busy={syncing ? 'true' : 'false'}
+            onClick={() => { if (!syncing) onSyncNow?.() }}
+          >
+            {syncing ? 'Syncing…' : 'Sync now'}
+          </button>
         </div>
+        {syncedAt && !syncing ? (
+          <p className="muted" data-testid="sync-synced-at">Synced at {syncedAt}</p>
+        ) : null}
         {status?.last_synced ? (
           <p className="muted" data-testid="sync-last">Last synced {String(status.last_synced).replace('T', ' ')}</p>
         ) : null}
@@ -89,6 +110,9 @@ function desktop() {
 export function SyncSettingsHost() {
   const [status, setStatus] = useState(null)
   const [deviceName, setDeviceName] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncedAt, setSyncedAt] = useState('')
+  const [syncError, setSyncError] = useState('')
 
   const load = async () => {
     try {
@@ -104,6 +128,12 @@ export function SyncSettingsHost() {
 
   useEffect(() => {
     load()
+    const onError = (event) => {
+      const message = event && event.detail
+      if (message) setSyncError(String(message))
+    }
+    window.addEventListener('eq-sync-error', onError)
+    return () => window.removeEventListener('eq-sync-error', onError)
   }, [])
 
   const save = async (patch) => {
@@ -113,11 +143,22 @@ export function SyncSettingsHost() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       })
-      if (!response.ok) return
+      if (!response.ok) {
+        let message = `Sync settings could not be saved (${response.status}).`
+        try {
+          const body = await response.json()
+          if (typeof body?.detail === 'string' && body.detail) message = body.detail
+        } catch (_) { /* the status line uses the status code */ }
+        setSyncError(message)
+        return
+      }
       const body = await response.json()
       setStatus(body)
+      setSyncError('')
       if (body.device_name) setDeviceName(body.device_name)
-    } catch (_) { /* leave the form as the user left it */ }
+    } catch (err) {
+      setSyncError(String(err?.message || err || 'Sync settings could not be saved.'))
+    }
   }
 
   return (
@@ -135,29 +176,81 @@ export function SyncSettingsHost() {
       onSignIn={async () => {
         const result = await desktop()?.signInOneDrive?.()
         if (result && result.ok === false) {
+          const message = result.error || 'OneDrive sign-in failed.'
+          setSyncError(message)
           setStatus((prev) => ({
             ...(prev || {}),
             provider: 'onedrive',
             status: 'error',
-            error: result.error || 'OneDrive sign-in failed.',
+            error: message,
           }))
           return
         }
         await load()
       }}
       onSignOut={async () => {
-        await desktop()?.signOutOneDrive?.()
         try {
-          await fetch('/api/sync/onedrive/sign-out', { method: 'POST' })
-        } catch (_) { /* status reload shows the signed-out row */ }
+          await desktop()?.signOutOneDrive?.()
+          const response = await fetch('/api/sync/onedrive/sign-out', { method: 'POST' })
+          if (!response.ok) setSyncError(`OneDrive sign-out failed (${response.status}).`)
+        } catch (err) {
+          setSyncError(String(err?.message || err || 'OneDrive sign-out failed.'))
+        }
         await load()
       }}
       onSyncNow={async () => {
+        setSyncing(true)
+        setSyncError('')
         try {
-          await fetch('/api/sync/now', { method: 'POST' })
-        } catch (_) { /* the status line stays on the last error */ }
-        await load()
+          const result = await requestSyncNow()
+          const problem = syncFailureText(result)
+          if (problem) {
+            setSyncError(problem)
+            setSyncedAt('')
+            setStatus((prev) => ({
+              ...(prev || {}),
+              ...result,
+              status: result.status || 'error',
+              error: problem,
+            }))
+          } else if (result.status === 'waiting') {
+            setSyncedAt('')
+            setStatus((prev) => ({ ...(prev || {}), ...result, error: '' }))
+          } else {
+            setSyncedAt(formatSyncedAt(new Date()))
+            setStatus((prev) => ({ ...(prev || {}), ...result, error: '' }))
+          }
+        } catch (err) {
+          const message = String(err?.message || err || 'Sync failed.')
+          setSyncError(message)
+          setSyncedAt('')
+          setStatus((prev) => ({ ...(prev || {}), status: 'error', error: message }))
+        } finally {
+          setSyncing(false)
+          await load()
+        }
       }}
+      syncing={syncing}
+      syncedAt={syncedAt}
+      syncError={syncError}
     />
   )
+}
+
+async function requestSyncNow() {
+  const desk = desktop()
+  if (desk?.syncNow) {
+    const result = await desk.syncNow()
+    if (!result || typeof result !== 'object') throw new Error('Sync did not return a status.')
+    return result
+  }
+  const response = await fetch('/api/sync/now', { method: 'POST' })
+  let body = null
+  try { body = await response.json() } catch (_) { body = null }
+  if (!response.ok) {
+    const detail = body && (body.detail || body.error)
+    throw new Error(typeof detail === 'string' ? detail : `Sync failed (${response.status}).`)
+  }
+  if (!body || typeof body !== 'object') throw new Error('Sync did not return a status.')
+  return body
 }

@@ -335,17 +335,16 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.10 notes", () => {
+test("what's new dialog shows the 1.1.11 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.10")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.10<\/h2>/)
-  assert.match(html, /Sync folder/)
-  assert.match(html, /OneDrive/)
-  assert.match(html, /Always keep on this device/)
-  assert.match(html, /waiting for iCloud to download/)
-  assert.match(html, /Close all/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.9<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.11")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.11<\/h2>/)
+  assert.match(html, /OneDrive sync now actually syncs/)
+  assert.match(html, /Sync now shows progress and results/)
+  assert.match(html, /Closing the app fully exits/)
+  assert.match(html, /Reopening while running focuses the app/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.10<\/h2>/.test(html), false)
 })
 
 test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {

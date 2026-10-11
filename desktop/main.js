@@ -7,7 +7,7 @@
  * PolarOppositesHub/eq-legends-bis (see PACKAGING.md).
  */
 const { app, BrowserWindow, dialog, shell, ipcMain, Menu, nativeTheme, Tray, nativeImage, screen, safeStorage } = require('electron');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const http = require('http');
 const https = require('https');
@@ -20,6 +20,7 @@ const overlayLib = require('./overlayWindows');
 const eqclientIni = require('./eqclientIni');
 const onedriveAuth = require('./onedriveAuth');
 const { SYNC_INTERVAL_MS, planSync } = require('./syncSchedule');
+const lifecycle = require('./appLifecycle');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -46,11 +47,16 @@ if (!gotSingleInstanceLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
-    if (!mainWindow) return;
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.show();
-    mainWindow.focus();
+    focusRunningInstance();
   });
+}
+
+function focusRunningInstance() {
+  const plan = lifecycle.revealWindow(mainWindow);
+  if (plan.action !== 'recreate') return;
+  createWindow({ playIntro: false }).then(() => {
+    if (apiReady && apiPort) showMainUi();
+  }).catch((err) => mainLog('warn', 'second-instance', err && err.message ? err.message : err));
 }
 
 // Main-process + sidecar output also goes to <userData>/logs/main.log. Before
@@ -247,11 +253,118 @@ function startApi() {
   });
   apiProc.stdout.on('data', (d) => { const t = d.toString().trimEnd(); console.log('[api]', t); mainLog('api', t); });
   apiProc.stderr.on('data', (d) => { const t = d.toString().trimEnd(); console.error('[api]', t); mainLog('api', t); });
+  if (apiProc.pid) writeSidecarRecord(apiProc.pid, apiPort);
   apiProc.on('exit', (code, signal) => {
     console.log('[eq] API exited', code, signal);
     mainLog('info', '[eq] API exited', code, signal);
     apiProc = null;
+    if (!quitting) clearSidecarRecord();
   });
+}
+
+function sidecarPidPath() {
+  return path.join(app.getPath('userData'), 'sidecar.pid');
+}
+
+function readSidecarRecord() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(sidecarPidPath(), 'utf8'));
+    return raw && typeof raw === 'object' ? raw : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeSidecarRecord(pid, port) {
+  try {
+    const file = sidecarPidPath();
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify({ pid, port }), 'utf8');
+  } catch (err) {
+    mainLog('warn', 'sidecar pid', err && err.message ? err.message : err);
+  }
+}
+
+function clearSidecarRecord() {
+  try { fs.unlinkSync(sidecarPidPath()); } catch (_) { /* already gone */ }
+}
+
+function probeHealth(port) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/api/health`, (res) => {
+      let body = '';
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body || '{}');
+          resolve(res.statusCode === 200 ? parsed : null);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.setTimeout(800, () => {
+      req.destroy();
+      resolve(null);
+    });
+  });
+}
+
+function killProcessTree(pid) {
+  if (!pid || Number(pid) === process.pid) return;
+  if (process.platform === 'win32') {
+    try {
+      spawnSync('taskkill', lifecycle.taskkillArgs(pid), { windowsHide: true, timeout: 8000 });
+    } catch (err) {
+      mainLog('warn', 'taskkill', err && err.message ? err.message : err);
+    }
+    return;
+  }
+  try {
+    process.kill(Number(pid), 'SIGTERM');
+  } catch (err) {
+    mainLog('warn', 'kill', err && err.message ? err.message : err);
+  }
+}
+
+function listenerPid(port) {
+  const spec = process.platform === 'win32'
+    ? { cmd: 'netstat', args: ['-ano', '-p', 'tcp'] }
+    : { cmd: 'ss', args: ['-ltnp'] };
+  try {
+    const out = spawnSync(spec.cmd, spec.args, { encoding: 'utf8', timeout: 4000, windowsHide: true });
+    return lifecycle.listenerPidFromListing(`${out.stdout || ''}\n${out.stderr || ''}`, port);
+  } catch (_) {
+    return null;
+  }
+}
+
+async function reclaimRecord(recorded) {
+  if (!recorded || !recorded.port) return false;
+  const health = await probeHealth(recorded.port);
+  if (!lifecycle.shouldReclaimSidecar(recorded, health)) return false;
+  mainLog('info', 'stopping orphaned sidecar', recorded.pid, recorded.port);
+  killProcessTree(recorded.pid);
+  clearSidecarRecord();
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  return true;
+}
+
+async function reclaimOrphanedSidecar() {
+  const recorded = readSidecarRecord();
+  if (!recorded) return;
+  const killed = await reclaimRecord(recorded);
+  if (!killed) clearSidecarRecord();
+}
+
+async function reclaimPort(port) {
+  const health = await probeHealth(port);
+  if (!health || health.ok !== true || typeof health.version !== 'string' || !health.version) return false;
+  const recorded = readSidecarRecord();
+  let pid = recorded && Number(recorded.port) === Number(port) ? recorded.pid : null;
+  if (!pid) pid = listenerPid(port);
+  return reclaimRecord({ pid, port });
 }
 
 function waitForHealth(timeoutMs = 60000) {
@@ -296,17 +409,14 @@ function waitForHealth(timeoutMs = 60000) {
 }
 
 function stopApi() {
-  if (!apiProc) return;
-  try {
-    if (process.platform === 'win32') {
-      spawn('taskkill', ['/pid', String(apiProc.pid), '/f', '/t']);
-    } else {
-      apiProc.kill('SIGTERM');
-    }
-  } catch (e) {
-    console.error('[eq] stopApi', e);
-  }
+  const proc = apiProc;
+  const pid = proc && proc.pid;
   apiProc = null;
+  if (proc) {
+    try { proc.kill('SIGTERM'); } catch (_) { /* Windows falls through to taskkill */ }
+  }
+  if (process.platform === 'win32' && pid) killProcessTree(pid);
+  clearSidecarRecord();
 }
 
 function resolveSplashVideo() {
@@ -444,15 +554,17 @@ async function createWindow({ playIntro = false } = {}) {
     await mainWindow.loadFile(splashHtml, { query: { src: 'skip' } });
   }
   mainWindow.on('close', (event) => {
-    if (!quitting && readSettings().closeToTray === true) {
+    if (quitting) return;
+    // Default is quit. Hiding here used to leave the tray and the alert host
+    // alive, so the process stayed in Task Manager and a second launch did nothing.
+    if (lifecycle.shouldMinimizeToTray(readSettings())) {
       event.preventDefault();
-      mainWindow.hide();
-      ensureTray();
+      hideMainWindowToTray();
       return;
     }
-    for (const win of overlayWindows.values()) {
-      if (win && !win.isDestroyed()) win.close();
-    }
+    event.preventDefault();
+    quitting = true;
+    app.quit();
   });
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -780,6 +892,78 @@ function ensureAlertHost() {
   return alertHost;
 }
 
+function openFromTray() {
+  const plan = lifecycle.revealWindow(mainWindow);
+  if (plan.action !== 'recreate') return;
+  createWindow({ playIntro: false }).then(() => {
+    if (apiReady && apiPort) showMainUi();
+  }).catch((err) => mainLog('warn', 'tray open', err && err.message ? err.message : err));
+}
+
+function hideMainWindowToTray() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.hide();
+  ensureTray();
+  showTrayNoticeOnce();
+}
+
+function showTrayNoticeOnce() {
+  if (!lifecycle.shouldShowTrayNotice(readSettings())) return;
+  const title = lifecycle.TRAY_NOTICE_TITLE;
+  const content = lifecycle.TRAY_NOTICE;
+  let shown = false;
+  try {
+    if (tray && typeof tray.displayBalloon === 'function') {
+      tray.displayBalloon({ title, content, iconType: 'info' });
+      shown = true;
+    }
+  } catch (err) {
+    mainLog('warn', 'tray notice', err && err.message ? err.message : err);
+  }
+  if (!shown) {
+    try {
+      const { Notification } = require('electron');
+      if (Notification.isSupported()) {
+        new Notification({ title, body: content }).show();
+        shown = true;
+      }
+    } catch (err) {
+      mainLog('warn', 'tray notice', err && err.message ? err.message : err);
+    }
+  }
+  if (shown) writeSettings({ trayNoticeShown: true });
+}
+
+function destroyTray() {
+  if (!tray) return;
+  try { tray.destroy(); } catch (_) { /* already gone */ }
+  tray = null;
+}
+
+function closeAuxiliaryWindows() {
+  for (const win of [...overlayWindows.values()]) {
+    if (win && !win.isDestroyed()) {
+      try { win.destroy(); } catch (_) { /* already gone */ }
+    }
+  }
+  overlayWindows.clear();
+  if (alertHost && !alertHost.isDestroyed()) {
+    try { alertHost.destroy(); } catch (_) { /* already gone */ }
+  }
+  alertHost = null;
+}
+
+function quitCleanup() {
+  if (overlayRaiseTimer) {
+    clearInterval(overlayRaiseTimer);
+    overlayRaiseTimer = null;
+  }
+  stopInventoryWatcher();
+  stopSyncSchedule();
+  closeAuxiliaryWindows();
+  destroyTray();
+}
+
 function ensureTray() {
   if (tray) return;
   try {
@@ -791,7 +975,7 @@ function ensureTray() {
     tray = new Tray(image);
     tray.setToolTip('EQ Legends BiS');
     tray.setContextMenu(Menu.buildFromTemplate([
-      { label: 'Show EQ Legends BiS', click: () => { if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); } } },
+      { label: 'Open EQ Legends BiS', click: () => openFromTray() },
       { label: 'DPS meter', click: () => openOverlayWindow('dps') },
       { label: 'Heal meter', click: () => openOverlayWindow('heal') },
       { label: 'Alert banner', click: () => openOverlayWindow('alert') },
@@ -804,12 +988,7 @@ function ensureTray() {
       },
       { label: 'Quit', click: () => { quitting = true; app.quit(); } },
     ]));
-    tray.on('click', () => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.show();
-        mainWindow.focus();
-      }
-    });
+    tray.on('double-click', () => openFromTray());
   } catch (err) {
     console.log('[eq] tray unavailable', err && err.message);
     tray = null;
@@ -926,6 +1105,7 @@ ipcMain.handle('eq:app-info', async () => ({
 }));
 
 ipcMain.handle('eq:quit', async () => {
+  quitting = true;
   app.quit();
   return { ok: true };
 });
@@ -948,6 +1128,13 @@ function readSettings() {
 function writeSettings(patch) {
   const cur = readSettings();
   const next = { ...cur, ...(patch || {}) };
+  if (patch && Object.prototype.hasOwnProperty.call(patch, 'xButton')) {
+    next.xButton = patch.xButton === 'tray' ? 'tray' : 'quit';
+    next.closeToTray = next.xButton === 'tray';
+  } else if (patch && Object.prototype.hasOwnProperty.call(patch, 'closeToTray')) {
+    next.closeToTray = patch.closeToTray === true;
+    next.xButton = next.closeToTray ? 'tray' : 'quit';
+  }
   const p = settingsPath();
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(next, null, 2), 'utf8');
@@ -1006,9 +1193,11 @@ function pathIsInside(parent, child) {
 
 function settingsView(s) {
   const src = s || {};
+  const xButton = lifecycle.xButtonAction(src);
   return {
     ok: true,
-    closeToTray: src.closeToTray === true,
+    closeToTray: xButton === 'tray',
+    xButton,
     eqInstallFolder: src.eqInstallFolder || '',
     lastInventoryPath: src.lastInventoryPath || '',
     lastInventoryName: src.lastInventoryName || '',
@@ -1277,7 +1466,23 @@ function postJson(pathname, body, timeoutMs = 30000) {
       let raw = '';
       res.on('data', (chunk) => { raw += chunk; });
       res.on('end', () => {
-        try { resolve(JSON.parse(raw || '{}')); } catch (_) { resolve({}); }
+        let parsed = {};
+        try {
+          parsed = raw ? JSON.parse(raw) : {};
+        } catch (_) {
+          if (res.statusCode >= 400) {
+            reject(new Error(raw || `Sync failed (${res.statusCode}).`));
+            return;
+          }
+          resolve({});
+          return;
+        }
+        if (res.statusCode >= 400) {
+          const detail = parsed && (parsed.detail || parsed.error);
+          reject(new Error(typeof detail === 'string' ? detail : `Sync failed (${res.statusCode}).`));
+          return;
+        }
+        resolve(parsed);
       });
     });
     req.on('error', reject);
@@ -1403,16 +1608,29 @@ function stopSyncSchedule() {
 }
 
 async function runSync(reason) {
-  if (!apiPort || !apiReady) return { ok: false };
+  if (!apiPort || !apiReady) return { ok: false, status: 'error', error: 'Sync is not ready.' };
   syncing = true;
   try {
-    const status = await postJson('/api/sync/now', {}, reason === 'quit' ? 4000 : 30000);
+    const status = await lifecycle.syncWithAuthRefresh({
+      sync: () => postJson('/api/sync/now', {}, reason === 'quit' ? 4000 : 30000),
+      refresh: () => onedriveAuth.refreshAccessToken(oneDriveDeps()),
+      postToken: (body) => postJson('/api/sync/onedrive', body),
+    });
     ignoreWatchUntil = Date.now() + 2500;
     if (reason !== 'quit') await refreshSyncWatch();
-    return status;
+    if (status && status.auth_expired === true && status.ok !== true && status.status !== 'ok') {
+      return {
+        ok: false,
+        status: 'error',
+        error: status.error || lifecycle.AUTH_EXPIRED_TEXT,
+        auth_expired: true,
+      };
+    }
+    return status && typeof status === 'object' ? status : { ok: false, status: 'error', error: 'Sync did not return a status.' };
   } catch (err) {
-    mainLog('warn', 'sync', reason, err && err.message ? err.message : err);
-    return { ok: false, error: String(err && err.message ? err.message : err) };
+    const message = String(err && err.message ? err.message : err);
+    mainLog('warn', 'sync', reason, message);
+    return { ok: false, status: 'error', error: message };
   } finally {
     syncing = false;
   }
@@ -1455,6 +1673,8 @@ ipcMain.handle('eq:sync-touch', async () => {
   return { ok: true };
 });
 
+ipcMain.handle('eq:sync-now', async () => runSync('now'));
+
 ipcMain.handle('eq:pick-sync-folder', async () => {
   const result = await dialog.showOpenDialog({
     title: 'Choose a sync folder',
@@ -1494,8 +1714,20 @@ app.whenReady().then(async () => {
   // Drop the stock File/Edit/View menu — in-app Quit + window chrome still exit.
   Menu.setApplicationMenu(null);
   instanceNonce = crypto.randomBytes(16).toString('hex');
+  try {
+    await reclaimOrphanedSidecar();
+  } catch (err) {
+    mainLog('warn', 'orphan sidecar', err && err.message ? err.message : err);
+  }
   if (process.env.EQ_API_PORT) {
     apiPort = Number(process.env.EQ_API_PORT) || 0;
+  }
+  if (apiPort) {
+    try {
+      await reclaimPort(apiPort);
+    } catch (err) {
+      mainLog('warn', 'orphan port', err && err.message ? err.message : err);
+    }
   }
   if (!apiPort) {
     try {
@@ -1538,12 +1770,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', (event) => {
   quitting = true;
-  if (overlayRaiseTimer) {
-    clearInterval(overlayRaiseTimer);
-    overlayRaiseTimer = null;
-  }
-  stopInventoryWatcher();
-  stopSyncSchedule();
+  quitCleanup();
   if (quitSyncStarted || !apiReady || !apiPort) {
     stopApi();
     return;
@@ -1554,6 +1781,12 @@ app.on('before-quit', (event) => {
     stopApi();
     app.quit();
   });
+});
+
+app.on('will-quit', () => {
+  quitting = true;
+  quitCleanup();
+  stopApi();
 });
 
 app.on('activate', () => {

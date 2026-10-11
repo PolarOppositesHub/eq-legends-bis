@@ -24,14 +24,29 @@ export function SyncBridge({ snapshot, onApply, enabled = true }) {
           headers: { 'Content-Type': 'application/json' },
           body: json,
         })
-        if (!response.ok || cancel) return
+        if (cancel) return
+        if (!response.ok) {
+          let message = `Sync could not save changes (${response.status}).`
+          try {
+            const failed = await response.json()
+            if (typeof failed?.detail === 'string' && failed.detail) message = failed.detail
+          } catch (_) { /* keep the status text */ }
+          if (desktop()?.isDesktop && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('eq-sync-error', { detail: message }))
+          }
+          return
+        }
         const body = await response.json()
         if (cancel) return
         const merged = mergeProjection(JSON.parse(json), body.projection)
         if (merged && onApplyRef.current) onApplyRef.current(merged)
         desktop()?.syncTouch?.()
-      } catch (_) {
-        /* The sidecar is not up in a browser test. Local data stays. */
+      } catch (err) {
+        if (desktop()?.isDesktop && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('eq-sync-error', {
+            detail: String(err?.message || err || 'Sync could not save changes.'),
+          }))
+        }
       }
     }, delay)
     return () => {
