@@ -45,7 +45,7 @@ Josh-chosen Polar Opposites intro — source MP4 only; do not invent or replace 
 - Source: `packaging/splash/polar-opposites-intro.mp4`
 - Electron plays `splash.html` (`<video>`) from the same folder as the MP4, then loads the planner UI
 - **Any key skips** (main-process `before-input-event` + renderer keydown). Click also skips. Natural end proceeds.
-- Packaged via electron-builder `extraResources` → `resources/splash/polar-opposites-intro.mp4` + `splash.html` (outside asar, so portable/offline works). `scripts/bundle_desktop_resources.py` also copies them into `desktop/resources/splash/`
+- Packaged once via electron-builder `extraResources` from `packaging/splash/` → `resources/splash/polar-opposites-intro.mp4` + `splash.html` (outside asar, so portable/offline works). The `resources/` extraResources rule excludes `splash/**`, so the copy `scripts/bundle_desktop_resources.py` makes under `desktop/resources/splash/` is not packed a second time.
 - Version / updater (`PolarOppositesHub/eq-legends-bis`) untouched
 
 ## Sharing

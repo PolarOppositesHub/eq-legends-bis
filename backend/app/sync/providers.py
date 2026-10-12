@@ -9,7 +9,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any, Protocol
-from urllib.parse import quote
+from urllib.parse import quote, urljoin, urlsplit
 
 from .layout import (
     ICLOUD_WAITING,
@@ -45,7 +45,12 @@ ONEDRIVE_SIGN_IN_EXPIRED = "OneDrive sign-in expired. Sign in again."
 ONEDRIVE_UPDATE_SIGN_IN = "Sign in to OneDrive again to finish the update"
 CONNECTED_APP_FOLDER = "Connected to OneDrive App Folder"
 GRAPH_TIMEOUT_SECONDS = 30
+# Graph /content answers 302 to a pre-authenticated host. Cap the chase.
+GRAPH_MAX_REDIRECTS = 5
 GRAPH_LOGGER = logging.getLogger("eq.sync.graph")
+_SAFE_REDIRECT_HEADERS = frozenset({"accept", "accept-language", "user-agent"})
+_CREDENTIAL_HEADERS = frozenset({"authorization", "cookie", "proxy-authorization"})
+_DOWNLOAD_URL = "@microsoft.graph.downloadUrl"
 
 _WWW_AUTH_PARAM = re.compile(r'([A-Za-z0-9_\-]+)\s*=\s*("(?:\\.|[^"])*"|[^,\s]+)')
 
@@ -54,10 +59,22 @@ _graph_base_for_tests: str | None = None
 
 
 class GraphResponse:
-    def __init__(self, status: int, body: bytes, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        status: int,
+        body: bytes,
+        headers: dict[str, str] | None = None,
+        *,
+        url: str = "",
+        graph_host: bool | None = None,
+    ) -> None:
         self.status = status
         self.body = body or b""
         self.headers = dict(headers or {})
+        self.url = url
+        # None means the caller did not say. A Graph 401 is still auth-expired.
+        # False means a different host, such as the personal OneDrive download URL.
+        self.graph_host = graph_host
 
     def header(self, name: str) -> str:
         wanted = name.lower()
@@ -88,12 +105,57 @@ def default_graph_transport() -> "UrllibGraphTransport":
     return UrllibGraphTransport(base_url=_graph_base_for_tests)
 
 
+def skipped_files_message(count: int) -> str:
+    """Settings text when sync finished and left some files behind."""
+    n = int(count or 0)
+    if n <= 0:
+        return ""
+    if n == 1:
+        return "Synced with 1 file skipped"
+    return f"Synced with {n} files skipped"
+
+
+def _endpoint_key(url: str) -> tuple[str, int]:
+    parts = urlsplit(str(url or ""))
+    host = (parts.hostname or "").lower()
+    if parts.port:
+        port = int(parts.port)
+    elif parts.scheme == "https":
+        port = 443
+    elif parts.scheme == "http":
+        port = 80
+    else:
+        port = 0
+    return host, port
+
+
+def _safe_redirect_headers(headers: dict[str, str] | None) -> dict[str, str]:
+    safe: dict[str, str] = {}
+    for key, value in (headers or {}).items():
+        if str(key).lower() in _SAFE_REDIRECT_HEADERS:
+            safe[str(key)] = str(value)
+    return safe
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Do not follow 3xx. The transport fetches Location itself, without credentials."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        return None
+
+
 class UrllibGraphTransport:
-    """Microsoft Graph over urllib. JSON listings and raw file bytes. No extra packages."""
+    """Microsoft Graph over urllib. JSON listings and raw file bytes. No extra packages.
+
+    A file download from ``:/content`` is a 302 to a pre-authenticated URL on
+    another host. urllib's default handler would keep ``Authorization: Bearer``
+    on that hop, and the personal OneDrive download host answers 401.
+    """
 
     def __init__(self, *, base_url: str | None = None, timeout: float = GRAPH_TIMEOUT_SECONDS) -> None:
         self.base_url = (base_url or GRAPH_API).rstrip("/")
         self.timeout = timeout
+        self._opener = urllib.request.build_opener(_NoRedirectHandler())
 
     def request(
         self,
@@ -103,23 +165,84 @@ class UrllibGraphTransport:
         body: bytes | None = None,
     ) -> GraphResponse:
         target = self._resolve(url)
-        request = urllib.request.Request(
-            target,
-            data=body,
-            headers=dict(headers or {}),
-            method=method,
-        )
+        method_now = method
+        body_now = body
+        header_now = dict(headers or {})
+        response = self._open(method_now, target, header_now, body_now)
+        seen = {target}
+        hops = 0
+        while 300 <= response.status < 400:
+            location = response.header("Location").strip()
+            if not location:
+                break
+            hops += 1
+            if hops > GRAPH_MAX_REDIRECTS:
+                raise OSError("OneDrive redirected too many times.")
+            nxt = urljoin(response.url or target, location)
+            parts = urlsplit(nxt)
+            if parts.scheme not in {"http", "https"}:
+                raise OSError("OneDrive redirected to an unsupported URL.")
+            if nxt in seen:
+                raise OSError("OneDrive redirected too many times.")
+            seen.add(nxt)
+            if response.status in {301, 302, 303} and method_now not in {"GET", "HEAD"}:
+                method_now = "GET"
+                body_now = None
+            # Fresh request. No Authorization, including when the next host is still Graph.
+            response = self._open(method_now, nxt, _safe_redirect_headers(headers), body_now)
+            target = nxt
+        return response
+
+    def _auth_allowed(self, url: str) -> bool:
+        """Bearer stays on the Graph host. A test base stands in for that host."""
+        return self._is_graph_host(url)
+
+    def _is_graph_host(self, url: str) -> bool:
+        host, port = _endpoint_key(url)
+        if host == "graph.microsoft.com":
+            return True
+        return (host, port) == _endpoint_key(self.base_url)
+
+    def _open(
+        self,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        body: bytes | None,
+    ) -> GraphResponse:
+        send = dict(headers or {})
+        if not self._auth_allowed(url):
+            send = {
+                str(key): str(value)
+                for key, value in send.items()
+                if str(key).lower() not in _CREDENTIAL_HEADERS
+            }
+        request = urllib.request.Request(url, data=body, headers=send, method=method)
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+            with self._opener.open(request, timeout=self.timeout) as response:
                 payload = response.read()
                 status = int(getattr(response, "status", response.getcode()))
-                return GraphResponse(status, payload, _header_map(getattr(response, "headers", None)))
+                final = str(getattr(response, "url", None) or url)
+                return GraphResponse(
+                    status,
+                    payload,
+                    _header_map(getattr(response, "headers", None)),
+                    url=final,
+                    graph_host=self._is_graph_host(final),
+                )
         except urllib.error.HTTPError as exc:
             try:
                 payload = exc.read()
             except Exception:
                 payload = b""
-            return GraphResponse(int(exc.code), payload or b"", _header_map(getattr(exc, "headers", None)))
+            final = str(getattr(exc, "url", None) or url)
+            return GraphResponse(
+                int(exc.code),
+                payload or b"",
+                _header_map(getattr(exc, "headers", None)),
+                url=final,
+                graph_host=self._is_graph_host(final),
+            )
         except TimeoutError as exc:
             raise OSError("OneDrive timed out.") from exc
         except urllib.error.URLError as exc:
@@ -145,13 +268,13 @@ class SyncProvider(Protocol):
 
 
 def provider_for(kind: str, **kwargs: Any) -> SyncProvider:
-    """Build a provider. ``google`` is reserved for 1.1.13."""
+    """Build a provider. ``google`` is reserved for 1.1.14."""
     if kind == "folder":
         return FolderProvider(kwargs["root"])
     if kind == "onedrive":
         return OneDriveProvider(kwargs["transport"], kwargs.get("token") or "")
     if kind == "google":
-        raise SyncError("Google Drive sync is planned for 1.1.13 and is not in this version.")
+        raise SyncError("Google Drive sync is planned for 1.1.14 and is not in this version.")
     raise SyncError("Choose Sync folder or OneDrive.")
 
 
@@ -360,6 +483,8 @@ class OneDriveProvider:
         self.transport = transport
         self.token = token or ""
         self.session = session if session is not None else {}
+        self.skipped = 0
+        self._skipped_keys: set[str] = set()
 
     def _headers(self, content: bool = False) -> dict[str, str]:
         # Graph requires the Bearer scheme and a single space. The token is not logged.
@@ -380,7 +505,9 @@ class OneDriveProvider:
         if response.status >= 400:
             detail = describe_graph_error(response)
             log_graph_error(method, url, response.status, detail, self.token)
-            if response.status == 401:
+            # A 401 from graph.microsoft.com (or the test stand-in) is an expired
+            # sign-in. A 401 from the pre-authenticated download host is not.
+            if response.status == 401 and response.graph_host is not False:
                 raise SyncAuthExpired(f"OneDrive Graph {detail}")
         return response
 
@@ -402,6 +529,8 @@ class OneDriveProvider:
         return {"ok": True, "message": CONNECTED_APP_FOLDER}
 
     def pull(self) -> dict[str, Any]:
+        self.skipped = 0
+        self._skipped_keys = set()
         self.ensure_approot()
         events: dict[str, list[dict[str, Any]]] = {}
         listing = self._call("GET", _graph_path(f"{SYNC_DIR_NAME}/events", "/children"))
@@ -424,20 +553,74 @@ class OneDriveProvider:
             if children.status >= 400:
                 raise SyncError(f"OneDrive could not list {character} ({describe_graph_error(children)}).")
             gathered: list[list[dict[str, Any]]] = []
+            downloads = _download_url_map(children.body)
             for name in _child_names(children.body, folders_only=False):
                 if not is_event_filename(name):
                     continue
-                downloaded = self._call("GET", _graph_path(f"{relative}/{name}", "/content"))
-                if downloaded.status == 404:
+                payload = self._read_download(f"{relative}/{name}", downloads.get(name, ""))
+                if payload is None:
                     continue
-                if downloaded.status >= 400:
-                    raise SyncError(f"OneDrive could not read {name} ({describe_graph_error(downloaded)}).")
                 from .model import decode_jsonl
-                text = downloaded.body.decode("utf-8", errors="replace")
+                text = payload.decode("utf-8", errors="replace")
                 gathered.append(decode_jsonl(text))
             events[character] = union_events(gathered)
         manifest = self._pull_manifest()
-        return {"events": events, "waiting": False, "manifest": manifest, "message": ""}
+        return {
+            "events": events,
+            "waiting": False,
+            "manifest": manifest,
+            "message": skipped_files_message(self.skipped),
+            "skipped": self.skipped,
+        }
+
+    def _read_download(self, relative: str, download_url: str = "") -> bytes | None:
+        """File bytes, or None when the file is missing or skipped.
+
+        ``@microsoft.graph.downloadUrl`` is preferred when the listing has one.
+        A failure there falls back to ``:/content``. One failed file does not
+        raise; a Graph 401 on the Graph host still does.
+        """
+        candidates: list[str] = []
+        direct = str(download_url or "").strip()
+        if direct:
+            candidates.append(direct)
+        candidates.append(_graph_path(relative, "/content"))
+        for index, url in enumerate(candidates):
+            last = index == len(candidates) - 1
+            try:
+                response = self._call("GET", url)
+            except SyncAuthExpired:
+                raise
+            except SyncOffline as exc:
+                if last:
+                    log_graph_error("GET", url, 0, str(exc), self.token)
+                    self._note_skip(relative)
+                    return None
+                continue
+            if 200 <= response.status < 300:
+                return response.body
+            if response.status == 404:
+                if last:
+                    return None
+                continue
+            if last:
+                if response.status < 400:
+                    log_graph_error(
+                        "GET",
+                        response.url or url,
+                        response.status,
+                        str(response.status),
+                        self.token,
+                    )
+                self._note_skip(relative)
+                return None
+        return None
+
+    def _note_skip(self, relative: str) -> None:
+        if relative in self._skipped_keys:
+            return
+        self._skipped_keys.add(relative)
+        self.skipped += 1
 
     def _pull_manifest(self) -> dict[str, Any]:
         parts: list[dict[str, Any]] = []
@@ -446,15 +629,16 @@ class OneDriveProvider:
             return {"version": 1, "devices": {}}
         if listing.status >= 400:
             return {"version": 1, "devices": {}}
+        downloads = _download_url_map(listing.body)
         for name in _child_names(listing.body, folders_only=False):
             lower = name.lower()
             if lower != "manifest.json" and not (lower.startswith("manifest") and is_conflicted_name(name)):
                 continue
-            downloaded = self._call("GET", _graph_path(f"{SYNC_DIR_NAME}/{name}", "/content"))
-            if downloaded.status >= 400:
+            payload = self._read_download(f"{SYNC_DIR_NAME}/{name}", downloads.get(name, ""))
+            if payload is None:
                 continue
             try:
-                data = json.loads(downloaded.body.decode("utf-8"))
+                data = json.loads(payload.decode("utf-8"))
             except json.JSONDecodeError:
                 continue
             if isinstance(data, dict):
@@ -483,12 +667,12 @@ class OneDriveProvider:
             raise SyncError(f"OneDrive could not save the manifest ({describe_graph_error(response)}).")
 
 
-def _child_names(body: bytes, *, folders_only: bool) -> list[str]:
+def _child_entries(body: bytes, *, folders_only: bool) -> list[dict[str, str]]:
     try:
         data = json.loads(body.decode("utf-8") or "{}")
     except json.JSONDecodeError:
         return []
-    names: list[str] = []
+    entries: list[dict[str, str]] = []
     for item in data.get("value") or []:
         if not isinstance(item, dict) or not item.get("name"):
             continue
@@ -496,5 +680,22 @@ def _child_names(body: bytes, *, folders_only: bool) -> list[str]:
             continue
         if not folders_only and "folder" in item and "file" not in item:
             continue
-        names.append(str(item["name"]))
-    return names
+        entry = {"name": str(item["name"])}
+        download = item.get(_DOWNLOAD_URL) or item.get("downloadUrl") or ""
+        if isinstance(download, str) and download.strip():
+            entry["download_url"] = download.strip()
+        entries.append(entry)
+    return entries
+
+
+def _child_names(body: bytes, *, folders_only: bool) -> list[str]:
+    return [entry["name"] for entry in _child_entries(body, folders_only=folders_only)]
+
+
+def _download_url_map(body: bytes) -> dict[str, str]:
+    found: dict[str, str] = {}
+    for entry in _child_entries(body, folders_only=False):
+        url = entry.get("download_url") or ""
+        if url:
+            found[entry["name"]] = url
+    return found

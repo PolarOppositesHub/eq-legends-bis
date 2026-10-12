@@ -14,7 +14,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
@@ -36,6 +36,7 @@ from app.sync.providers import (  # noqa: E402
     describe_graph_error,
     log_graph_error,
     set_graph_base_url_for_tests,
+    skipped_files_message,
 )
 import app.sync_api as sync_api  # noqa: E402
 
@@ -54,6 +55,12 @@ class _Store:
         self.force_unauthorized = False
         self.unauthorized_body = b'{"error":"invalid_token"}'
         self.unauthorized_header = ""
+        self.redirect_content = False
+        self.download_port = 0
+        self.deny: set[str] = set()
+        self.graph_unauthorized: set[str] = set()
+        self.download_urls: dict[str, str] = {}
+        self.download_calls: list[tuple[str, str, str | None, list[str]]] = []
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -83,13 +90,23 @@ class _Handler(BaseHTTPRequestHandler):
             return
         kind, relative = _split(path)
         if kind == "children" and method == "GET":
-            items = _children(store.files, relative)
+            items = _children(store.files, relative, store.download_urls)
             if not items:
                 self._send(404, b"")
                 return
             self._send(200, json.dumps({"value": items}).encode("utf-8"))
             return
         if kind == "content" and method == "GET":
+            if relative in store.graph_unauthorized:
+                self._send(401, b'{"error":{"code":"InvalidAuthenticationToken","message":"expired"}}')
+                return
+            if store.redirect_content:
+                location = (
+                    f"http://127.0.0.1:{store.download_port}/blob/"
+                    f"{quote(relative, safe='/')}?tempauth=sekret-value"
+                )
+                self._send(302, b"", {"Location": location})
+                return
             if relative not in store.files:
                 self._send(404, b"")
                 return
@@ -111,10 +128,68 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
 
+class _DownloadHandler(BaseHTTPRequestHandler):
+    """Pre-authenticated download host. Any Authorization header is a leak."""
+
+    def do_GET(self) -> None:  # noqa: N802
+        self._dispatch("GET")
+
+    def do_PUT(self) -> None:  # noqa: N802
+        length = int(self.headers.get("Content-Length") or 0)
+        if length:
+            self.rfile.read(length)
+        self._dispatch("PUT")
+
+    def log_message(self, fmt: str, *args) -> None:
+        return
+
+    def _dispatch(self, method: str) -> None:
+        store: _Store = self.server.store  # type: ignore[attr-defined]
+        auth = self.headers.get("Authorization")
+        path = unquote(self.path.split("?", 1)[0])
+        leaked = [
+            str(key)
+            for key, value in self.headers.items()
+            if value and (TOKEN in str(value) or "sekret-value" in str(value) or str(key).lower() == "authorization")
+        ]
+        store.download_calls.append((method, path, auth, leaked))
+        if auth or leaked:
+            self._send(401, b'{"error":{"code":"unauthenticated","message":"Unauthenticated"}}')
+            return
+        prefix = "/blob/"
+        if method != "GET" or not path.startswith(prefix):
+            self._send(404, b"")
+            return
+        relative = path[len(prefix):]
+        if relative in store.deny:
+            self._send(401, b'{"error":{"code":"unauthenticated","message":"Unauthenticated"}}')
+            return
+        payload = store.files.get(relative)
+        if payload is None:
+            self._send(404, b"")
+            return
+        self._send(200, payload)
+
+    def _send(self, status: int, payload: bytes, extra: dict[str, str] | None = None) -> None:
+        payload = payload or b""
+        self.send_response(status)
+        for key, value in (extra or {}).items():
+            self.send_header(key, value)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+
 class _Server(ThreadingHTTPServer):
     def __init__(self, store: _Store) -> None:
         self.store = store
         super().__init__(("127.0.0.1", 0), _Handler)
+
+
+class _DownloadServer(ThreadingHTTPServer):
+    def __init__(self, store: _Store) -> None:
+        self.store = store
+        super().__init__(("127.0.0.1", 0), _DownloadHandler)
 
 
 def _split(path: str) -> tuple[str, str]:
@@ -126,7 +201,11 @@ def _split(path: str) -> tuple[str, str]:
     raise AssertionError(path)
 
 
-def _children(files: dict[str, bytes], folder: str) -> list[dict[str, object]]:
+def _children(
+    files: dict[str, bytes],
+    folder: str,
+    download_urls: dict[str, str] | None = None,
+) -> list[dict[str, object]]:
     prefix = folder.rstrip("/") + "/"
     names: dict[str, bool] = {}
     for key in files:
@@ -144,8 +223,32 @@ def _children(files: dict[str, bytes], folder: str) -> list[dict[str, object]]:
             item["folder"] = {}
         else:
             item["file"] = {}
+            full = prefix + name
+            if download_urls and full in download_urls:
+                item["@microsoft.graph.downloadUrl"] = download_urls[full]
         items.append(item)
     return items
+
+
+def _start_pair(store: _Store) -> tuple[_Server, _DownloadServer, list[threading.Thread]]:
+    graph = _Server(store)
+    download = _DownloadServer(store)
+    store.download_port = download.server_address[1]
+    threads: list[threading.Thread] = []
+    for server in (download, graph):
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        threads.append(thread)
+    return graph, download, threads
+
+
+def _stop_pair(graph: _Server, download: _DownloadServer, threads: list[threading.Thread]) -> None:
+    graph.shutdown()
+    download.shutdown()
+    graph.server_close()
+    download.server_close()
+    for thread in threads:
+        thread.join(timeout=3)
 
 
 class OneDriveTransportTests(unittest.TestCase):
@@ -315,6 +418,171 @@ class OneDriveTransportTests(unittest.TestCase):
         self.assertTrue(noted["reauth"])
         checked = self.client.post("/api/sync/onedrive/test")
         self.assertEqual(checked.json()["message"], ONEDRIVE_SIGN_IN)
+
+    def test_content_redirect_drops_authorization_on_the_download_host(self) -> None:
+        store = _Store()
+        store.redirect_content = True
+        remote = make_event(
+            event_id="from-other-pc",
+            ts="2026-08-01T00:00:00",
+            device_id="b" * 32,
+            source="manual",
+            event_type="wish",
+            payload={"name": "Mask of Song", "pinned": True},
+        )
+        remote_path = f"{SYNC_DIR_NAME}/events/Zasariz/{'b' * 32}.jsonl"
+        store.files[remote_path] = encode_jsonl([remote]).encode("utf-8")
+        graph, download, threads = _start_pair(store)
+        try:
+            set_graph_base_url_for_tests(f"http://127.0.0.1:{graph.server_address[1]}")
+            self.engine.append_log_line("Zasariz", LINE, LINE_TS)
+            signed = self.client.post("/api/sync/onedrive", json={"access_token": TOKEN, "account": "Josh"})
+            self.assertEqual(signed.status_code, 200, signed.text)
+            synced = self.client.post("/api/sync/now")
+            self.assertEqual(synced.status_code, 200, synced.text)
+            body = synced.json()
+            self.assertEqual(body["status"], "ok", body)
+            self.assertFalse(body["auth_expired"])
+            self.assertEqual(body["skipped"], 0)
+            self.assertEqual(body["projection"]["characters"]["Zasariz"]["wishes"], ["Mask of Song"])
+            self.assertTrue(store.download_calls)
+            self.assertTrue(all(method == "GET" for method, _path, _auth, _leaked in store.download_calls))
+            self.assertTrue(all(auth is None for _method, _path, auth, _leaked in store.download_calls))
+            self.assertTrue(all(not leaked for _method, _path, _auth, leaked in store.download_calls))
+            self.assertTrue(any(remote_path in path for _method, path, _auth, _leaked in store.download_calls))
+            graph_downloads = [
+                path for method, path, _auth, _body in store.calls
+                if method == "GET" and path.endswith(":/content") and ("b" * 32) in path
+            ]
+            self.assertTrue(graph_downloads)
+            uploads = [
+                path for method, path, _auth, _body in store.calls
+                if method == "PUT" and path.endswith(":/content")
+            ]
+            self.assertTrue(uploads)
+            self.assertTrue(all(
+                auth == f"Bearer {TOKEN}"
+                for method, _path, auth, _body in store.calls
+                if method == "PUT"
+            ))
+            for _method, path, auth, leaked in store.download_calls:
+                self.assertNotIn("sekret-value", auth or "")
+                self.assertNotIn(TOKEN, auth or "")
+                self.assertEqual(leaked, [])
+                self.assertNotIn("sekret-value", path)
+        finally:
+            _stop_pair(graph, download, threads)
+
+    def test_one_failed_download_is_skipped_and_sync_continues(self) -> None:
+        store = _Store()
+        store.redirect_content = True
+        good = make_event(
+            event_id="from-other-pc",
+            ts="2026-08-01T00:00:00",
+            device_id="b" * 32,
+            source="manual",
+            event_type="wish",
+            payload={"name": "Mask of Song", "pinned": True},
+        )
+        bad = make_event(
+            event_id="broken-file",
+            ts="2026-08-02T00:00:00",
+            device_id="c" * 32,
+            source="manual",
+            event_type="wish",
+            payload={"name": "Should Not Sync", "pinned": True},
+        )
+        good_path = f"{SYNC_DIR_NAME}/events/Zasariz/{'b' * 32}.jsonl"
+        bad_path = f"{SYNC_DIR_NAME}/events/Zasariz/{'c' * 32}.jsonl"
+        store.files[good_path] = encode_jsonl([good]).encode("utf-8")
+        store.files[bad_path] = encode_jsonl([bad]).encode("utf-8")
+        store.deny.add(bad_path)
+        graph, download, threads = _start_pair(store)
+        try:
+            set_graph_base_url_for_tests(f"http://127.0.0.1:{graph.server_address[1]}")
+            signed = self.client.post("/api/sync/onedrive", json={"access_token": TOKEN, "account": "Josh"})
+            self.assertEqual(signed.status_code, 200, signed.text)
+            with self.assertLogs("eq.sync.graph", level="WARNING") as logs:
+                synced = self.client.post("/api/sync/now")
+            self.assertEqual(synced.status_code, 200, synced.text)
+            body = synced.json()
+            self.assertEqual(body["status"], "ok", body)
+            self.assertFalse(body["auth_expired"])
+            self.assertEqual(body["skipped"], 1)
+            self.assertEqual(body["message"], skipped_files_message(1))
+            self.assertEqual(body["message"], "Synced with 1 file skipped")
+            wishes = body["projection"]["characters"]["Zasariz"]["wishes"]
+            self.assertIn("Mask of Song", wishes)
+            self.assertNotIn("Should Not Sync", wishes)
+            logged = "\n".join(logs.output)
+            self.assertIn("GET", logged)
+            self.assertIn("c" * 32, logged)
+            self.assertNotIn(TOKEN, logged)
+            self.assertNotIn("sekret-value", logged)
+            self.assertNotIn("Bearer " + TOKEN, logged)
+            self.assertTrue(all(auth is None for _m, _p, auth, _l in store.download_calls))
+            self.assertTrue(all(not leaked for _m, _p, _a, leaked in store.download_calls))
+        finally:
+            _stop_pair(graph, download, threads)
+
+    def test_graph_401_on_a_file_still_expires_sign_in(self) -> None:
+        store = _Store()
+        remote_path = f"{SYNC_DIR_NAME}/events/Zasariz/{'b' * 32}.jsonl"
+        store.files[remote_path] = b"{}\n"
+        store.graph_unauthorized.add(remote_path)
+        server = _Server(store)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            set_graph_base_url_for_tests(f"http://127.0.0.1:{server.server_address[1]}")
+            signed = self.client.post("/api/sync/onedrive", json={"access_token": TOKEN, "account": "Josh"})
+            self.assertEqual(signed.status_code, 200, signed.text)
+            synced = self.client.post("/api/sync/now")
+            body = synced.json()
+            self.assertEqual(body["status"], "error", body)
+            self.assertTrue(body["auth_expired"])
+            self.assertEqual(body["skipped"], 0)
+            self.assertIn("401", body["error"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_download_url_is_fetched_without_authorization(self) -> None:
+        store = _Store()
+        remote = make_event(
+            event_id="from-download-url",
+            ts="2026-08-01T00:00:00",
+            device_id="b" * 32,
+            source="manual",
+            event_type="wish",
+            payload={"name": "Cloak of Flames", "pinned": True},
+        )
+        remote_path = f"{SYNC_DIR_NAME}/events/Zasariz/{'b' * 32}.jsonl"
+        store.files[remote_path] = encode_jsonl([remote]).encode("utf-8")
+        graph, download, threads = _start_pair(store)
+        try:
+            port = download.server_address[1]
+            store.download_urls[remote_path] = (
+                f"http://127.0.0.1:{port}/blob/{quote(remote_path, safe='/')}?tempauth=sekret-value"
+            )
+            set_graph_base_url_for_tests(f"http://127.0.0.1:{graph.server_address[1]}")
+            signed = self.client.post("/api/sync/onedrive", json={"access_token": TOKEN, "account": "Josh"})
+            self.assertEqual(signed.status_code, 200, signed.text)
+            synced = self.client.post("/api/sync/now")
+            body = synced.json()
+            self.assertEqual(body["status"], "ok", body)
+            self.assertEqual(body["skipped"], 0)
+            self.assertEqual(body["projection"]["characters"]["Zasariz"]["wishes"], ["Cloak of Flames"])
+            content_gets = [
+                path for method, path, _auth, _body in store.calls
+                if method == "GET" and path.endswith(":/content")
+            ]
+            self.assertEqual(content_gets, [])
+            self.assertTrue(store.download_calls)
+            self.assertTrue(all(auth is None and not leaked for _m, _p, auth, leaked in store.download_calls))
+        finally:
+            _stop_pair(graph, download, threads)
 
 
 class GraphErrorParseTests(unittest.TestCase):

@@ -40,6 +40,7 @@ from .providers import (
     OneDriveProvider,
     default_graph_transport,
     provider_for,
+    skipped_files_message,
 )
 
 
@@ -89,6 +90,7 @@ class SyncEngine:
         data.setdefault("message", "")
         data.setdefault("auth_expired", False)
         data.setdefault("reauth", False)
+        data.setdefault("skipped", 0)
         return data
 
     def _save_state(self) -> None:
@@ -116,6 +118,7 @@ class SyncEngine:
             "message": self.state.get("message") or "",
             "auth_expired": bool(self.state.get("auth_expired")),
             "reauth": bool(self.state.get("reauth")),
+            "skipped": int(self.state.get("skipped") or 0),
             "pending": pending,
             "migrated": bool(self.state.get("migrated")),
             "icloud_tip": ICLOUD_TIP if provider == "folder" else "",
@@ -137,7 +140,7 @@ class SyncEngine:
         if provider is not None:
             if provider not in {"", "folder", "onedrive"}:
                 if provider == "google":
-                    raise SyncError("Google Drive sync is planned for 1.1.13 and is not in this version.")
+                    raise SyncError("Google Drive sync is planned for 1.1.14 and is not in this version.")
                 raise SyncError("Choose Sync folder or OneDrive.")
             self.state["provider"] = provider
         if folder is not None:
@@ -650,15 +653,17 @@ class SyncEngine:
             self._write_queue(remaining)
 
         now = self.clock()
+        skipped = int(getattr(provider, "skipped", 0) or 0)
         self.state["last_synced"] = now
         self.state["error"] = ""
         self.state["auth_expired"] = False
+        self.state["skipped"] = skipped
         if waiting:
             self.state["status"] = "waiting"
             self.state["message"] = ICLOUD_WAITING
         else:
             self.state["status"] = "ok"
-            self.state["message"] = ""
+            self.state["message"] = skipped_files_message(skipped)
         self._save_state()
         return self.status()
 
@@ -667,6 +672,7 @@ class SyncEngine:
         self.state["error"] = str(exc)
         self.state["message"] = ""
         self.state["auth_expired"] = isinstance(exc, SyncAuthExpired)
+        self.state["skipped"] = 0
         self._save_state()
         return self.status()
 
@@ -675,6 +681,7 @@ class SyncEngine:
         self.state["error"] = str(exc)
         self.state["message"] = ""
         self.state["auth_expired"] = False
+        self.state["skipped"] = 0
         self._save_state()
         return self.status()
 
@@ -683,6 +690,7 @@ class SyncEngine:
         self.state["error"] = ""
         self.state["message"] = ICLOUD_WAITING
         self.state["auth_expired"] = False
+        self.state["skipped"] = 0
         self._save_state()
         return self.status()
 

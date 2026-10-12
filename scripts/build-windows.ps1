@@ -29,6 +29,13 @@ $Vpy = ".\.venv\Scripts\python.exe"
 Exit-OnNativeFailure "pip install -U pip"
 & $Vpy -m pip install -r backend\requirements.txt pyinstaller
 Exit-OnNativeFailure "pip install -r backend\requirements.txt pyinstaller"
+# Drop untracked and ignored leftovers in the packaging inputs.
+# Tracked source (icons, installer.nsh, committed resources) stays.
+# This runs before bundling so electron-builder packs a fresh copy.
+# A dirty tree made the 1.1.11 installer about 690 KB larger than a clean build.
+Write-Host "cleaning stale outputs in desktop/build and desktop/resources"
+& git clean -fdx -- desktop/build desktop/resources
+Exit-OnNativeFailure "git clean desktop/build desktop/resources"
 & $Vpy scripts\bundle_desktop_resources.py
 Exit-OnNativeFailure "scripts\bundle_desktop_resources.py"
 & $Vpy -m PyInstaller --noconfirm backend\packaging\eq-api.spec

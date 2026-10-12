@@ -5,6 +5,7 @@ import {
   SYNC_PROVIDERS,
   connectionResultText,
   formatSyncedAt,
+  skippedFilesText,
   syncFailureText,
   syncStatusText,
 } from './syncSettings.js'
@@ -29,6 +30,7 @@ export function SyncSettings({
   const provider = status?.provider === 'onedrive' ? 'onedrive' : (status?.provider === 'folder' ? 'folder' : '')
   const line = syncError || syncStatusText(status)
   const waiting = !syncError && status?.message === ICLOUD_WAITING
+  const skippedNote = !syncError && !syncing ? skippedFilesText(status?.skipped) : ''
   return (
     <div className="settings-row" data-testid="sync-settings">
       <div>
@@ -106,6 +108,9 @@ export function SyncSettings({
         </div>
         {syncedAt && !syncing ? (
           <p className="muted" data-testid="sync-synced-at">Synced at {syncedAt}</p>
+        ) : null}
+        {skippedNote ? (
+          <p className="note" role="status" data-testid="sync-skipped">{skippedNote}</p>
         ) : null}
         {status?.last_synced ? (
           <p className="muted" data-testid="sync-last">Last synced {String(status.last_synced).replace('T', ' ')}</p>
