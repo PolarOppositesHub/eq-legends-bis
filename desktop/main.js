@@ -19,6 +19,8 @@ const { InventoryFolderWatcher, isInventoryFileName } = require('./inventoryWatc
 const overlayLib = require('./overlayWindows');
 const eqclientIni = require('./eqclientIni');
 const onedriveAuth = require('./onedriveAuth');
+const googleDriveAuth = require('./googleDriveAuth');
+const titleBar = require('./titleBar');
 const { SYNC_INTERVAL_MS, planSync } = require('./syncSchedule');
 const lifecycle = require('./appLifecycle');
 
@@ -488,9 +490,16 @@ function resolveAppIcon() {
   return candidates.find((p) => fs.existsSync(p));
 }
 
+function broadcastWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
+  const payload = { maximized: !!mainWindow.isMaximized() };
+  try { mainWindow.webContents.send('eq:window-state', payload); } catch (_) { /* ignore */ }
+  return payload;
+}
+
 async function createWindow({ playIntro = false } = {}) {
-  // Dark title-bar / widget chrome so Windows matches the planner UI.
-  // Keep a normal framed window so the caption X, minimize, maximize, and Alt+F4 still work.
+  // Frameless window. The page draws the title bar in the app theme.
+  // thickFrame stays on so Windows can snap and resize, without a second caption.
   try {
     nativeTheme.themeSource = 'dark';
   } catch (_) {
@@ -502,14 +511,8 @@ async function createWindow({ playIntro = false } = {}) {
     height: 860,
     minWidth: 960,
     minHeight: 640,
-    title: 'EQ Legends BiS',
-    backgroundColor: '#0a0a0a',
-    autoHideMenuBar: true,
-    frame: true,
-    closable: true,
-    minimizable: true,
-    maximizable: true,
     ...(icon ? { icon } : {}),
+    ...titleBar.mainWindowChrome(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -518,6 +521,8 @@ async function createWindow({ playIntro = false } = {}) {
     },
   });
   mainWindow.setMenuBarVisibility(false);
+  mainWindow.on('maximize', () => broadcastWindowState());
+  mainWindow.on('unmaximize', () => broadcastWindowState());
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -703,10 +708,35 @@ function lockedFor(id) {
   return !!((overlayLib.readOverlayMap(readSettings())[id] || {}).locked);
 }
 
-function raiseOverlay(win, locked) {
-  if (!win || win.isDestroyed()) return;
-  const plan = overlayLib.overlayRaisePlan('raise', !!locked);
+function focusedWindowId() {
+  try {
+    const focused = BrowserWindow.getFocusedWindow();
+    if (!focused || focused.isDestroyed()) return '';
+    return String(focused.id);
+  } catch (_) {
+    return '';
+  }
+}
+
+function windowById(id) {
+  if (!id) return null;
+  try {
+    return BrowserWindow.getAllWindows().find((candidate) => String(candidate.id) === String(id)) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+let restoringOverlayFocus = false;
+
+function raiseOverlay(win, locked, reason) {
+  if (!win || win.isDestroyed() || restoringOverlayFocus) return;
+  const plan = overlayLib.overlayRaisePlan(reason || 'raise', !!locked);
   if (plan.hide || plan.close) return;
+  const beforeId = focusedWindowId();
+  if (plan.unfocusableDuringRaise) {
+    try { win.setFocusable(false); } catch (_) { /* ignore */ }
+  }
   try {
     win.setAlwaysOnTop(true, plan.level);
   } catch (_) {
@@ -715,12 +745,33 @@ function raiseOverlay(win, locked) {
   try {
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: !!plan.visibleOnFullScreen });
   } catch (_) { /* ignore */ }
+  if (plan.setFocusable || plan.unfocusableDuringRaise) {
+    try { win.setFocusable(plan.focusable); } catch (_) { /* ignore */ }
+  }
   try { win.setSkipTaskbar(true); } catch (_) { /* ignore */ }
-  try { win.setFocusable(plan.focusable); } catch (_) { /* ignore */ }
+  // Never focus, show, or moveTop the overlay from a raise. The timer used to
+  // steal the text box in the main window about once a second.
+  if (plan.focus) {
+    try { win.focus(); } catch (_) { /* ignore */ }
+  }
+  if (plan.show) {
+    try { win.show(); } catch (_) { /* ignore */ }
+  }
+  const decision = overlayLib.focusAfterRaise({
+    beforeId,
+    afterId: focusedWindowId(),
+    overlayId: String(win.id),
+  });
+  if (!decision.restoreFocusId) return;
+  const target = windowById(decision.restoreFocusId);
+  if (!target || target.isDestroyed() || target === win) return;
+  restoringOverlayFocus = true;
+  try { target.focus(); } catch (_) { /* ignore */ }
+  restoringOverlayFocus = false;
 }
 
 function raiseAllOverlays() {
-  for (const [id, win] of overlayWindows) raiseOverlay(win, lockedFor(id));
+  for (const [id, win] of overlayWindows) raiseOverlay(win, lockedFor(id), 'interval');
 }
 
 function ensureOverlayRaiseLoop() {
@@ -807,14 +858,14 @@ function openOverlayWindow(id, patch = {}) {
   });
   overlayWindows.set(id, win);
   applyOverlayLock(win, !!stored.locked);
-  const keepUp = () => {
-    if (!win || win.isDestroyed()) return;
-    const plan = overlayLib.overlayRaisePlan('blur', lockedFor(id));
-    if (plan.hide || plan.close) return;
-    raiseOverlay(win, lockedFor(id));
+  const keepUp = (reason) => {
+    if (restoringOverlayFocus || !win || win.isDestroyed()) return;
+    const plan = overlayLib.overlayRaisePlan(reason, lockedFor(id));
+    if (plan.hide || plan.close || plan.focus || plan.show) return;
+    raiseOverlay(win, lockedFor(id), reason);
   };
-  win.on('blur', keepUp);
-  win.on('show', keepUp);
+  win.on('blur', () => keepUp('blur'));
+  win.on('show', () => keepUp('show'));
   if (stored.x != null && stored.y != null && (options.x !== stored.x || options.y !== stored.y || options.width !== stored.width || options.height !== stored.height)) {
     saveOverlay(id, { x: options.x, y: options.y, width: options.width, height: options.height });
   }
@@ -1510,6 +1561,33 @@ function getJson(pathname, timeoutMs = 15000) {
   });
 }
 
+function googleDriveDeps() {
+  const tokenPath = path.join(app.getPath('userData'), 'sync', 'google-drive-refresh.bin');
+  return {
+    openExternal: (url) => shell.openExternal(url),
+    request: requestJson,
+    http,
+    randomBytes: (n) => crypto.randomBytes(n),
+    timeoutMs: 180000,
+    tokenPath,
+    isEncryptionAvailable: () => {
+      try { return safeStorage.isEncryptionAvailable(); } catch (_) { return false; }
+    },
+    encryptString: (value) => safeStorage.encryptString(value),
+    decryptString: (buf) => safeStorage.decryptString(buf),
+    writeFile: (file, buf) => {
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, buf);
+    },
+    readFile: (file) => fs.readFileSync(file),
+    exists: (file) => fs.existsSync(file),
+    removeFile: (file) => {
+      try { fs.unlinkSync(file); } catch (_) { /* already gone */ }
+    },
+    log: (message) => mainLog('warn', 'google-drive', message),
+  };
+}
+
 function oneDriveDeps() {
   const tokenPath = path.join(app.getPath('userData'), 'sync', 'onedrive-refresh.bin');
   return {
@@ -1608,14 +1686,35 @@ function stopSyncSchedule() {
   stopSyncWatch();
 }
 
+async function cloudAuth(provider) {
+  if (provider === 'google') {
+    return {
+      refresh: () => googleDriveAuth.refreshAccessToken(googleDriveDeps()),
+      postToken: (body) => postJson('/api/sync/google', body),
+      expired: googleDriveAuth.AUTH_EXPIRED_TEXT,
+    };
+  }
+  return {
+    refresh: () => onedriveAuth.refreshAccessToken(oneDriveDeps()),
+    postToken: (body) => postJson('/api/sync/onedrive', body),
+    expired: lifecycle.AUTH_EXPIRED_TEXT,
+  };
+}
+
 async function runSync(reason) {
   if (!apiPort || !apiReady) return { ok: false, status: 'error', error: 'Sync is not ready.' };
   syncing = true;
   try {
+    let provider = '';
+    try {
+      const current = await getJson('/api/sync/status');
+      provider = current && current.provider ? current.provider : '';
+    } catch (_) { /* the sync call reports its own error */ }
+    const auth = await cloudAuth(provider);
     const status = await lifecycle.syncWithAuthRefresh({
       sync: () => postJson('/api/sync/now', {}, reason === 'quit' ? 4000 : 30000),
-      refresh: () => onedriveAuth.refreshAccessToken(oneDriveDeps()),
-      postToken: (body) => postJson('/api/sync/onedrive', body),
+      refresh: auth.refresh,
+      postToken: auth.postToken,
     });
     ignoreWatchUntil = Date.now() + 2500;
     if (reason !== 'quit') await refreshSyncWatch();
@@ -1623,7 +1722,7 @@ async function runSync(reason) {
       return {
         ok: false,
         status: 'error',
-        error: status.error || lifecycle.AUTH_EXPIRED_TEXT,
+        error: status.error || auth.expired,
         auth_expired: true,
       };
     }
@@ -1647,34 +1746,55 @@ function scheduleSync(reason) {
   }, plan.delayMs);
 }
 
+async function restoreGoogleSession() {
+  const deps = googleDriveDeps();
+  if (!deps.exists(deps.tokenPath)) return;
+  const refreshed = await googleDriveAuth.refreshAccessToken(deps);
+  const outcome = lifecycle.classifyRefresh(refreshed);
+  if (outcome.action === 'post') {
+    await postJson('/api/sync/google', {
+      access_token: refreshed.access_token,
+      account: refreshed.account || '',
+    });
+  } else if (outcome.error) {
+    await postJson('/api/sync/google/notice', {
+      error: outcome.error,
+      auth_expired: outcome.auth_expired,
+      reauth: outcome.reauth,
+    });
+  }
+}
+
+async function restoreOneDriveSession(provider) {
+  const deps = oneDriveDeps();
+  if (!deps.exists(deps.tokenPath)) return;
+  const refreshed = await onedriveAuth.refreshAccessToken(deps);
+  const outcome = lifecycle.classifyRefresh(refreshed);
+  if (outcome.action === 'post') {
+    await postJson('/api/sync/onedrive', {
+      access_token: refreshed.access_token,
+      account: refreshed.account || '',
+    });
+  } else if (outcome.error && provider !== 'folder') {
+    await postJson('/api/sync/onedrive/notice', {
+      error: outcome.error,
+      auth_expired: outcome.auth_expired,
+      reauth: outcome.reauth,
+    });
+  }
+}
+
 async function startSyncSchedule() {
   try {
-    const deps = oneDriveDeps();
-    if (deps.exists(deps.tokenPath)) {
-      const refreshed = await onedriveAuth.refreshAccessToken(deps);
-      const outcome = lifecycle.classifyRefresh(refreshed);
-      if (outcome.action === 'post') {
-        await postJson('/api/sync/onedrive', {
-          access_token: refreshed.access_token,
-          account: refreshed.account || '',
-        });
-      } else if (outcome.error) {
-        let provider = '';
-        try {
-          const status = await getJson('/api/sync/status');
-          provider = status && status.provider ? status.provider : '';
-        } catch (_) { /* a folder sync should not be overwritten by this notice */ }
-        if (provider !== 'folder') {
-          await postJson('/api/sync/onedrive/notice', {
-            error: outcome.error,
-            auth_expired: outcome.auth_expired,
-            reauth: outcome.reauth,
-          });
-        }
-      }
-    }
+    let provider = '';
+    try {
+      const status = await getJson('/api/sync/status');
+      provider = status && status.provider ? status.provider : '';
+    } catch (_) { /* sidecar may still be starting */ }
+    if (provider === 'google') await restoreGoogleSession();
+    else await restoreOneDriveSession(provider);
   } catch (err) {
-    mainLog('warn', 'onedrive refresh', err && err.message ? err.message : err);
+    mainLog('warn', 'cloud refresh', err && err.message ? err.message : err);
   }
   scheduleSync('launch');
   syncInterval = setInterval(() => {
@@ -1721,6 +1841,57 @@ ipcMain.handle('eq:onedrive-sign-out', async () => {
   try {
     await postJson('/api/sync/onedrive/sign-out', {});
   } catch (_) { /* the settings page posts sign-out as well */ }
+  return { ok: true };
+});
+
+ipcMain.handle('eq:google-drive-sign-in', async () => {
+  const result = await googleDriveAuth.signInGoogleDrive(googleDriveDeps());
+  if (!result.ok) return { ok: false, error: result.error || 'Google Drive sign-in failed.' };
+  try {
+    await postJson('/api/sync/google', {
+      access_token: result.access_token,
+      account: result.account || '',
+    });
+    scheduleSync('now');
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) };
+  }
+  return { ok: true, account: result.account || '' };
+});
+
+ipcMain.handle('eq:google-drive-sign-out', async () => {
+  googleDriveAuth.forgetRefreshToken(googleDriveDeps());
+  try {
+    await postJson('/api/sync/google/sign-out', {});
+  } catch (_) { /* the settings page posts sign-out as well */ }
+  return { ok: true };
+});
+
+ipcMain.handle('eq:window-state', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { maximized: false };
+  return { maximized: !!mainWindow.isMaximized() };
+});
+
+ipcMain.handle('eq:window-minimize', () => {
+  if (titleBar.windowControlCall('minimize', false) === 'minimize' && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.minimize();
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('eq:window-toggle-maximize', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, maximized: false };
+  const call = titleBar.windowControlCall('toggle-maximize', mainWindow.isMaximized());
+  if (call === 'unmaximize') mainWindow.unmaximize();
+  else if (call === 'maximize') mainWindow.maximize();
+  return { ok: true, ...broadcastWindowState() };
+});
+
+ipcMain.handle('eq:window-close', () => {
+  // Same path as the caption X: quit, or minimize to tray when that setting is on.
+  if (titleBar.windowControlCall('close', false) === 'close' && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.close();
+  }
   return { ok: true };
 });
 

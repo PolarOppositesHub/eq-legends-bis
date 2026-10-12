@@ -1,4 +1,4 @@
-"""Settings and sync routes. The event log lives in the sidecar; Electron does OneDrive sign-in."""
+"""Settings and sync routes. The event log lives in the sidecar; Electron does cloud sign-in."""
 
 from __future__ import annotations
 
@@ -171,6 +171,26 @@ def sync_onedrive_notice(body: OneDriveNotice) -> dict[str, Any]:
 @router.post("/onedrive/test")
 def sync_onedrive_test() -> dict[str, Any]:
     return get_engine().test_onedrive()
+
+
+@router.post("/google")
+def sync_google(body: OneDriveBody) -> dict[str, Any]:
+    return get_engine().set_google_session(body.access_token, body.account)
+
+
+@router.post("/google/sign-out")
+def sync_google_out() -> dict[str, Any]:
+    return get_engine().clear_google_session()
+
+
+@router.post("/google/notice")
+def sync_google_notice(body: OneDriveNotice) -> dict[str, Any]:
+    return get_engine().note_google_error(body.error, auth_expired=body.auth_expired, reauth=body.reauth)
+
+
+@router.post("/google/test")
+def sync_google_test() -> dict[str, Any]:
+    return get_engine().test_google()
 
 
 @router.post("/capture")

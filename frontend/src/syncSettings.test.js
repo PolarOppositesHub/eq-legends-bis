@@ -153,6 +153,39 @@ test('OneDrive Test connection shows connected, Graph errors, and the sign-in pr
   )
 })
 
+test('Google Drive settings offer sign in, test connection, and the unverified-app note', () => {
+  const signedOut = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'google', account: '' },
+    deviceName: 'Home PC',
+  }))
+  assert.match(signedOut, /Google Drive/)
+  assert.match(signedOut, /data-testid="sync-sign-in"/)
+  assert.match(signedOut, /data-testid="sync-test-connection"/)
+  assert.match(signedOut, /data-testid="sync-google-unverified"/)
+  assert.match(signedOut, /unverified app warning/)
+  assert.equal(signedOut.includes('<img'), false)
+  const signedIn = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'google', account: 'Google Drive', last_synced: '2026-10-13T09:00:00', status: 'ok', skipped: 1 },
+    deviceName: 'Home PC',
+    connectionText: 'Connected to Google Drive app folder',
+  }))
+  assert.match(signedIn, /data-testid="sync-sign-out"/)
+  assert.match(signedIn, /data-testid="sync-account"/)
+  assert.match(signedIn, /Last synced 2026-10-13 09:00:00/)
+  assert.match(signedIn, /Connected to Google Drive app folder/)
+  assert.match(signedIn, /Synced with 1 file skipped/)
+  const failed = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'google', account: 'Google Drive' },
+    deviceName: 'Home PC',
+    syncError: 'Google Drive 401 UNAUTHENTICATED: Invalid Credentials',
+  }))
+  assert.match(failed, /401/)
+  assert.match(failed, /UNAUTHENTICATED/)
+  assert.match(failed, /Invalid Credentials/)
+  assert.equal(connectionResultText({ ok: true }, 0, 'google'), 'Connected to Google Drive app folder')
+  assert.equal(connectionResultText(null, 403, 'google'), 'Google Drive 403')
+})
+
 test('workspace snapshot is per character and a projection can add a pin', () => {
   const snapshot = snapshotFromWorkspace({
     wishByCharacter: { Zasariz: ['Mask of Song'], Other: ['Cloak of Flames'] },

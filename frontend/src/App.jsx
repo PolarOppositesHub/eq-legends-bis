@@ -67,6 +67,7 @@ import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
 import { SyncBridge } from './SyncBridge.jsx'
 import { SyncSettingsHost } from './SyncSettings.jsx'
+import { TitleBar } from './TitleBar.jsx'
 import { CloseActionSettingHost } from './CloseActionSetting.jsx'
 import { snapshotFromWorkspace } from './syncSettings.js'
 import { simulatorRecalcDecision } from './simulatorClasses.js'
@@ -3312,6 +3313,7 @@ export default function App() {
           Drop Inventory.txt to import
         </div>
       )}
+      {isDesktopApp ? <TitleBar /> : null}
       <header className="app-header">
         <div>
           <h1>EQ Legends — BiS + Build Simulator</h1>

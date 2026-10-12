@@ -1,4 +1,4 @@
-"""Sync providers. Google Drive is not implemented; the factory is the plug-in point."""
+"""Sync providers: a folder you pick, OneDrive, and Google Drive app data."""
 
 from __future__ import annotations
 
@@ -268,14 +268,15 @@ class SyncProvider(Protocol):
 
 
 def provider_for(kind: str, **kwargs: Any) -> SyncProvider:
-    """Build a provider. ``google`` is reserved for 1.1.14."""
+    """Build a provider. ``google`` uses the Drive appDataFolder."""
     if kind == "folder":
         return FolderProvider(kwargs["root"])
     if kind == "onedrive":
         return OneDriveProvider(kwargs["transport"], kwargs.get("token") or "")
     if kind == "google":
-        raise SyncError("Google Drive sync is planned for 1.1.14 and is not in this version.")
-    raise SyncError("Choose Sync folder or OneDrive.")
+        from .google_drive import GoogleDriveProvider
+        return GoogleDriveProvider(kwargs["transport"], kwargs.get("token") or "")
+    raise SyncError("Choose Sync folder, OneDrive, or Google Drive.")
 
 
 class FolderProvider:

@@ -31,6 +31,14 @@ from .model import (
     sort_key,
     union_events,
 )
+from .google_drive import (
+    GOOGLE_AUTHORIZE,
+    GOOGLE_DRIVE_CLIENT_ID,
+    GOOGLE_DRIVE_SCOPES,
+    GOOGLE_SIGN_IN,
+    GoogleDriveProvider,
+    default_drive_transport,
+)
 from .providers import (
     ONEDRIVE_AUTHORITY,
     ONEDRIVE_CLIENT_ID,
@@ -39,7 +47,6 @@ from .providers import (
     FolderProvider,
     OneDriveProvider,
     default_graph_transport,
-    provider_for,
     skipped_files_message,
 )
 
@@ -56,6 +63,9 @@ class SyncEngine:
         self._access_token = ""
         self._transport = None
         self._graph_session: dict[str, Any] = {}
+        self._google_token = ""
+        self._google_transport = None
+        self._google_session: dict[str, Any] = {}
         self._bound: Any = None
         self.state = self._load_state(device_id)
         self._remote: dict[str, list[dict[str, Any]]] = {}
@@ -128,6 +138,12 @@ class SyncEngine:
                 "scopes": ONEDRIVE_SCOPES,
                 "redirect": "http://localhost:<port>",
             },
+            "google": {
+                "client_id": GOOGLE_DRIVE_CLIENT_ID,
+                "authorize": GOOGLE_AUTHORIZE,
+                "scopes": GOOGLE_DRIVE_SCOPES,
+                "redirect": "http://localhost:<port>",
+            },
         }
 
     def configure(
@@ -138,10 +154,8 @@ class SyncEngine:
         device_name: str | None = None,
     ) -> dict[str, Any]:
         if provider is not None:
-            if provider not in {"", "folder", "onedrive"}:
-                if provider == "google":
-                    raise SyncError("Google Drive sync is planned for 1.1.14 and is not in this version.")
-                raise SyncError("Choose Sync folder or OneDrive.")
+            if provider not in {"", "folder", "onedrive", "google"}:
+                raise SyncError("Choose Sync folder, OneDrive, or Google Drive.")
             self.state["provider"] = provider
         if folder is not None:
             self.state["folder"] = str(folder)
@@ -199,6 +213,52 @@ class SyncEngine:
         self._save_state()
         return self.status()
 
+    def set_google_session(self, access_token: str, account: str = "", transport: Any = None) -> dict[str, Any]:
+        self._google_token = access_token or ""
+        if transport is not None:
+            self._google_transport = transport
+        else:
+            self._google_transport = default_drive_transport()
+        self.state["provider"] = "google"
+        self.state["account"] = account or self.state.get("account") or ""
+        self.state["error"] = ""
+        self.state["auth_expired"] = False
+        self.state["reauth"] = False
+        self._save_state()
+        return self.status()
+
+    def clear_google_session(self) -> dict[str, Any]:
+        self._google_token = ""
+        self._google_session.clear()
+        self.state["account"] = ""
+        self.state["error"] = ""
+        self.state["auth_expired"] = False
+        self.state["reauth"] = False
+        if self.state.get("provider") == "google":
+            self.state["status"] = "idle"
+            self.state["message"] = ""
+        self._save_state()
+        return self.status()
+
+    def note_google_error(self, error: str, *, auth_expired: bool = False, reauth: bool = False) -> dict[str, Any]:
+        return self.note_onedrive_error(error, auth_expired=auth_expired, reauth=reauth)
+
+    def test_google(self) -> dict[str, Any]:
+        if str(self.state.get("provider") or "") != "google" or not self._google_token:
+            return {"ok": False, "message": GOOGLE_SIGN_IN}
+        provider = self._provider()
+        try:
+            return provider.test_connection()
+        except SyncAuthExpired as exc:
+            self.state["status"] = "error"
+            self.state["error"] = str(exc)
+            self.state["auth_expired"] = True
+            self.state["message"] = ""
+            self._save_state()
+            return {"ok": False, "message": str(exc), "auth_expired": True}
+        except SyncError as exc:
+            return {"ok": False, "message": str(exc)}
+
     def test_onedrive(self) -> dict[str, Any]:
         if str(self.state.get("provider") or "") != "onedrive" or not self._access_token:
             return {"ok": False, "message": ONEDRIVE_SIGN_IN}
@@ -231,8 +291,12 @@ class SyncEngine:
                 self._transport = default_graph_transport()
             return OneDriveProvider(self._transport, self._access_token, session=self._graph_session)
         if kind == "google":
-            return provider_for("google")
-        raise SyncError("Choose Sync folder or OneDrive.")
+            if not self._google_token:
+                raise SyncError(GOOGLE_SIGN_IN)
+            if self._google_transport is None:
+                self._google_transport = default_drive_transport()
+            return GoogleDriveProvider(self._google_transport, self._google_token, session=self._google_session)
+        raise SyncError("Choose Sync folder, OneDrive, or Google Drive.")
 
     def _read_queue(self) -> dict[str, list[dict[str, Any]]]:
         path = self.user_data / "sync" / "queue.jsonl"
