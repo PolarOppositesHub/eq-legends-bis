@@ -119,6 +119,15 @@ export function syncStatusText(status) {
   return ''
 }
 
+/** Settings line when sync finished and left files behind. Empty when none were skipped. */
+export function skippedFilesText(count) {
+  const n = Number(count)
+  if (!Number.isFinite(n) || n <= 0) return ''
+  const whole = Math.trunc(n)
+  if (whole === 1) return 'Synced with 1 file skipped'
+  return `Synced with ${whole} files skipped`
+}
+
 /** Local clock time for the Sync now result. Empty when the date is not usable. */
 export function formatSyncedAt(date) {
   const value = date instanceof Date ? date : new Date(date)

@@ -50,6 +50,14 @@ test('nsis shortcuts, seal icon, include script, and appId stay stable', () => {
   // false skips rcedit, so win.icon never becomes the exe's embedded icon.
   assert.equal(build.win.signAndEditExecutable, true);
 
+  const resourcesRule = build.extraResources.find((rule) => rule.from === 'resources/');
+  const splashRule = build.extraResources.find((rule) => rule.to === 'splash');
+  assert.ok(resourcesRule);
+  assert.ok(splashRule);
+  assert.equal(splashRule.from, '../packaging/splash/');
+  assert.equal(resourcesRule.filter.includes('!splash/**'), true);
+  assert.equal(build.extraResources.filter((rule) => rule.to === 'splash').length, 1);
+
   for (const key of ['installerIcon', 'uninstallerIcon', 'installerHeaderIcon']) {
     assert.equal(nsis[key], 'icon.ico');
     assert.equal(fs.existsSync(path.join(desktopDir, 'build', nsis[key])), true);

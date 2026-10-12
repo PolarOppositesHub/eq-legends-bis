@@ -42,10 +42,10 @@ test('Windows kills an orphaned backend tree with taskkill /PID /T /F', () => {
 
 test('a stale backend is reclaimed only when the health check is this app', () => {
   const recorded = { pid: 4321, port: 8765 }
-  assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true, version: '1.1.12' }), true)
+  assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true, version: '1.1.13' }), true)
   assert.equal(lifecycle.shouldReclaimSidecar(recorded, null), false)
   assert.equal(lifecycle.shouldReclaimSidecar(recorded, { ok: true }), false)
-  assert.equal(lifecycle.shouldReclaimSidecar({ port: 8765 }, { ok: true, version: '1.1.12' }), false)
+  assert.equal(lifecycle.shouldReclaimSidecar({ port: 8765 }, { ok: true, version: '1.1.13' }), false)
   const netstat = '  TCP    127.0.0.1:8765    0.0.0.0:0    LISTENING    4321\r\n  TCP    127.0.0.1:87650   0.0.0.0:0    LISTENING    99'
   assert.equal(lifecycle.listenerPidFromListing(netstat, 8765), 4321)
   const ss = 'LISTEN 0 128 127.0.0.1:8765 0.0.0.0:* users:(("python",pid=4321,fd=5))'

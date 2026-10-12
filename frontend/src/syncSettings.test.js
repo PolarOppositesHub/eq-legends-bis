@@ -12,6 +12,7 @@ import {
   connectionResultText,
   formatSyncedAt,
   mergeProjection,
+  skippedFilesText,
   snapshotFromWorkspace,
   syncFailureText,
   syncStatusText,
@@ -87,6 +88,19 @@ test('Sync now shows syncing, the local time, and the error', () => {
   assert.match(failed, /OneDrive sign-in expired\. Sign in again\./)
   assert.equal(syncFailureText({ ok: false, error: 'Sync is not ready.' }), 'Sync is not ready.')
   assert.equal(syncFailureText({ ok: true, status: 'ok', error: '' }), '')
+
+  const skipped = renderToStaticMarkup(React.createElement(SyncSettings, {
+    status: { provider: 'onedrive', account: 'josh@example.com', status: 'ok', skipped: 2, error: '' },
+    deviceName: 'Home PC',
+    syncedAt: '3:45 PM',
+  }))
+  assert.match(skipped, /Synced at 3:45 PM/)
+  assert.match(skipped, /data-testid="sync-skipped"/)
+  assert.match(skipped, /Synced with 2 files skipped/)
+  assert.equal(skipped.includes('role="alert"'), false)
+  assert.equal(skippedFilesText(1), 'Synced with 1 file skipped')
+  assert.equal(skippedFilesText(0), '')
+  assert.equal(skippedFilesText(3), 'Synced with 3 files skipped')
   assert.equal(formatSyncedAt(new Date('not-a-date')), '')
   assert.notEqual(formatSyncedAt(new Date('2026-10-11T15:45:00')), '')
 })

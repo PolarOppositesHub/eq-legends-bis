@@ -1,5 +1,23 @@
 # Next build notes
 
+**Planned as 1.1.13.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.13 — OneDrive personal downloads and skipped files
+Hotfix on 1.1.12. Test connection and listing the events folders succeeded, but every file download failed. Graph answers `/content` with a 302 to a pre-authenticated download URL, and urllib kept the Authorization header. The personal OneDrive download host rejects that with 401. Google Drive is not in this release (1.1.14). The custom title bar is not in this release (1.1.14).
+- [x] UrllibGraphTransport does not auto-follow redirects. A 3xx Location is fetched with no Authorization header and only safe headers, with a hop limit. `@microsoft.graph.downloadUrl` is preferred when the listing has one. PUT `:/content` still sends the token only to the Graph host, never to another host.
+- [x] One failed file download is logged (method and URL path, no token), skipped, and sync continues. Settings says Synced with N file(s) skipped. A Graph 401 on graph.microsoft.com is still sign-in expired.
+- [x] Splash video is packaged once. `resources/` extraResources excludes `splash/**`. `build-windows.ps1` removes untracked leftovers in `desktop/build` and `desktop/resources` before packaging, and does not delete tracked source.
+- [x] Version **1.1.13** the same way 1.1.12 was bumped, with 1.1.13-only What's new lines. No release publishing.
+- [ ] Custom title bar. Not in 1.1.13.
+
+## Upcoming (1.1.x only)
+- **1.1.14 Tue Oct 13:** Google Drive + custom title bar. The OneDrive download-redirect fix shipped in 1.1.13, so it is not carried here.
+- **1.1.15 Fri Oct 16:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.16 Tue Oct 20:** companion features
+- **1.1.17 Fri Oct 23:** Ask AI
+
+---
+
 **Planned as 1.1.12.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.12 — OneDrive personal accounts and Graph errors

@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.12'
+export const WHATS_NEW_ID = '1.1.13'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,13 +23,12 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.12"
+export const WHATS_NEW_TITLE = "What's new in 1.1.13"
 
 export const WHATS_NEW_POINTS = [
-  'OneDrive sign-in asks Microsoft for the App Folder with the full Graph permission. If you already signed in, sign in once more to finish the update.',
-  'Before a sync, the app opens the OneDrive App Folder so a personal Microsoft account has a place to store characters.',
-  'If OneDrive or Microsoft Graph refuses the connection, Settings shows the status and Microsoft\'s error code and message. Test connection in Settings > Sync checks the App Folder and shows the result.',
-  'Sign in to OneDrive is shown when this PC has no saved sign-in. Expired is shown only when a saved sign-in cannot be refreshed.',
+  'OneDrive file downloads work with a personal Microsoft account. The app follows Microsoft\'s download link without sending your sign-in to that server.',
+  'If one synced file cannot be downloaded, the rest of the sync still finishes. Settings shows Synced with N files skipped.',
+  'If Microsoft Graph itself rejects the sign-in, Settings still asks you to sign in again.',
 ]
 
 export function currentClassText(current) {
