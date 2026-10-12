@@ -156,7 +156,54 @@ html {
 ::-webkit-scrollbar-corner {
   background: var(--scrollbar-track);
 }
-.app { width: 100%; max-width: none; margin: 0; padding: 1.2rem 1.4rem 3rem; box-sizing: border-box; }
+/* Frameless desktop window: the title bar is the only caption. No second border. */
+html, body, #root { border: 0; outline: none; }
+.app { width: 100%; max-width: none; margin: 0; padding: 1.2rem 1.4rem 3rem; box-sizing: border-box; border: 0; }
+.app-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  margin: -1.2rem -1.4rem 0.85rem;
+  background: var(--panel);
+  color: var(--heading);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  app-region: drag;
+  user-select: none;
+}
+.app-titlebar-title {
+  display: flex;
+  align-items: center;
+  padding: 0 0.85rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+.app-titlebar-controls {
+  margin-left: auto;
+  display: flex;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.app-titlebar-btn {
+  width: 46px;
+  height: 36px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.app-titlebar-btn:hover { background: var(--panel2); }
+.app-titlebar-close:hover { background: var(--danger); color: #fff; }
 .app-header { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
 .app-header h1 { margin: 0; font-size: 1.5rem; color: var(--heading); letter-spacing: 0.01em; }
 .app-header p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }

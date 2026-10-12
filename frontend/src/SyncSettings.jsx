@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  GOOGLE_UNVERIFIED_NOTE,
   ICLOUD_TIP,
   ICLOUD_WAITING,
   SYNC_PROVIDERS,
@@ -27,7 +28,10 @@ export function SyncSettings({
   connectionText = '',
   testingConnection = false,
 }) {
-  const provider = status?.provider === 'onedrive' ? 'onedrive' : (status?.provider === 'folder' ? 'folder' : '')
+  const provider = status?.provider === 'onedrive' || status?.provider === 'google' || status?.provider === 'folder'
+    ? status.provider
+    : ''
+  const cloud = provider === 'onedrive' || provider === 'google'
   const line = syncError || syncStatusText(status)
   const waiting = !syncError && status?.message === ICLOUD_WAITING
   const skippedNote = !syncError && !syncing ? skippedFilesText(status?.skipped) : ''
@@ -37,7 +41,7 @@ export function SyncSettings({
         <label htmlFor="sync-provider">Sync</label>
         <span className="muted">
           Currency counts, wish list pins, class and level, and inventory sections for each character.
-          Google Drive is a later version.
+          Sync folder, OneDrive, or the hidden Google Drive app folder.
         </span>
       </div>
       <div>
@@ -71,8 +75,11 @@ export function SyncSettings({
             <p className="note" data-testid="sync-icloud-tip">{status?.icloud_tip || ICLOUD_TIP}</p>
           </div>
         )}
-        {provider === 'onedrive' && (
+        {cloud && (
           <div style={{ marginTop: '0.45rem' }}>
+            {provider === 'google' ? (
+              <p className="note" data-testid="sync-google-unverified">{GOOGLE_UNVERIFIED_NOTE}</p>
+            ) : null}
             {status?.account ? <p className="muted" data-testid="sync-account">{status.account}</p> : null}
             {(!status?.account || status?.reauth) ? (
               <button type="button" data-testid="sync-sign-in" onClick={() => onSignIn?.()}>Sign in</button>
@@ -192,48 +199,73 @@ export function SyncSettingsHost() {
       deviceName={deviceName}
       onDeviceName={setDeviceName}
       onDeviceNameCommit={(name) => save({ device_name: name })}
-      onProvider={(provider) => save({ provider })}
+      onProvider={(provider) => {
+        setSyncError('')
+        setConnectionText('')
+        setSyncedAt('')
+        save({ provider })
+      }}
       onChooseFolder={async () => {
         const picked = await desktop()?.pickSyncFolder?.()
         if (picked?.folder) await save({ provider: 'folder', folder: picked.folder })
         else await load()
       }}
       onSignIn={async () => {
-        const result = await desktop()?.signInOneDrive?.()
+        const google = status?.provider === 'google'
+        const signIn = google ? desktop()?.signInGoogleDrive : desktop()?.signInOneDrive
+        if (typeof signIn !== 'function') {
+          const message = google
+            ? 'Google Drive sign-in is available in the desktop app.'
+            : 'OneDrive sign-in is available in the desktop app.'
+          setSyncError(message)
+          return
+        }
+        const result = await signIn()
         if (result && result.ok === false) {
-          const message = result.error || 'OneDrive sign-in failed.'
+          const message = result.error || (google ? 'Google Drive sign-in failed.' : 'OneDrive sign-in failed.')
           setSyncError(message)
           setStatus((prev) => ({
             ...(prev || {}),
-            provider: 'onedrive',
+            provider: google ? 'google' : 'onedrive',
             status: 'error',
             error: message,
           }))
           return
         }
+        setSyncError('')
         await load()
       }}
       onTestConnection={async () => {
+        const google = status?.provider === 'google'
         setTestingConnection(true)
         setConnectionText('')
         try {
-          const response = await fetch('/api/sync/onedrive/test', { method: 'POST' })
+          const response = await fetch(google ? '/api/sync/google/test' : '/api/sync/onedrive/test', { method: 'POST' })
           let body = null
           try { body = await response.json() } catch (_) { body = null }
-          setConnectionText(connectionResultText(body, response.ok ? 0 : response.status))
+          setConnectionText(connectionResultText(body, response.ok ? 0 : response.status, google ? 'google' : 'onedrive'))
+          if (body && body.ok === true) setSyncError('')
         } catch (err) {
-          setConnectionText(String(err?.message || err || 'OneDrive connection test failed.'))
+          setConnectionText(String(err?.message || err || (google ? 'Google Drive connection test failed.' : 'OneDrive connection test failed.')))
         } finally {
           setTestingConnection(false)
+          await load()
         }
       }}
       onSignOut={async () => {
+        const google = status?.provider === 'google'
         try {
-          await desktop()?.signOutOneDrive?.()
-          const response = await fetch('/api/sync/onedrive/sign-out', { method: 'POST' })
-          if (!response.ok) setSyncError(`OneDrive sign-out failed (${response.status}).`)
+          if (google) await desktop()?.signOutGoogleDrive?.()
+          else await desktop()?.signOutOneDrive?.()
+          const response = await fetch(google ? '/api/sync/google/sign-out' : '/api/sync/onedrive/sign-out', { method: 'POST' })
+          if (!response.ok) {
+            setSyncError(`${google ? 'Google Drive' : 'OneDrive'} sign-out failed (${response.status}).`)
+          } else {
+            setSyncError('')
+            setConnectionText('')
+          }
         } catch (err) {
-          setSyncError(String(err?.message || err || 'OneDrive sign-out failed.'))
+          setSyncError(String(err?.message || err || (google ? 'Google Drive sign-out failed.' : 'OneDrive sign-out failed.')))
         }
         await load()
       }}

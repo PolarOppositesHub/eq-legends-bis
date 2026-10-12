@@ -8,6 +8,7 @@ const {
   lockWindowCalls,
   overlayAfterLockToggle,
   overlayRaisePlan,
+  focusAfterRaise,
   alertPlaybackPlan,
   alertContentDismiss,
   closedOverlayPatch,
@@ -69,6 +70,47 @@ test('blur raises the overlay and does not hide or close it', () => {
   assert.equal(dismissed.hideWindow, false)
   assert.equal(dismissed.closeWindow, false)
   assert.equal(dismissed.contentVisible, false)
+})
+
+test('the raise timer does not focus or show the overlay', () => {
+  const unlocked = overlayRaisePlan('interval', false)
+  assert.equal(unlocked.focus, false)
+  assert.equal(unlocked.show, false)
+  assert.equal(unlocked.moveTop, false)
+  assert.equal(unlocked.setFocusable, false)
+  assert.equal(unlocked.unfocusableDuringRaise, true)
+  assert.equal(unlocked.raise, true)
+  assert.equal(unlocked.alwaysOnTop, true)
+  assert.equal(unlocked.focusable, true)
+  const locked = overlayRaisePlan('interval', true)
+  assert.equal(locked.focus, false)
+  assert.equal(locked.show, false)
+  assert.equal(locked.focusable, false)
+  assert.equal(locked.setFocusable, false)
+  assert.deepEqual(
+    focusAfterRaise({ beforeId: 'main', afterId: 'dps', overlayId: 'dps' }),
+    { restoreFocusId: 'main' },
+  )
+  assert.deepEqual(
+    focusAfterRaise({ beforeId: 'main', afterId: 'main', overlayId: 'dps' }),
+    { restoreFocusId: null },
+  )
+  assert.deepEqual(
+    focusAfterRaise({ beforeId: 'dps', afterId: 'dps', overlayId: 'dps' }),
+    { restoreFocusId: null },
+  )
+  const main = fs.readFileSync(path.join(__dirname, 'main.js'), 'utf8')
+  assert.match(main, /raiseOverlay\(win, lockedFor\(id\), 'interval'\)/)
+  assert.match(main, /plan\.focus/)
+  assert.match(main, /plan\.show/)
+  assert.match(main, /unfocusableDuringRaise/)
+  assert.equal(main.includes('win.moveTop'), false)
+  for (const reason of ['blur', 'show', 'lock', 'unlock', 'display', 'raise']) {
+    const plan = overlayRaisePlan(reason, false)
+    assert.equal(plan.focus, false)
+    assert.equal(plan.show, false)
+    assert.equal(plan.moveTop, false)
+  }
 })
 
 test('an unlocked overlay can move and keeps a saved position', () => {

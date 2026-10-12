@@ -335,16 +335,17 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.13 notes", () => {
+test("what's new dialog shows the 1.1.14 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.13")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.13<\/h2>/)
-  assert.match(html, /personal Microsoft account/)
-  assert.match(html, /without sending your sign-in/)
-  assert.match(html, /Synced with N files skipped/)
-  assert.match(html, /sign in again/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.12<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.14")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.14<\/h2>/)
+  assert.match(html, /Google Drive/)
+  assert.match(html, /unverified app warning/)
+  assert.match(html, /title bar/)
+  assert.match(html, /minimizes to the tray/)
+  assert.match(html, /without taking focus/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.13<\/h2>/.test(html), false)
 })
 
 test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {

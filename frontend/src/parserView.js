@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.13'
+export const WHATS_NEW_ID = '1.1.14'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,12 +23,12 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.13"
+export const WHATS_NEW_TITLE = "What's new in 1.1.14"
 
 export const WHATS_NEW_POINTS = [
-  'OneDrive file downloads work with a personal Microsoft account. The app follows Microsoft\'s download link without sending your sign-in to that server.',
-  'If one synced file cannot be downloaded, the rest of the sync still finishes. Settings shows Synced with N files skipped.',
-  'If Microsoft Graph itself rejects the sign-in, Settings still asks you to sign in again.',
+  'Google Drive is a sync choice next to Sync folder and OneDrive. Sign-in uses the hidden Drive app folder only. Google may show an unverified app warning; that warning is expected.',
+  'The window has a title bar in the app theme, with minimize, maximize, and close. Close still quits, or minimizes to the tray when that X button setting is on.',
+  'Overlay meters stay on top without taking focus from a text box about once a second.',
 ]
 
 export function currentClassText(current) {

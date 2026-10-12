@@ -368,9 +368,9 @@ class SyncTests(unittest.TestCase):
             ]
             self.assertEqual(approot, [f"{GRAPH_ROOT}"])
 
-    def test_google_provider_is_not_built(self):
-        with self.assertRaises(SyncError):
-            provider_for("google")
+    def test_google_provider_builds(self):
+        provider = provider_for("google", transport=object(), token="test-token")
+        self.assertEqual(provider.kind, "google")
 
 
 class MockGraph:

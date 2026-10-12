@@ -51,6 +51,19 @@ contextBridge.exposeInMainWorld('eqDesktop', {
   pickSyncFolder: () => ipcRenderer.invoke('eq:pick-sync-folder'),
   signInOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-in'),
   signOutOneDrive: () => ipcRenderer.invoke('eq:onedrive-sign-out'),
+  signInGoogleDrive: () => ipcRenderer.invoke('eq:google-drive-sign-in'),
+  signOutGoogleDrive: () => ipcRenderer.invoke('eq:google-drive-sign-out'),
+  windowMinimize: () => ipcRenderer.invoke('eq:window-minimize'),
+  windowToggleMaximize: () => ipcRenderer.invoke('eq:window-toggle-maximize'),
+  windowClose: () => ipcRenderer.invoke('eq:window-close'),
+  windowState: () => ipcRenderer.invoke('eq:window-state'),
+  onWindowState: (cb) => {
+    const listener = (_event, state) => {
+      try { cb(state); } catch (_) { /* ignore */ }
+    };
+    ipcRenderer.on('eq:window-state', listener);
+    return () => ipcRenderer.removeListener('eq:window-state', listener);
+  },
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

@@ -1,5 +1,21 @@
 # Next build notes
 
+**Planned as 1.1.14.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.14 — Google Drive, themed title bar, overlay focus
+Ships the Tue Oct 13 target. Tray, window X, and single-instance behavior shipped in 1.1.11 and are not redone. The OneDrive download-redirect fix shipped in 1.1.13 and is not carried here.
+- [x] Google Drive provider beside Sync folder and OneDrive. Scope `https://www.googleapis.com/auth/drive.appdata`. Desktop OAuth public client, PKCE, system browser, loopback `http://localhost:<port>`, refresh token in Electron safeStorage. Files in the appDataFolder use `EQLegendsBiS-sync/manifest.json` and `events/<character>/<device_id>.jsonl`. Same merge, queue, and sync schedule. Settings: choose Google Drive, Sign in / Sign out, Test connection, Sync now, last synced, clear errors. Unverified-app warning is expected. No Google logo. Client id constant is `GOOGLE_DRIVE_CLIENT_ID` = `REPLACE_WITH_GOOGLE_DESKTOP_CLIENT_ID` until a real id is pasted in. Authorization is not sent to a non-Google download host. Official download URLs are preferred. One bad file is skipped. Settings shows the API error code and message.
+- [x] Custom themed title bar: minimize, maximize/restore, close. Close uses the 1.1.11 X button setting (Quit or Minimize to tray). Drag moves the window. Double-click toggles maximize. Windows snap still works. Frameless on Windows without a second caption.
+- [x] Overlay focus: the raise timer keeps meters on top and does not focus or show them. Tests cover that the interval raise does not focus the overlay.
+- [x] Version **1.1.14** the same way 1.1.13 was bumped, with 1.1.14-only What's new lines. No release publishing.
+
+## Upcoming (1.1.x only)
+- **1.1.15 Fri Oct 16:** dashboards (home screen, loot history, leveling, raid timers)
+- **1.1.16 Tue Oct 20:** companion features
+- **1.1.17 Fri Oct 23:** Ask AI
+
+---
+
 **Planned as 1.1.13.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.13 — OneDrive personal downloads and skipped files

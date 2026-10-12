@@ -262,6 +262,7 @@ const RAISE_INTERVAL_MS = 2000
  * set the level again. Blur must only raise the window.
  */
 function overlayRaisePlan(reason, locked) {
+  const onTimer = reason === 'interval'
   return {
     reason: reason || 'show',
     hide: false,
@@ -274,9 +275,27 @@ function overlayRaisePlan(reason, locked) {
     visibleOnFullScreen: true,
     skipTaskbar: true,
     focusable: !locked,
+    // The 2s timer keeps z-order. It must not focus, show, or flip focusable.
+    // setFocusable(true) on that timer blurs a text box in the main window.
+    focus: false,
+    show: false,
+    moveTop: false,
+    setFocusable: !onTimer,
+    unfocusableDuringRaise: onTimer,
     intervalMs: RAISE_INTERVAL_MS,
     injection: false,
   }
+}
+
+/**
+ * If a raise moved focus onto the overlay, put it back on the window that had it.
+ * A raise that left focus alone does nothing.
+ */
+function focusAfterRaise({ beforeId, afterId, overlayId }) {
+  if (afterId && overlayId && afterId === overlayId && beforeId && beforeId !== overlayId) {
+    return { restoreFocusId: beforeId }
+  }
+  return { restoreFocusId: null }
 }
 
 /** Sounds play off the visible meter so exclusive fullscreen can still be heard. */
@@ -311,6 +330,7 @@ module.exports = {
   lockWindowCalls,
   overlayAfterLockToggle,
   overlayRaisePlan,
+  focusAfterRaise,
   alertPlaybackPlan,
   alertContentDismiss,
   closedOverlayPatch,

@@ -9,12 +9,16 @@ import { applySyncedSections } from './inventorySections.js'
 export const ICLOUD_TIP = 'If this folder is in iCloud Drive, mark it Always keep on this device.'
 export const ICLOUD_WAITING = 'waiting for iCloud to download'
 export const CONNECTED_APP_FOLDER = 'Connected to OneDrive App Folder'
+export const CONNECTED_GOOGLE = 'Connected to Google Drive app folder'
 export const SIGN_IN_TEXT = 'Sign in to OneDrive'
 export const UPDATE_SIGN_IN_TEXT = 'Sign in to OneDrive again to finish the update'
+export const GOOGLE_SIGN_IN_TEXT = 'Sign in to Google Drive'
+export const GOOGLE_UNVERIFIED_NOTE = 'Google may show an unverified app warning before sign-in finishes. That warning is expected. The app only uses its hidden Drive folder.'
 
 export const SYNC_PROVIDERS = [
   { id: 'folder', label: 'Sync folder' },
   { id: 'onedrive', label: 'OneDrive' },
+  { id: 'google', label: 'Google Drive' },
 ]
 
 export function snapshotFromWorkspace(state) {
@@ -115,7 +119,7 @@ export function syncStatusText(status) {
   if (!status) return ''
   if (status.message === ICLOUD_WAITING) return ICLOUD_WAITING
   if (status.error) return String(status.error)
-  if (status.status === 'offline') return 'Offline. Changes stay on this PC until sync can reach the folder or OneDrive.'
+  if (status.status === 'offline') return 'Offline. Changes stay on this PC until sync can reach the folder, OneDrive, or Google Drive.'
   return ''
 }
 
@@ -135,12 +139,14 @@ export function formatSyncedAt(date) {
   return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
-/** Plain text for the OneDrive Test connection button. */
-export function connectionResultText(body, httpStatus) {
-  if (body && body.ok === true) return String(body.message || CONNECTED_APP_FOLDER)
+/** Plain text for the Test connection button. */
+export function connectionResultText(body, httpStatus, provider) {
+  const google = provider === 'google'
+  const connected = google ? CONNECTED_GOOGLE : CONNECTED_APP_FOLDER
+  if (body && body.ok === true) return String(body.message || connected)
   if (body && (body.message || body.error)) return String(body.message || body.error)
-  if (httpStatus) return `Graph ${httpStatus}`
-  return 'OneDrive connection test failed.'
+  if (httpStatus) return google ? `Google Drive ${httpStatus}` : `Graph ${httpStatus}`
+  return google ? 'Google Drive connection test failed.' : 'OneDrive connection test failed.'
 }
 
 /** Text to show when a sync call failed. Empty when the call succeeded or is waiting on iCloud. */

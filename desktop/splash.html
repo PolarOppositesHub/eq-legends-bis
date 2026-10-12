@@ -58,9 +58,57 @@
     }
     #hint.visible, #wait.visible { opacity: 1; }
     #wait { color: rgba(200, 180, 140, 0.72); }
+    .splash-titlebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      z-index: 6;
+      display: flex;
+      align-items: stretch;
+      background: #111111;
+      color: #f2f2f2;
+      border-bottom: 1px solid #3a3a3a;
+      -webkit-app-region: drag;
+      user-select: none;
+      cursor: default;
+    }
+    .splash-titlebar span {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+    .splash-titlebar .controls {
+      margin-left: auto;
+      display: flex;
+      -webkit-app-region: no-drag;
+    }
+    .splash-titlebar button {
+      width: 46px;
+      height: 36px;
+      border: 0;
+      background: transparent;
+      color: #f2f2f2;
+      font: inherit;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .splash-titlebar button:hover { background: #1a1a1a; }
+    .splash-titlebar button.close:hover { background: #c44; color: #fff; }
+    #stage { top: 36px; }
   </style>
 </head>
 <body>
+  <header class="splash-titlebar">
+    <span>EQ Legends BiS</span>
+    <div class="controls">
+      <button type="button" id="splash-min" aria-label="Minimize">−</button>
+      <button type="button" id="splash-max" aria-label="Maximize">□</button>
+      <button type="button" id="splash-close" class="close" aria-label="Close">×</button>
+    </div>
+  </header>
   <div id="stage">
     <video id="intro" playsinline disablepictureinpicture></video>
   </div>
@@ -117,6 +165,23 @@
         }, FADE_MS);
       }
 
+      const desk = window.eqDesktop;
+      const min = document.getElementById('splash-min');
+      const max = document.getElementById('splash-max');
+      const close = document.getElementById('splash-close');
+      if (min) min.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (desk && desk.windowMinimize) desk.windowMinimize();
+      });
+      if (max) max.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (desk && desk.windowToggleMaximize) desk.windowToggleMaximize();
+      });
+      if (close) close.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (desk && desk.windowClose) desk.windowClose();
+      });
+
       if (!src || src === 'skip') {
         finishImmediate();
         return;
@@ -134,7 +199,10 @@
         e.preventDefault();
         finish();
       }, true);
-      document.addEventListener('pointerdown', finish, true);
+      document.addEventListener('pointerdown', function (e) {
+        if (e.target && e.target.closest && e.target.closest('.splash-titlebar')) return;
+        finish();
+      }, true);
       setTimeout(function () { if (!done && !fading) hint.classList.add('visible'); }, 900);
       setTimeout(finish, 90000);
 
