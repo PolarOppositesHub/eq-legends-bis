@@ -144,9 +144,9 @@ def _tree(drive: MockDrive) -> str:
 
 
 class GoogleDriveProviderTests(unittest.TestCase):
-    def test_client_id_is_the_placeholder(self):
-        self.assertEqual(GOOGLE_DRIVE_CLIENT_ID, "REPLACE_WITH_GOOGLE_DESKTOP_CLIENT_ID")
-        self.assertNotIn(".apps.googleusercontent.com", GOOGLE_DRIVE_CLIENT_ID)
+    def test_client_id_is_the_desktop_oauth_client(self):
+        self.assertEqual(GOOGLE_DRIVE_CLIENT_ID, "122260219418-2rhjatugpadqi99ofecm8quruernbb0d.apps.googleusercontent.com")
+        self.assertIn(".apps.googleusercontent.com", GOOGLE_DRIVE_CLIENT_ID)
         self.assertEqual(GOOGLE_DRIVE_SCOPES, "https://www.googleapis.com/auth/drive.appdata")
         built = provider_for("google", transport=object(), token=TOKEN)
         self.assertIsInstance(built, GoogleDriveProvider)

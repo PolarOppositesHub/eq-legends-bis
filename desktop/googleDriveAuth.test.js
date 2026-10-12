@@ -19,8 +19,8 @@ const {
 } = require('./googleDriveAuth')
 
 test('Google Drive authorize URL is the public client, loopback, and PKCE', () => {
-  assert.equal(GOOGLE_DRIVE_CLIENT_ID, 'REPLACE_WITH_GOOGLE_DESKTOP_CLIENT_ID')
-  assert.equal(GOOGLE_DRIVE_CLIENT_ID.includes('.apps.googleusercontent.com'), false)
+  assert.equal(GOOGLE_DRIVE_CLIENT_ID, '122260219418-2rhjatugpadqi99ofecm8quruernbb0d.apps.googleusercontent.com')
+  assert.equal(GOOGLE_DRIVE_CLIENT_ID.includes('.apps.googleusercontent.com'), true)
   assert.equal(AUTHORIZE, 'https://accounts.google.com/o/oauth2/v2/auth')
   assert.equal(SCOPES, 'https://www.googleapis.com/auth/drive.appdata')
   const pair = pkcePair((n) => Buffer.alloc(n, 7))

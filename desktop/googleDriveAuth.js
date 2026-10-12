@@ -3,13 +3,13 @@
  * System browser, loopback http://localhost:<port>, PKCE. The refresh token
  * stays in Electron safeStorage. Tests pass the crypto and file helpers in.
  *
- * GOOGLE_DRIVE_CLIENT_ID is a placeholder until a real desktop client id is
- * pasted in. Do not replace it with a made-up id.
+ * GOOGLE_DRIVE_CLIENT_ID is the public Google desktop OAuth client id
+ * (PKCE; no client secret on the token request).
  */
 const crypto = require('crypto')
 const http = require('http')
 
-const GOOGLE_DRIVE_CLIENT_ID = 'REPLACE_WITH_GOOGLE_DESKTOP_CLIENT_ID'
+const GOOGLE_DRIVE_CLIENT_ID = '122260219418-2rhjatugpadqi99ofecm8quruernbb0d.apps.googleusercontent.com'
 const AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN = 'https://oauth2.googleapis.com/token'
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata'

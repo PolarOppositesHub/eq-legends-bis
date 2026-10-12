@@ -35,7 +35,7 @@ from .model import decode_jsonl, union_events
 DRIVE_API = "https://www.googleapis.com/drive/v3"
 DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3"
 DRIVE_ORIGIN = "https://www.googleapis.com"
-GOOGLE_DRIVE_CLIENT_ID = "REPLACE_WITH_GOOGLE_DESKTOP_CLIENT_ID"
+GOOGLE_DRIVE_CLIENT_ID = "122260219418-2rhjatugpadqi99ofecm8quruernbb0d.apps.googleusercontent.com"
 GOOGLE_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN = "https://oauth2.googleapis.com/token"
 GOOGLE_DRIVE_SCOPES = "https://www.googleapis.com/auth/drive.appdata"
