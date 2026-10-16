@@ -41,6 +41,7 @@ _DERIVED_TABLES = (
     "merge_events",
     "xp_events",
     "level_events",
+    "consider_events",
 )
 
 _SCHEMA = """
@@ -261,6 +262,36 @@ CREATE TABLE IF NOT EXISTS alert_fires (
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS consider_events (
+    file_id INTEGER NOT NULL,
+    generation INTEGER NOT NULL,
+    offset INTEGER NOT NULL,
+    ts TEXT,
+    character TEXT,
+    mob TEXT,
+    regard TEXT,
+    con_text TEXT,
+    mob_level INTEGER,
+    zone TEXT,
+    PRIMARY KEY (file_id, generation, offset)
+);
+
+CREATE TABLE IF NOT EXISTS favourites (
+    character TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    name TEXT NOT NULL,
+    ts TEXT,
+    PRIMARY KEY (character, kind, name)
+);
+
+CREATE TABLE IF NOT EXISTS user_lockouts (
+    character TEXT NOT NULL,
+    mob TEXT NOT NULL,
+    note TEXT,
+    ts TEXT,
+    PRIMARY KEY (character, mob)
 );
 """
 
@@ -636,6 +667,20 @@ class ParserDB:
                 (
                     file_id, generation, offset, _iso(event.ts), character,
                     event.player_level, event.player_classes, "who", None, None,
+                ),
+            )
+        elif event.kind == "consider":
+            extra = event.extra or {}
+            self.conn.execute(
+                """
+                INSERT OR IGNORE INTO consider_events(
+                    file_id, generation, offset, ts, character, mob, regard, con_text, mob_level, zone
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    file_id, generation, offset, _iso(event.ts), character,
+                    event.target, extra.get("regard"), extra.get("con") or event.text,
+                    extra.get("mob_level"), event.zone,
                 ),
             )
 
@@ -1102,7 +1147,7 @@ class ParserDB:
         return int(row["n"])
 
     def count_where(self, table: str, file_id: int | None = None) -> int:
-        if table not in {"loot_events", "give_events", "merge_events", "xp_events", "level_events", "fights"}:
+        if table not in {"loot_events", "give_events", "merge_events", "xp_events", "level_events", "fights", "consider_events"}:
             raise ValueError(table)
         if file_id is None:
             row = self.conn.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()
@@ -1300,3 +1345,127 @@ class ParserDB:
                 "result_tier": row["result_tier"],
             })
         return events
+
+    def list_xp_events(self, character: str | None = None) -> list[dict]:
+        sql = "SELECT ts, character, pct, party, bonus, offset FROM xp_events"
+        args: list = []
+        if character:
+            sql += " WHERE character=? COLLATE NOCASE"
+            args.append(character)
+        sql += " ORDER BY COALESCE(ts, ''), offset"
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "pct": row["pct"],
+                "party": bool(row["party"]),
+                "bonus": bool(row["bonus"]),
+                "offset": row["offset"],
+            }
+            for row in self.conn.execute(sql, args)
+        ]
+
+    def list_consider(self, character: str | None = None, limit: int = 200) -> list[dict]:
+        sql = "SELECT ts, character, mob, regard, con_text, mob_level, zone, offset FROM consider_events"
+        args: list = []
+        if character:
+            sql += " WHERE character=? COLLATE NOCASE"
+            args.append(character)
+        sql += " ORDER BY COALESCE(ts, '') DESC, offset DESC LIMIT ?"
+        args.append(int(limit))
+        return [
+            {
+                "ts": row["ts"],
+                "character": row["character"],
+                "mob": row["mob"],
+                "regard": row["regard"],
+                "con": row["con_text"],
+                "level": row["mob_level"],
+                "zone": row["zone"],
+                "level_source": "consider line",
+            }
+            for row in self.conn.execute(sql, args)
+        ]
+
+    def list_your_slain(self, character: str, limit: int = 2000) -> list[dict]:
+        sql = """
+            SELECT e.ts, e.target AS mob, e.offset
+            FROM events e
+            JOIN log_files lf ON lf.id = e.file_id
+            WHERE e.kind = 'slain' AND e.source = 'You' AND lf.character = ? COLLATE NOCASE
+            ORDER BY COALESCE(e.ts, '') DESC, e.offset DESC
+            LIMIT ?
+        """
+        return [
+            {"ts": row["ts"], "mob": row["mob"], "offset": row["offset"]}
+            for row in self.conn.execute(sql, (character, int(limit)))
+        ]
+
+    def loot_counts_by_mob(self, character: str) -> dict[str, int]:
+        sql = """
+            SELECT from_name AS mob, COUNT(*) AS n
+            FROM loot_events
+            WHERE character = ? COLLATE NOCASE AND from_name IS NOT NULL AND from_name != ''
+            GROUP BY from_name COLLATE NOCASE
+        """
+        return {row["mob"]: int(row["n"]) for row in self.conn.execute(sql, (character,))}
+
+    def slain_counts_by_mob(self, character: str) -> dict[str, int]:
+        sql = """
+            SELECT e.target AS mob, COUNT(*) AS n
+            FROM events e
+            JOIN log_files lf ON lf.id = e.file_id
+            WHERE e.kind = 'slain' AND e.source = 'You' AND lf.character = ? COLLATE NOCASE
+              AND e.target IS NOT NULL AND e.target != ''
+            GROUP BY e.target COLLATE NOCASE
+        """
+        return {row["mob"]: int(row["n"]) for row in self.conn.execute(sql, (character,))}
+
+    def list_favourites(self, character: str, kind: str | None = None) -> list[dict]:
+        sql = "SELECT kind, name, ts FROM favourites WHERE character=? COLLATE NOCASE"
+        args: list = [character]
+        if kind:
+            sql += " AND kind=?"
+            args.append(kind)
+        sql += " ORDER BY name COLLATE NOCASE"
+        return [{"kind": row["kind"], "name": row["name"], "ts": row["ts"]} for row in self.conn.execute(sql, args)]
+
+    def set_favourite(self, character: str, kind: str, name: str, starred: bool, ts: str) -> None:
+        if starred:
+            self.conn.execute(
+                """
+                INSERT INTO favourites(character, kind, name, ts) VALUES(?, ?, ?, ?)
+                ON CONFLICT(character, kind, name) DO UPDATE SET ts=excluded.ts
+                """,
+                (character, kind, name, ts),
+            )
+        else:
+            self.conn.execute(
+                "DELETE FROM favourites WHERE character=? COLLATE NOCASE AND kind=? AND name=? COLLATE NOCASE",
+                (character, kind, name),
+            )
+
+    def list_user_lockouts(self, character: str) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT mob, note, ts FROM user_lockouts WHERE character=? COLLATE NOCASE ORDER BY mob COLLATE NOCASE",
+            (character,),
+        )
+        return [
+            {"mob": row["mob"], "note": row["note"] or "", "ts": row["ts"], "status": "UNVERIFIED", "source": "user-entered"}
+            for row in rows
+        ]
+
+    def set_user_lockout(self, character: str, mob: str, note: str | None, ts: str, clear: bool = False) -> None:
+        if clear:
+            self.conn.execute(
+                "DELETE FROM user_lockouts WHERE character=? COLLATE NOCASE AND mob=? COLLATE NOCASE",
+                (character, mob),
+            )
+            return
+        self.conn.execute(
+            """
+            INSERT INTO user_lockouts(character, mob, note, ts) VALUES(?, ?, ?, ?)
+            ON CONFLICT(character, mob) DO UPDATE SET note=excluded.note, ts=excluded.ts
+            """,
+            (character, mob, note or "", ts),
+        )

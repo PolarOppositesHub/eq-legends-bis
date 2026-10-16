@@ -101,13 +101,43 @@ export const postParserAlertImport = (text) =>
 
 export const getParserAlertsRecent = () => req('/api/parser/alerts/recent')
 
+const characterQuery = (character) => {
+  const q = new URLSearchParams()
+  if (character) q.set('character', character)
+  return q
+}
+
+export const getDashboardOverview = (character) => req(`/api/parser/dashboards/overview?${characterQuery(character)}`)
+export const getDashboardLoot = (character) => req(`/api/parser/dashboards/loot?${characterQuery(character)}`)
+export const getDashboardLeveling = (character) => req(`/api/parser/dashboards/leveling?${characterQuery(character)}`)
+export const getDashboardRaids = (character) => req(`/api/parser/dashboards/raids?${characterQuery(character)}`)
+export const getDashboardConsidered = (character) => req(`/api/parser/dashboards/considered?${characterQuery(character)}`)
+export const getDashboardMob = (character, name) => {
+  const q = characterQuery(character)
+  q.set('name', name || '')
+  return req(`/api/parser/dashboards/mob?${q}`)
+}
+export const getDashboardOverlay = (character, kind) => {
+  const q = characterQuery(character)
+  q.set('kind', kind || 'xp')
+  return req(`/api/parser/dashboards/overlay?${q}`)
+}
+export const postDashboardFavourite = (body) =>
+  req('/api/parser/dashboards/favourites', { method: 'POST', body: JSON.stringify(body) })
+export const postDashboardLockout = (body) =>
+  req('/api/parser/dashboards/lockouts', { method: 'POST', body: JSON.stringify(body) })
+export const postDashboardMoteGrade = (grade) =>
+  req('/api/parser/dashboards/mote-grade', { method: 'POST', body: JSON.stringify({ grade }) })
+export const postDashboardWishes = (character, wishes) =>
+  req('/api/parser/dashboards/wishes', { method: 'POST', body: JSON.stringify({ character, wishes: wishes || [] }) })
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {
     return { close() {} }
   }
   const source = new EventSource('/api/parser/stream')
-  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message', 'alert']
+  const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message', 'alert', 'toast']
   for (const type of types) {
     source.addEventListener(type, (ev) => {
       let data = null

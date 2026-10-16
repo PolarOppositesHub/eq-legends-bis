@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getParserMeters, openParserStream } from './parserApi.js'
+import { getDashboardOverlay, getParserMeters, openParserStream } from './parserApi.js'
+import { overlayCardText } from './dashboardsView.jsx'
 import { formatAlertRates, formatDamage, formatPerSecond } from './parserView.js'
 import {
   FULLSCREEN_NOTE,
@@ -26,6 +27,7 @@ export default function OverlayApp() {
   const [look, setLook] = useState(() => overlayAppearance({}))
   const [meter, setMeter] = useState(null)
   const [banner, setBanner] = useState(null)
+  const [card, setCard] = useState(null)
 
   useEffect(() => {
     const desk = desktop()
@@ -40,7 +42,24 @@ export default function OverlayApp() {
   }, [id])
 
   useEffect(() => {
-    if (id === 'alert' || !character) return undefined
+    if (id !== 'xp' && id !== 'con') return undefined
+    if (!character) return undefined
+    let cancelled = false
+    const load = () => {
+      getDashboardOverlay(character, id).then((body) => {
+        if (!cancelled) setCard(body)
+      }).catch(() => {})
+    }
+    load()
+    const timer = setInterval(load, 2000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [id, character])
+
+  useEffect(() => {
+    if (id === 'alert' || id === 'xp' || id === 'con' || !character) return undefined
     let cancelled = false
     const load = () => {
       getParserMeters(character, scope).then((body) => {
@@ -77,7 +96,15 @@ export default function OverlayApp() {
   }, [banner, id])
 
   const rows = meterRows(meter)
-  const title = id === 'heal' ? 'Heal meter' : id === 'alert' ? 'Alerts' : 'DPS meter'
+  const title = id === 'heal'
+    ? 'Heal meter'
+    : id === 'alert'
+      ? 'Alerts'
+      : id === 'xp'
+        ? 'Experience'
+        : id === 'con'
+          ? 'Con card'
+          : 'DPS meter'
   const chrome = overlayChromeStyle(look)
   const showTitle = locked && look.showTitleWhenLocked
   const closeControl = overlayCloseControl(locked)
@@ -130,6 +157,10 @@ export default function OverlayApp() {
         {id === 'alert' ? (
           <p className="overlay-banner" data-testid="overlay-alert-banner">
             {formatAlertRates(banner?.message) || 'Waiting for an alert.'}
+          </p>
+        ) : id === 'xp' || id === 'con' ? (
+          <p className="overlay-banner" data-testid={id === 'xp' ? 'overlay-xp' : 'overlay-con'}>
+            {character ? overlayCardText(card) : 'Choose a character log in the Parser.'}
           </p>
         ) : (
           <>

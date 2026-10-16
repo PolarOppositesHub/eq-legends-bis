@@ -63,6 +63,14 @@ import { openParserStream } from './parserApi.js'
 import { AlertsPanel } from './AlertsTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
+import {
+  DashboardToasts,
+  LevelingPanel,
+  LootPanel,
+  OverviewPanel,
+  RaidsPanel,
+  RecentlyConsidered,
+} from './dashboardsView.jsx'
 import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
 import { SyncBridge } from './SyncBridge.jsx'
@@ -993,7 +1001,7 @@ function TierSelects({ label, values, options, onChange }) {
 
 export default function App() {
   const [meta, setMeta] = useState(null)
-  const [tab, setTab] = useState('bis')
+  const [tab, setTab] = useState('overview')
   const [classes, setClasses] = useState([])
   const [mode, setMode] = useState('priority')
   const [primaryStats, setPrimaryStats] = useState(() => [...EMPTY_TIERS])
@@ -3133,7 +3141,12 @@ export default function App() {
     setWishByCharacter((current) => toggleWish(current, wishCharacter, itemName))
   }, [wishCharacter])
 
+  const dashboardTab = tab === 'overview' || tab === 'loot' || tab === 'leveling' || tab === 'raids'
   const navItems = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'loot', label: 'Loot' },
+    { id: 'leveling', label: 'Leveling' },
+    { id: 'raids', label: 'Raid targets' },
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
@@ -3388,7 +3401,7 @@ export default function App() {
             <span className="trio-value">{trioLabel}</span>
           </div>
 
-          <div className="panel">
+          <div className="panel" hidden={dashboardTab}>
             <div className="row">
               <div className="field" style={{ minWidth: '100%' }}>
                 <label>Classes (pick up to 3)</label>
@@ -3615,6 +3628,17 @@ export default function App() {
               </div>
             )}
           </div>
+
+          {dashboardTab && (
+            <>
+              {tab === 'overview' && <OverviewPanel character={wishCharacter} wishes={wishNames} />}
+              {tab === 'loot' && <LootPanel character={wishCharacter} wishes={wishNames} />}
+              {tab === 'leveling' && <LevelingPanel character={wishCharacter} />}
+              {tab === 'raids' && (
+                <RaidsPanel character={wishCharacter} onSelectMob={(name) => { setSelectedMobName(name); setTab('mobs') }} />
+              )}
+            </>
+          )}
 
           {error && <div className="error" style={{ marginBottom: '1rem' }}>{error}</div>}
           {exportMsg && <div className="note" style={{ marginBottom: '1rem' }}>{exportMsg}</div>}
@@ -4145,6 +4169,7 @@ export default function App() {
           {tab === 'mobs' && (
             <div className="panel item-search">
               <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Mobs</h2>
+              <RecentlyConsidered character={wishCharacter} onSelectMob={setSelectedMobName} />
               <p className="muted" style={{ marginTop: 0 }}>
                 Single-click a mob for a preview. Double-click (or use the side arrow) to maximize the detail panel.
                 Names and kinds come from eqlwiki (raid / mini boss / named / standard). Filter by Classic / Kunark / Velious era (eqlwiki era categories).
@@ -5547,6 +5572,7 @@ export default function App() {
         </div>
       )}
 
+      <DashboardToasts />
       {creditsOpen && <CreditsDialog onClose={() => setCreditsOpen(false)} />}
       {whatsNewOpen && (
         <WhatsNewDialog

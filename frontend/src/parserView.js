@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.14'
+export const WHATS_NEW_ID = '1.1.15'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,12 +23,14 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.14"
+export const WHATS_NEW_TITLE = "What's new in 1.1.15"
 
 export const WHATS_NEW_POINTS = [
-  'Google Drive is a sync choice next to Sync folder and OneDrive. Sign-in uses the hidden Drive app folder only. Google may show an unverified app warning; that warning is expected.',
-  'The window has a title bar in the app theme, with minimize, maximize, and close. Close still quits, or minimizes to the tray when that X button setting is on.',
-  'Overlay meters stay on top without taking focus from a text box about once a second.',
+  'Overview is the home screen. It shows the current mob, your fight DPS curve, leveling pace, recent drops and kills, and the zones from the log.',
+  'Loot history shows your own drop rate (your loots divided by your kills), starred favourites, and quest flags from sourced links. Unknown items stay unknown.',
+  'Leveling and AA follow each class loadout. Swapping classes can drop the level, and both readings are kept. Pace is levels of progress, because the log has a percent and not raw experience points.',
+  'Raid targets list named kills with the instance difficulty already on the fight. The weekly lockout reuses the Tuesday 8:00 AM Pacific reset. Other lockouts stay unverified until you enter them.',
+  'A level-up or notable loot toast appears only while the log is live. Experience and con card overlays use the same lock and raise rules as the other meters.',
 ]
 
 export function currentClassText(current) {

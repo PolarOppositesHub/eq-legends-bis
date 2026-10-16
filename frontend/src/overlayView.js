@@ -27,6 +27,8 @@ export const OVERLAY_CHOICES = [
   { id: 'dps', label: 'DPS' },
   { id: 'heal', label: 'Heal' },
   { id: 'alert', label: 'Alerts' },
+  { id: 'xp', label: 'XP' },
+  { id: 'con', label: 'Con card' },
 ]
 
 export const DEFAULT_OVERLAY_APPEARANCE = {
@@ -119,6 +121,6 @@ export function closeAllIds(rows, choices) {
 export function overlayIdFromSearch(search) {
   const params = new URLSearchParams(search || '')
   const id = params.get('overlay')
-  if (id === 'dps' || id === 'heal' || id === 'alert') return id
+  if (id === 'dps' || id === 'heal' || id === 'alert' || id === 'xp' || id === 'con') return id
   return ''
 }

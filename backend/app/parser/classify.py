@@ -114,6 +114,15 @@ _AA_N = re.compile(
     r"^You have gained (?P<n>\d+) ability points?!\s+You now have (?P<now>\d+) ability points?\.$"
 )
 _ZONE_RE = re.compile(r"^You have entered (?P<zone>.+)\.$")
+# SPEC §5.1. Example: Key Master regards you indifferently -- looks like he
+# would wipe the floor with you! (Lvl: 55). The regard verbs are that line's
+# family (the spec's "…" after regards you / glowers at you).
+_CONSIDER_RE = re.compile(
+    r"^(?P<mob>.+?) "
+    r"(?P<regard>(?:regards you|looks upon you|kindly considers you|judges you|"
+    r"looks your way|glowers at you|scowls at you|glares at you).*?) "
+    r"-- (?P<con>.+?) \(Lvl: (?P<level>\d+)\)$"
+)
 _ZONE_TIER = re.compile(
     r"^(?P<name>.+?)(?: - (?P<scope>Solo|Group))?(?: (?P<num>\d+))? "
     r"\((?P<tier>Awakened|Adaptive|Refined|Fused|Normal)\)$"
@@ -870,6 +879,24 @@ def _other(msg: str, mods: tuple[str, ...]) -> ParsedEvent | None:
     return None
 
 
+def _consider(msg: str) -> ParsedEvent | None:
+    match = _CONSIDER_RE.match(msg)
+    if not match:
+        return None
+    level = int(match.group("level"))
+    return _event(
+        "consider",
+        source="You",
+        target=match.group("mob"),
+        text=match.group("con"),
+        extra={
+            "regard": match.group("regard"),
+            "con": match.group("con"),
+            "mob_level": level,
+        },
+    )
+
+
 def _who_event(msg: str) -> ParsedEvent | None:
     match = _WHO.match(msg)
     if not match:
@@ -893,6 +920,10 @@ def classify_message(message: str) -> ParsedEvent | None:
     who = _who_event(msg)
     if who:
         return who
+    # (Lvl: N) would be stripped as a trailing modifier. Match consider first.
+    considered = _consider(msg)
+    if considered:
+        return considered
     msg, mods = _split_mods(msg)
 
     if " points of " in msg and " damage by " in msg:
