@@ -28,7 +28,7 @@ test('missing or corrupt session falls back to defaults', () => {
     const result = sanitizeWorkspace(raw, catalog)
     assert.equal(result.restored, false)
     assert.deepEqual(result.state.classes, [])
-    assert.equal(result.state.tab, 'bis')
+    assert.equal(result.state.tab, 'overview')
     assert.equal(result.state.race, 'Human')
     assert.equal(result.state.characterLevel, 50)
     assert.equal(result.state.uiSettings, null)
@@ -64,7 +64,7 @@ test('unknown classes, race, slot, stat, mode, and item shapes fall back per fie
   }, catalog)
 
   assert.equal(restored, true)
-  assert.equal(state.tab, 'bis')
+  assert.equal(state.tab, 'overview')
   assert.deepEqual(state.classes, ['Wizard', 'Cleric', 'Monk'])
   assert.equal(state.mode, 'priority')
   assert.deepEqual(state.primaryStats, ['', 'INT', ''])
@@ -141,7 +141,7 @@ test('snapshot keeps a 3-class trio and does not embed saved loadouts', () => {
   assert.equal(snap.uiSettings.theme, 'forge')
   assert.equal(snap.uiSettings.extra, undefined)
   assert.equal(snap.builds, undefined)
-  assert.equal(defaultWorkspace(catalog).tab, 'bis')
+  assert.equal(defaultWorkspace(catalog).tab, 'overview')
 })
 
 test('bad theme falls back and import rows that are not items are dropped', () => {

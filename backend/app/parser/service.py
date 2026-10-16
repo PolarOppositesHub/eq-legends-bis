@@ -463,6 +463,78 @@ class ParserService:
             if self._stop.wait(tail.poll_interval):
                 break
 
+    def _accept_parsed(
+        self,
+        *,
+        file_id: int,
+        generation: int,
+        offset: int,
+        character: str,
+        seg,
+        event,
+        message: str,
+    ) -> bool:
+        """Store one classified line. Consider does not move fight boundaries.
+
+        A duplicate zone line still updates the in-memory zone so a consider
+        that was not in the database yet can keep the zone from the log.
+        Returns True when the row is new.
+        """
+        if event is None:
+            self.consider_alerts(file_id, offset, None, message)
+            return False
+        if event.kind == "consider":
+            event.zone = seg.zone
+        inserted = self.db.insert_event(file_id, generation, offset, event)
+        if not inserted:
+            if event.kind == "zone":
+                seg.zone = event.zone
+                seg.instance = dict(event.instance) if event.instance else None
+            return False
+        self.db.insert_specialized(file_id, generation, offset, character, event)
+        if event.kind != "consider":
+            seg.observe(event, offset)
+        self.consider_alerts(file_id, offset, event, event.text or message)
+        if event.kind in {"who", "level"} and not self._replaying:
+            self.hub.publish({"type": "roster", "character": character})
+        self._maybe_toast(event, character)
+        return True
+
+    def _wish_keys(self, character: str) -> set[str]:
+        import json
+
+        from .dashboards import item_key
+
+        raw = self.db.get_setting(f"wishes:{character.casefold()}") or "[]"
+        try:
+            names = json.loads(raw)
+        except json.JSONDecodeError:
+            names = []
+        if not isinstance(names, list):
+            return set()
+        return {item_key(name) for name in names if isinstance(name, str) and item_key(name)}
+
+    def _mote_min_grade(self) -> int | None:
+        from .dashboards import parse_mote_grade_setting
+
+        return parse_mote_grade_setting(self.db.get_setting("mote_notable_grade"))
+
+    def _maybe_toast(self, event, character: str) -> None:
+        if self._replaying or event is None:
+            return
+        from .dashboards import bis_name_keys, pos_item_keys, toast_for_event
+
+        payload = toast_for_event(
+            event,
+            live=True,
+            bis_keys=bis_name_keys(),
+            wish_keys=self._wish_keys(character),
+            pos_keys=pos_item_keys(),
+            mote_min_grade=self._mote_min_grade(),
+        )
+        if payload:
+            self.hub.publish({"type": "toast", "live": True, "toast": payload})
+
     def _ingest_batch(self, path: Path, batch: TailBatch) -> None:
         character, server = parse_log_name(path.name) or ("You", "")
         st = path.stat() if path.exists() else None
@@ -485,17 +557,15 @@ class ParserService:
             try:
                 for line in batch.lines:
                     _ts, event = classify_log_line(line.text)
-                    msg = _log_message(line.text)
-                    if event is None:
-                        self.consider_alerts(file_id, line.offset, None, msg)
-                        continue
-                    if not self.db.insert_event(file_id, generation, line.offset, event):
-                        continue
-                    self.db.insert_specialized(file_id, generation, line.offset, character, event)
-                    seg.observe(event, line.offset)
-                    self.consider_alerts(file_id, line.offset, event, event.text or msg)
-                    if event.kind in {"who", "level"} and not self._replaying:
-                        self.hub.publish({"type": "roster", "character": character})
+                    self._accept_parsed(
+                        file_id=file_id,
+                        generation=generation,
+                        offset=line.offset,
+                        character=character,
+                        seg=seg,
+                        event=event,
+                        message=_log_message(line.text),
+                    )
                 if seg.fight is not None and seg.fight.open:
                     self.db.save_fight(file_id, generation, seg.fight)
                     self._emit_fight(seg.fight.summary())
@@ -552,14 +622,20 @@ class ParserService:
                         key = _skeleton(msg)
                         shapes[key] += 1
                         examples.setdefault(key, msg[:180])
-                        self.consider_alerts(file_id, offset, None, msg)
                     else:
                         classified += 1
-                        if self.db.insert_event(file_id, generation, offset, event):
+                    accepted = self._accept_parsed(
+                        file_id=file_id,
+                        generation=generation,
+                        offset=offset,
+                        character=character,
+                        seg=seg,
+                        event=event,
+                        message=msg,
+                    )
+                    if event is not None:
+                        if accepted:
                             inserted += 1
-                            self.db.insert_specialized(file_id, generation, offset, character, event)
-                            seg.observe(event, offset)
-                            self.consider_alerts(file_id, offset, event, event.text or msg)
                         else:
                             duplicate += 1
                     if lines % CHUNK_LINES == 0:
@@ -1320,6 +1396,269 @@ class ParserService:
             {"pet": row["pet"], "owner": row["owner"], "evidence": row["evidence"], "manual": bool(row["manual"])}
             for row in rows
         ]
+
+
+    def remember_wishes(self, character: str, wishes: list[str]) -> dict:
+        import json
+
+        character = character.strip()
+        clean = []
+        seen = set()
+        for name in wishes:
+            text = str(name or "").strip()
+            if not text or text.casefold() in seen:
+                continue
+            seen.add(text.casefold())
+            clean.append(text)
+        self.db.set_setting(f"wishes:{character.casefold()}", json.dumps(clean))
+        return {"ok": True, "character": character, "wishes": clean}
+
+    def set_mote_notable_grade(self, grade: int | None) -> dict:
+        if grade is None:
+            self.db.set_setting("mote_notable_grade", "")
+        else:
+            self.db.set_setting("mote_notable_grade", str(int(grade)))
+        return {"ok": True, "mote_notable_grade": self._mote_min_grade()}
+
+    def set_favourite(self, character: str, kind: str, name: str, starred: bool) -> dict:
+        character = character.strip()
+        kind = kind.strip()
+        name = name.strip()
+        if kind not in {"item", "mob"}:
+            raise ValueError("kind must be item or mob")
+        if not character or not name:
+            raise ValueError("character and name are required")
+        with self.db.lock:
+            self.db.set_favourite(character, kind, name, starred, datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+            self.db.commit()
+        return {"ok": True, "character": character, "kind": kind, "name": name, "starred": starred}
+
+    def set_user_lockout(self, character: str, mob: str, note: str | None, clear: bool = False) -> dict:
+        character = character.strip()
+        mob = mob.strip()
+        if not character or not mob:
+            raise ValueError("character and mob are required")
+        with self.db.lock:
+            self.db.set_user_lockout(character, mob, note, datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), clear=clear)
+            self.db.commit()
+            rows = self.db.list_user_lockouts(character)
+        return {"ok": True, "lockouts": rows}
+
+    def _notable_sets(self, character: str, wishes: list[str] | None) -> tuple[set[str], set[str], set[str], set[str]]:
+        from .dashboards import bis_name_keys, item_key, pos_item_keys
+
+        if wishes is not None:
+            self.remember_wishes(character, wishes)
+        wish_keys = self._wish_keys(character)
+        favourite_keys = {item_key(row["name"]) for row in self.db.list_favourites(character, "item")}
+        return set(bis_name_keys()), wish_keys, set(pos_item_keys()), favourite_keys
+
+    def dashboard_loot(self, character: str, wishes: list[str] | None = None, limit: int = 300) -> dict:
+        from .dashboards import annotate_loot_row, drop_rates
+
+        character = character.strip()
+        with self.read_guard():
+            rows = self.db.list_loot(character, limit=limit, offset=0)
+            rates = drop_rates(self.db.loot_counts_by_mob(character), self.db.slain_counts_by_mob(character))
+            bis_keys, wish_keys, pos_keys, favourite_keys = self._notable_sets(character, wishes)
+            grade = self._mote_min_grade()
+            favourites = self.db.list_favourites(character)
+        annotated = [
+            annotate_loot_row(
+                row,
+                bis_keys=bis_keys,
+                wish_keys=wish_keys,
+                pos_keys=pos_keys,
+                favourite_keys=favourite_keys,
+                mote_min_grade=grade,
+            )
+            for row in rows
+        ]
+        return {
+            "character": character,
+            "loot": annotated,
+            "drop_rates": rates,
+            "mote_notable_grade": grade,
+            "favourites": favourites,
+        }
+
+    def dashboard_leveling(self, character: str) -> dict:
+        from ..spell_buffs import load_spell_buffs
+        from .dashboards import leveling_summary, zone_level_requirement
+
+        character = character.strip()
+        with self.read_guard():
+            xp_rows = self.db.list_xp_events(character)
+            level_rows = self.db.list_level_events(character)
+            current = self._current_locked(character) or {}
+            fights = self.db.list_fights(character=character, limit=1)
+        zone = fights[0]["zone"] if fights else None
+        classes = current.get("classes")
+        level = current.get("level")
+        summary = leveling_summary(
+            xp_rows,
+            level_rows,
+            classes=classes,
+            level=level,
+            spells=load_spell_buffs().get("buffs") or [],
+            zone=zone,
+            zone_level=zone_level_requirement(zone),
+        )
+        summary["character"] = character
+        return summary
+
+    def dashboard_raids(self, character: str, now: datetime | None = None) -> dict:
+        from datetime import timezone
+
+        from .dashboards import mob_index_by_key, name_key, raid_kills
+
+        character = character.strip()
+        moment = now or datetime.now(timezone.utc)
+        with self.read_guard():
+            slain = self.db.list_your_slain(character, limit=2000)
+            fights = self.db.list_fights(character=character, limit=500)
+            lockouts = self.db.list_user_lockouts(character)
+        payload = raid_kills(slain, fights, mob_index_by_key(), moment)
+        known = {name_key(row.get("name")) for row in mob_index_by_key().values()}
+        payload["user_lockouts"] = lockouts
+        payload["unverified_note"] = (
+            "A lockout you type is UNVERIFIED. It is not the Tuesday reset unless you say so in the note."
+        )
+        payload["character"] = character
+        payload["indexed_mobs"] = len(known)
+        return payload
+
+    def dashboard_considered(self, character: str, limit: int = 40) -> dict:
+        character = character.strip()
+        with self.read_guard():
+            rows = self.db.list_consider(character, limit=limit)
+            favourites = {row["name"].casefold() for row in self.db.list_favourites(character, "mob")}
+        for row in rows:
+            row["favourite"] = str(row.get("mob") or "").casefold() in favourites
+        return {"character": character, "considered": rows}
+
+    def dashboard_mob(self, character: str, name: str) -> dict:
+        from ..mob_hub import mob_detail
+        from .dashboards import drop_rate, name_key
+
+        character = character.strip()
+        name = name.strip()
+        with self.read_guard():
+            considers = [row for row in self.db.list_consider(character, limit=500) if name_key(row.get("mob")) == name_key(name)]
+            loots = [row for row in self.db.list_loot(character, limit=2000) if name_key(row.get("from")) == name_key(name)]
+            slain = [row for row in self.db.list_your_slain(character, limit=2000) if name_key(row.get("mob")) == name_key(name)]
+            starred = any(
+                name_key(row["name"]) == name_key(name)
+                for row in self.db.list_favourites(character, "mob")
+            )
+        hub = mob_detail(name, fetch=False)
+        wiki_level = (hub.get("level") or "").strip() if isinstance(hub, dict) else ""
+        return {
+            "character": character,
+            "name": hub.get("name") if isinstance(hub, dict) and hub.get("name") else name,
+            "favourite": starred,
+            "your_considers": considers,
+            "your_loots": loots,
+            "your_kills": len(slain),
+            "drop_rate": drop_rate(len(loots), len(slain)),
+            "drop_rate_text": "unknown" if not slain else f"{len(loots)} / {len(slain)}",
+            "consider_levels": [
+                {"level": row.get("level"), "source": "consider line", "ts": row.get("ts")}
+                for row in considers if row.get("level") is not None
+            ],
+            "hub": hub,
+            "wiki_level": wiki_level or None,
+            "wiki_level_note": None if wiki_level else "No sourced wiki level is cached for this mob.",
+        }
+
+    def dashboard_overview(self, character: str, wishes: list[str] | None = None) -> dict:
+        from .dashboards import curve_from_timeline, overview_cards
+
+        character = character.strip()
+        with self.read_guard():
+            fights = self.db.list_fights(character=character, limit=30)
+            loots = self.db.list_loot(character, limit=8)
+            slain = self.db.list_your_slain(character, limit=8)
+            if wishes is not None:
+                self.remember_wishes(character, wishes)
+            alive = []
+            dead = []
+            fight = fights[0] if fights else None
+            if fight is not None:
+                import json
+                raw = self.db.get_fight_row(int(fight["id"]))
+                parsed = {}
+                if raw is not None and raw["targets_json"]:
+                    parsed = json.loads(raw["targets_json"])
+                if isinstance(parsed, dict):
+                    alive = [name for name, up in parsed.items() if up]
+                    dead = [name for name, up in parsed.items() if not up]
+                elif isinstance(parsed, list):
+                    alive = [str(name) for name in parsed]
+        zones = []
+        seen = set()
+        for row in fights:
+            zone = row.get("zone") or ""
+            if not zone or zone in seen:
+                continue
+            seen.add(zone)
+            zones.append({"zone": zone, "instance": row.get("instance"), "ts": row.get("start_ts")})
+            if len(zones) >= 8:
+                break
+        leveling = self.dashboard_leveling(character)
+        cards = overview_cards(
+            fight=fight,
+            targets_alive=alive,
+            targets_dead=dead,
+            recent_loots=loots,
+            recent_kills=slain,
+            zones=zones,
+            leveling=leveling,
+        )
+        curve = {"available": False, "buckets": [], "bin_seconds": None, "reason": "No fight yet."}
+        fight_id = cards["dps"].get("fight_id")
+        if fight_id:
+            try:
+                curve = curve_from_timeline(self.fight_timeline(int(fight_id)))
+            except ParserBusy:
+                curve = {"available": False, "buckets": [], "bin_seconds": None, "reason": "Parser is rebuilding."}
+        cards["dps"]["curve"] = curve
+        cards["character"] = character
+        cards["caveat"] = leveling.get("caveat")
+        return cards
+
+    def dashboard_overlay(self, character: str, kind: str) -> dict:
+        character = character.strip()
+        kind = "con" if kind == "con" else "xp"
+        with self.read_guard():
+            if kind == "con":
+                rows = self.db.list_consider(character, limit=1)
+                latest = rows[0] if rows else None
+                return {
+                    "kind": "con",
+                    "character": character,
+                    "consider": latest,
+                    "note": None if latest else "No consider line yet. Consider a mob in game.",
+                }
+            xp_rows = self.db.list_xp_events(character)
+        from .dashboards import leveling_summary
+
+        summary = leveling_summary(xp_rows, [])
+        latest = None
+        for row in reversed(xp_rows):
+            latest = row
+            break
+        return {
+            "kind": "xp",
+            "character": character,
+            "latest": latest,
+            "levels_per_hour": summary.get("levels_per_hour"),
+            "progress_pct": summary.get("progress_pct"),
+            "bar_known": summary.get("bar_known"),
+            "hours_to_level": summary.get("hours_to_level"),
+            "honesty": summary.get("honesty"),
+            "xp_lines_without_percent": summary.get("xp_lines_without_percent"),
+        }
 
 
 class EventHub:

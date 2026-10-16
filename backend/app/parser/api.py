@@ -96,6 +96,29 @@ class GroupBody(BaseModel):
     action: str
 
 
+class FavouriteBody(BaseModel):
+    character: str
+    kind: str
+    name: str
+    starred: bool = True
+
+
+class LockoutBody(BaseModel):
+    character: str
+    mob: str
+    note: str | None = None
+    clear: bool = False
+
+
+class MoteGradeBody(BaseModel):
+    grade: int | None = Field(default=None, ge=1, le=10)
+
+
+class WishesBody(BaseModel):
+    character: str
+    wishes: list[str] = Field(default_factory=list)
+
+
 def _http_error(exc: Exception) -> HTTPException:
     if isinstance(exc, FileNotFoundError):
         return HTTPException(404, str(exc))
@@ -337,6 +360,87 @@ def get_alert_recent() -> dict[str, Any]:
     service = get_service()
     with service.read_guard():
         return service.recent_alerts()
+
+
+def _wishes(wish: list[str] | None) -> list[str] | None:
+    if not wish:
+        return None
+    return [item for item in wish if isinstance(item, str) and item.strip()]
+
+
+@router.get("/dashboards/overview")
+def get_dashboard_overview(
+    character: str = "",
+    wish: list[str] = Query(default=[]),
+) -> dict[str, Any]:
+    return get_service().dashboard_overview(character, wishes=_wishes(wish))
+
+
+@router.get("/dashboards/loot")
+def get_dashboard_loot(
+    character: str = "",
+    wish: list[str] = Query(default=[]),
+    limit: int = Query(default=300, ge=1, le=2000),
+) -> dict[str, Any]:
+    return get_service().dashboard_loot(character, wishes=_wishes(wish), limit=limit)
+
+
+@router.get("/dashboards/leveling")
+def get_dashboard_leveling(character: str = "") -> dict[str, Any]:
+    return get_service().dashboard_leveling(character)
+
+
+@router.get("/dashboards/raids")
+def get_dashboard_raids(character: str = "") -> dict[str, Any]:
+    return get_service().dashboard_raids(character)
+
+
+@router.get("/dashboards/considered")
+def get_dashboard_considered(
+    character: str = "",
+    limit: int = Query(default=40, ge=1, le=200),
+) -> dict[str, Any]:
+    return get_service().dashboard_considered(character, limit=limit)
+
+
+@router.get("/dashboards/mob")
+def get_dashboard_mob(character: str = "", name: str = "") -> dict[str, Any]:
+    if not name.strip():
+        raise HTTPException(400, "name is required")
+    return get_service().dashboard_mob(character, name)
+
+
+@router.get("/dashboards/overlay")
+def get_dashboard_overlay(character: str = "", kind: str = "xp") -> dict[str, Any]:
+    return get_service().dashboard_overlay(character, kind)
+
+
+@router.post("/dashboards/favourites")
+def post_dashboard_favourite(body: FavouriteBody) -> dict[str, Any]:
+    try:
+        return get_service().set_favourite(body.character, body.kind, body.name, body.starred)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/dashboards/lockouts")
+def post_dashboard_lockout(body: LockoutBody) -> dict[str, Any]:
+    try:
+        return get_service().set_user_lockout(body.character, body.mob, body.note, clear=body.clear)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/dashboards/mote-grade")
+def post_dashboard_mote_grade(body: MoteGradeBody) -> dict[str, Any]:
+    return get_service().set_mote_notable_grade(body.grade)
+
+
+@router.post("/dashboards/wishes")
+def post_dashboard_wishes(body: WishesBody) -> dict[str, Any]:
+    if not body.character.strip():
+        raise HTTPException(400, "character is required")
+    return get_service().remember_wishes(body.character, body.wishes)
 
 
 @router.get("/stream")

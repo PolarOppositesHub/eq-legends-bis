@@ -5,7 +5,7 @@
  * if the toggle only calls setResizable.
  */
 
-const OVERLAY_IDS = ['dps', 'heal', 'alert']
+const OVERLAY_IDS = ['dps', 'heal', 'alert', 'xp', 'con']
 const SNAP_PX = 16
 
 const APPEARANCE_DEFAULTS = {
@@ -19,6 +19,7 @@ const APPEARANCE_DEFAULTS = {
 
 function defaultSize(id) {
   if (id === 'alert') return { width: 460, height: 140 }
+  if (id === 'xp' || id === 'con') return { width: 320, height: 120 }
   if (id === 'heal') return { width: 300, height: 280 }
   return { width: 320, height: 360 }
 }

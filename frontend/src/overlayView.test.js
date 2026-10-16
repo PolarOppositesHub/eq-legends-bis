@@ -95,9 +95,11 @@ test('the unlocked drag bar closes with an X and Close all targets open meters',
   assert.deepEqual(ids, ['dps', 'alert'])
 })
 
-test('overlay route ids are the three windows', () => {
+test('overlay route ids include the meters and the tracking cards', () => {
   assert.equal(overlayIdFromSearch('?overlay=dps'), 'dps')
   assert.equal(overlayIdFromSearch('?overlay=heal'), 'heal')
   assert.equal(overlayIdFromSearch('?overlay=alert'), 'alert')
-  assert.equal(overlayIdFromSearch('?overlay=xp'), '')
+  assert.equal(overlayIdFromSearch('?overlay=xp'), 'xp')
+  assert.equal(overlayIdFromSearch('?overlay=con'), 'con')
+  assert.equal(overlayIdFromSearch('?overlay=nope'), '')
 })

@@ -11,7 +11,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser', 'alerts']
+export const WORKSPACE_TABS = ['overview', 'loot', 'leveling', 'raids', 'bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser', 'alerts']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']
@@ -100,7 +100,7 @@ export function defaultWorkspace(catalog) {
     ? Math.min(MAX_LEVEL, Math.max(...levels))
     : MAX_LEVEL
   return {
-    tab: 'bis',
+    tab: 'overview',
     classes: [],
     mode: 'priority',
     primaryStats: [...EMPTY_TIERS],
@@ -273,7 +273,7 @@ function pickNameMap(value, slots, itemExists) {
 
 function pickTab(value) {
   if (value === 'bags') return 'character'
-  return pickEnum(value, WORKSPACE_TABS, 'bis')
+  return pickEnum(value, WORKSPACE_TABS, 'overview')
 }
 
 function pickEnum(value, allowed, fallback) {
