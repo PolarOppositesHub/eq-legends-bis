@@ -101,5 +101,6 @@ test('overlay route ids include the meters and the tracking cards', () => {
   assert.equal(overlayIdFromSearch('?overlay=alert'), 'alert')
   assert.equal(overlayIdFromSearch('?overlay=xp'), 'xp')
   assert.equal(overlayIdFromSearch('?overlay=con'), 'con')
+  assert.equal(overlayIdFromSearch('?overlay=buffs'), 'buffs')
   assert.equal(overlayIdFromSearch('?overlay=nope'), '')
 })

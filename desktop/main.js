@@ -680,6 +680,7 @@ function overlayConfig(id, saved) {
     locked: !!saved.locked,
     scope: saved.scope === 'zone' ? 'zone' : 'fight',
     character: saved.character || '',
+    loadout: saved.loadout || '',
     ...appearance,
   };
 }
@@ -831,6 +832,7 @@ function openOverlayWindow(id, patch = {}) {
     opacity: appearance.backgroundOpacity,
     scope: saved.scope === 'zone' ? 'zone' : 'fight',
     character: saved.character || '',
+    loadout: saved.loadout || '',
     ...appearance,
   };
   if (saved.x == null) delete record.x;
@@ -869,7 +871,7 @@ function openOverlayWindow(id, patch = {}) {
   if (stored.x != null && stored.y != null && (options.x !== stored.x || options.y !== stored.y || options.width !== stored.width || options.height !== stored.height)) {
     saveOverlay(id, { x: options.x, y: options.y, width: options.width, height: options.height });
   }
-  const route = overlayLib.overlayRoute(id, stored.character, stored.scope);
+  const route = overlayLib.overlayRoute(id, stored.character, stored.scope, stored.loadout);
   win.loadURL(`http://127.0.0.1:${apiPort}${route}`).catch(() => {});
   win.webContents.on('did-finish-load', () => {
     const latest = overlayLib.readOverlayMap(readSettings())[id] || stored;
@@ -1051,6 +1053,7 @@ ipcMain.handle('eq:overlay-open', async (_evt, args) => {
   ensureTray();
   const patch = {};
   if (args && typeof args.character === 'string') patch.character = args.character;
+  if (args && typeof args.loadout === 'string') patch.loadout = args.loadout;
   if (args && (args.scope === 'zone' || args.scope === 'fight')) patch.scope = args.scope;
   if (args && typeof args.locked === 'boolean') patch.locked = args.locked;
   if (args && args.opacity != null) patch.backgroundOpacity = args.opacity;

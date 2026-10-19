@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import faulthandler
+import json
 import os
 import threading
 import time
@@ -1659,6 +1660,239 @@ class ParserService:
             "honesty": summary.get("honesty"),
             "xp_lines_without_percent": summary.get("xp_lines_without_percent"),
         }
+
+    def _companion_key(self, character: str) -> str:
+        return "companion:" + character.strip().casefold()
+
+    def _companion_blob(self, character: str) -> dict:
+        from .companion import normalize_blob
+
+        raw = self.db.get_setting(self._companion_key(character))
+        if not raw:
+            return normalize_blob({})
+        try:
+            return normalize_blob(json.loads(raw))
+        except json.JSONDecodeError:
+            return normalize_blob({})
+
+    def _save_companion_blob(self, character: str, blob: dict) -> None:
+        self.db.set_setting(self._companion_key(character), json.dumps(blob))
+
+    def companion_buffs(self, character: str, loadout: str, now: datetime | None = None) -> dict:
+        from .companion import buff_timers, durations_for_loadout
+
+        character = character.strip()
+        blob = self._companion_blob(character)
+        with self.read_guard():
+            events = self.db.list_companion_events(character)
+        payload = buff_timers(
+            events,
+            loadout=loadout,
+            durations=durations_for_loadout(blob, loadout),
+            manual=blob.get("manual_buffs") or [],
+            now=now or self.clock(),
+        )
+        payload["character"] = character
+        return payload
+
+    def companion_set_duration(self, character: str, loadout: str, spell: str, seconds: int | None) -> dict:
+        from .companion import set_duration
+
+        character = character.strip()
+        blob = self._companion_blob(character)
+        set_duration(blob, loadout, spell, seconds)
+        self._save_companion_blob(character, blob)
+        return self.companion_buffs(character, loadout)
+
+    def companion_manual_buff(
+        self,
+        character: str,
+        loadout: str,
+        spell: str,
+        target: str,
+        seconds: int | None,
+        action: str,
+    ) -> dict:
+        from .companion import parse_user_seconds
+
+        character = character.strip()
+        spell = spell.strip()
+        if not spell:
+            raise ValueError("spell name is required")
+        if seconds is not None:
+            seconds = parse_user_seconds(seconds)
+        blob = self._companion_blob(character)
+        manuals = [row for row in (blob.get("manual_buffs") or []) if isinstance(row, dict)]
+        if action == "clear":
+            manuals = [
+                row for row in manuals
+                if not (
+                    str(row.get("loadout") or "") == loadout
+                    and str(row.get("spell") or "").casefold() == spell.casefold()
+                    and str(row.get("target") or "You").casefold() == (target or "You").strip().casefold()
+                )
+            ]
+        else:
+            manuals.append({
+                "id": f"{loadout}|{spell}|{target or 'You'}|{self.clock().isoformat(timespec='seconds')}",
+                "loadout": loadout,
+                "spell": spell,
+                "target": (target or "You").strip() or "You",
+                "started": self.clock().isoformat(timespec="seconds"),
+                "duration_seconds": seconds,
+            })
+        blob["manual_buffs"] = manuals[-80:]
+        self._save_companion_blob(character, blob)
+        return self.companion_buffs(character, loadout)
+
+    def companion_respawns(self, character: str, now: datetime | None = None) -> dict:
+        from .companion import respawn_timers
+
+        character = character.strip()
+        blob = self._companion_blob(character)
+        with self.read_guard():
+            kills = self.db.list_slain_with_zone(character)
+        payload = respawn_timers(kills, blob.get("respawns") or {}, now=now or self.clock())
+        payload["character"] = character
+        return payload
+
+    def companion_set_respawn(self, character: str, zone: str, mob: str, seconds: int | None) -> dict:
+        from .companion import set_respawn
+
+        character = character.strip()
+        blob = self._companion_blob(character)
+        set_respawn(blob, zone or "", mob, seconds)
+        self._save_companion_blob(character, blob)
+        return self.companion_respawns(character)
+
+    def companion_maps(self, character: str) -> dict:
+        from ..zones import get_zone
+        from .companion import map_rows
+
+        character = character.strip()
+        with self.read_guard():
+            seen = self.db.list_zones_seen(character)
+        payload = map_rows(seen, get_zone)
+        payload["character"] = character
+        return payload
+
+    def companion_exaltations(self, character: str, loadout: str, items: list[dict] | None) -> dict:
+        from ..item_catalog import get_item_by_name
+        from .companion import exaltation_plan
+
+        character = character.strip()
+        blob = self._companion_blob(character)
+        notes = (blob.get("exaltation_notes") or {}).get(loadout) or {}
+
+        def lookup(name: str):
+            found = get_item_by_name(name, enrich=False) if name else None
+            if not isinstance(found, dict):
+                return None
+            stats = found.get("stats_plus0") or {}
+            return stats if isinstance(stats, dict) and stats else None
+
+        payload = exaltation_plan(items or [], loadout=loadout, notes=notes if isinstance(notes, dict) else {}, stat_lookup=lookup)
+        payload["character"] = character
+        return payload
+
+    def companion_set_exaltation_note(self, character: str, loadout: str, socket_key: str, target: str) -> dict:
+        character = character.strip()
+        socket_key = socket_key.strip()
+        if not socket_key:
+            raise ValueError("socket is required")
+        blob = self._companion_blob(character)
+        notes = blob.setdefault("exaltation_notes", {}).setdefault(loadout, {})
+        if not isinstance(notes, dict):
+            notes = {}
+            blob["exaltation_notes"][loadout] = notes
+        cleaned = target.strip()
+        if cleaned:
+            notes[socket_key] = cleaned[:200]
+        else:
+            notes.pop(socket_key, None)
+        self._save_companion_blob(character, blob)
+        return {"ok": True, "loadout": loadout, "key": socket_key, "target": notes.get(socket_key, "")}
+
+    def companion_resists(
+        self,
+        character: str,
+        loadout: str,
+        classes: list[str],
+        level: int | None,
+        race: str | None,
+        worn: list[dict],
+        assume_max_aas: bool,
+        save_as: str | None,
+    ) -> dict:
+        from ..item_catalog import get_item_by_name
+        from .companion import resist_profile
+
+        def lookup(name: str):
+            found = get_item_by_name(name, enrich=False) if name else None
+            if not isinstance(found, dict):
+                return None
+            stats = found.get("stats_plus0") or {}
+            return stats if isinstance(stats, dict) and stats else None
+
+        payload = resist_profile(
+            loadout=loadout,
+            classes=classes,
+            level=level,
+            race=race,
+            worn=worn,
+            stat_lookup=lookup,
+            assume_max_aas=assume_max_aas,
+        )
+        payload["character"] = character.strip()
+        if save_as and save_as.strip():
+            blob = self._companion_blob(character)
+            bucket = blob.setdefault("resist_profiles", {}).setdefault(loadout, [])
+            if not isinstance(bucket, list):
+                bucket = []
+                blob["resist_profiles"][loadout] = bucket
+            bucket.append({
+                "name": save_as.strip()[:80],
+                "saved_at": self.clock().isoformat(timespec="seconds"),
+                "snapshot": json.loads(json.dumps(payload, default=str)),
+            })
+            blob["resist_profiles"][loadout] = bucket[-12:]
+            self._save_companion_blob(character, blob)
+            payload["saved"] = True
+        else:
+            blob = self._companion_blob(character)
+        payload["saved_profiles"] = (blob.get("resist_profiles") or {}).get(loadout) or []
+        return payload
+
+    def companion_export(self, character: str, ui: dict | None) -> dict:
+        from .companion import export_profile
+
+        character = character.strip()
+        return export_profile(self._companion_blob(character), ui, character)
+
+    def companion_import(self, character: str, profile: dict) -> dict:
+        from .companion import import_profile, merge_profile
+
+        character = character.strip()
+        incoming = import_profile(profile)
+        blob = merge_profile(self._companion_blob(character), incoming)
+        self._save_companion_blob(character, blob)
+        return {"ok": True, "character": character, "ui": incoming.get("ui") or {}}
+
+    def companion_feedback(self) -> bytes:
+        from .companion import feedback_zip, perf_readout, safe_log_name
+
+        log_dir = Path(self.user_data) / "logs"
+        files = []
+        if log_dir.is_dir():
+            for path in sorted(log_dir.iterdir()):
+                if not path.is_file() or safe_log_name(path.name) is None:
+                    continue
+                data = path.read_bytes()
+                if len(data) > 200_000:
+                    data = data[-200_000:]
+                files.append((path.name, data))
+        settings = {"companion_note": "Per-character companion entries stay in the profile export. This zip is logs and the perf readout."}
+        return feedback_zip(settings, files, perf_readout())
 
 
 class EventHub:

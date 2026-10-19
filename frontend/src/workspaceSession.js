@@ -11,7 +11,7 @@ import { DEFAULT_UI_SETTINGS, THEME_OPTIONS } from './uiSettings.js'
 
 export const WORKSPACE_VERSION = 1
 
-export const WORKSPACE_TABS = ['overview', 'loot', 'leveling', 'raids', 'bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser', 'alerts']
+export const WORKSPACE_TABS = ['overview', 'loot', 'leveling', 'raids', 'companion', 'maps', 'bis', 'sim', 'upgrades', 'requirements', 'wishlist', 'character', 'currencies', 'quests', 'mobs', 'search', 'parser', 'alerts']
 export const MOB_KINDS = ['all', 'raid', 'mini_boss', 'named', 'standard']
 export const MOB_ERAS = ['all', 'classic', 'kunark', 'velious', 'planes', 'untagged']
 export const CAST_BUFF_MODES = ['off', 'quick']

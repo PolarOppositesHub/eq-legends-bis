@@ -131,6 +131,33 @@ export const postDashboardMoteGrade = (grade) =>
 export const postDashboardWishes = (character, wishes) =>
   req('/api/parser/dashboards/wishes', { method: 'POST', body: JSON.stringify({ character, wishes: wishes || [] }) })
 
+export const getCompanionBuffs = (character, loadout) => {
+  const q = characterQuery(character)
+  q.set('loadout', loadout || '')
+  return req(`/api/parser/companion/buffs?${q}`)
+}
+export const postCompanionDuration = (body) =>
+  req('/api/parser/companion/duration', { method: 'POST', body: JSON.stringify(body) })
+export const postCompanionManual = (body) =>
+  req('/api/parser/companion/manual', { method: 'POST', body: JSON.stringify(body) })
+export const getCompanionRespawns = (character) =>
+  req(`/api/parser/companion/respawns?${characterQuery(character)}`)
+export const postCompanionRespawn = (body) =>
+  req('/api/parser/companion/respawn', { method: 'POST', body: JSON.stringify(body) })
+export const getCompanionMaps = (character) =>
+  req(`/api/parser/companion/maps?${characterQuery(character)}`)
+export const postCompanionExaltations = (body) =>
+  req('/api/parser/companion/exaltations', { method: 'POST', body: JSON.stringify(body) })
+export const postCompanionExaltationNote = (body) =>
+  req('/api/parser/companion/exaltation-note', { method: 'POST', body: JSON.stringify(body) })
+export const postCompanionResists = (body) =>
+  req('/api/parser/companion/resists', { method: 'POST', body: JSON.stringify(body) })
+export const postCompanionExport = (body) =>
+  req('/api/parser/companion/export', { method: 'POST', body: JSON.stringify(body) })
+export const postCompanionImport = (body) =>
+  req('/api/parser/companion/import', { method: 'POST', body: JSON.stringify(body) })
+export const getCompanionPerf = () => req('/api/parser/companion/perf')
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {

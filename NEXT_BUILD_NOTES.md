@@ -1,5 +1,26 @@
 # Next build notes
 
+**Planned as 1.1.16.** Updater untouched. Never invent item stats, spell durations, respawn times, map data, resist values, or game rules. Unknown stays unknown or is typed by the user. Anything level or class based is stored per loadout. Overlays use the existing lock and raise path and do not take focus. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.16 — Companion
+Ships the Tue Oct 20 target. Ask AI stays 1.1.17. Compose from classified log lines, the decoded catalog, race saves, and the inventory import. A missing number is unknown. A cast line is not a landed buff. Two kills do not become a respawn time.
+- [x] (1) Buff and debuff timers. Slow, charm, and rune lines open a timer. A worn-off line closes a matching spell. Duration comes from a number entered for this loadout, or from the start and end already in the log. Otherwise the duration is unknown.
+- [x] (2) Per-mob respawn timers. Last kill and zone come from the log. The respawn seconds are entered by the user. No entry stays unknown.
+- [x] (3) Maps tab. Zones already on fights. A zone file supplies a map link and mob notes only when that file exists. Otherwise the map and the location are unknown.
+- [x] (4) Exaltation planner. Sockets and (Exaltation) names from the inventory import. Catalog stats only. No best pick. Targets are per loadout.
+- [x] (5) Resist profiles. Race saves plus catalog resists at the item's +N, per loadout. A missing item or race leaves that part unknown. Resist cap stays unknown.
+- [x] (6) Profile export and import. Durations, respawn seconds, exaltation notes, resist snapshots, and UI settings. Tokens are dropped.
+- [x] (7) Perf readout and a feedback zip of allowlisted logs plus redacted settings. No sign-in tokens.
+- [x] (8) Version **1.1.16** with 1.1.16-only What's new lines. No release publishing.
+
+## Slipped to 1.1.17
+None from the 1.1.16 companion list. Ask AI remains the 1.1.17 release.
+
+## Upcoming (1.1.x only)
+- **1.1.17 Fri Oct 23:** Ask AI
+
+---
+
 **Planned as 1.1.15.** Updater untouched. Never invent item stats, log formats, or formulas. Anything unverified stays labeled. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.15 — Tracking dashboards

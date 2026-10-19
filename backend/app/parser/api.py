@@ -103,6 +103,63 @@ class FavouriteBody(BaseModel):
     starred: bool = True
 
 
+class CompanionDurationBody(BaseModel):
+    character: str
+    loadout: str
+    spell: str
+    seconds: int | None = None
+
+
+class CompanionManualBody(BaseModel):
+    character: str
+    loadout: str
+    spell: str
+    target: str = "You"
+    seconds: int | None = None
+    action: str = "start"
+
+
+class CompanionRespawnBody(BaseModel):
+    character: str
+    zone: str = ""
+    mob: str
+    seconds: int | None = None
+
+
+class CompanionExaltationBody(BaseModel):
+    character: str = ""
+    loadout: str
+    items: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class CompanionExaltationNoteBody(BaseModel):
+    character: str
+    loadout: str
+    key: str
+    target: str = ""
+
+
+class CompanionResistBody(BaseModel):
+    character: str = ""
+    loadout: str
+    classes: list[str] = Field(default_factory=list)
+    level: int | None = None
+    race: str | None = None
+    worn: list[dict[str, Any]] = Field(default_factory=list)
+    assume_max_aas: bool = False
+    save_as: str | None = None
+
+
+class CompanionExportBody(BaseModel):
+    character: str = ""
+    ui: dict[str, Any] | None = None
+
+
+class CompanionImportBody(BaseModel):
+    character: str
+    profile: dict[str, Any]
+
+
 class LockoutBody(BaseModel):
     character: str
     mob: str
@@ -441,6 +498,118 @@ def post_dashboard_wishes(body: WishesBody) -> dict[str, Any]:
     if not body.character.strip():
         raise HTTPException(400, "character is required")
     return get_service().remember_wishes(body.character, body.wishes)
+
+
+def _loadout(text: str) -> str:
+    cleaned = (text or "").strip()
+    if not cleaned:
+        raise HTTPException(400, "loadout is required")
+    return cleaned
+
+
+@router.get("/companion/buffs")
+def get_companion_buffs(character: str = "", loadout: str = "") -> dict[str, Any]:
+    return get_service().companion_buffs(character, _loadout(loadout))
+
+
+@router.post("/companion/duration")
+def post_companion_duration(body: CompanionDurationBody) -> dict[str, Any]:
+    try:
+        return get_service().companion_set_duration(body.character, _loadout(body.loadout), body.spell, body.seconds)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/companion/manual")
+def post_companion_manual(body: CompanionManualBody) -> dict[str, Any]:
+    try:
+        return get_service().companion_manual_buff(
+            body.character,
+            _loadout(body.loadout),
+            body.spell,
+            body.target,
+            body.seconds,
+            "clear" if body.action == "clear" else "start",
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/companion/respawns")
+def get_companion_respawns(character: str = "") -> dict[str, Any]:
+    return get_service().companion_respawns(character)
+
+
+@router.post("/companion/respawn")
+def post_companion_respawn(body: CompanionRespawnBody) -> dict[str, Any]:
+    try:
+        return get_service().companion_set_respawn(body.character, body.zone, body.mob, body.seconds)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/companion/maps")
+def get_companion_maps(character: str = "") -> dict[str, Any]:
+    return get_service().companion_maps(character)
+
+
+@router.post("/companion/exaltations")
+def post_companion_exaltations(body: CompanionExaltationBody) -> dict[str, Any]:
+    return get_service().companion_exaltations(body.character, _loadout(body.loadout), body.items)
+
+
+@router.post("/companion/exaltation-note")
+def post_companion_exaltation_note(body: CompanionExaltationNoteBody) -> dict[str, Any]:
+    try:
+        return get_service().companion_set_exaltation_note(body.character, _loadout(body.loadout), body.key, body.target)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.post("/companion/resists")
+def post_companion_resists(body: CompanionResistBody) -> dict[str, Any]:
+    return get_service().companion_resists(
+        body.character,
+        _loadout(body.loadout),
+        body.classes,
+        body.level,
+        body.race,
+        body.worn,
+        body.assume_max_aas,
+        body.save_as,
+    )
+
+
+@router.post("/companion/export")
+def post_companion_export(body: CompanionExportBody) -> dict[str, Any]:
+    return get_service().companion_export(body.character, body.ui)
+
+
+@router.post("/companion/import")
+def post_companion_import(body: CompanionImportBody) -> dict[str, Any]:
+    try:
+        return get_service().companion_import(body.character, body.profile)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/companion/perf")
+def get_companion_perf() -> dict[str, Any]:
+    from .companion import perf_readout
+
+    return perf_readout()
+
+
+@router.get("/companion/feedback")
+def get_companion_feedback():
+    from fastapi.responses import Response
+
+    data = get_service().companion_feedback()
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=eq-legends-bis-feedback.zip"},
+    )
 
 
 @router.get("/stream")

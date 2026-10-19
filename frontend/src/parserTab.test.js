@@ -335,17 +335,19 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.15 notes", () => {
+test("what's new dialog shows the 1.1.16 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.15")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.15<\/h2>/)
-  assert.match(html, /Overview is the home screen/)
-  assert.match(html, /drop rate/)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.16")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.16<\/h2>/)
+  assert.match(html, /Buff and debuff timers/)
   assert.match(html, /class loadout/)
-  assert.match(html, /Tuesday 8:00 AM Pacific/)
-  assert.match(html, /only while the log is live/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.14<\/h2>/.test(html), false)
+  assert.match(html, /Respawn timers/)
+  assert.match(html, /Maps tab/)
+  assert.match(html, /exaltation planner/)
+  assert.match(html, /Resist profiles/)
+  assert.match(html, /feedback bundle/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.15<\/h2>/.test(html), false)
 })
 
 test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {

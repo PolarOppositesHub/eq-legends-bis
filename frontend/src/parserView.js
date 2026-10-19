@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.15'
+export const WHATS_NEW_ID = '1.1.16'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,14 +23,15 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.15"
+export const WHATS_NEW_TITLE = "What's new in 1.1.16"
 
 export const WHATS_NEW_POINTS = [
-  'Overview is the home screen. It shows the current mob, your fight DPS curve, leveling pace, recent drops and kills, and the zones from the log.',
-  'Loot history shows your own drop rate (your loots divided by your kills), starred favourites, and quest flags from sourced links. Unknown items stay unknown.',
-  'Leveling and AA follow each class loadout. Swapping classes can drop the level, and both readings are kept. Pace is levels of progress, because the log has a percent and not raw experience points.',
-  'Raid targets list named kills with the instance difficulty already on the fight. The weekly lockout reuses the Tuesday 8:00 AM Pacific reset. Other lockouts stay unverified until you enter them.',
-  'A level-up or notable loot toast appears only while the log is live. Experience and con card overlays use the same lock and raise rules as the other meters.',
+  'Buff and debuff timers follow slow, charm, rune, and worn-off lines. A duration is one you enter for this class loadout, or the time already in your log. Otherwise it stays unknown. The buff overlay uses the same lock and raise rules as the other meters.',
+  'Respawn timers show the last kill of each mob. The respawn seconds are a number you enter. A mob with no number stays unknown.',
+  'The Maps tab lists zones from your fights. A map link or mob location appears only when a zone file already has it.',
+  'The exaltation planner lists sockets from your inventory import. Catalog stats only. A target you type stays on this class loadout.',
+  'Resist profiles add race saves and catalog resists for the current loadout. A missing item, race, or resist cap stays unknown.',
+  'Export and import a profile without sign-in tokens. Perf shows a memory reading when the platform reports one. The feedback bundle is a zip of logs and settings with tokens removed.',
 ]
 
 export function currentClassText(current) {

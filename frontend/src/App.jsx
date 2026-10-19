@@ -71,6 +71,8 @@ import {
   RaidsPanel,
   RecentlyConsidered,
 } from './dashboardsView.jsx'
+import { CompanionPanel, MapsPanel } from './companionView.jsx'
+import { loadoutKey } from './companionView.js'
 import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
 import { SyncBridge } from './SyncBridge.jsx'
@@ -3147,6 +3149,8 @@ export default function App() {
     { id: 'loot', label: 'Loot' },
     { id: 'leveling', label: 'Leveling' },
     { id: 'raids', label: 'Raid targets' },
+    { id: 'companion', label: 'Companion' },
+    { id: 'maps', label: 'Maps' },
     { id: 'bis', label: 'Best in Slot' },
     { id: 'sim', label: 'Simulator' },
     { id: 'upgrades', label: 'Upgrade Priority' },
@@ -3636,6 +3640,36 @@ export default function App() {
               {tab === 'leveling' && <LevelingPanel character={wishCharacter} />}
               {tab === 'raids' && (
                 <RaidsPanel character={wishCharacter} onSelectMob={(name) => { setSelectedMobName(name); setTab('mobs') }} />
+              )}
+            </>
+          )}
+
+          {(tab === 'companion' || tab === 'maps') && (
+            <>
+              {tab === 'companion' && (
+                <CompanionPanel
+                  character={(String(parserLogPath || '').split(/[/\\]/).pop().match(/^eqlog_([^_]+)_/i) || [])[1] || wishCharacter}
+                  loadout={loadoutKey(classes, characterLevel)}
+                  classes={classes}
+                  level={characterLevel}
+                  race={race}
+                  equipment={equipment}
+                  wornUpgrades={wornUpgrades}
+                  items={allImportedItems}
+                  ui={uiSettings}
+                  onUi={(next) => {
+                    if (!next || typeof next !== 'object') return
+                    const merged = { ...uiSettings, ...next }
+                    setUiSettings(merged)
+                    saveUiSettings(merged)
+                    applyThemeToDocument(merged.theme)
+                  }}
+                />
+              )}
+              {tab === 'maps' && (
+                <MapsPanel
+                  character={(String(parserLogPath || '').split(/[/\\]/).pop().match(/^eqlog_([^_]+)_/i) || [])[1] || wishCharacter}
+                />
               )}
             </>
           )}
@@ -4401,6 +4435,7 @@ export default function App() {
               itemNameProps={catalogItemNameProps}
               groupCollapsed={parserGroupCollapsed}
               onToggleGroup={() => setParserGroupCollapsed((open) => !open)}
+              loadout={loadoutKey(classes, characterLevel)}
             />
           )}
 
