@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getDashboardOverlay, getParserMeters, openParserStream } from './parserApi.js'
+import { getCompanionBuffs, getDashboardOverlay, getParserMeters, openParserStream } from './parserApi.js'
+import { buffOverlayText } from './companionView.js'
 import { overlayCardText } from './dashboardsView.jsx'
 import { formatAlertRates, formatDamage, formatPerSecond } from './parserView.js'
 import {
@@ -22,6 +23,7 @@ export default function OverlayApp() {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const id = overlayIdFromSearch(params.toString() ? `?${params.toString()}` : '')
   const [character, setCharacter] = useState(params.get('character') || '')
+  const [loadout, setLoadout] = useState(params.get('loadout') || '')
   const [scope, setScope] = useState(params.get('scope') === 'zone' ? 'zone' : 'fight')
   const [locked, setLocked] = useState(false)
   const [look, setLook] = useState(() => overlayAppearance({}))
@@ -35,11 +37,30 @@ export default function OverlayApp() {
     return desk.onOverlayConfig((config) => {
       if (!config || config.id !== id) return
       if (typeof config.character === 'string') setCharacter(config.character)
+      if (typeof config.loadout === 'string') setLoadout(config.loadout)
       if (config.scope === 'zone' || config.scope === 'fight') setScope(config.scope)
       if (typeof config.locked === 'boolean') setLocked(config.locked)
       setLook(overlayAppearance(config))
     })
   }, [id])
+
+  useEffect(() => {
+    if (id !== 'buffs') return undefined
+    if (!character) return undefined
+    let cancelled = false
+    const load = () => {
+      if (!loadout) return
+      getCompanionBuffs(character, loadout).then((body) => {
+        if (!cancelled) setCard(body)
+      }).catch(() => {})
+    }
+    load()
+    const timer = setInterval(load, 2000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [id, character, loadout])
 
   useEffect(() => {
     if (id !== 'xp' && id !== 'con') return undefined
@@ -59,7 +80,7 @@ export default function OverlayApp() {
   }, [id, character])
 
   useEffect(() => {
-    if (id === 'alert' || id === 'xp' || id === 'con' || !character) return undefined
+    if (id === 'alert' || id === 'xp' || id === 'con' || id === 'buffs' || !character) return undefined
     let cancelled = false
     const load = () => {
       getParserMeters(character, scope).then((body) => {
@@ -104,7 +125,9 @@ export default function OverlayApp() {
         ? 'Experience'
         : id === 'con'
           ? 'Con card'
-          : 'DPS meter'
+          : id === 'buffs'
+            ? 'Buff timers'
+            : 'DPS meter'
   const chrome = overlayChromeStyle(look)
   const showTitle = locked && look.showTitleWhenLocked
   const closeControl = overlayCloseControl(locked)
@@ -161,6 +184,10 @@ export default function OverlayApp() {
         ) : id === 'xp' || id === 'con' ? (
           <p className="overlay-banner" data-testid={id === 'xp' ? 'overlay-xp' : 'overlay-con'}>
             {character ? overlayCardText(card) : 'Choose a character log in the Parser.'}
+          </p>
+        ) : id === 'buffs' ? (
+          <p className="overlay-banner" data-testid="overlay-buffs">
+            {character && loadout ? buffOverlayText(card) : 'Open buff timers from the overlays panel so this class loadout is included.'}
           </p>
         ) : (
           <>

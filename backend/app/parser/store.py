@@ -1469,3 +1469,60 @@ class ParserDB:
             """,
             (character, mob, note or "", ts),
         )
+
+    def list_companion_events(self, character: str, limit: int = 8000) -> list[dict]:
+        """Classified lines the companion timers read. Zone text is not on this table."""
+        sql = """
+            SELECT e.ts, e.kind, e.source, e.target, e.spell, e.amount, e.offset
+            FROM events e
+            JOIN log_files lf ON lf.id = e.file_id
+            WHERE lf.character = ? COLLATE NOCASE
+              AND e.kind IN ('slow', 'charm', 'charm_break', 'rune', 'spell_fade', 'cast', 'fizzle', 'interrupt')
+            ORDER BY COALESCE(e.ts, ''), e.offset
+            LIMIT ?
+        """
+        return [dict(row) for row in self.conn.execute(sql, (character, int(limit)))]
+
+    def list_slain_with_zone(self, character: str, limit: int = 4000) -> list[dict]:
+        """Your kills, with the fight zone when the line falls inside a saved fight."""
+        sql = """
+            SELECT e.ts, e.target AS mob, e.offset,
+              (
+                SELECT f.zone FROM fights f
+                WHERE f.file_id = e.file_id AND f.generation = e.generation
+                  AND e.offset >= f.start_offset
+                  AND (f.end_offset IS NULL OR e.offset <= f.end_offset)
+                  AND f.zone IS NOT NULL AND f.zone != ''
+                ORDER BY f.start_offset DESC
+                LIMIT 1
+              ) AS zone
+            FROM events e
+            JOIN log_files lf ON lf.id = e.file_id
+            WHERE e.kind = 'slain' AND e.source = 'You' AND lf.character = ? COLLATE NOCASE
+            ORDER BY COALESCE(e.ts, ''), e.offset
+            LIMIT ?
+        """
+        return [
+            {"ts": row["ts"], "mob": row["mob"], "offset": row["offset"], "zone": row["zone"]}
+            for row in self.conn.execute(sql, (character, int(limit)))
+        ]
+
+    def list_zones_seen(self, character: str, limit: int = 80) -> list[dict]:
+        sql = """
+            SELECT zone, instance_json, MAX(COALESCE(end_ts, start_ts)) AS ts
+            FROM fights
+            WHERE character = ? COLLATE NOCASE AND zone IS NOT NULL AND zone != ''
+            GROUP BY zone COLLATE NOCASE
+            ORDER BY ts DESC
+            LIMIT ?
+        """
+        rows = []
+        for row in self.conn.execute(sql, (character, int(limit))):
+            instance = None
+            if row["instance_json"]:
+                try:
+                    instance = json.loads(row["instance_json"])
+                except json.JSONDecodeError:
+                    instance = None
+            rows.append({"zone": row["zone"], "instance": instance, "ts": row["ts"]})
+        return rows

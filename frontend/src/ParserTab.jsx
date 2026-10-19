@@ -424,6 +424,7 @@ function IdentityBar({ character, current, history, onSetIdentity, onClearIdenti
 }
 
 export function ParserPanel({
+  loadout = '',
   folder,
   logs,
   logsStatus,
@@ -589,7 +590,7 @@ export function ParserPanel({
         Damage, DPS, and SDPS come from that file.
       </p>
 
-      <OverlaysPanel character={character || selected?.character || ''} folder={folder || ''} />
+      <OverlaysPanel character={character || selected?.character || ''} folder={folder || ''} loadout={loadout || ''} />
 
       <div className="parser-toolbar">
         <div className="field" style={{ minWidth: 280, flex: '1 1 280px' }}>
@@ -1169,6 +1170,7 @@ export default function ParserTab({
   itemNameProps,
   groupCollapsed = false,
   onToggleGroup,
+  loadout = '',
 }) {
   const [folder, setFolder] = useState('')
   const [logs, setLogs] = useState([])
@@ -1553,6 +1555,7 @@ export default function ParserTab({
 
   return (
     <ParserPanel
+      loadout={loadout}
       folder={folder}
       logs={logs}
       logsStatus={logsStatus}

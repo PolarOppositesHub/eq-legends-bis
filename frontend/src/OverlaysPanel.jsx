@@ -27,7 +27,7 @@ function emptyState() {
   return state
 }
 
-export function OverlaysPanel({ character, folder = '', fullscreenWarning = '' }) {
+export function OverlaysPanel({ character, folder = '', fullscreenWarning = '', loadout = '' }) {
   const [rows, setRows] = useState(emptyState)
   const [notice, setNotice] = useState('')
   const [videoWarning, setVideoWarning] = useState(fullscreenWarning)
@@ -109,6 +109,7 @@ export function OverlaysPanel({ character, folder = '', fullscreenWarning = '' }
       id,
       character: character || '',
       scope: row?.scope === 'zone' ? 'zone' : 'fight',
+      loadout: loadout || '',
     }).catch(fail)
   }
 

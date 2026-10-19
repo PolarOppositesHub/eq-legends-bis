@@ -15,6 +15,7 @@ const {
   snapBounds,
   keepOnScreen,
   overlayRoute,
+  OVERLAY_IDS,
   readOverlayMap,
   appearanceFromRow,
   APPEARANCE_DEFAULTS,
@@ -70,6 +71,17 @@ test('blur raises the overlay and does not hide or close it', () => {
   assert.equal(dismissed.hideWindow, false)
   assert.equal(dismissed.closeWindow, false)
   assert.equal(dismissed.contentVisible, false)
+})
+
+test('the buff overlay uses the same raise path and does not take focus', () => {
+  assert.equal(OVERLAY_IDS.includes('buffs'), true)
+  const locked = overlayBrowserOptions('buffs', { locked: true, x: 8, y: 8, width: 360, height: 220 })
+  assert.equal(locked.focusable, false)
+  assert.equal(locked.skipTaskbar, true)
+  const plan = overlayRaisePlan('interval', false)
+  assert.equal(plan.focus, false)
+  assert.equal(plan.show, false)
+  assert.equal(plan.setFocusable, false)
 })
 
 test('the raise timer does not focus or show the overlay', () => {
