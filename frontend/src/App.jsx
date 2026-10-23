@@ -62,6 +62,7 @@ import ParserTab from './ParserTab.jsx'
 import { openParserStream } from './parserApi.js'
 import { AlertsPanel } from './AlertsTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
+import { AskAiDialog } from './askAi.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
 import {
   DashboardToasts,
@@ -1041,7 +1042,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appHelpOpen, setAppHelpOpen] = useState(false)
   const [creditsOpen, setCreditsOpen] = useState(false)
+  const [askAiOpen, setAskAiOpen] = useState(false)
   const [whatsNewOpen, setWhatsNewOpen] = useState(false)
+  const [parserSummary, setParserSummary] = useState(null)
   const [parserLogPath, setParserLogPath] = useState('')
   const [parserMergePets, setParserMergePets] = useState(true)
   const [parserFightId, setParserFightId] = useState(null)
@@ -3109,6 +3112,20 @@ export default function App() {
   }, [tab, currencyCharacter])
 
   const wishCharacter = (currencyCharacter || '').trim() || characterFromInventoryFile(importMeta?.source || '')
+  const askSnapshot = useMemo(() => ({
+    view: tab,
+    character: wishCharacter,
+    classes,
+    level: characterLevel,
+    equipment: importMeta?.equipment || null,
+    wornUpgrades: importMeta?.wornUpgrades || null,
+    bisSlots: Array.isArray(bis?.slots)
+      ? bis.slots.map((slot) => ({ slot: slot.slot || '', name: slot.name || '' }))
+      : [],
+    bisUpgrade: bis?.upgrade ?? null,
+    currencies: currencyView,
+    parse: parserSummary,
+  }), [tab, wishCharacter, classes, characterLevel, importMeta, bis, currencyView, parserSummary])
   const syncSnapshot = useMemo(() => snapshotFromWorkspace({
     wishByCharacter,
     upgradeProgressByCharacter,
@@ -3341,6 +3358,14 @@ export default function App() {
           </p>
         </div>
         <div className="header-actions">
+          <button
+            type="button"
+            className="header-text-btn"
+            data-testid="ask-ai-open"
+            onClick={() => setAskAiOpen(true)}
+          >
+            Ask AI
+          </button>
           <button
             type="button"
             className="header-text-btn"
@@ -4436,6 +4461,7 @@ export default function App() {
               groupCollapsed={parserGroupCollapsed}
               onToggleGroup={() => setParserGroupCollapsed((open) => !open)}
               loadout={loadoutKey(classes, characterLevel)}
+              onFightSummary={setParserSummary}
             />
           )}
 
@@ -5609,6 +5635,13 @@ export default function App() {
 
       <DashboardToasts />
       {creditsOpen && <CreditsDialog onClose={() => setCreditsOpen(false)} />}
+      {askAiOpen && (
+        <AskAiDialog
+          snapshot={askSnapshot}
+          onClose={() => setAskAiOpen(false)}
+          desktop={isDesktopApp ? window.eqDesktop : null}
+        />
+      )}
       {whatsNewOpen && (
         <WhatsNewDialog
           onClose={() => {

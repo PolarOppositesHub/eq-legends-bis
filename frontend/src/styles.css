@@ -1674,3 +1674,27 @@ button.linkish {
   padding: 0;
   text-align: left;
 }
+.ask-ai-beta {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.ask-ai-question {
+  display: block;
+  width: 100%;
+  min-height: 4.5rem;
+  margin-top: 0.35rem;
+}
+.ask-ai-output {
+  white-space: pre-wrap;
+  max-height: 16rem;
+  overflow: auto;
+  font-size: 0.82rem;
+}

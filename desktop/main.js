@@ -23,6 +23,7 @@ const googleDriveAuth = require('./googleDriveAuth');
 const titleBar = require('./titleBar');
 const { SYNC_INTERVAL_MS, planSync } = require('./syncSchedule');
 const lifecycle = require('./appLifecycle');
+const grokCli = require('./grokCli');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -1015,6 +1016,7 @@ function quitCleanup() {
   stopSyncSchedule();
   closeAuxiliaryWindows();
   destroyTray();
+  grokCli.stopAll(spawn);
 }
 
 function ensureTray() {
@@ -1157,6 +1159,108 @@ ipcMain.handle('eq:app-info', async () => ({
   packaged: app.isPackaged,
   apiPort,
 }));
+
+const grokRuns = new Map();
+
+ipcMain.handle('eq:grok-status', async () => {
+  try {
+    return await grokCli.detectGrok({ spawn });
+  } catch (_) {
+    return { state: 'unknown', detail: 'Sign-in check failed. The copy button still works.' };
+  }
+});
+
+ipcMain.handle('eq:grok-install', async (_evt, args) => {
+  const started = grokCli.startInstall({
+    spawn,
+    confirmed: !!(args && args.confirmed === true),
+    platform: process.platform,
+  });
+  if (!started.started) return started;
+  const output = await new Promise((resolve) => {
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      try { started.child.kill(); } catch (_) { /* already gone */ }
+      resolve({ code: null, stdout, stderr: 'The installer was stopped after the wait limit. The command is shown in Ask AI so you can run it yourself.' });
+    }, grokCli.INSTALL_TIMEOUT_MS);
+    if (started.child.stdout) started.child.stdout.on('data', (chunk) => { stdout += chunk; });
+    if (started.child.stderr) started.child.stderr.on('data', (chunk) => { stderr += chunk; });
+    started.child.on('error', () => {
+      clearTimeout(timer);
+      resolve({ code: 1, stdout, stderr: stderr || 'The installer could not be started.' });
+    });
+    started.child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ code, stdout, stderr });
+    });
+  });
+  return {
+    ok: output.code === 0,
+    command: started.command,
+    detail: grokCli.redactSecrets(output.stderr || output.stdout || started.command),
+  };
+});
+
+ipcMain.handle('eq:grok-login', async () => {
+  try {
+    const started = grokCli.startLogin({ spawn });
+    return { ok: true, detail: started.detail };
+  } catch (err) {
+    return {
+      ok: false,
+      detail: err && err.code === 'ENOENT' ? grokCli.NOT_INSTALLED : 'Grok sign-in could not be started.',
+    };
+  }
+});
+
+ipcMain.handle('eq:grok-ask', async (evt, args) => {
+  const id = crypto.randomUUID();
+  const requested = Number(args && args.timeoutMs);
+  const timeoutMs = Number.isFinite(requested)
+    ? Math.min(Math.max(requested, 1000), grokCli.ASK_TIMEOUT_MS)
+    : grokCli.ASK_TIMEOUT_MS;
+  const handle = grokCli.startHeadless({
+    spawn,
+    prompt: args && args.prompt,
+    timeoutMs,
+  });
+  grokRuns.set(id, handle);
+  handle.done.then((result) => {
+    grokRuns.delete(id);
+    if (!evt.sender.isDestroyed()) {
+      evt.sender.send('eq:grok-result', {
+        id,
+        ok: result.ok === true,
+        kind: result.kind || (result.ok ? 'ok' : 'error'),
+        friendly: result.friendly || '',
+        fallbackCopy: result.fallbackCopy === true,
+        sessionId: result.sessionId || null,
+        answerField: result.answerField || 'unknown',
+        raw: grokCli.redactSecrets(result.raw || ''),
+      });
+    }
+  }).catch(() => {
+    grokRuns.delete(id);
+    if (!evt.sender.isDestroyed()) {
+      evt.sender.send('eq:grok-result', {
+        id,
+        ok: false,
+        kind: 'error',
+        friendly: 'Grok stopped. Copy the context and open Grok in the browser.',
+        fallbackCopy: true,
+        answerField: 'unknown',
+      });
+    }
+  });
+  return { id };
+});
+
+ipcMain.handle('eq:grok-cancel', async (_evt, id) => {
+  const handle = grokRuns.get(String(id || ''));
+  if (handle) handle.cancel();
+  return { ok: true };
+});
 
 ipcMain.handle('eq:quit', async () => {
   quitting = true;

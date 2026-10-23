@@ -18,6 +18,7 @@ import {
   postParserPet,
 } from './parserApi.js'
 import { CLASS_TOKENS } from './classTokens.js'
+import { compactFightSummary } from './askAi.js'
 import {
   AbilityList,
   DeathsPanel,
@@ -1171,6 +1172,7 @@ export default function ParserTab({
   groupCollapsed = false,
   onToggleGroup,
   loadout = '',
+  onFightSummary,
 }) {
   const [folder, setFolder] = useState('')
   const [logs, setLogs] = useState([])
@@ -1212,6 +1214,11 @@ export default function ParserTab({
   loadingRef.current = loadingLog
   upgradingRef.current = upgrading
   mergeRef.current = mergePets
+
+  useEffect(() => {
+    if (!detail || typeof onFightSummary !== 'function') return
+    onFightSummary(compactFightSummary(detail))
+  }, [detail, onFightSummary])
 
   const selected = useMemo(
     () => logs.find((log) => log.path === logPath) || null,
