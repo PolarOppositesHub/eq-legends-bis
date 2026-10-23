@@ -335,19 +335,18 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.16 notes", () => {
+test("what's new dialog shows the 1.1.17 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.16")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.16<\/h2>/)
-  assert.match(html, /Buff and debuff timers/)
-  assert.match(html, /class loadout/)
-  assert.match(html, /Respawn timers/)
-  assert.match(html, /Maps tab/)
-  assert.match(html, /exaltation planner/)
-  assert.match(html, /Resist profiles/)
-  assert.match(html, /feedback bundle/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.15<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.17")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.17<\/h2>/)
+  assert.match(html, /Ask AI is one button/)
+  assert.match(html, /Best in Slot picks/)
+  assert.match(html, /selected Parser fight/)
+  assert.match(html, /stays unknown/)
+  assert.match(html, /paste it into Grok/)
+  assert.match(html, /does not add an API key/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.16<\/h2>/.test(html), false)
 })
 
 test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {

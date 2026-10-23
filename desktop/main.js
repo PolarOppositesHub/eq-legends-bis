@@ -23,6 +23,7 @@ const googleDriveAuth = require('./googleDriveAuth');
 const titleBar = require('./titleBar');
 const { SYNC_INTERVAL_MS, planSync } = require('./syncSchedule');
 const lifecycle = require('./appLifecycle');
+const grokCli = require('./grokCli');
 
 // Windows taskbar pins use this id. It must match build.appId: electron-builder
 // derives the NSIS install GUID from it, and the installer stamps the same
@@ -1157,6 +1158,15 @@ ipcMain.handle('eq:app-info', async () => ({
   packaged: app.isPackaged,
   apiPort,
 }));
+
+ipcMain.handle('eq:ask-grok', async (_evt, args) => {
+  const prompt = String(args && args.prompt || '').slice(0, 24000);
+  try {
+    return await grokCli.askWithLocalGrok(prompt);
+  } catch (_) {
+    return { mode: 'browser', reason: 'failed' };
+  }
+});
 
 ipcMain.handle('eq:quit', async () => {
   quitting = true;

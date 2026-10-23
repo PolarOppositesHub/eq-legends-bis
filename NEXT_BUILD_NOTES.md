@@ -1,5 +1,23 @@
 # Next build notes
 
+**Planned as 1.1.17.** Updater untouched. Never invent item stats, game rules, or numbers in the Ask AI context. Unknown stays unknown. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.17 — Ask AI
+Ships the Fri Oct 23 target. One Ask AI button in the header. The question goes out with the context for the page that is open. A missing number stays unknown.
+- [x] (1) One Ask AI button. The question plus current character and worn gear, Best in Slot picks, Simulator picks, or the selected Parser fight summary, depending on the open page.
+- [x] (2) Opens grok.com in the default browser. The prompt is prefilled with ?q= when the link stays short. Otherwise the prompt is copied and a toast says to paste it.
+- [x] (3) If the local grok command is installed and signed in to the user's own account, the answer can show in the app. Detection does not read or store tokens, and it does not pass an API key. If the command is missing or not signed in, the browser flow is used.
+- [x] (4) Version **1.1.17** with 1.1.17-only What's new lines. No release publishing.
+
+## Slipped to 1.1.18
+None from the Ask AI list.
+
+## Upcoming (1.1.x only)
+- **1.1.18 Tue Oct 27:** speed: startup, Item Search, lighter overlays
+- **1.1.19 Fri Oct 30:** UI polish: home screen, shortcuts, sync status
+
+---
+
 **Planned as 1.1.16.** Updater untouched. Never invent item stats, spell durations, respawn times, map data, resist values, or game rules. Unknown stays unknown or is typed by the user. Anything level or class based is stored per loadout. Overlays use the existing lock and raise path and do not take focus. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.16 — Companion

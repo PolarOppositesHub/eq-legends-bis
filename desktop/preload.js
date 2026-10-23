@@ -64,6 +64,7 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     ipcRenderer.on('eq:window-state', listener);
     return () => ipcRenderer.removeListener('eq:window-state', listener);
   },
+  askGrok: (args) => ipcRenderer.invoke('eq:ask-grok', { prompt: args && args.prompt ? String(args.prompt) : '' }),
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

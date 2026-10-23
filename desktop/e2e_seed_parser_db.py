@@ -114,7 +114,7 @@ def main(argv: list[str]) -> int:
         "preferRanged": True,
         "characterLevel": 50,
         "race": "Human",
-        "whatsNewSeen": "1.1.16",
+        "whatsNewSeen": "1.1.17",
         "primaryStats": ["", "", ""],
         "secondaryStats": ["", "", ""],
         "tertiaryStats": ["", "", ""],

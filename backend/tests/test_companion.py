@@ -240,7 +240,7 @@ class ResistAndShareTests(unittest.TestCase):
                 ("tokens.json", b"refresh_token=nope"),
                 ("../eq-api.log", b"sidecar\n"),
             ],
-            {"version": "1.1.16", "rss_text": "unknown"},
+            {"version": "1.1.17", "rss_text": "unknown"},
         )
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             names = set(archive.namelist())

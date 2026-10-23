@@ -1,7 +1,7 @@
 {
   "name": "eq-legends-bis-desktop",
   "productName": "EQ Legends BiS",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "EQ Legends BiS + build-sim (portable Windows app)",
   "main": "main.js",
   "author": "Josh Monroe",
@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node --test workspaceSessionStore.test.js packagingConfig.test.js singleInstance.test.js inventoryWatcher.test.js overlayWindows.test.js eqclientIni.test.js onedriveAuth.test.js googleDriveAuth.test.js titleBar.test.js syncSchedule.test.js appLifecycle.test.js",
+    "test": "node --test workspaceSessionStore.test.js packagingConfig.test.js singleInstance.test.js inventoryWatcher.test.js overlayWindows.test.js eqclientIni.test.js onedriveAuth.test.js googleDriveAuth.test.js titleBar.test.js syncSchedule.test.js appLifecycle.test.js grokCli.test.js",
     "test:e2e": "node rebuildIcons.e2e.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
@@ -44,6 +44,7 @@
       "titleBar.js",
       "syncSchedule.js",
       "appLifecycle.js",
+      "grokCli.js",
       "splash.html",
       "package.json",
       "build/icon.ico",
