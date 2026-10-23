@@ -1,5 +1,23 @@
 # Next build notes
 
+**Planned as 1.1.17.** Updater untouched. Never invent item stats, game rules, mob data, log formats, or CLI behavior. Unknown stays unknown and is labeled. Levels and class data are per loadout. Overlays use the existing lock and raise path and do not take focus. Always 1.1.x, never 1.2.0. Versions stay valid semver.
+
+## 1.1.17 — Ask AI
+Ships the Fri Oct 23 target. The spec and PR plan still title this "1.1.8: Ask AI". That work ships as 1.1.17. QUEUED_SMALL_FIXES has no open items for this version. Nothing slipped from 1.1.16. Users pay nothing beyond their own Grok account. No paid xAI API key, no bundled or shared sign-in, and the app never stores or handles credentials.
+- [ ] (A) Copy context and open Grok. An Ask AI button builds a compact pack (current view, character and class loadout, relevant gear and parse numbers, the question), copies it, and opens `https://grok.com/?q=` with a short prompt in the default browser. A paste hint is shown. `?q` is undocumented, so the full pack always stays on the clipboard. Long context never goes in the URL. Clipboard text has no tell, say, group, or guild chat lines.
+- [ ] (B) Grok Build CLI detection and guided setup. States are not installed, not signed in, and ready. The official installer runs only after an explicit confirm. Sign-in is the CLI's own `grok login` with the user's own account. Installer commands come from https://docs.x.ai/build/overview (`irm https://x.ai/cli/install.ps1 | iex` on Windows, `curl -fsSL https://x.ai/cli/install.sh | bash` elsewhere). Credentials are never stored or read.
+- [ ] (C) In-app answers, marked Beta. A headless `grok -p` run uses only flags that exist in https://docs.x.ai/build/cli/headless-scripting, https://docs.x.ai/build/cli/reference, https://docs.x.ai/build/features/sandbox, https://docs.x.ai/build/features/permissions, and https://docs.x.ai/build/enterprise. Empty temp `--cwd`, `--sandbox read-only`, `--permission-mode dontAsk` with no allows, low `--max-turns`, `--no-memory`, and `--system-prompt-override`. Drop any candidate flag the docs do not list. Quota, eligibility, and auth failures show a friendly message and fall back to the copy button. Timeout and cancel are supported. The JSON answer field is not documented; only `sessionId` is named, so unknown output stays labeled.
+- [ ] (D) Version **1.1.17** the same way 1.1.16 was bumped, with 1.1.17-only What's new lines. No release publishing.
+
+## Slipped to 1.1.18
+None.
+
+## Upcoming (1.1.x only)
+- **1.1.18 Tue Oct 27:** speed (startup, Item Search, lighter overlays while parsing, measured before and after)
+- **1.1.19 Fri Oct 30:** UI polish (cleaner home screen, keyboard shortcuts listed in Help, visible cloud sync status indicator)
+
+---
+
 **Planned as 1.1.16.** Updater untouched. Never invent item stats, spell durations, respawn times, map data, resist values, or game rules. Unknown stays unknown or is typed by the user. Anything level or class based is stored per loadout. Overlays use the existing lock and raise path and do not take focus. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.16 — Companion
