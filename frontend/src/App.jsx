@@ -63,6 +63,7 @@ import { openParserStream } from './parserApi.js'
 import { AlertsPanel } from './AlertsTab.jsx'
 import { CreditsDialog, WhatsNewDialog } from './parserChrome.jsx'
 import { WHATS_NEW_ID } from './parserView.js'
+import { AskAiControl } from './askAi.jsx'
 import {
   DashboardToasts,
   LevelingPanel,
@@ -1045,6 +1046,7 @@ export default function App() {
   const [parserLogPath, setParserLogPath] = useState('')
   const [parserMergePets, setParserMergePets] = useState(true)
   const [parserFightId, setParserFightId] = useState(null)
+  const [parserSummary, setParserSummary] = useState(null)
   const [parserGroupCollapsed, setParserGroupCollapsed] = useState(false)
   const [currencyCharacter, setCurrencyCharacter] = useState('')
   const [wishByCharacter, setWishByCharacter] = useState({})
@@ -3341,6 +3343,25 @@ export default function App() {
           </p>
         </div>
         <div className="header-actions">
+          <AskAiControl
+            tab={tab}
+            snapshot={{
+              character: wishCharacter || '',
+              classes,
+              level: characterLevel,
+              race,
+              upgrade,
+              equipment,
+              wornUpgrades,
+              bisUpgrades,
+              bisOverrides,
+              bis,
+              slotItems,
+              slots: meta?.slots || [],
+              parser: parserSummary,
+              buildName,
+            }}
+          />
           <button
             type="button"
             className="header-text-btn"
@@ -4436,6 +4457,7 @@ export default function App() {
               groupCollapsed={parserGroupCollapsed}
               onToggleGroup={() => setParserGroupCollapsed((open) => !open)}
               loadout={loadoutKey(classes, characterLevel)}
+              onFightSummary={setParserSummary}
             />
           )}
 

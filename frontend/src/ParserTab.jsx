@@ -1171,6 +1171,7 @@ export default function ParserTab({
   groupCollapsed = false,
   onToggleGroup,
   loadout = '',
+  onFightSummary,
 }) {
   const [folder, setFolder] = useState('')
   const [logs, setLogs] = useState([])
@@ -1218,6 +1219,17 @@ export default function ParserTab({
     [logs, logPath],
   )
   characterRef.current = selected?.character || ''
+
+  useEffect(() => {
+    if (typeof onFightSummary !== 'function') return
+    const row = fights.find((fight) => fight && fight.id === fightId) || null
+    onFightSummary({
+      status: detailStatus,
+      fight: row,
+      detail: detailStatus === 'ready' ? detail : null,
+      character: selected?.character || '',
+    })
+  }, [onFightSummary, fights, fightId, detail, detailStatus, selected])
 
   useEffect(() => {
     let cancelled = false
