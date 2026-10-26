@@ -1,0 +1,41 @@
+{
+  "zone": "Tutorial",
+  "slug": "tutorial",
+  "overview": {
+    "brief": "Starter tutorial zone (one-way exit). Very safe; nothing aggros. Boots of the Long Road is a tutorial reward. No eqlegendstools card (404). Source: https://eqlwiki.com/Tutorial_Zone Recommended Level 1 / Level of Monsters 1. Inventory unique_mobs=[].",
+    "level_requirement": "1",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Tutorial Zone - eqlwiki",
+        "url": "https://eqlwiki.com/Tutorial_Zone",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Tutorial_Zone",
+      "https://eqlwiki.com/Boots_of_the_Long_Road",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": null,
+    "inventory_mob_count": 0,
+    "checked": [
+      "https://eqlegendstools.com/zones/tutorial/ (404)",
+      "https://eqlwiki.com/Tutorial_Zone"
+    ],
+    "spawn_policy": "Batch 3 deferred spawn deep-dive."
+  },
+  "aliases": [
+    "Tutorial Zone"
+  ]
+}

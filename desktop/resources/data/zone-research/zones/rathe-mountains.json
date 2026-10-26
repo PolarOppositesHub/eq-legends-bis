@@ -1,0 +1,101 @@
+{
+  "zone": "Rathe Mountains",
+  "slug": "rathe-mountains",
+  "overview": {
+    "brief": "Sprawling valleys and ridgelines on Antonica’s southern overland route between Lake Rathetear and Feerrott. EQ Legends Tools recommends 1–37.",
+    "level_requirement": "1-37",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Rathe Mountains - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/rathe-mountains/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/rathe-mountains/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Brother Qwinn",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/rathe-mountains/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Brother Zephyl",
+      "level": 61,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/rathe-mountains/"
+      ]
+    },
+    {
+      "name": "Mortificator Syythrak",
+      "level": 38,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/rathe-mountains/"
+      ]
+    },
+    {
+      "name": "Petrifin",
+      "level": 40,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/rathe-mountains/"
+      ]
+    },
+    {
+      "name": "Quid Rilstone",
+      "level": 34,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/rathe-mountains/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 5,
+    "mobs_with_level": 4,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/rathe-mountains/",
+    "inventory_mob_count": 5,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "zone": "Lake Nerius",
+  "slug": "lake-nerius",
+  "overview": {
+    "brief": "New open zone between Nektulos Forest and Nektropos Castle (Lake of Death); undead, zombies, bears, skeletons, wolves, spiders, ghosts. Home of Retainer Ozval and Vlad Sterovich (Trading Center). Ayr'Haeth race unlock quest starts here.",
+    "level_requirement": "10-15",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Lake Nerius - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/lake-nerius/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/lake-nerius/",
+      "https://www.everquestlegends.com/news/eql-nektropos-castle",
+      "https://eqlwiki.com/Patch_Notes"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Corrupted Kedgespawn",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "NW lake; drops Ancient Signet Ring (access quest)",
+        "coords": "(2662, 1238, -119)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lake-nerius/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Direbear",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lake-nerius/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Discarded Experiment",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lake-nerius/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Retainer Ozval",
+      "level": null,
+      "spawn": {
+        "known": true,
+        "notes": "access quest giver, central huts",
+        "coords": "(201, -97, -7)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    }
+  ]
+}

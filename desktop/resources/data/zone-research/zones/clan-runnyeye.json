@@ -1,0 +1,250 @@
+{
+  "zone": "Clan Runnyeye",
+  "slug": "clan-runnyeye",
+  "overview": {
+    "brief": "Compact goblin citadel (Liberated Citadel of Runnyeye) beyond Misty Thicket / Gorge of King Xorbb. EQ Legends Tools recommends levels 10–24; named Pickclaw and Sporali encounters appear higher on drop attributions.",
+    "level_requirement": "10-24",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Runnyeye - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/runnyeye/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/runnyeye/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "An Evil Eye",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Battlelord Paluk",
+      "level": "25-27",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "Battlewizard Unak",
+      "level": "25-27",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "Ghanex Drah",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Lord Pickclaw",
+      "level": "25-27",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "Lord Soptyvr",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Lord Sviir",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Lord Syrkl",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "The Sporali Moldmaster",
+      "level": "25-28",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "a Pickclaw Foeseeker",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "a Pickclaw mindripper",
+      "level": "20-24",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "a gelatinous cube",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "a slime elemental",
+      "level": "16-20",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "an Evil Eye prisoner",
+      "level": "20-24",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    },
+    {
+      "name": "an evil eye",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "an evil eye prisoner",
+      "level": "20-24",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/runnyeye/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 16,
+    "mobs_with_level": 9,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/runnyeye/",
+    "inventory_mob_count": 16,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

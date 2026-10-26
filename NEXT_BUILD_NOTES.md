@@ -1,5 +1,26 @@
 # Next build notes
 
+**Planned as 1.1.18.** Updater untouched. Never invent item stats, mob levels, spawns, rules, or formats. Unknown stays unknown. Always 1.1.x, never 1.2.0. Versions stay valid semver. No feature removals.
+
+## 1.1.18 — Speed, Ask AI extras, packaged zones
+Ships from main `846cacf` (1.1.17). Measured on this machine before the changes, then again after.
+- [x] (1) Speed. Faster sidecar startup: `/api/health` answers from a small boot app while the full API imports, and the item catalog warms in that same background load. Faster Item Search: filter and sort the catalog, then build public rows only for the page (image names come from one directory listing). Lighter overlays while a parser rebuild runs: the full-screen wait overlay drops blur and the sliding bar, meter polls back off on a busy parser and skip an unchanged payload, and overlay windows subscribe only to alert events.
+- [x] (2) Port PR #64 extras onto main's Ask AI files. Do not replace `askAi.js`, `askAi.jsx`, or `grokCli.js`. Keep main's gear, Best in Slot, and Simulator stat lines and `.text` parsing on the existing local-ask path. Add chat scrub (main does not strip chat today; needles match `backend/tests/test_parser.py` `_CHAT`). Always copy the full pack. `grok.com/?q=` gets only a short prompt (`SHORT_PROMPT_MAX` 160, `URL_MAX_LENGTH` 1800). Clipboard failure shows `data-testid="ask-ai-pack"`. Context adds view label, loadout key, currency rows (skip all-zero), and a fight summary of at most 8 sources. CLI detection uses `grok version` then ACP `grok agent stdio` initialize (`cached_token` = ready; `xai.api_key` or empty = not signed in; missing or error = unknown). Never read `auth.json`. Installer runs only when `confirmed === true` (Windows `irm https://x.ai/cli/install.ps1 | iex`, else `curl -fsSL https://x.ai/cli/install.sh | bash`), waits 120s, and kills only that child. Sign-in is `grok login`. Headless flags stay the documented read-only set, 90s timeout, cancel, no spawn over 6000 characters, empty pack after scrub does not spawn. JSON keeps `sessionId`. The answer text field stays labeled unknown on that path. IPC adds `eq:grok-status`, `eq:grok-install`, `eq:grok-login`, `eq:grok-ask`, `eq:grok-result`, `eq:grok-cancel`. `eq:ask-grok` stays. Quit calls `stopAll`.
+- [x] (3) Maps packaging. Commit sourced zone files into `desktop/resources/data/zone-research` (index, `mobs.csv`, `zones/*.json`, `SOURCES.md`). No scripts and no research digs. The dev loader also reads that directory when `data/zone-research` is absent. The bundle copies only those allowlisted files from an external tree when one exists, then merges the October update, and fails if the packaged index is missing. A test fails when that index is missing, a symlink, or untracked.
+- [x] (4) Nektropos update. 2 zones, 28 mobs, 50 items. Stats use keys the catalog already knows. Weapon damage, delay, and the sourced ratio are stored. A source conflict stays in the text and is flagged. It is not resolved. The base zone-research tree (54 zones, 420 mobs, generated 2026-09-06) is merged in. Nektropos files replace only nektropos-castle and lake-nerius. The package has 56 zones and 448 mobs.
+- [x] (5) Version **1.1.18** with 1.1.18-only What's new lines. No release publishing.
+
+## Speed numbers
+Same machine, Python 3.12, after the changes:
+- Boot import of `backend.app.boot` until `/api/health` returns: 0.011s import + 0.003s for the health response. Before, `import app.main` was 0.713s (cProfile) and health could not answer until that finished. TestClient health after a finished import was 0.015s.
+- Item catalog build: 1.156s, 11877 items (11827 before, plus the 50 new rows). Empty Item Search (limit 50) after the catalog exists: 0.145s first, 0.008s second. Before: 4.110s first, 3.885s second.
+- The sample progress event in the hub test is 145 bytes. Overlay windows subscribe with `events=alert`, so that progress payload is not delivered to them. Meter polls stay at 2s and step to 4s then 8s when a request fails.
+
+## Upcoming (1.1.x only)
+- **1.1.19 Fri Oct 30:** UI polish: home screen, shortcuts, sync status
+
+---
+
 **Planned as 1.1.17.** Updater untouched. Never invent item stats, game rules, or numbers in the Ask AI context. Unknown stays unknown. Always 1.1.x, never 1.2.0. Versions stay valid semver.
 
 ## 1.1.17 — Ask AI

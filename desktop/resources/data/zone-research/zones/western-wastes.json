@@ -1,0 +1,28 @@
+{
+  "zone": "Western Wastes",
+  "slug": "western-wastes",
+  "aliases": [],
+  "overview": {
+    "brief": "Long, long ago the great wurm Veeshan found the barren world of Norrath. She marked the lifeless void with her claw as a warning to all other deities that it now belonged to her. Her claws fell upon the continent of Velious marking the Western Wastes with two great gorges the dragons hold sacred.",
+    "level_requirement": null,
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/Western_Wastes",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Western_Wastes"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

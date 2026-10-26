@@ -1,0 +1,139 @@
+{
+  "zone": "Cazic Thule",
+  "slug": "cazic-thule",
+  "overview": {
+    "brief": "Ruined jungle temple in the Feerrott controlled by lizardman devotees of Cazic-Thule, with golems and the Avatar of Fear. Recommended 18–33 on EQ Legends Tools.",
+    "level_requirement": "18-33",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Temple of Cazic-Thule - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/temple-of-cazic-thule/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/temple-of-cazic-thule/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Clay Golem",
+      "level": "25-28",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "Avatar of Fear",
+      "level": 43,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "Cazic Cenobite",
+      "level": "30-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "Tae Ew Archon",
+      "level": "28-31",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "Tae Ew Diviner",
+      "level": "27-30",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "Tae Ew Templar",
+      "level": "30-33",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "a steel golem",
+      "level": "32-35",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    },
+    {
+      "name": "a stone golem",
+      "level": "29-31",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/temple-of-cazic-thule/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 8,
+    "mobs_with_level": 8,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/temple-of-cazic-thule/",
+    "inventory_mob_count": 8,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

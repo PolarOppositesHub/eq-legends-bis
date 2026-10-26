@@ -1,0 +1,713 @@
+{
+  "zone": "Plane of Fear",
+  "slug": "plane-of-fear",
+  "overview": {
+    "brief": "Raid plane of Cazic-Thule. Blood-red terrain with large aggro ranges and see-invis trash. Enter from Feerrott spectre caves (level 46+); raid via Voidling beside the portal.",
+    "level_requirement": "46+",
+    "access_keys": [
+      {
+        "name": "No zone key required",
+        "required": false,
+        "notes": "One-way portal in The Feerrott spectre caves; minimum player level 46. Raid instance via Voidling in Feerrott.",
+        "source_url": "https://eqlwiki.com/Plane_of_Fear"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Plane of Fear - EverQuest Legends Wiki",
+        "url": "https://eqlwiki.com/Plane_of_Fear",
+        "preferred": true
+      },
+      {
+        "title": "How to Start Raiding / Voidling locations",
+        "url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+        "preferred": false
+      },
+      {
+        "title": "EQ Legends Planes guide",
+        "url": "https://eqlegends.wiki/guide/planes/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [
+      {
+        "url": "https://eqlwiki.com/Plane_of_Fear",
+        "description": "Plane of Fear map on eqlwiki",
+        "license_note": "Fan wiki; verify license before redistributing map images"
+      }
+    ],
+    "sources": [
+      "https://eqlegendstools.com/zones/plane-of-fear/",
+      "https://eqlwiki.com/Plane_of_Fear",
+      "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+      "https://eqlegends.wiki/guide/planes/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Amygdalan warrior",
+      "level": "48-51",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Cazic Thule (God)",
+      "level": 70,
+      "spawn": {
+        "known": true,
+        "notes": "Top of the Temple / northeastern area around ring of fire",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Cleric of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Dracoliche",
+      "level": 58,
+      "spawn": {
+        "known": true,
+        "notes": "Wanders",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Dread",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "(-635, -1201)",
+        "coords": {
+          "x": -635.0,
+          "y": -1201.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Fright",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "(-636, -358)",
+        "coords": {
+          "x": -636.0,
+          "y": -358.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Innoruuk's Chosen",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "Terror",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "(200, -365)",
+        "coords": {
+          "x": 200.0,
+          "y": -365.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a Champion of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a Disciple of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a Knight of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a Sage of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a boogeyman",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "14% @ (-176, -764), 14% @ (-972, 447)",
+        "coords": {
+          "x": -176.0,
+          "y": -764.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a decrepit warder",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a dracoliche",
+      "level": 58,
+      "spawn": {
+        "known": true,
+        "notes": "Wanders",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a fetid fiend",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a forsaken revenant",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a frightfinger",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "15% @ (-331, -1071), 15% @ (-322, -1133)",
+        "coords": {
+          "x": -331.0,
+          "y": -1071.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a glare lord",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Camps including Three @ (575, -1135), Three @ (275,-780)",
+        "coords": {
+          "x": 575.0,
+          "y": -1135.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a gorgon",
+      "level": 49,
+      "spawn": {
+        "known": true,
+        "notes": "13% @ (-282, -664), 13% @ (-360, -639)",
+        "coords": {
+          "x": -282.0,
+          "y": -664.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a kiraikuei",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a loathling lich",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a nightmare",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "14% @ (486, -386), (1355, -664)",
+        "coords": {
+          "x": 486.0,
+          "y": -386.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a phantasm",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "100% @ (1184, -830) and others",
+        "coords": {
+          "x": 1184.0,
+          "y": -830.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a revultant rat",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a samhain",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "12% @ (-364, -1265), 12% @ (-1276, 248), 12% @ (-957, 414)",
+        "coords": {
+          "x": -364.0,
+          "y": -1265.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a scareling",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a scorn banshee",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a shiverback",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a spinechiller spider",
+      "level": "48-52",
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a spite golem",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a tentacle tormentor",
+      "level": 50,
+      "spawn": {
+        "known": true,
+        "notes": "Two @ (-420,710), Four @ (40, 635), One @ (902,390,113)",
+        "coords": {
+          "x": -420.0,
+          "y": 710.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a turmoil toad",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "a worry wraith",
+      "level": "50-51",
+      "spawn": {
+        "known": true,
+        "notes": "100% @ (-762, -68), 100% @ (-352, -1134), and others",
+        "coords": {
+          "x": -762.0,
+          "y": -68.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "amygdalan knight",
+      "level": "49-51",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "amygdalan warrior",
+      "level": "48-51",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "an Agent of Innoruuk",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "an abhorrent",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "an ashenbone drake",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "an elite dragoon",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "an ire ghast",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "class-specific mini-bosses",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "haunted chest",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "still drops?",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/",
+        "https://eqlwiki.com/Plane_of_Fear"
+      ]
+    },
+    {
+      "name": "various mobs",
+      "level": "48+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Fear"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-fear/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 45,
+    "mobs_with_level": 24,
+    "mobs_with_spawn": 23,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/plane-of-fear/",
+    "inventory_mob_count": 45,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

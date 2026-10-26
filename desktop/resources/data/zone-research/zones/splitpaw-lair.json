@@ -1,0 +1,191 @@
+{
+  "zone": "Splitpaw Lair",
+  "slug": "splitpaw-lair",
+  "overview": {
+    "brief": "Gnoll stronghold beneath the stone pawprint in South Karana. EQ Legends revamped with placeholders removed; recommended 25–40.",
+    "level_requirement": "25-40",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Splitpaw Lair - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/splitpaw-lair/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/splitpaw-lair/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Nisch Mas Mender",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Ishma Mas Apprentice",
+      "level": "40+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Ishva Mas Apprentice",
+      "level": "40+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Nisch Val Torash Mashk",
+      "level": 39,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Rosch Val L'Vlor",
+      "level": 39,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Rosch Val L'Vlor (Rare)",
+      "level": 39,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Tesch Val Kadvem",
+      "level": 40,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "The Ishva Mal",
+      "level": 40,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "Verishe Mal Executioner",
+      "level": 42,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "a Lteth Val Deviant",
+      "level": 33,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "a Nisch Mas Mender",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    },
+    {
+      "name": "a Tesch Val Brute",
+      "level": 37,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/splitpaw-lair/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 12,
+    "mobs_with_level": 12,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/splitpaw-lair/",
+    "inventory_mob_count": 12,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

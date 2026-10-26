@@ -1,0 +1,48 @@
+{
+  "zone": "Lake Rathetear",
+  "slug": "lake-rathetear",
+  "overview": {
+    "brief": "Sprawling lake with islands, cliffs, towers and camps; connects South Karana, Rathe Mountains, and The Arena. Recommended 9–16 on EQ Legends Tools.",
+    "level_requirement": "9-16",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Lake Rathetear - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/lake-rathetear/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/lake-rathetear/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a gnoll embalmer",
+      "level": "14-17",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lake-rathetear/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/lake-rathetear/",
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

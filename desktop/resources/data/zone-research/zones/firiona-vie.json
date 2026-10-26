@@ -1,0 +1,28 @@
+{
+  "zone": "Firiona Vie",
+  "slug": "firiona-vie",
+  "aliases": [],
+  "overview": {
+    "brief": "The land of Firiona Vie, named after a High Elf princess, is a very wild forest, and also happens to be the site of a beachhead established long ago by the elves of Faydwer. After being long-abandoned, the elves are now returning to this land to rebuild their fortress.",
+    "level_requirement": null,
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/Firiona_Vie",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Firiona_Vie"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

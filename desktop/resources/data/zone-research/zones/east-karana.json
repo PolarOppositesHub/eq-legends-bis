@@ -1,0 +1,53 @@
+{
+  "zone": "East Karana",
+  "slug": "east-karana",
+  "overview": {
+    "brief": "Rugged Karana plains stretch with passes and river crossings; connects to North Karana, Highpass Hold, and Gorge of King Xorbb. Lions, spiders, bandits, gnolls; upper end griffins, evil eyes, cyclopes, hill giants, treants. EQ Legends Tools recommends 8–20.",
+    "level_requirement": "8-20",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "East Karana - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/east-karana/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/east-karana/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "an evil eye",
+      "level": "16-20",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/east-karana/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/east-karana/",
+    "inventory_mob_count": 2,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "alias_merge": "Merged inventory rows East Karana / Eastern Karana; kept both inventory spellings of the evil eye mob."
+  },
+  "aliases": [
+    "Eastern Karana",
+    "Eastern Plains of Karana"
+  ]
+}

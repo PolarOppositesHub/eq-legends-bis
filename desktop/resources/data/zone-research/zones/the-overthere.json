@@ -1,0 +1,28 @@
+{
+  "zone": "The Overthere",
+  "slug": "the-overthere",
+  "aliases": [],
+  "overview": {
+    "brief": "The Overthere is a vast area of plains that gradually evolves to reach the northern shore of the continent of Kunark. There is a vast area of ravines and chasms that have existed for centuries, infested with the evil Scorpiki, ancient protectors of the hidden temples. The evil races of Norrath have also claimed the shore of The Overthere and have established their beachhead here.",
+    "level_requirement": null,
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/The_Overthere",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/The_Overthere"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

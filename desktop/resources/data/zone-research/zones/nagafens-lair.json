@@ -1,0 +1,203 @@
+{
+  "zone": "Nagafen's Lair",
+  "slug": "nagafens-lair",
+  "overview": {
+    "brief": "Fire giant / kobold dungeon culminating in Lord Nagafen. EQ Legends Tools tags it as a raid zone with recommended levels 34\u201347; Nagafen listed at level 55 on drop tables. Raid Voidling access described for Sol B / Nagafen route.",
+    "level_requirement": "34-47",
+    "access_keys": [
+      {
+        "name": "Lord Nagafen Voidling (raid instance)",
+        "required": false,
+        "notes": "Itemlevel guide: Voidling inside Sol B along the route toward Nagafen for the raid instance. Public dungeon access via Solusek's Eye / Lavastorm connections per zone list.",
+        "source_url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Nagafen's Lair - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/nagafens-lair/",
+        "preferred": true
+      },
+      {
+        "title": "Voidling locations",
+        "url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/nagafens-lair/",
+      "https://eqlegendstools.com/zones/",
+      "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Efreeti Lord Djarn",
+      "level": 50,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "King Tranix",
+      "level": 52,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "Lord Nagafen",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "Magus Rokyl",
+      "level": "48-50",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "Solusek kobold king",
+      "level": "42-45",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "Warlord Skarlon",
+      "level": "47-50",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "death beetle",
+      "level": "34-37",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "guano harvester",
+      "level": "38-40",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "kobold noble",
+      "level": "39-42",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "kobold priest",
+      "level": "39-42",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "noxious spider",
+      "level": "40-42",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    },
+    {
+      "name": "stone spider",
+      "level": "38-40",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nagafens-lair/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 12,
+    "mobs_with_level": 12,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/nagafens-lair/",
+    "inventory_mob_count": 12,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "zone": "The Warrens",
+  "slug": "the-warrens",
+  "overview": {
+    "brief": "Sprawling kobold cave network beneath Odus (Clan Kolbok), connected to Paineel and Stonebrunt Mountains. Dense kobolds, bats, and rats; tougher shamans, brawlers, and named leaders deeper in. EQ Legends Tools recommends 4–18.",
+    "level_requirement": "4-18",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "The Warrens - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/the-warrens/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/the-warrens/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Grodl Ripclaw",
+      "level": "21-22",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-warrens/"
+      ]
+    },
+    {
+      "name": "King Gragnar",
+      "level": 24,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-warrens/"
+      ]
+    },
+    {
+      "name": "The Muglwump",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-warrens/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/the-warrens/",
+    "inventory_mob_count": 3,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  }
+}

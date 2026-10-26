@@ -381,6 +381,11 @@ def _all_flat_items() -> list[dict[str, Any]]:
                 "zone": row.get("sourceZone") or "",
                 "tooltipLines": row.get("tooltipLines") or [],
                 "from_aggregate_only": True,
+                "ratio_plus0": row.get("ratio_plus0"),
+                "ratio_plus10": row.get("ratio_plus10"),
+                "reviewNotes": row.get("reviewNotes") or "",
+                "skill": row.get("skill") or "",
+                "source_conflicts": list(row.get("source_conflicts") or []),
             })
         except Exception:
             continue
@@ -743,6 +748,17 @@ def damage_delay_ratio(item: dict[str, Any], level: int | None = None) -> dict[s
         used_damage = scaled_damage
         used_delay = scaled_delay
     ratio = round(float(used_damage) / float(used_delay), 2)
+    stored = None
+    if lvl == 0:
+        stored = item.get("ratio_plus0")
+    elif lvl == 10:
+        stored = item.get("ratio_plus10")
+    if stored is not None and stored != "":
+        try:
+            ratio = float(stored)
+            note = None
+        except (TypeError, ValueError):
+            pass
     return {
         "ratio": ratio,
         "damage": used_damage,
@@ -881,6 +897,7 @@ def search_items(
         pool = _all_flat_items()
     except Exception:
         pool = []
+    want_ratio = ratio_min is not None
     hits: list[dict[str, Any]] = []
     for it in pool:
         try:
@@ -898,20 +915,11 @@ def search_items(
                     continue
                 if stat_min is not None and value < float(stat_min):
                     continue
-            ratio_info = damage_delay_ratio(it, level)
-            if ratio_min is not None and (
-                ratio_info.get("ratio") is None or float(ratio_info["ratio"]) < float(ratio_min)
-            ):
-                continue
-            public = _public_item(it)
-            skill = item_skill(it)
-            if skill:
-                public["skill"] = skill
-            public["compare_level"] = level
-            public["stats_at_compare"] = stats_at_compare_level(it, level)
-            public["damage_delay_ratio"] = ratio_info.get("ratio")
-            public["damage_delay_note"] = ratio_info.get("note")
-            hits.append(public)
+            if want_ratio:
+                ratio_info = damage_delay_ratio(it, level)
+                if ratio_info.get("ratio") is None or float(ratio_info["ratio"]) < float(ratio_min):
+                    continue
+            hits.append(it)
         except Exception:
             continue
     levels = [
@@ -922,9 +930,24 @@ def search_items(
     if any(key for key, _direction in levels):
         hits = sort_search_items(hits, levels, level)
     else:
-        hits.sort(key=lambda r: (r["name"] or "").lower())
+        hits.sort(key=lambda r: (r.get("name") or "").lower())
     total = len(hits)
-    page = hits[offset: offset + max(1, min(200, limit))]
+    page_rows = hits[offset: offset + max(1, min(200, limit))]
+    page = []
+    for it in page_rows:
+        try:
+            public = _public_item(it)
+            skill = item_skill(it)
+            if skill:
+                public["skill"] = skill
+            public["compare_level"] = level
+            public["stats_at_compare"] = stats_at_compare_level(it, level)
+            ratio_info = damage_delay_ratio(it, level)
+            public["damage_delay_ratio"] = ratio_info.get("ratio")
+            public["damage_delay_note"] = ratio_info.get("note")
+            page.append(public)
+        except Exception:
+            continue
     decoded_s = ""
     try:
         decoded_s = str(decoded_dir())
@@ -1564,15 +1587,85 @@ def _enrich_item_from_eqlwiki(name: str) -> dict[str, Any] | None:
     return cached
 
 
+_IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+
+
+@lru_cache(maxsize=1)
+def _image_slugs() -> frozenset[str]:
+    """File stems under the icon dirs. One listing, not a stat per search hit."""
+    slugs: set[str] = set()
+    dirs: list[Path] = []
+    try:
+        dirs.append(_images_dir())
+    except Exception:
+        pass
+    try:
+        dirs.extend(image_seed_dirs())
+    except Exception:
+        pass
+    seen: set[str] = set()
+    for img_dir in dirs:
+        try:
+            key = str(img_dir.resolve())
+        except Exception:
+            key = str(img_dir)
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            entries = list(img_dir.iterdir())
+        except OSError:
+            continue
+        for entry in entries:
+            try:
+                if not entry.is_file():
+                    continue
+                if entry.suffix.lower() not in _IMAGE_EXTS:
+                    continue
+                if entry.stat().st_size <= 0:
+                    continue
+            except OSError:
+                continue
+            slugs.add(entry.stem)
+    return frozenset(slugs)
+
+
+def _note_image_written() -> None:
+    try:
+        _image_slugs.cache_clear()
+    except Exception:
+        pass
+
+
+def _has_local_image(name: str) -> bool:
+    try:
+        return _slug(name) in _image_slugs()
+    except Exception:
+        return False
+
+
+def warm_search() -> None:
+    """Build the catalog, facets, and icon index. Safe to call off the health path."""
+    try:
+        _all_flat_items()
+    except Exception:
+        return
+    try:
+        search_facets()
+    except Exception:
+        pass
+    try:
+        _image_slugs()
+    except Exception:
+        pass
+
+
 def _public_item(it: dict[str, Any]) -> dict[str, Any]:
     name = it.get("name") or ""
-    local = None
     has_local = False
     try:
-        local = local_image_path(name)
-        has_local = bool(local and local.is_file())
+        has_local = _has_local_image(name)
     except Exception:
-        local = None
         has_local = False
     try:
         image_url = f"/api/item-image?name={urllib.parse.quote(name)}" if name else ""
@@ -1600,6 +1693,9 @@ def _public_item(it: dict[str, Any]) -> dict[str, Any]:
         "quests": it.get("quests") or [],
         "image_url": image_url,
         "has_local_image": has_local,
+        "ratio_plus0": it.get("ratio_plus0"),
+        "ratio_plus10": it.get("ratio_plus10"),
+        "source_conflicts": list(it.get("source_conflicts") or []),
         "catalog_source": it.get("catalog_source") or "tools",
         "has_stats": bool(
             it.get("has_stats")
@@ -1666,6 +1762,7 @@ def _copy_seed_into_cache(name: str) -> Path | None:
         dest = img_dir / seed_hit.name
         if not dest.exists() or dest.stat().st_size == 0:
             dest.write_bytes(seed_hit.read_bytes())
+            _note_image_written()
         return dest if dest.is_file() and dest.stat().st_size > 0 else seed_hit
     except Exception:
         return seed_hit
@@ -1887,6 +1984,7 @@ def _write_icon_aliases(img_dir: Path, names: list[str], blob: bytes, ext: str) 
         dest = img_dir / f"{slug}{ext}"
         try:
             dest.write_bytes(blob)
+            _note_image_written()
         except Exception:
             if i == 0:
                 return None
@@ -2017,6 +2115,7 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
                 dest = img_dir / f"{_slug(name)}{hit.suffix}"
                 if not dest.exists() or dest.stat().st_size == 0:
                     dest.write_bytes(hit.read_bytes())
+                    _note_image_written()
                 if dest.is_file() and dest.stat().st_size > 0:
                     existing = dest
                     break
@@ -2032,10 +2131,12 @@ def _ensure_item_image_unlocked(name: str, *, fetch: bool = True) -> dict[str, A
                 if fixed and fixed != raw:
                     try:
                         existing.write_bytes(fixed)
+                        _note_image_written()
                     except Exception:
                         # Seed may be read-only — write fixed copy into writable cache.
                         dest = img_dir / f"{_slug(name)}.png"
                         dest.write_bytes(fixed)
+                        _note_image_written()
                         existing = dest
         except Exception:
             pass

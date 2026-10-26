@@ -1,0 +1,65 @@
+{
+  "zone": "Southern Desert of Ro",
+  "slug": "southern-desert-of-ro",
+  "overview": {
+    "brief": "Southern Desert of Ro between Oasis of Marr and Innothule Swamp (tools page: South Ro). Orcs, dervishes, snakes, tarantulas, undead; sand giants as roamers. EQ Legends Tools recommends 8–17.",
+    "level_requirement": "8-17",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "South Ro - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/south-ro/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/south-ro/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a Dervish Cutthroat",
+      "level": "10-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-ro/"
+      ]
+    },
+    {
+      "name": "a young ronin",
+      "level": "13-15",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-ro/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 2,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/south-ro/",
+    "inventory_mob_count": 2,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  },
+  "aliases": [
+    "Southern Desert of Ro",
+    "South Ro"
+  ]
+}

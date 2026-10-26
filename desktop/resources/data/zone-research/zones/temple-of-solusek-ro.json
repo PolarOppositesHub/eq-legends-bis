@@ -1,0 +1,45 @@
+{
+  "zone": "Temple of Solusek Ro",
+  "slug": "temple-of-solusek-ro",
+  "overview": {
+    "brief": "NPC/quest hub city in Lavastorm Mountains (class armor quests such as Darkforge). Listed on eqlwiki Recommended Levels as City type with range 50–50. No dedicated zone guide page on eqlegendstools.com (only mentioned as a Lavastorm Mountains zone connection). Inventory lists 0 BiS-source mobs.",
+    "level_requirement": "50-50",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Recommended Levels and ZEM List (eqlwiki)",
+        "url": "https://eqlwiki.com/Recommended_Levels_and_ZEM_List",
+        "preferred": true
+      },
+      {
+        "title": "Lavastorm Mountains (zone connection mention)",
+        "url": "https://eqlegendstools.com/zones/lavastorm-mountains/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Recommended_Levels_and_ZEM_List",
+      "https://eqlegendstools.com/zones/lavastorm-mountains/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": null,
+    "inventory_mob_count": 0,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were).",
+    "checked": [
+      "https://eqlegendstools.com/zones/ (no dedicated Temple of Solusek Ro card among 59 zones)",
+      "https://eqlegendstools.com/zones/lavastorm-mountains/ (lists Temple of Solusek Ro as a zone connection)",
+      "https://eqlwiki.com/Recommended_Levels_and_ZEM_List (City; Lvl Range 50-50)"
+    ]
+  }
+}

@@ -119,6 +119,13 @@ export function closeAllIds(rows, choices) {
   return list.filter((choice) => rows?.[choice.id]?.open).map((choice) => choice.id)
 }
 
+/** Meter poll. A busy parser (HTTP 503) backs off toward 8 seconds. */
+export function meterPollDelay(previous, failed) {
+  if (!failed) return 2000
+  const prev = Number(previous) || 2000
+  return Math.min(8000, Math.max(4000, prev * 2))
+}
+
 export function overlayIdFromSearch(search) {
   const params = new URLSearchParams(search || '')
   const id = params.get('overlay')

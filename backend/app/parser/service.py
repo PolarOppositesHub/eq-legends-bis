@@ -1903,19 +1903,23 @@ class EventHub:
         self._subs: list = []
         self._loop = None
 
-    def subscribe(self):
+    def subscribe(self, types: list[str] | None = None):
         import asyncio
         loop = asyncio.get_running_loop()
         queue: asyncio.Queue = asyncio.Queue(maxsize=400)
+        wanted = None
+        if types:
+            wanted = frozenset(str(item).strip() for item in types if str(item).strip())
+            if not wanted:
+                wanted = None
         with self._lock:
             self._loop = loop
-            self._subs.append(queue)
+            self._subs.append((queue, wanted))
         return queue
 
     def unsubscribe(self, queue) -> None:
         with self._lock:
-            if queue in self._subs:
-                self._subs.remove(queue)
+            self._subs = [row for row in self._subs if (row[0] if isinstance(row, tuple) else row) is not queue]
 
     def publish(self, event: dict) -> None:
         with self._lock:
@@ -1923,7 +1927,11 @@ class EventHub:
             loop = self._loop
         if not subs:
             return
-        for queue in subs:
+        etype = str(event.get("type") or "")
+        for row in subs:
+            queue, wanted = row if isinstance(row, tuple) else (row, None)
+            if wanted is not None and etype not in wanted:
+                continue
             if loop is not None and loop.is_running():
                 loop.call_soon_threadsafe(_offer, queue, event)
             else:

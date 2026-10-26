@@ -5,6 +5,8 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / 'desktop' / 'resources'
 LEGENDS = Path(os.environ.get('EQ_LEGENDS_ROOT') or (ROOT.parent / 'eq-legends'))
@@ -68,16 +70,27 @@ def main():
         help_md = ROOT / 'frontend' / 'public' / 'HELP_BUTTON.md'
     if help_md.exists():
         shutil.copy2(help_md, RES / 'data' / 'HELP_BUTTON.md')
-    # Zone research (prefer copy of symlink target for portable Windows packs)
+    # Zone research. Allowlist only, then the October update. Missing index fails the pack.
+    from app.zone_pack import install_packaged_zones
+    from app.catalog_update import merge_item_update
+
     zr = ROOT / 'data' / 'zone-research'
     if not (zr / 'zones_index.json').exists():
         zr = LEGENDS / 'zone-research'
-    if (zr / 'zones_index.json').exists():
-        dst_zr = RES / 'data' / 'zone-research'
-        if dst_zr.exists():
-            shutil.rmtree(dst_zr)
-        shutil.copytree(zr, dst_zr, ignore=lambda d, names: {n for n in names if n.startswith('.') or n.startswith('_batch')})
-        print('  zone-research ->', dst_zr)
+    external = zr if (zr / 'zones_index.json').exists() else None
+    dst_zr = RES / 'data' / 'zone-research'
+    update = ROOT / 'packaging' / 'zone-updates' / '2026-10-nektropos'
+    try:
+        install_packaged_zones(dst_zr, external, update if update.is_dir() else None)
+    except RuntimeError as exc:
+        print('ERROR:', exc)
+        return 1
+    print('  zone-research ->', dst_zr)
+    items_update = ROOT / 'packaging' / 'item-updates' / '2026-10-nektropos' / 'items.json'
+    aggregate = RES / 'data' / 'decoded' / 'aggregate.json'
+    if items_update.is_file() and aggregate.is_file():
+        added = merge_item_update(aggregate, items_update)
+        print('  nektropos items merged:', added)
     # Seed item icons so packaged installs show BiS pictures without first-run wiki fetches.
     icons_src = ROOT / 'data' / 'item-images'
     if icons_src.is_dir() and any(icons_src.glob('*.png')):

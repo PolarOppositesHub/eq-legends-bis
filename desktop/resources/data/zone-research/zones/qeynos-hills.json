@@ -1,0 +1,66 @@
+{
+  "zone": "Qeynos Hills",
+  "slug": "qeynos-hills",
+  "overview": {
+    "brief": "Wooded low-level region outside Qeynos; western Antonica crossroads to Surefall Glade, Blackburrow, and West Karana. Wildlife, undead, and gnolls; fisherman Hadden at the northwest pond. EQ Legends Tools recommends 1–7.",
+    "level_requirement": "1-7",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Qeynos Hills - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/qeynos-hills/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/qeynos-hills/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Hadden",
+      "level": 28,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/qeynos-hills/"
+      ]
+    },
+    {
+      "name": "Pyzjn",
+      "level": 13,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/qeynos-hills/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 2,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/qeynos-hills/",
+    "inventory_mob_count": 2,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "alias_merge": "Merged inventory rows 'Qeynos Hills' (Hadden) and 'The Qeynos Hills' (Pyzjn) into one canonical file."
+  },
+  "aliases": [
+    "Qeynos Hills",
+    "The Qeynos Hills"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "zone": "Ocean of Tears",
+  "slug": "ocean-of-tears",
+  "overview": {
+    "brief": "Island-dotted sea route between Faydwer (Butcherblock) and Freeport. Goblins, pirates, sirens, gargoyles, spectres, and high-level cyclopes across a wide level span. EQ Legends Tools recommends 10–48.",
+    "level_requirement": "10-48",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Ocean of Tears - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/ocean-of-tears/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/ocean-of-tears/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Antinime",
+      "level": "22-24",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/ocean-of-tears/"
+      ]
+    },
+    {
+      "name": "Euboea Delewyn",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/ocean-of-tears/"
+      ]
+    },
+    {
+      "name": "Larisa Gelrith",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/ocean-of-tears/"
+      ]
+    },
+    {
+      "name": "Oracle of K`Arnon",
+      "level": 40,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/ocean-of-tears/"
+      ]
+    },
+    {
+      "name": "Sister of Erollisi",
+      "level": "7-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/ocean-of-tears/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 5,
+    "mobs_with_level": 5,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/ocean-of-tears/",
+    "inventory_mob_count": 5,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  }
+}

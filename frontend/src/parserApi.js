@@ -158,12 +158,20 @@ export const postCompanionImport = (body) =>
   req('/api/parser/companion/import', { method: 'POST', body: JSON.stringify(body) })
 export const getCompanionPerf = () => req('/api/parser/companion/perf')
 
+/** SSE path. `events` limits the hub to those types. Empty means every event. */
+export function parserStreamPath(events) {
+  const list = Array.isArray(events) ? events : []
+  const cleaned = list.map((item) => String(item || '').trim()).filter(Boolean)
+  if (!cleaned.length) return '/api/parser/stream'
+  return `/api/parser/stream?events=${encodeURIComponent(cleaned.join(','))}`
+}
+
 /** SSE for replay progress and live fight updates. No-op when EventSource is missing. */
 export function openParserStream(handlers = {}) {
   if (typeof EventSource === 'undefined') {
     return { close() {} }
   }
-  const source = new EventSource('/api/parser/stream')
+  const source = new EventSource(parserStreamPath(handlers.events))
   const types = ['hello', 'progress', 'fight', 'live', 'reset', 'upgrade', 'roster', 'message', 'alert', 'toast']
   for (const type of types) {
     source.addEventListener(type, (ev) => {

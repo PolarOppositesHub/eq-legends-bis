@@ -1,0 +1,62 @@
+{
+  "zone": "Neriak Foreign Quarter",
+  "slug": "neriak-foreign-quarter",
+  "aliases": [],
+  "overview": {
+    "brief": "Neriak is the center of the Dark Elven empire, and is a splendid, dark city that lies carved out of the mountians next to the Nektulos Forest. No natural light has ever seen their homeland, and the dark elves thrive and flourish in their city. All manner of evil races, including the Trolls and Ogres, can be found within. Most of these are restricted to the Foreign Quarter, where the dark elves trade with the outside world. The deeper parts of the city house many of the city's shops, guild halls,",
+    "level_requirement": null,
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/Neriak_Foreign_Quarter",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Neriak_Foreign_Quarter"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "X`Ta Tempi",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": []
+    },
+    {
+      "name": "X`Ta Timpi",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": []
+    },
+    {
+      "name": "X`Ta Tompi",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": []
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

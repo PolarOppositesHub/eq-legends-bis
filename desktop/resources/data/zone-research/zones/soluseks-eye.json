@@ -1,0 +1,164 @@
+{
+  "zone": "Solusek's Eye",
+  "slug": "soluseks-eye",
+  "overview": {
+    "brief": "Volcanic goblin/kobold dungeon beneath Lavastorm (Sol A). EQ Legends Tools recommends levels 16\u201335; connects toward Nagafen's Lair.",
+    "level_requirement": "16-35",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Solusek's Eye - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/soluseks-eye/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/soluseks-eye/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "CWG Model EXG",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "Captain Bipnubble",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "Kindle",
+      "level": "28-30",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "Singe",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "Solusek Goblin King",
+      "level": "30-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "fire goblin bartender",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "goblin high shaman",
+      "level": "28-30",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "inferno goblin captain",
+      "level": "29-31",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "kobold predator",
+      "level": "30-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    },
+    {
+      "name": "reckless efreeti",
+      "level": "30-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/soluseks-eye/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 10,
+    "mobs_with_level": 10,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/soluseks-eye/",
+    "inventory_mob_count": 10,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

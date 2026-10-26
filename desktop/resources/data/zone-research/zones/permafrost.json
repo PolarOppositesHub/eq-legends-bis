@@ -1,0 +1,100 @@
+{
+  "zone": "Permafrost",
+  "slug": "permafrost",
+  "overview": {
+    "brief": "Ancient frozen fortress beneath Everfrost Peaks occupied by ice goblins serving Lady Vox. EQ Legends Tools recommends 14–26 for regular hunting; Lady Vox and some giant/priest NPCs are much higher on drop attributions.",
+    "level_requirement": "14-26",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Permafrost Keep - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/permafrost-keep/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/permafrost-keep/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "High Priest Zaharn",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/permafrost-keep/"
+      ]
+    },
+    {
+      "name": "King Thex`Ka IV",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/permafrost-keep/"
+      ]
+    },
+    {
+      "name": "Lady Vox",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/permafrost-keep/"
+      ]
+    },
+    {
+      "name": "a goblin alchemist",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/permafrost-keep/"
+      ]
+    },
+    {
+      "name": "a goblin scryer",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/permafrost-keep/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 5,
+    "mobs_with_level": 5,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/permafrost-keep/",
+    "inventory_mob_count": 5,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

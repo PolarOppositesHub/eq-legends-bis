@@ -4,11 +4,13 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import OverlayApp from './OverlayApp.jsx'
 import { formatAlertRates, formatPerSecond } from './parserView.js'
+import { parserStreamPath } from './parserApi.js'
 import {
   OVERLAY_CHOICES,
   alertSoundRoute,
   closeAllIds,
   dismissAlertContent,
+  meterPollDelay,
   meterRows,
   overlayChromeStyle,
   overlayCloseControl,
@@ -103,4 +105,14 @@ test('overlay route ids include the meters and the tracking cards', () => {
   assert.equal(overlayIdFromSearch('?overlay=con'), 'con')
   assert.equal(overlayIdFromSearch('?overlay=buffs'), 'buffs')
   assert.equal(overlayIdFromSearch('?overlay=nope'), '')
+})
+
+test('meter polls back off when the parser is busy and overlays can listen for alerts only', () => {
+  assert.equal(meterPollDelay(2000, false), 2000)
+  assert.equal(meterPollDelay(2000, true), 4000)
+  assert.equal(meterPollDelay(4000, true), 8000)
+  assert.equal(meterPollDelay(8000, true), 8000)
+  assert.equal(parserStreamPath(undefined), '/api/parser/stream')
+  assert.equal(parserStreamPath(['alert']), '/api/parser/stream?events=alert')
+  assert.equal(parserStreamPath(['progress', 'upgrade']), '/api/parser/stream?events=progress%2Cupgrade')
 })

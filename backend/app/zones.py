@@ -15,6 +15,7 @@ def zone_research_dir() -> Path:
     root = app_root()
     for cand in (
         root / "data" / "zone-research",
+        root / "desktop" / "resources" / "data" / "zone-research",
         root / "resources" / "data" / "zone-research",
         legends_root().parent / "eq-legends" / "zone-research",
         Path("/workspace/eq-legends/zone-research"),

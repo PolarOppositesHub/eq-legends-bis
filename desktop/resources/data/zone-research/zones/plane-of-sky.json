@@ -1,0 +1,450 @@
+{
+  "zone": "Plane of Sky",
+  "slug": "plane-of-sky",
+  "overview": {
+    "brief": "Floating islands with keyed island-to-island progression and class quest rewards. EQ Legends Tools lists Levels 46+; many trash/named listed as level 50+ on drop tables, with Keeper of Souls / Hand of Veeshan / Noble Dojorn at 63.",
+    "level_requirement": "46+",
+    "access_keys": [
+      {
+        "name": "Island keys (progression)",
+        "required": true,
+        "notes": "Zone uses keyed progression from island to island per EQ Legends Tools overview. Exact key item names/order not fully extracted in this batch\u2014see walkthrough sources.",
+        "source_url": "https://eqlegendstools.com/zones/plane-of-sky/"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Plane of Sky - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/plane-of-sky/",
+        "preferred": true
+      },
+      {
+        "title": "EQ Legends Planes guide",
+        "url": "https://eqlegends.wiki/guide/planes/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/plane-of-sky/",
+      "https://eqlegends.wiki/guide/planes/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Bazzt Zzzt",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Bazzzazzt",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Bizazzt",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Bzzzt",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Gorgalosk",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Gorgolosk",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Keeper of Souls",
+      "level": 63,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Noble Dojorn",
+      "level": 63,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Overseer of Air",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Protector of Sky",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "Sister of the Spire",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "The Hand of Veeshan",
+      "level": 63,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "The Spiroc Lord",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a crystalline cloud",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a fatestealer drake",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a gorgalask",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a greater sphinx",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a gust of wind",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a heartsbane drake",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a soul harvester",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a sprited harpie",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a thunder spirit",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a thunder spirit princess",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a watchful guard",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "a windrider drake",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "an azarack",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "an essence carrier",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "an essence tamer",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "an undine spirit",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "heart harpie",
+      "level": "50+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    },
+    {
+      "name": "various trash and named mobs",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-sky/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 31,
+    "mobs_with_level": 23,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/plane-of-sky/",
+    "inventory_mob_count": 31,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}
