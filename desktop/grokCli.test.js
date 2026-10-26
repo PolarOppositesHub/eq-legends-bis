@@ -106,7 +106,9 @@ test('detect strips the API key and reads cached_token from initialize', async (
   let seenEnv = null
   const spawn = (cmd, args, opts) => {
     const child = fakeChild()
-    seenEnv = opts.env
+    // Windows cleanup calls this same spawn for taskkill. That call is not the grok env.
+    if (cmd !== 'grok') return child
+    seenEnv = opts && opts.env
     if (args[0] === 'version') {
       process.nextTick(() => child.emit('close', 0))
       return child
