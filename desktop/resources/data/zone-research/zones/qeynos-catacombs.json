@@ -1,0 +1,53 @@
+{
+  "zone": "Qeynos Catacombs",
+  "slug": "qeynos-catacombs",
+  "overview": {
+    "brief": "Abandoned waterworks and catacombs beneath Qeynos (tools/wiki page title: Qeynos Aqueducts). Early tunnels of rats/bats/beetles; deeper smugglers, undead, frogloks, cultists, gelatinous cubes. EQ Legends Tools recommends 3–13.",
+    "level_requirement": "3-13",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Qeynos Aqueducts - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/qeynos-aqueducts/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/qeynos-aqueducts/",
+      "https://eqlegendstools.com/zones/",
+      "https://eqlwiki.com/Qeynos_Aqueducts"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a gelatinous cube",
+      "level": "4-6",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/qeynos-aqueducts/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/qeynos-aqueducts/",
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  },
+  "aliases": [
+    "Qeynos Catacombs",
+    "Qeynos Aqueducts"
+  ]
+}

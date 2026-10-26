@@ -1,0 +1,61 @@
+{
+  "zone": "Oasis of Marr",
+  "slug": "oasis-of-marr",
+  "overview": {
+    "brief": "Palm-lined lake and desert corridor between Northern and Southern Deserts of Ro. Recommended 10–20 on EQ Legends Tools.",
+    "level_requirement": "10-20",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Oasis of Marr - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/oasis-of-marr/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/oasis-of-marr/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Hatar",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/oasis-of-marr/"
+      ]
+    },
+    {
+      "name": "Lockjaw",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/oasis-of-marr/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 2,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/oasis-of-marr/",
+    "inventory_mob_count": 2,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

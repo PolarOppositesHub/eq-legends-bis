@@ -1,0 +1,207 @@
+{
+  "zone": "Kedge Keep",
+  "slug": "kedge-keep",
+  "overview": {
+    "brief": "Drowned fortress under Dagnor's Cauldron; nearly the entire adventure is underwater. Flagged raid/EXP on EQ Legends Tools; recommended 37–45.",
+    "level_requirement": "37-45",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Kedge Keep - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/kedge-keep/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/kedge-keep/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Advisor C`Zatl",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Cauldronboil",
+      "level": 49,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "Cauldronbubble",
+      "level": 49,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "Coercer Q`ioul",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Phinigel Autropos",
+      "level": 53,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "Shellara Ebbhunter",
+      "level": 46,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "Swirlspine Guardian",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "Undertow",
+      "level": 49,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "a fierce impaler",
+      "level": 42,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "a frenzied bull shark",
+      "level": 32,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "a frenzied cauldron shark",
+      "level": 42,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "a seahorse matriarch",
+      "level": 47,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    },
+    {
+      "name": "a seahorse patriarch",
+      "level": 47,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kedge-keep/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 13,
+    "mobs_with_level": 11,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/kedge-keep/",
+    "inventory_mob_count": 13,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were).",
+    "access_keys": "No zone key requirement stated on https://eqlegendstools.com/zones/kedge-keep/ (checked). Water breathing not a key."
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "zone": "Befallen",
+  "slug": "befallen",
+  "overview": {
+    "brief": "Ruined multi-level crypt under West Commonlands packed with undead and dark cultists. EQ Legends revamped dungeon; recommended 6–25. Deeper floors revolve around keys carried by shadow knights.",
+    "level_requirement": "6-25",
+    "access_keys": [
+      {
+        "name": "Shadow knight floor keys",
+        "required": true,
+        "notes": "EQ Legends Tools: progression through deeper floors revolves around keys carried by shadow knights. Specific key item names not fully cataloged on the zone page.",
+        "source_url": "https://eqlegendstools.com/zones/befallen/"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Befallen - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/befallen/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/befallen/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Greater Skeleton - confirmed drop in EQL",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "A Necromancer",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Akksstaff",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Arisen Thaumaturgist",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "Baron Telyx V`Zher",
+      "level": 28,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "Footman of V`Zher",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "Rathyl",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Skeleton Lrodd",
+      "level": "11-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "Soldier of V`Zher",
+      "level": 26,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "a festering hag",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "a magician",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "a necro acolyte",
+      "level": "15-17",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "a necro theurgist",
+      "level": "16-17",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "a necromancer",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "a shadowknight (Dark Elf Female)",
+      "level": "10-14",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "a shadowknight (Ogre)",
+      "level": "12-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    },
+    {
+      "name": "the thaumaturgist",
+      "level": "18-19",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/befallen/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 17,
+    "mobs_with_level": 10,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/befallen/",
+    "inventory_mob_count": 17,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

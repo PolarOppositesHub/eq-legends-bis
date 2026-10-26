@@ -1,0 +1,61 @@
+{
+  "zone": "New Sebilis Expedition",
+  "slug": "new-sebilis-expedition",
+  "overview": {
+    "brief": "EQ Legends Iksar starting settlement / expedition outpost over ruins beneath the Desert of Ro (connects to North Ro). Protected vendor areas plus beginner dungeon of undead, ghosts, spiderlings, and failed experiments. EQ Legends Tools recommends 1–12.",
+    "level_requirement": "1-12",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "New Sebilis Expedition - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/new-sebilis-expedition/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/new-sebilis-expedition/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Vitrified Skeleton",
+      "level": "10-15",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/new-sebilis-expedition/"
+      ]
+    },
+    {
+      "name": "Flaming Wraith",
+      "level": "10-15",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/new-sebilis-expedition/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 2,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/new-sebilis-expedition/",
+    "inventory_mob_count": 2,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  }
+}

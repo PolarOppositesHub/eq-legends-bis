@@ -1,0 +1,740 @@
+{
+  "zone": "Plane of Hate",
+  "slug": "plane-of-hate",
+  "overview": {
+    "brief": "Raid plane home to Innoruuk and his minions. In EverQuest Legends, public entry is via the Oasis of Marr Spectre Isle tower flaming sword; raid instances use the nearby Voidling. Minimum player level 46+.",
+    "level_requirement": "46+",
+    "access_keys": [
+      {
+        "name": "No zone key required",
+        "required": false,
+        "notes": "Entry via Oasis of Marr tower flaming sword (public) or Voidling (raid); wizard Alter Plane: Hate with Fuligan Soulstone also works. Characters below 46 cannot enter.",
+        "source_url": "https://eqlwiki.com/Plane_of_Hate"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Plane of Hate - EverQuest Legends Wiki",
+        "url": "https://eqlwiki.com/Plane_of_Hate",
+        "preferred": true
+      },
+      {
+        "title": "How to Start Raiding / Voidling locations",
+        "url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+        "preferred": false
+      },
+      {
+        "title": "EQ Legends Planes guide",
+        "url": "https://eqlegends.wiki/guide/planes/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [
+      {
+        "url": "https://eqlwiki.com/Plane_of_Hate",
+        "description": "First and second floor maps hosted on eqlwiki Plane of Hate page",
+        "license_note": "Fan wiki; verify license before redistributing map images"
+      }
+    ],
+    "sources": [
+      "https://eqlegendstools.com/zones/plane-of-hate/",
+      "https://eqlwiki.com/Plane_of_Hate",
+      "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+      "https://eqlegends.wiki/guide/planes/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "An Agent of Innoruuk",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Ashenbone Broodmaster",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "(-1, -263)",
+        "coords": {
+          "x": -1.0,
+          "y": -263.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Avatar of Abhorrence",
+      "level": 58,
+      "spawn": {
+        "known": true,
+        "notes": "(-117, -65, 50) - Upstairs of Cathedral on 1st level",
+        "coords": {
+          "x": -117.0,
+          "y": -65.0,
+          "z": 50.0
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Cleric of Innoruuk",
+      "level": 49,
+      "spawn": {
+        "known": true,
+        "notes": "Various locations on the lower floor",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Grandmaster R`Tal",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "Always @ (-64, -452) 2nd Floor",
+        "coords": {
+          "x": -64.0,
+          "y": -452.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Innoruuk",
+      "level": 60,
+      "spawn": {
+        "known": true,
+        "notes": "230, 10, 150 (second floor)",
+        "coords": {
+          "x": 230.0,
+          "y": 10.0,
+          "z": 150.0
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Innoruuk (God)",
+      "level": 60,
+      "spawn": {
+        "known": true,
+        "notes": "230, 10, 150 (second floor)",
+        "coords": {
+          "x": 230.0,
+          "y": 10.0,
+          "z": 150.0
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Innoruuk's Chosen",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "Various (2nd floor)",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Lord of Ire",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "-352, -165 1st floor",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Lord of Loathing",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "100% @ (344, 227)",
+        "coords": {
+          "x": 344.0,
+          "y": 227.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Maestro of Rancor",
+      "level": "52-53",
+      "spawn": {
+        "known": true,
+        "notes": "100% @ (-82, 295) Organ Hall",
+        "coords": {
+          "x": -82.0,
+          "y": 295.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Magi P`Tasa",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "(-371, -164) Upstairs",
+        "coords": {
+          "x": -371.0,
+          "y": -164.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "Mistress of Scorn",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "100% @ (-136, -181) 2nd Floor",
+        "coords": {
+          "x": -136.0,
+          "y": -181.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a Champion of Innoruuk",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple static locations listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a Disciple of Innoruuk",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple static locations listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a Knight of Innoruuk",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple static locations listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a Sage of Innoruuk",
+      "level": 56,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple static locations listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a boogeyman",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a decrepit warder",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a fetid fiend",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a forsaken revenant",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Various static and roaming spawns inside buildings",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a frightfinger",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a glare lord",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a gorgon",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a kiraikuei",
+      "level": "48-50",
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a loathling lich",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a nightmare",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a phantasm",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a revultant rat",
+      "level": "49-55",
+      "spawn": {
+        "known": true,
+        "notes": "Location not detailed beyond zone spawn",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a samhain",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a scareling",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a scorn banshee",
+      "level": "47-51",
+      "spawn": {
+        "known": true,
+        "notes": "Various static spawns among buildings on lower floor",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a shiverback",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a spinechiller spider",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a spite golem",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "Various - static spawns and roamers",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a tentacle tormentor",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a turmoil toad",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "a worry wraith",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "amygdalan knight",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "amygdalan warrior",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/",
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "an Agent of Innoruuk",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "Various",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "an abhorrent",
+      "level": 49,
+      "spawn": {
+        "known": true,
+        "notes": "Various static locations throughout lower floor houses",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "an ashenbone drake",
+      "level": 51,
+      "spawn": {
+        "known": true,
+        "notes": "34% @ (-1, -263), (40, -55), (-374, 117)",
+        "coords": {
+          "x": -1.0,
+          "y": -263.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "an elite dragoon",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple static locations listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "an ire ghast",
+      "level": 50,
+      "spawn": {
+        "known": true,
+        "notes": "Various - static in houses and roamers",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "class-specific mini-bosses",
+      "level": "48+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/"
+      ]
+    },
+    {
+      "name": "haunted chest",
+      "level": 50,
+      "spawn": {
+        "known": true,
+        "notes": "Multiple % spawn locations in houses listed on wiki",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlwiki.com/Plane_of_Hate"
+      ]
+    },
+    {
+      "name": "various mobs",
+      "level": "48+",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Plane_of_Hate"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/plane-of-hate/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 48,
+    "mobs_with_level": 31,
+    "mobs_with_spawn": 29,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/plane-of-hate/",
+    "inventory_mob_count": 48,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

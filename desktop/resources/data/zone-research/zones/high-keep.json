@@ -1,0 +1,82 @@
+{
+  "zone": "High Keep",
+  "slug": "high-keep",
+  "overview": {
+    "brief": "Fortified keep overlooking Highpass Hold (tools page title: Highpass Keep). Upper civilized areas; lower passages with Pickclaw goblins, prisoners, smugglers, and rogues. EQ Legends Tools recommends 25–30. Wiki Recommended Levels lists High Keep as City 20–30.",
+    "level_requirement": "25-30",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Highpass Keep - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/highpass-keep/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/highpass-keep/",
+      "https://eqlegendstools.com/zones/",
+      "https://eqlwiki.com/High_Keep",
+      "https://eqlwiki.com/Recommended_Levels_and_ZEM_List"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Dyrna Nlith",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/highpass-keep/"
+      ]
+    },
+    {
+      "name": "Najena (NPC)",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/highpass-keep/"
+      ]
+    },
+    {
+      "name": "Tyrana Slil",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/highpass-keep/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/highpass-keep/",
+    "inventory_mob_count": 3,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "level_gaps": "Najena (NPC) appears in inventory under High Keep but is not leveled on the Highpass Keep tools page (likely cross-zone contamination); left null.",
+    "access_keys": "No zone-entry keys cataloged on tools page. Wiki mentions a quest key for a locked room (Tearon's Skeleton) — not treated as zone access."
+  },
+  "aliases": [
+    "Highpass Keep",
+    "High Keep"
+  ]
+}

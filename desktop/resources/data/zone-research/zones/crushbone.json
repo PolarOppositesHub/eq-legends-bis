@@ -1,0 +1,242 @@
+{
+  "zone": "Crushbone",
+  "slug": "crushbone",
+  "overview": {
+    "brief": "Fortified Crushbone orc clan dungeon in Greater Faydark. EQ Legends revamped with additional named enemies and loot; recommended range 5\u201317, with named encounters reaching roughly level 20.",
+    "level_requirement": "5-17",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Crushbone - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/crushbone/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/crushbone/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Ambassador DVinn",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Bloodgurgler",
+      "level": 19,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Bonefire",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Chokehold",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Emperor Crush",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Joren Nobleheart",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Lord Darish",
+      "level": "14-17",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "Marrowbane",
+      "level": "19-21",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "The Prophet",
+      "level": 17,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "an orc legionnaire",
+      "level": "12-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc legionnaire",
+      "level": "12-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc oracle",
+      "level": "19-21",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc slaver",
+      "level": "6-8",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc taskmaster",
+      "level": 12,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc trainer",
+      "level": 13,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    },
+    {
+      "name": "orc warlord",
+      "level": 16,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/crushbone/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 16,
+    "mobs_with_level": 15,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/crushbone/",
+    "inventory_mob_count": 16,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

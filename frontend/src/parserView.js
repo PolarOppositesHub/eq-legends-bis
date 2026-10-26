@@ -30,7 +30,7 @@ export const WHATS_NEW_POINTS = [
   'Installing Grok Build runs only after you confirm. Sign-in uses your own account. No API key. In-app answers are Beta, read-only, and can be cancelled. If Grok stops, copy the pack instead.',
   'The API health check answers in about 0.01s. Before this build the import took 0.71s before health could answer. Empty Item Search went from 4.11s to 0.15s, and the next search of that catalog was 0.01s.',
   'While a parser rebuild is running, the wait screen skips the blur and the sliding bar. Meter overlays back off when the parser is busy and listen only for alerts.',
-  'This install includes zone files for Nektropos Castle and Lake Nerius (28 mobs). Other zones stay unknown. A source conflict stays flagged and is not resolved.',
+  'This install includes the sourced zone files: 56 zones and 448 mobs, including Nektropos Castle and Lake Nerius. A source conflict stays flagged and is not resolved.',
 ]
 
 export function currentClassText(current) {

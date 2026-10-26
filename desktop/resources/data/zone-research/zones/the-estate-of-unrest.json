@@ -1,0 +1,190 @@
+{
+  "zone": "The Estate of Unrest",
+  "slug": "the-estate-of-unrest",
+  "overview": {
+    "brief": "Revamped haunted estate dungeon on Faydwer. Recommended levels 10\u201330 per EQ Legends Tools. Patch notes: some doors locked\u2014adventurers need keys to navigate the estate.",
+    "level_requirement": "10-30",
+    "access_keys": [
+      {
+        "name": "Estate door keys",
+        "required": true,
+        "notes": "Patch notes state Unrest keeps some doors locked and adventurers should find keys to navigate. Specific key item names not sourced in this batch.",
+        "source_url": "https://eqlwiki.com/Patch_Notes"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "The Estate of Unrest - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/estate-of-unrest/",
+        "preferred": true
+      },
+      {
+        "title": "Patch Notes (Unrest keys)",
+        "url": "https://eqlwiki.com/Patch_Notes",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/estate-of-unrest/",
+      "https://eqlwiki.com/Patch_Notes",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Garanel Rucksif",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "Khrix Fritchoff",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "a festering hag",
+      "level": "28-30",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "a priest of najena",
+      "level": "29-31",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "a reanimated hand",
+      "level": 21,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "a reanimated hand (Unrest)",
+      "level": 21,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "a zombie of an unrest noble",
+      "level": "24-26",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "an undead barkeep",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "an undead brewer",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "an undead knight of Unrest",
+      "level": 28,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    },
+    {
+      "name": "reclusive ghoul magus",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/estate-of-unrest/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 11,
+    "mobs_with_level": 11,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/estate-of-unrest/",
+    "inventory_mob_count": 11,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

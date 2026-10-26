@@ -1,0 +1,42 @@
+{
+  "zone": "Butcherblock Mountains",
+  "slug": "butcherblock-mountains",
+  "aliases": [],
+  "overview": {
+    "brief": "Butcherblock Mountains is a rugged coastal region surrounding the dwarven homeland of Kaladim, with broad newbie hunting grounds that give way to goblin camps, bandits and dangerous undead pockets. The open terrain makes it easy to move between camps, while the docks on the eastern coast connect Faydwer to the Ocean of Tears. The recommended range is 1\u20138 for ordinary progression, though several isolated camps and named creatures are substantially higher level.",
+    "level_requirement": "1-8",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Butcherblock Mountains - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/butcherblock-mountains/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/butcherblock-mountains/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a goblin shaman; a goblin wizard",
+      "level": "9\u201313",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/butcherblock-mountains/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

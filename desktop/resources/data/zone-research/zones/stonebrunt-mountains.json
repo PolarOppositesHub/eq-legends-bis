@@ -1,0 +1,68 @@
+{
+  "zone": "Stonebrunt Mountains",
+  "slug": "stonebrunt-mountains",
+  "aliases": [],
+  "overview": {
+    "brief": "Stonebrunt Mountains is a vast wilderness beyond The Warrens, shifting from jungle into valleys, rocky mountains and snowy highlands. Highland kobolds are common, but the zone also contains Kejekans, pandas, leopards, tigers, gorillas and powerful wandering Ancients, with long stretches of open terrain between camps. The typical progression range is 14\u201328. Some roaming creatures and named encounters are considerably more dangerous than the ordinary camps.",
+    "level_requirement": "14-28",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Stonebrunt Mountains - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/stonebrunt-mountains/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/stonebrunt-mountains/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a highland kobold",
+      "level": "22\u201324",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/stonebrunt-mountains/"
+      ]
+    },
+    {
+      "name": "a highland kobold shaman",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/stonebrunt-mountains/"
+      ]
+    },
+    {
+      "name": "a raging highland kobold",
+      "level": "25\u201327",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/stonebrunt-mountains/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "zone": "The Feerrott",
+  "slug": "the-feerrott",
+  "overview": {
+    "brief": "Dark jungle/swamp around Oggok and the Temple of Cazic-Thule; connects also toward Rathe Mountains, Innothule, and Plane of Fear. Lizard men, spiders, alligators, undead, and spectres. EQ Legends Tools recommends 1–9 (page title: Feerrott).",
+    "level_requirement": "1-9",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Feerrott - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/feerrott/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/feerrott/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a lizardman mystic",
+      "level": "3-11",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/feerrott/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/feerrott/",
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  },
+  "aliases": [
+    "The Feerrott",
+    "Feerrott"
+  ]
+}

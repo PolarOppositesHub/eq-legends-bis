@@ -1,0 +1,53 @@
+{
+  "zone": "Kerra Island",
+  "slug": "kerra-isle",
+  "overview": {
+    "brief": "Kerran settlement and hunting area off western Toxxulia Forest (EQ Legends Tools title: Kerra Island; batch-2 inventory label: Kerra Isle). Faction-sensitive Kerrans and island wildlife; Talisman of Kejaar Kerrath quest attraction. EQ Legends Tools recommends 6–19.",
+    "level_requirement": "6-19",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Kerra Island - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/kerra-island/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/kerra-island/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Shazda Asad",
+      "level": 23,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kerra-island/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/kerra-island/",
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2/3 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were).",
+    "batch_merge": "Updated batch-2 kerra-isle.json for batch-3 Kerra Island inventory (Shazda Asad). Canonical name Kerra Island; aliases include Kerra Isle."
+  },
+  "aliases": [
+    "Kerra Island",
+    "Kerra Isle"
+  ]
+}

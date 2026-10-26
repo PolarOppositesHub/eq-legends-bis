@@ -1,0 +1,398 @@
+{
+  "zone": "The Hole",
+  "slug": "the-hole",
+  "overview": {
+    "brief": "High-level Odus dungeon / raid zone with elementals, ratmen, and Master Yael. EQ Legends Tools lists Levels 40\u201350; Yael raid Voidling sits outside the normal Hole entrance in Paineel.",
+    "level_requirement": "40-50",
+    "access_keys": [
+      {
+        "name": "Master Yael Voidling (raid instance)",
+        "required": false,
+        "notes": "Voidling outside the normal Hole entrance in Paineel for Yael raid instance (itemlevel guide).",
+        "source_url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "The Hole - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/the-hole/",
+        "preferred": true
+      },
+      {
+        "title": "Voidling locations",
+        "url": "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/the-hole/",
+      "https://itemlevel.net/how-to-start-raiding-in-everquest-legends-every-voidling-location/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Ratman Warrior",
+      "level": "45-50",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Bejeweled Elemental",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Commander Yarik",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Dartain the Lost",
+      "level": "55-56",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Gibartik",
+      "level": "48-49",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Initiate Sirlis",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Irslak the Wretched",
+      "level": 50,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Master Yael",
+      "level": 56,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Niltoth the Unholy",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Retseth Tretse",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Rocksoul",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Slizik the Mighty",
+      "level": 54,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Stonegrinder Minion",
+      "level": 49,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Stonesoul the Unmoving",
+      "level": "44-46",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "Ulrik the Devout",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "a revenant",
+      "level": "49-54",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "a rock golem",
+      "level": "48-54",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "a wanderer",
+      "level": "51-54",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental capturer",
+      "level": "43-47",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental channeler",
+      "level": "40-44",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental crusader",
+      "level": "40-44",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental deceiver",
+      "level": "39-44",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental harvester",
+      "level": "43-47",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental visier",
+      "level": "38-45",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental warrior",
+      "level": "38-42",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "an elemental wizard",
+      "level": "43-46",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    },
+    {
+      "name": "muck covered elemental",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/the-hole/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 27,
+    "mobs_with_level": 23,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/the-hole/",
+    "inventory_mob_count": 27,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

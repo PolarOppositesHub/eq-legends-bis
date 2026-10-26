@@ -1,0 +1,326 @@
+{
+  "zone": "Blackburrow",
+  "slug": "blackburrow",
+  "overview": {
+    "brief": "Blackburrow gnoll stronghold linking Qeynos Hills and Everfrost. EQ Legends revamped population/loot for levels 5\u201320 progression beyond classic low teens.",
+    "level_requirement": "5-20",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Blackburrow - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/blackburrow/",
+        "preferred": true
+      },
+      {
+        "title": "Patch Notes (Blackburrow revamp)",
+        "url": "https://eqlwiki.com/Patch_Notes",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/blackburrow/",
+      "https://eqlwiki.com/Patch_Notes",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Gnoll Commander",
+      "level": 14,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Lord Elgnub",
+      "level": 22,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Lord Elgnub (rare drop)",
+      "level": 22,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Mannan of the Sabertooth",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Master Brewer",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Mooto; a goblin shaman",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Refugee Splitpaw",
+      "level": 14,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Refugee Splitpaw (Monk)",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Sabertooth Clan Necromancer",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Sabertooth Overseer",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Socho Darkpaw",
+      "level": 13,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Splitpaw Commander",
+      "level": 14,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Splitpaw Explorer",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Splitpaw Sharpshooter",
+      "level": 20,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "The gnoll high shaman",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "Tranixx Darkpaw",
+      "level": 17,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "a giant plague rat",
+      "level": 10,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "a gnoll commander",
+      "level": 14,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "a goblin shaman; a goblin wizard",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "an elite gnoll guard",
+      "level": "11-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "the gnoll high shaman",
+      "level": 15,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    },
+    {
+      "name": "various gnolls",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/blackburrow/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 22,
+    "mobs_with_level": 19,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/blackburrow/",
+    "inventory_mob_count": 22,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

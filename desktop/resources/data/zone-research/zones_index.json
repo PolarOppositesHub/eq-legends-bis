@@ -1,9 +1,589 @@
 {
-  "batches": "update_2026-10_nektropos",
-  "generated": "2026-10-25",
-  "zone_file_count": 2,
-  "note": "Patch 2026-10-22 (Nektropos release) + 2026-10-23 hotfix. Nektropos Undercroft (Ayr'Haeth starting area) not cataloged anywhere yet.",
+  "batches": "1+2+3+4, update_2026-10_nektropos",
+  "generated": "2026-09-06",
+  "zone_file_count": 56,
+  "note": "Canonical from zones/*.json including batch4 leftovers. Prefer _canonical_deliverable/ if live aggregates race.",
   "zones": [
+    {
+      "zone": "Befallen",
+      "slug": "befallen",
+      "path": "/workspace/eq-legends/zone-research/zones/befallen.json",
+      "status": "partial",
+      "mobs_total": 17,
+      "mobs_with_level": 10,
+      "mobs_with_spawn": 0,
+      "level_requirement": "6-25"
+    },
+    {
+      "zone": "Blackburrow",
+      "slug": "blackburrow",
+      "path": "/workspace/eq-legends/zone-research/zones/blackburrow.json",
+      "status": "partial",
+      "mobs_total": 22,
+      "mobs_with_level": 19,
+      "mobs_with_spawn": 0,
+      "level_requirement": "5-20"
+    },
+    {
+      "zone": "Butcherblock Mountains",
+      "slug": "butcherblock-mountains",
+      "path": "/workspace/eq-legends/zone-research/zones/butcherblock-mountains.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-8"
+    },
+    {
+      "zone": "Cazic Thule",
+      "slug": "cazic-thule",
+      "path": "/workspace/eq-legends/zone-research/zones/cazic-thule.json",
+      "status": "partial",
+      "mobs_total": 8,
+      "mobs_with_level": 8,
+      "mobs_with_spawn": 0,
+      "level_requirement": "18-33"
+    },
+    {
+      "zone": "Clan Runnyeye",
+      "slug": "clan-runnyeye",
+      "path": "/workspace/eq-legends/zone-research/zones/clan-runnyeye.json",
+      "status": "partial",
+      "mobs_total": 16,
+      "mobs_with_level": 9,
+      "mobs_with_spawn": 0,
+      "level_requirement": "10-24"
+    },
+    {
+      "zone": "Crushbone",
+      "slug": "crushbone",
+      "path": "/workspace/eq-legends/zone-research/zones/crushbone.json",
+      "status": "partial",
+      "mobs_total": 16,
+      "mobs_with_level": 15,
+      "mobs_with_spawn": 0,
+      "level_requirement": "5-17"
+    },
+    {
+      "zone": "Dagnor's Cauldron",
+      "slug": "dagnors-cauldron",
+      "path": "/workspace/eq-legends/zone-research/zones/dagnors-cauldron.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "15-20"
+    },
+    {
+      "zone": "East Karana",
+      "slug": "east-karana",
+      "path": "/workspace/eq-legends/zone-research/zones/east-karana.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "8-20",
+      "aliases": [
+        "Eastern Karana",
+        "Eastern Plains of Karana"
+      ]
+    },
+    {
+      "zone": "Erudin Palace",
+      "slug": "erudin-palace",
+      "path": "/workspace/eq-legends/zone-research/zones/erudin-palace.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-5"
+    },
+    {
+      "zone": "Everfrost Peaks",
+      "slug": "everfrost-peaks",
+      "path": "/workspace/eq-legends/zone-research/zones/everfrost-peaks.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-20"
+    },
+    {
+      "zone": "Firiona Vie",
+      "slug": "firiona-vie",
+      "path": "/workspace/eq-legends/zone-research/zones/firiona-vie.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": null
+    },
+    {
+      "zone": "Gorge of King Xorbb (Beholder's Maze)",
+      "slug": "gorge-of-king-xorbb",
+      "path": "/workspace/eq-legends/zone-research/zones/gorge-of-king-xorbb.json",
+      "status": "partial",
+      "mobs_total": 4,
+      "mobs_with_level": 4,
+      "mobs_with_spawn": 0,
+      "level_requirement": "12-18",
+      "aliases": [
+        "Beholder's Maze",
+        "Gorge of King Xorbb (Beholder's Maze)",
+        "Gorge of King Xorbb"
+      ]
+    },
+    {
+      "zone": "High Keep",
+      "slug": "high-keep",
+      "path": "/workspace/eq-legends/zone-research/zones/high-keep.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "25-30",
+      "aliases": [
+        "Highpass Keep",
+        "High Keep"
+      ]
+    },
+    {
+      "zone": "Kedge Keep",
+      "slug": "kedge-keep",
+      "path": "/workspace/eq-legends/zone-research/zones/kedge-keep.json",
+      "status": "partial",
+      "mobs_total": 13,
+      "mobs_with_level": 11,
+      "mobs_with_spawn": 0,
+      "level_requirement": "37-45"
+    },
+    {
+      "zone": "Kerra Island",
+      "slug": "kerra-isle",
+      "path": "/workspace/eq-legends/zone-research/zones/kerra-isle.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "6-19",
+      "aliases": [
+        "Kerra Island",
+        "Kerra Isle"
+      ]
+    },
+    {
+      "zone": "Kithicor Forest",
+      "slug": "kithicor-forest",
+      "path": "/workspace/eq-legends/zone-research/zones/kithicor-forest.json",
+      "status": "partial",
+      "mobs_total": 2,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "5-10"
+    },
+    {
+      "zone": "Lake Rathetear",
+      "slug": "lake-rathetear",
+      "path": "/workspace/eq-legends/zone-research/zones/lake-rathetear.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "9-16"
+    },
+    {
+      "zone": "Lesser Faydark",
+      "slug": "lesser-faydark",
+      "path": "/workspace/eq-legends/zone-research/zones/lesser-faydark.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "8-13"
+    },
+    {
+      "zone": "Lower Guk",
+      "slug": "lower-guk",
+      "path": "/workspace/eq-legends/zone-research/zones/lower-guk.json",
+      "status": "partial",
+      "mobs_total": 25,
+      "mobs_with_level": 22,
+      "mobs_with_spawn": 2,
+      "level_requirement": "28-44"
+    },
+    {
+      "zone": "Mistmoore Castle",
+      "slug": "mistmoore-castle",
+      "path": "/workspace/eq-legends/zone-research/zones/mistmoore-castle.json",
+      "status": "partial",
+      "mobs_total": 11,
+      "mobs_with_level": 11,
+      "mobs_with_spawn": 0,
+      "level_requirement": "18-35"
+    },
+    {
+      "zone": "Misty Thicket",
+      "slug": "misty-thicket",
+      "path": "/workspace/eq-legends/zone-research/zones/misty-thicket.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-10"
+    },
+    {
+      "zone": "Nagafen's Lair",
+      "slug": "nagafens-lair",
+      "path": "/workspace/eq-legends/zone-research/zones/nagafens-lair.json",
+      "status": "partial",
+      "mobs_total": 12,
+      "mobs_with_level": 12,
+      "mobs_with_spawn": 0,
+      "level_requirement": "34-47"
+    },
+    {
+      "zone": "Najena",
+      "slug": "najena",
+      "path": "/workspace/eq-legends/zone-research/zones/najena.json",
+      "status": "partial",
+      "mobs_total": 19,
+      "mobs_with_level": 19,
+      "mobs_with_spawn": 0,
+      "level_requirement": "11-27"
+    },
+    {
+      "zone": "Neriak Foreign Quarter",
+      "slug": "neriak-foreign-quarter",
+      "path": "/workspace/eq-legends/zone-research/zones/neriak-foreign-quarter.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": null
+    },
+    {
+      "zone": "Neriak Third Gate",
+      "slug": "neriak-third-gate",
+      "path": "/workspace/eq-legends/zone-research/zones/neriak-third-gate.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 1,
+      "level_requirement": "1-5"
+    },
+    {
+      "zone": "New Sebilis Expedition",
+      "slug": "new-sebilis-expedition",
+      "path": "/workspace/eq-legends/zone-research/zones/new-sebilis-expedition.json",
+      "status": "partial",
+      "mobs_total": 2,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-12"
+    },
+    {
+      "zone": "Northern Desert of Ro",
+      "slug": "northern-desert-of-ro",
+      "path": "/workspace/eq-legends/zone-research/zones/northern-desert-of-ro.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-11",
+      "aliases": [
+        "Northern Desert of Ro",
+        "North Ro"
+      ]
+    },
+    {
+      "zone": "Oasis of Marr",
+      "slug": "oasis-of-marr",
+      "path": "/workspace/eq-legends/zone-research/zones/oasis-of-marr.json",
+      "status": "partial",
+      "mobs_total": 2,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "10-20"
+    },
+    {
+      "zone": "Ocean of Tears",
+      "slug": "ocean-of-tears",
+      "path": "/workspace/eq-legends/zone-research/zones/ocean-of-tears.json",
+      "status": "partial",
+      "mobs_total": 5,
+      "mobs_with_level": 5,
+      "mobs_with_spawn": 0,
+      "level_requirement": "10-48"
+    },
+    {
+      "zone": "Permafrost",
+      "slug": "permafrost",
+      "path": "/workspace/eq-legends/zone-research/zones/permafrost.json",
+      "status": "partial",
+      "mobs_total": 5,
+      "mobs_with_level": 5,
+      "mobs_with_spawn": 0,
+      "level_requirement": "14-26"
+    },
+    {
+      "zone": "Plane of Fear",
+      "slug": "plane-of-fear",
+      "path": "/workspace/eq-legends/zone-research/zones/plane-of-fear.json",
+      "status": "partial",
+      "mobs_total": 45,
+      "mobs_with_level": 24,
+      "mobs_with_spawn": 23,
+      "level_requirement": "46+"
+    },
+    {
+      "zone": "Plane of Hate",
+      "slug": "plane-of-hate",
+      "path": "/workspace/eq-legends/zone-research/zones/plane-of-hate.json",
+      "status": "partial",
+      "mobs_total": 48,
+      "mobs_with_level": 31,
+      "mobs_with_spawn": 29,
+      "level_requirement": "46+"
+    },
+    {
+      "zone": "Plane of Sky",
+      "slug": "plane-of-sky",
+      "path": "/workspace/eq-legends/zone-research/zones/plane-of-sky.json",
+      "status": "partial",
+      "mobs_total": 31,
+      "mobs_with_level": 23,
+      "mobs_with_spawn": 0,
+      "level_requirement": "46+"
+    },
+    {
+      "zone": "Qeynos Catacombs",
+      "slug": "qeynos-catacombs",
+      "path": "/workspace/eq-legends/zone-research/zones/qeynos-catacombs.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "3-13",
+      "aliases": [
+        "Qeynos Catacombs",
+        "Qeynos Aqueducts"
+      ]
+    },
+    {
+      "zone": "Qeynos Hills",
+      "slug": "qeynos-hills",
+      "path": "/workspace/eq-legends/zone-research/zones/qeynos-hills.json",
+      "status": "partial",
+      "mobs_total": 2,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-7",
+      "aliases": [
+        "Qeynos Hills",
+        "The Qeynos Hills"
+      ]
+    },
+    {
+      "zone": "Rathe Mountains",
+      "slug": "rathe-mountains",
+      "path": "/workspace/eq-legends/zone-research/zones/rathe-mountains.json",
+      "status": "partial",
+      "mobs_total": 5,
+      "mobs_with_level": 4,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-37"
+    },
+    {
+      "zone": "Solusek's Eye",
+      "slug": "soluseks-eye",
+      "path": "/workspace/eq-legends/zone-research/zones/soluseks-eye.json",
+      "status": "partial",
+      "mobs_total": 10,
+      "mobs_with_level": 10,
+      "mobs_with_spawn": 0,
+      "level_requirement": "16-35"
+    },
+    {
+      "zone": "Southern Desert of Ro",
+      "slug": "southern-desert-of-ro",
+      "path": "/workspace/eq-legends/zone-research/zones/southern-desert-of-ro.json",
+      "status": "partial",
+      "mobs_total": 2,
+      "mobs_with_level": 2,
+      "mobs_with_spawn": 0,
+      "level_requirement": "8-17",
+      "aliases": [
+        "Southern Desert of Ro",
+        "South Ro"
+      ]
+    },
+    {
+      "zone": "Southern Felwithe",
+      "slug": "southern-felwithe",
+      "path": "/workspace/eq-legends/zone-research/zones/southern-felwithe.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": null
+    },
+    {
+      "zone": "Southern Karana",
+      "slug": "southern-karana",
+      "path": "/workspace/eq-legends/zone-research/zones/southern-karana.json",
+      "status": "partial",
+      "mobs_total": 6,
+      "mobs_with_level": 6,
+      "mobs_with_spawn": 0,
+      "level_requirement": "15-30"
+    },
+    {
+      "zone": "Splitpaw Lair",
+      "slug": "splitpaw-lair",
+      "path": "/workspace/eq-legends/zone-research/zones/splitpaw-lair.json",
+      "status": "partial",
+      "mobs_total": 12,
+      "mobs_with_level": 12,
+      "mobs_with_spawn": 0,
+      "level_requirement": "25-40"
+    },
+    {
+      "zone": "Steamfont Mountains",
+      "slug": "steamfont-mountains",
+      "path": "/workspace/eq-legends/zone-research/zones/steamfont-mountains.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-11"
+    },
+    {
+      "zone": "Stonebrunt Mountains",
+      "slug": "stonebrunt-mountains",
+      "path": "/workspace/eq-legends/zone-research/zones/stonebrunt-mountains.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "14-28"
+    },
+    {
+      "zone": "Temple of Solusek Ro",
+      "slug": "temple-of-solusek-ro",
+      "path": "/workspace/eq-legends/zone-research/zones/temple-of-solusek-ro.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": "50-50"
+    },
+    {
+      "zone": "The Estate of Unrest",
+      "slug": "the-estate-of-unrest",
+      "path": "/workspace/eq-legends/zone-research/zones/the-estate-of-unrest.json",
+      "status": "partial",
+      "mobs_total": 11,
+      "mobs_with_level": 11,
+      "mobs_with_spawn": 0,
+      "level_requirement": "10-30"
+    },
+    {
+      "zone": "The Feerrott",
+      "slug": "the-feerrott",
+      "path": "/workspace/eq-legends/zone-research/zones/the-feerrott.json",
+      "status": "partial",
+      "mobs_total": 1,
+      "mobs_with_level": 1,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1-9",
+      "aliases": [
+        "The Feerrott",
+        "Feerrott"
+      ]
+    },
+    {
+      "zone": "The Hole",
+      "slug": "the-hole",
+      "path": "/workspace/eq-legends/zone-research/zones/the-hole.json",
+      "status": "partial",
+      "mobs_total": 27,
+      "mobs_with_level": 23,
+      "mobs_with_spawn": 0,
+      "level_requirement": "40-50"
+    },
+    {
+      "zone": "The Overthere",
+      "slug": "the-overthere",
+      "path": "/workspace/eq-legends/zone-research/zones/the-overthere.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": null
+    },
+    {
+      "zone": "The Warrens",
+      "slug": "the-warrens",
+      "path": "/workspace/eq-legends/zone-research/zones/the-warrens.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "4-18"
+    },
+    {
+      "zone": "Tutorial",
+      "slug": "tutorial",
+      "path": "/workspace/eq-legends/zone-research/zones/tutorial.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": "1",
+      "aliases": [
+        "Tutorial Zone"
+      ]
+    },
+    {
+      "zone": "Upper Guk",
+      "slug": "upper-guk",
+      "path": "/workspace/eq-legends/zone-research/zones/upper-guk.json",
+      "status": "partial",
+      "mobs_total": 3,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "9-25"
+    },
+    {
+      "zone": "West Commonlands",
+      "slug": "west-commonlands",
+      "path": "/workspace/eq-legends/zone-research/zones/west-commonlands.json",
+      "status": "partial",
+      "mobs_total": 4,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 0,
+      "level_requirement": "3-14"
+    },
+    {
+      "zone": "Western Plains of Karana",
+      "slug": "western-plains-of-karana",
+      "path": "/workspace/eq-legends/zone-research/zones/western-plains-of-karana.json",
+      "status": "partial",
+      "mobs_total": 5,
+      "mobs_with_level": 5,
+      "mobs_with_spawn": 0,
+      "level_requirement": "5-13"
+    },
+    {
+      "zone": "Western Wastes",
+      "slug": "western-wastes",
+      "path": "/workspace/eq-legends/zone-research/zones/western-wastes.json",
+      "status": "partial",
+      "mobs_total": 0,
+      "mobs_with_level": 0,
+      "mobs_with_spawn": 0,
+      "level_requirement": null
+    },
     {
       "zone": "Nektropos Castle",
       "slug": "nektropos-castle",

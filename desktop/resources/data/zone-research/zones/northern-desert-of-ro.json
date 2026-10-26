@@ -1,0 +1,52 @@
+{
+  "zone": "Northern Desert of Ro",
+  "slug": "northern-desert-of-ro",
+  "overview": {
+    "brief": "Northern Desert of Ro south of Freeport (tools page: North Ro). Dervish camps, tarantulas, mummies, orcs, madmen; sand giants on travel routes. Connects to East Freeport, East Commonlands, Oasis of Marr, New Sebilis Expedition. EQ Legends Tools recommends 1–11.",
+    "level_requirement": "1-11",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "North Ro - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/north-ro/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/north-ro/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a Dervish Cutthroat",
+      "level": "10-14",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/north-ro/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/north-ro/",
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  },
+  "aliases": [
+    "Northern Desert of Ro",
+    "North Ro"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "zone": "Western Plains of Karana",
+  "slug": "western-plains-of-karana",
+  "overview": {
+    "brief": "Enormous westernmost plain of the Karana region from Qeynos Hills toward North Karana. EQ Legends Tools recommends 5–13; several ogre and werewolf nameds on the tools page are higher level.",
+    "level_requirement": "5-13",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "West Karana - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/west-karana/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/west-karana/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "An Ogre Priestess",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-karana/"
+      ]
+    },
+    {
+      "name": "Chief Goonda",
+      "level": 34,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-karana/"
+      ]
+    },
+    {
+      "name": "a werewolf",
+      "level": "22-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-karana/"
+      ]
+    },
+    {
+      "name": "an ogre priestess",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-karana/"
+      ]
+    },
+    {
+      "name": "an ogre shaman",
+      "level": "23-27",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-karana/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 5,
+    "mobs_with_level": 5,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/west-karana/",
+    "inventory_mob_count": 5,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

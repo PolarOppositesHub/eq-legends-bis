@@ -1,0 +1,42 @@
+{
+  "zone": "Steamfont Mountains",
+  "slug": "steamfont-mountains",
+  "aliases": [],
+  "overview": {
+    "brief": "Steamfont Mountains is the rocky homeland surrounding Ak\u2019Anon, mixing low-level gnome hunting grounds with clockworks, kobold camps and increasingly dangerous creatures around the minotaur caves and crater country. The zone has a mechanical flavor unlike most of Faydwer, but still mixes in drakes, elementals, harpies and undead. The recommended range is 1\u201311 for ordinary hunting, while the minotaur caves present the greatest challenge. Beware the gnome in the minotaur caves!",
+    "level_requirement": "1-11",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Steamfont Mountains - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/steamfont-mountains/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/steamfont-mountains/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Yendar Starpyre",
+      "level": 65,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/steamfont-mountains/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

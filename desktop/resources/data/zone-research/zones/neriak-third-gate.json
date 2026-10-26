@@ -1,0 +1,58 @@
+{
+  "zone": "Neriak Third Gate",
+  "slug": "neriak-third-gate",
+  "overview": {
+    "brief": "Dark Elf city district (Third Gate). No dedicated eqlegendstools.com zone card found. Wiki Recommended Levels lists Neriak Third Gate as City 1\u20135. Named Ratraz is documented on eqlwiki.",
+    "level_requirement": "1-5",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Neriak Third Gate - EQ Legends Wiki",
+        "url": "https://eqlwiki.com/Neriak_Third_Gate",
+        "preferred": true
+      },
+      {
+        "title": "Ratraz - EQ Legends Wiki",
+        "url": "https://eqlwiki.com/Ratraz",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Neriak_Third_Gate",
+      "https://eqlwiki.com/Ratraz",
+      "https://eqlwiki.com/Recommended_Levels_and_ZEM_List",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Ratraz",
+      "level": 19,
+      "spawn": {
+        "known": true,
+        "notes": "(890, -1424) from eqlwiki Neriak Third Gate NPC table (trivially on same page)",
+        "coords": "(890, -1424)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Neriak_Third_Gate",
+        "https://eqlwiki.com/Ratraz"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 1,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": null,
+    "inventory_mob_count": 1,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "missing_tools_page": "https://eqlegendstools.com/zones/neriak-third-gate/ returned 404; overview levels from eqlwiki Recommended Levels; Ratraz level from https://eqlwiki.com/Ratraz"
+  },
+  "aliases": []
+}

@@ -1,0 +1,74 @@
+{
+  "zone": "Everfrost Peaks",
+  "slug": "everfrost-peaks",
+  "overview": {
+    "brief": "Frozen homeland surrounding Halas: snowbound canyons opening into a dangerous tundra. Low end near the city (goblins, wolves, spiders, bears); mammoths, undead, icy orcs, and ice giants farther out toward Permafrost. EQ Legends Tools recommends 1–20.",
+    "level_requirement": "1-20",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Everfrost Peaks - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/everfrost-peaks/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/everfrost-peaks/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Karg IceBear",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/everfrost-peaks/"
+      ]
+    },
+    {
+      "name": "Martar Icebear",
+      "level": 32,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/everfrost-peaks/"
+      ]
+    },
+    {
+      "name": "Miragul",
+      "level": 53,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/everfrost-peaks/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/everfrost-peaks/",
+    "inventory_mob_count": 3,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  }
+}

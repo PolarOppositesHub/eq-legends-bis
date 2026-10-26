@@ -1,0 +1,55 @@
+{
+  "zone": "Kithicor Forest",
+  "slug": "kithicor-forest",
+  "aliases": [],
+  "overview": {
+    "brief": "Kithicor Forest is a wooded travel corridor that changes character completely after sunset. By day it supports low-level wildlife, bixies, spiders and Shralok orcs; at night the forest becomes a haunted gauntlet as powerful undead patrol among the trees, making the same route dramatically more dangerous. Daytime hunting is recommended around levels 5\u201310. At night, high-level undead replace much of the ordinary population, making the zone appropriate for levels 30+ and dangerous for young travelers.",
+    "level_requirement": "5-10",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Kithicor Forest - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/kithicor-forest/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/kithicor-forest/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Advisor C`Zatl",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kithicor-forest/"
+      ]
+    },
+    {
+      "name": "Coercer Q`ioul",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/kithicor-forest/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 2,
+    "mobs_with_level": 2,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

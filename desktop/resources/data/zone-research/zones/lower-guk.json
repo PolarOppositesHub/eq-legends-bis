@@ -1,0 +1,389 @@
+{
+  "zone": "Lower Guk",
+  "slug": "lower-guk",
+  "overview": {
+    "brief": "Deep Guk dungeon divided between living frogloks and undead \u201cdead side,\u201d with knights, ghouls, minotaurs and classic camp loot. EQ Legends Tools recommends levels 28\u201344; wiki describes high-level dungeon content ~35\u201350.",
+    "level_requirement": "28-44",
+    "access_keys": [
+      {
+        "name": "Access via Upper Guk",
+        "required": false,
+        "notes": "Accessible from Upper Guk via multiple connections (live-side and dead-side entrances). No separate Legends key claim sourced for zone entry.",
+        "source_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Lower Guk / Ruins of Old Guk - eqlwiki",
+        "url": "https://eqlwiki.com/Ruins_of_Old_Guk",
+        "preferred": true
+      },
+      {
+        "title": "Lower Guk - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/lower-guk/",
+        "preferred": false
+      }
+    ],
+    "map_urls": [
+      {
+        "url": "https://eqlwiki.com/Ruins_of_Old_Guk",
+        "description": "Zone maps/description on eqlwiki Ruins of Old Guk",
+        "license_note": "Fan wiki; verify license before redistributing map images"
+      }
+    ],
+    "sources": [
+      "https://eqlegendstools.com/zones/lower-guk/",
+      "https://eqlwiki.com/Ruins_of_Old_Guk",
+      "https://eqlwiki.com/The_ghoul_lord",
+      "https://eqlwiki.com/The_froglok_king"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Froglok Noble",
+      "level": "36-40",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "A Froglok Yun Priest",
+      "level": 37,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "A Yun Priest",
+      "level": 37,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "A froglok noble",
+      "level": "36-40",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "Najena (NPC)",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "Yendar Starpyre",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a Ghoul Assassin",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a frenzied ghoul",
+      "level": "32-35",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a froglok crusader",
+      "level": "35-39",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a froglok herbalist",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a froglok tactician",
+      "level": "35-39",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul cavalier",
+      "level": "34-37",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul executioner",
+      "level": "35-37",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul ritualist",
+      "level": 34,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul sage",
+      "level": "32-35",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul savant",
+      "level": "43-46",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul sentinel",
+      "level": "33-36",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a ghoul supplier",
+      "level": "32-35",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a minotaur elder",
+      "level": "34-38",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a minotaur patriarch",
+      "level": "35-39",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "a reanimated hand (Lower Guk)",
+      "level": "39-41",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "the froglok king",
+      "level": "47-49",
+      "spawn": {
+        "known": true,
+        "notes": "20% @ (-105, 22) per eqlwiki The_froglok_king",
+        "coords": {
+          "x": -105.0,
+          "y": 22.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/",
+        "https://eqlwiki.com/The_froglok_king"
+      ]
+    },
+    {
+      "name": "the ghoul arch magi",
+      "level": "46-49",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "the ghoul arch magus",
+      "level": "46-49",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/"
+      ]
+    },
+    {
+      "name": "the ghoul lord",
+      "level": "47-49",
+      "spawn": {
+        "known": true,
+        "notes": "25% @ (1558, -749) per eqlwiki The_ghoul_lord",
+        "coords": {
+          "x": 1558.0,
+          "y": -749.0,
+          "z": null
+        },
+        "map_url": "https://eqlwiki.com/Ruins_of_Old_Guk"
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lower-guk/",
+        "https://eqlwiki.com/The_ghoul_lord"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 25,
+    "mobs_with_level": 22,
+    "mobs_with_spawn": 2,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/lower-guk/",
+    "inventory_mob_count": 25,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

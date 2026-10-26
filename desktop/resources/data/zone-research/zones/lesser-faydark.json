@@ -1,0 +1,68 @@
+{
+  "zone": "Lesser Faydark",
+  "slug": "lesser-faydark",
+  "aliases": [],
+  "overview": {
+    "brief": "Lesser Faydark is a darker, more dangerous forest than Greater Faydark, with corrupted stretches claimed by orcs, bandits and shadowed creatures. Brownies, pixies, faeries and fae drakes also inhabit the woods, producing an unusually varied mix of friendly, neutral and highly aggressive encounters. The recommended range is 8\u201313, but the zone contains many roaming and named creatures well above that range, so travel can be dangerous for low-level characters. Beware the unicorn!",
+    "level_requirement": "8-13",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Lesser Faydark - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/lesser-faydark/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/lesser-faydark/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Bracken Underbrush",
+      "level": 18,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lesser-faydark/"
+      ]
+    },
+    {
+      "name": "Thistle Underbrush",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lesser-faydark/"
+      ]
+    },
+    {
+      "name": "orc legionnaire",
+      "level": "12\u201313",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/lesser-faydark/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

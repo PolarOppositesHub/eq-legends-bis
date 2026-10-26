@@ -1,0 +1,294 @@
+{
+  "zone": "Najena",
+  "slug": "najena",
+  "overview": {
+    "brief": "Laboratory dungeon in Lavastorm Mountains. Skeletons, ogre guards, casters and experiments; keys control deeper sections. Recommended 11\u201327; EQ Legends revamped with new nameds and loot.",
+    "level_requirement": "11-27",
+    "access_keys": [
+      {
+        "name": "Internal dungeon keys",
+        "required": true,
+        "notes": "EQ Legends Tools: keys controlling access to several deeper sections. Patch notes: Najena searches inventory for keys (no cursor requirement). Specific key names not fully cataloged in this batch.",
+        "source_url": "https://eqlegendstools.com/zones/najena/"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Najena - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/najena/",
+        "preferred": true
+      },
+      {
+        "title": "Patch Notes (Najena keys)",
+        "url": "https://eqlwiki.com/Patch_Notes",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/najena/",
+      "https://eqlwiki.com/Patch_Notes",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "A Greater Skeleton - confirmed drop in EQL",
+      "level": "11-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "A Necromancer",
+      "level": "18-24",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "A Visiting Priestess",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Akksstaff",
+      "level": "30-32",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "BoneCracker",
+      "level": 24,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Drelzna",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Ekeros",
+      "level": 26,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Lost Crusader",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Najena (NPC)",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Officer Grush",
+      "level": 24,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Rathyl",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Rathyl reincarnate",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "The Blood Artist",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "The Tenderizer",
+      "level": 22,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "The Widowmistress",
+      "level": 34,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Trazdon",
+      "level": 24,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "Unbound Flame",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "a magician",
+      "level": "17-29",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    },
+    {
+      "name": "the guard captain",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/najena/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 19,
+    "mobs_with_level": 19,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/najena/",
+    "inventory_mob_count": 19,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

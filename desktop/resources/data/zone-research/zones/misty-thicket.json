@@ -1,0 +1,42 @@
+{
+  "zone": "Misty Thicket",
+  "slug": "misty-thicket",
+  "aliases": [],
+  "overview": {
+    "brief": "Misty Thicket is the halfling homeland outside Rivervale, split by an old defensive wall into a very safe eastern newbie area and a rougher western half. Wildlife, bixies and insects dominate the safer side, while goblins, orcs and occasional undead become more common toward Runnyeye. The wall makes the 1\u201310 progression unusually forgiving, though named goblins such as Mooto are much tougher than nearby common spawns.",
+    "level_requirement": "1-10",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Misty Thicket - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/misty-thicket/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/misty-thicket/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Mooto; a goblin shaman",
+      "level": "7\u201311",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/misty-thicket/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 1,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

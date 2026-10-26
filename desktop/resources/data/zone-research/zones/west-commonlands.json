@@ -1,0 +1,88 @@
+{
+  "zone": "West Commonlands",
+  "slug": "west-commonlands",
+  "overview": {
+    "brief": "Western Commonlands corridor toward Kithicor Forest and Befallen. Orc camps, dervishes, wildlife, and undead; griffins and shadowed men at the upper end. EQ Legends Tools recommends 3–14.",
+    "level_requirement": "3-14",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "West Commonlands - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/west-commonlands/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/west-commonlands/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a Dervish Cutthroat",
+      "level": "10-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-commonlands/"
+      ]
+    },
+    {
+      "name": "a young ronin",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-commonlands/"
+      ]
+    },
+    {
+      "name": "an orc legionnaire",
+      "level": "9-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-commonlands/"
+      ]
+    },
+    {
+      "name": "orc legionnaire",
+      "level": "9-13",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/west-commonlands/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 4,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/west-commonlands/",
+    "inventory_mob_count": 4,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "level_gaps": "a young ronin appears in inventory for West Commonlands but has no level on the West Commonlands tools page (South Ro page lists young ronin 13–15). Left null rather than inferred."
+  }
+}

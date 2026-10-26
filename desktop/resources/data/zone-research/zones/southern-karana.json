@@ -1,0 +1,113 @@
+{
+  "zone": "Southern Karana",
+  "slug": "southern-karana",
+  "overview": {
+    "brief": "Vast grassland with aviak settlements, Splitpaw gnolls, and roaming wildlife. EQ Legends Tools recommends 15–30. Splitpaw Lair entrance is in this zone.",
+    "level_requirement": "15-30",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "South Karana - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/south-karana/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/south-karana/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Brother Qwinn",
+      "level": 61,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    },
+    {
+      "name": "Ghanex Drah",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    },
+    {
+      "name": "Grizzleknot",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    },
+    {
+      "name": "Narra Tanith",
+      "level": 23,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    },
+    {
+      "name": "Quillmane",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    },
+    {
+      "name": "aviak avocet",
+      "level": "18-20",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/south-karana/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 6,
+    "mobs_with_level": 6,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/south-karana/",
+    "inventory_mob_count": 6,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

@@ -30,12 +30,19 @@ class Release118Tests(unittest.TestCase):
     def test_packaged_zone_index_is_a_tracked_file(self):
         self.assertTrue(INDEX.is_file())
         self.assertFalse(INDEX.is_symlink())
-        rel = "desktop/resources/data/zone-research/zones_index.json"
-        listed = subprocess.check_output(["git", "ls-files", rel], cwd=ROOT, text=True).strip()
-        self.assertEqual(listed, rel)
+        rel = "desktop/resources/data/zone-research"
+        listed = subprocess.check_output(["git", "ls-files", rel], cwd=ROOT, text=True).splitlines()
+        packaged = []
         for path in ZONE.rglob("*"):
+            if not path.is_file():
+                continue
             if path.suffix in {".py", ".sh"}:
                 self.fail(f"zone package includes a script: {path}")
+            self.assertFalse(path.is_symlink(), path)
+            packaged.append(path.relative_to(ROOT).as_posix())
+        self.assertIn(f"{rel}/zones_index.json", listed)
+        self.assertEqual(sorted(packaged), sorted(listed))
+        self.assertGreaterEqual(len([name for name in packaged if name.endswith(".json") and "/zones/" in name]), 56)
 
     def test_nektropos_zones_and_crysta_level(self):
         load_zones_index.cache_clear()
@@ -43,14 +50,65 @@ class Release118Tests(unittest.TestCase):
         self.assertEqual(found, ZONE.resolve())
         index = json.loads(INDEX.read_text(encoding="utf-8"))
         slugs = [row.get("slug") for row in index.get("zones") or []]
-        self.assertEqual(slugs, ["nektropos-castle", "lake-nerius"])
-        self.assertEqual(index.get("zone_file_count"), 2)
+        self.assertEqual(len(slugs), 56)
+        self.assertEqual(len(set(slugs)), 56)
+        self.assertIn("nektropos-castle", slugs)
+        self.assertIn("lake-nerius", slugs)
+        self.assertIn("befallen", slugs)
+        self.assertEqual(index.get("zone_file_count"), 56)
+        self.assertEqual(index.get("generated"), "2026-09-06")
+        self.assertIn("update_2026-10_nektropos", str(index.get("batches")))
+        self.assertEqual(len(list((ZONE / "zones").glob("*.json"))), 56)
+        update = ROOT / "packaging" / "zone-updates" / "2026-10-nektropos" / "zones"
+        for name in ("nektropos-castle.json", "lake-nerius.json"):
+            self.assertEqual((ZONE / "zones" / name).read_bytes(), (update / name).read_bytes())
         with (ZONE / "mobs.csv").open(encoding="utf-8", newline="") as handle:
             mobs = list(csv.DictReader(handle))
-        self.assertEqual(len(mobs), 28)
+        self.assertEqual(len(mobs), 448)
+        self.assertEqual(sum(1 for row in mobs if row["zone"] == "Nektropos Castle"), 24)
+        self.assertEqual(sum(1 for row in mobs if row["zone"] == "Lake Nerius"), 4)
         crysta = next(row for row in mobs if row["mob"] == "Crysta Everling")
         self.assertEqual(crysta["level"], "60")
+        self.assertEqual(crysta["zone"], "Nektropos Castle")
         self.assertIn("CONFLICT:", crysta["spawn_notes"])
+        sources = (ZONE / "SOURCES.md").read_text(encoding="utf-8")
+        self.assertTrue(sources.startswith("# Sources used (Batch 1 + Batch 2 + Batch 3)"))
+        self.assertIn("# Sources — Nektropos update", sources)
+
+    def test_zone_source_note_survives_a_second_merge(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            external = root / "base"
+            update = root / "update"
+            dest = root / "out"
+            (external / "zones").mkdir(parents=True)
+            (update / "zones").mkdir(parents=True)
+            (external / "zones" / "befallen.json").write_text("{}\n", encoding="utf-8")
+            (update / "zones" / "lake-nerius.json").write_text("{}\n", encoding="utf-8")
+            (external / "zones_index.json").write_text(json.dumps({
+                "generated": "2026-09-06",
+                "batches": "1+2+3+4",
+                "zones": [{"slug": "befallen", "zone": "Befallen"}],
+            }), encoding="utf-8")
+            (update / "zones_index.json").write_text(json.dumps({
+                "generated": "2026-10-25",
+                "batches": "update_2026-10_nektropos",
+                "zones": [{"slug": "lake-nerius", "zone": "Lake Nerius"}],
+            }), encoding="utf-8")
+            (external / "mobs.csv").write_text("zone,mob,level\nBefallen,a skeleton,5\n", encoding="utf-8")
+            (update / "mobs.csv").write_text("zone,mob,level\nLake Nerius,a fish,10\n", encoding="utf-8")
+            (external / "SOURCES.md").write_text("# Sources used (Batch 1)\n\n- https://example.test/base\n", encoding="utf-8")
+            (update / "SOURCES.md").write_text("# Sources — Nektropos update\n\n- https://example.test/nek\n", encoding="utf-8")
+            install_packaged_zones(dest, external, update)
+            install_packaged_zones(dest, None, update)
+            note = (dest / "SOURCES.md").read_text(encoding="utf-8")
+            self.assertIn("# Sources used (Batch 1)", note)
+            self.assertIn("# Sources — Nektropos update", note)
+            index = json.loads((dest / "zones_index.json").read_text(encoding="utf-8"))
+            self.assertEqual([row["slug"] for row in index["zones"]], ["befallen", "lake-nerius"])
+            self.assertEqual(index["zone_file_count"], 2)
+            self.assertEqual(len(list((dest / "zones").glob("*.json"))), 2)
 
     def test_install_fails_when_the_index_is_missing(self):
         import tempfile

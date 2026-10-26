@@ -1,0 +1,177 @@
+{
+  "zone": "Mistmoore Castle",
+  "slug": "mistmoore-castle",
+  "overview": {
+    "brief": "Revamped vampire castle dungeon. EQ Legends Tools lists Levels 18\u201335 with PHs removed and mote/EXP/loot tags.",
+    "level_requirement": "18-35",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Mistmoore Castle - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/mistmoore-castle/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/mistmoore-castle/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Butler Syncall",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "Enynti",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "Garton Viswin",
+      "level": 37,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "Lasna Cheroon",
+      "level": 36,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "Maid Issis",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "Princess Cherista",
+      "level": 35,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "a cloaked dhampyre",
+      "level": 33,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "a fallen noble",
+      "level": 28,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "a glyphed ghoul",
+      "level": 27,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "an avenging caitiff",
+      "level": 30,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    },
+    {
+      "name": "an imp familiar",
+      "level": "29-35",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/mistmoore-castle/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 11,
+    "mobs_with_level": 11,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/mistmoore-castle/",
+    "inventory_mob_count": 11,
+    "firecrawl": "CLI not authenticated this session; used WebFetch/curl of same primary URLs. Outputs saved under .firecrawl/"
+  }
+}

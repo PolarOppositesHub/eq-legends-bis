@@ -1,0 +1,93 @@
+{
+  "zone": "Gorge of King Xorbb (Beholder's Maze)",
+  "slug": "gorge-of-king-xorbb",
+  "overview": {
+    "brief": "Twisting ravine network between East Karana and Runnyeye, also known as Beholder’s Maze. Goblins, muddites, minotaurs, and evil eyes in cramped terrain. EQ Legends Tools recommends 12–18.",
+    "level_requirement": "12-18",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Gorge of King Xorbb - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/gorge-of-king-xorbb/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/gorge-of-king-xorbb/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Lord Soptyvr",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/gorge-of-king-xorbb/"
+      ]
+    },
+    {
+      "name": "Lord Sviir",
+      "level": 25,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/gorge-of-king-xorbb/"
+      ]
+    },
+    {
+      "name": "Lord Syrkl",
+      "level": "24-25",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/gorge-of-king-xorbb/"
+      ]
+    },
+    {
+      "name": "an evil eye",
+      "level": "16-20",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/gorge-of-king-xorbb/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 4,
+    "mobs_with_level": 4,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/gorge-of-king-xorbb/",
+    "inventory_mob_count": 4,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were).",
+    "alias_merge": "Merged inventory rows Beholder's Maze and Gorge of King Xorbb (Beholder's Maze)."
+  },
+  "aliases": [
+    "Beholder's Maze",
+    "Gorge of King Xorbb (Beholder's Maze)",
+    "Gorge of King Xorbb"
+  ]
+}

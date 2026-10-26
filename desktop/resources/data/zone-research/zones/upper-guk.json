@@ -1,0 +1,74 @@
+{
+  "zone": "Upper Guk",
+  "slug": "upper-guk",
+  "overview": {
+    "brief": "Upper level of the froglok stronghold beneath Innothule Swamp; connects to Lower Guk. Placeholders removed; recommended 9–25 on EQ Legends Tools.",
+    "level_requirement": "9-25",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Upper Guk - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/upper-guk/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/upper-guk/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "a froglok gaz squire",
+      "level": 17,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/upper-guk/"
+      ]
+    },
+    {
+      "name": "a froglok scryer",
+      "level": "20-22",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/upper-guk/"
+      ]
+    },
+    {
+      "name": "an ancient croc",
+      "level": "24-25",
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/upper-guk/"
+      ]
+    }
+  ],
+  "coverage": {
+    "mobs_total": 3,
+    "mobs_with_level": 3,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/upper-guk/",
+    "inventory_mob_count": 3,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 2 deferred spawn deep-dive; spawn.known=false unless trivially on fetched page (none were)."
+  }
+}

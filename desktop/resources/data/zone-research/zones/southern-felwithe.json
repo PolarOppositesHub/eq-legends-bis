@@ -1,0 +1,40 @@
+{
+  "zone": "Southern Felwithe",
+  "slug": "southern-felwithe",
+  "aliases": [],
+  "overview": {
+    "brief": "Felwithe is the legendary city of the high elves, which rises out of the fog of Greater Faydark as one of the most wonderful cities in all of Norrath. Its golden walls give off a faint glow all their own, and the peaceful city attracts many visitors from abroad.",
+    "level_requirement": null,
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/Southern_Felwithe",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlwiki.com/Southern_Felwithe"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Joren Nobleheart",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": []
+    }
+  ],
+  "coverage": {
+    "mobs_total": 1,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  }
+}

@@ -117,16 +117,20 @@ def merge_zone_update(dst: Path, update: Path) -> None:
     dest_note = dst / "SOURCES.md"
     if note.is_file():
         incoming = note.read_text(encoding="utf-8").strip()
-        current_text = dest_note.read_text(encoding="utf-8") if dest_note.is_file() else ""
-        # copy_allowlist already wrote the update note. If a base note was
-        # saved, append the update once.
+        # copy_allowlist already wrote the update note over the destination.
+        # A saved base note is the text to keep. Append the update once.
+        # If that update is already in the base note, put the base note back.
         base_note = dst / "SOURCES.base.md"
         if base_note.is_file():
             current_text = base_note.read_text(encoding="utf-8")
             base_note.unlink()
+        else:
+            current_text = dest_note.read_text(encoding="utf-8") if dest_note.is_file() else ""
         if incoming and incoming not in current_text:
             joined = current_text.rstrip() + "\n\n" + incoming + "\n" if current_text.strip() else incoming + "\n"
             dest_note.write_text(joined, encoding="utf-8")
+        elif current_text.strip():
+            dest_note.write_text(current_text if current_text.endswith("\n") else current_text + "\n", encoding="utf-8")
 
 
 def install_packaged_zones(dst: Path, external: Path | None, update: Path | None) -> None:

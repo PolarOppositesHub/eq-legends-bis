@@ -1,0 +1,34 @@
+{
+  "zone": "Erudin Palace",
+  "slug": "erudin-palace",
+  "overview": {
+    "brief": "Elevated civic and religious center adjoining Erudin (Odus), with guild, government, and quest NPCs. Predominantly a safe city zone for services and quest turn-ins. EQ Legends Tools recommends 1–5. Inventory lists no BiS-source mobs for this zone.",
+    "level_requirement": "1-5",
+    "access_keys": [],
+    "walkthrough_urls": [
+      {
+        "title": "Erudin Palace - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/erudin-palace/",
+        "preferred": true
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/erudin-palace/",
+      "https://eqlegendstools.com/zones/"
+    ]
+  },
+  "mobs": [],
+  "coverage": {
+    "mobs_total": 0,
+    "mobs_with_level": 0,
+    "mobs_with_spawn": 0,
+    "status": "partial"
+  },
+  "research_notes": {
+    "eqltools_url": "https://eqlegendstools.com/zones/erudin-palace/",
+    "inventory_mob_count": 0,
+    "firecrawl": "CLI not authenticated this session; used curl of same primary URLs. Outputs saved under .firecrawl/",
+    "spawn_policy": "Batch 3 deferred spawn deep-dive; spawn.known=false / notes=\"mob location unknown\" unless trivial on same page (none were)."
+  }
+}
