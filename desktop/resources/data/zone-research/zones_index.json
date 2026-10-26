@@ -1,0 +1,28 @@
+{
+  "batches": "update_2026-10_nektropos",
+  "generated": "2026-10-25",
+  "zone_file_count": 2,
+  "note": "Patch 2026-10-22 (Nektropos release) + 2026-10-23 hotfix. Nektropos Undercroft (Ayr'Haeth starting area) not cataloged anywhere yet.",
+  "zones": [
+    {
+      "zone": "Nektropos Castle",
+      "slug": "nektropos-castle",
+      "path": "/workspace/eq-legends/zone-research/_update_2026-10_nektropos/zones/nektropos-castle.json",
+      "status": "partial",
+      "mobs_total": 24,
+      "mobs_with_level": 23,
+      "mobs_with_spawn": 8,
+      "level_requirement": "46+"
+    },
+    {
+      "zone": "Lake Nerius",
+      "slug": "lake-nerius",
+      "path": "/workspace/eq-legends/zone-research/_update_2026-10_nektropos/zones/lake-nerius.json",
+      "status": "partial",
+      "mobs_total": 4,
+      "mobs_with_level": 3,
+      "mobs_with_spawn": 2,
+      "level_requirement": "10-15"
+    }
+  ]
+}

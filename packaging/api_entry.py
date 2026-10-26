@@ -59,7 +59,7 @@ def main() -> None:
     port = int(os.environ.get("EQ_API_PORT", "8765"))
 
     import uvicorn
-    uvicorn.run("backend.app.main:app", host=host, port=port, log_level="info")
+    uvicorn.run("backend.app.boot:app", host=host, port=port, log_level="info")
 
 
 if __name__ == "__main__":

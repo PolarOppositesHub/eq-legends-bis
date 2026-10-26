@@ -5,7 +5,7 @@ import { pickLoadingSaying } from './uiSettings.js'
  * Full-screen busy overlay with progress bar + EQ-flavored tip.
  * jobs: [{ id, label }] — first label is the primary status line.
  */
-export default function LoadingOverlay({ open, jobs = [], funnyTips = true, progress = null }) {
+export default function LoadingOverlay({ open, jobs = [], funnyTips = true, progress = null, light = false }) {
   const [sayingIdx, setSayingIdx] = useState(() => Date.now())
   const active = open && (jobs.length > 0 || progress != null)
 
@@ -23,7 +23,13 @@ export default function LoadingOverlay({ open, jobs = [], funnyTips = true, prog
   if (!active) return null
 
   return (
-    <div className="load-overlay" role="alertdialog" aria-busy="true" aria-live="polite">
+    <div
+      className={`load-overlay${light ? ' load-overlay-light' : ''}`}
+      data-light={light ? '1' : undefined}
+      role="alertdialog"
+      aria-busy="true"
+      aria-live="polite"
+    >
       <div className="load-card">
         <div className="load-title">Please wait</div>
         <div className="load-status">{primary}</div>

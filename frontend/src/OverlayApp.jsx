@@ -7,12 +7,44 @@ import {
   FULLSCREEN_NOTE,
   ZONE_METER_NOTE,
   dismissAlertContent,
+  meterPollDelay,
   meterRows,
   overlayAppearance,
   overlayChromeStyle,
   overlayCloseControl,
   overlayIdFromSearch,
 } from './overlayView.js'
+
+function startPoll(load, apply) {
+  let cancelled = false
+  let timer = 0
+  let delay = 2000
+  let last = ''
+  const tick = () => {
+    Promise.resolve()
+      .then(() => load())
+      .then((body) => {
+        if (cancelled) return
+        delay = meterPollDelay(delay, false)
+        const next = JSON.stringify(body ?? null)
+        if (next !== last) {
+          last = next
+          apply(body)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) delay = meterPollDelay(delay, true)
+      })
+      .finally(() => {
+        if (!cancelled) timer = setTimeout(tick, delay)
+      })
+  }
+  tick()
+  return () => {
+    cancelled = true
+    clearTimeout(timer)
+  }
+}
 
 function desktop() {
   if (typeof window === 'undefined') return null
@@ -47,56 +79,32 @@ export default function OverlayApp() {
   useEffect(() => {
     if (id !== 'buffs') return undefined
     if (!character) return undefined
-    let cancelled = false
-    const load = () => {
-      if (!loadout) return
-      getCompanionBuffs(character, loadout).then((body) => {
-        if (!cancelled) setCard(body)
-      }).catch(() => {})
-    }
-    load()
-    const timer = setInterval(load, 2000)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
+    return startPoll(
+      () => (loadout ? getCompanionBuffs(character, loadout) : Promise.resolve(null)),
+      (body) => { if (body) setCard(body) },
+    )
   }, [id, character, loadout])
 
   useEffect(() => {
     if (id !== 'xp' && id !== 'con') return undefined
     if (!character) return undefined
-    let cancelled = false
-    const load = () => {
-      getDashboardOverlay(character, id).then((body) => {
-        if (!cancelled) setCard(body)
-      }).catch(() => {})
-    }
-    load()
-    const timer = setInterval(load, 2000)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
+    return startPoll(
+      () => getDashboardOverlay(character, id),
+      (body) => setCard(body),
+    )
   }, [id, character])
 
   useEffect(() => {
     if (id === 'alert' || id === 'xp' || id === 'con' || id === 'buffs' || !character) return undefined
-    let cancelled = false
-    const load = () => {
-      getParserMeters(character, scope).then((body) => {
-        if (!cancelled) setMeter(body)
-      }).catch(() => {})
-    }
-    load()
-    const timer = setInterval(load, 2000)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
+    return startPoll(
+      () => getParserMeters(character, scope),
+      (body) => setMeter(body),
+    )
   }, [id, character, scope])
 
   useEffect(() => {
     const stream = openParserStream({
+      events: ['alert'],
       alert: (data) => {
         const alerts = Array.isArray(data?.alerts) ? data.alerts : []
         const last = alerts[alerts.length - 1]

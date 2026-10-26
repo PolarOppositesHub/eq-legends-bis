@@ -65,6 +65,18 @@ contextBridge.exposeInMainWorld('eqDesktop', {
     return () => ipcRenderer.removeListener('eq:window-state', listener);
   },
   askGrok: (args) => ipcRenderer.invoke('eq:ask-grok', { prompt: args && args.prompt ? String(args.prompt) : '' }),
+  grokStatus: () => ipcRenderer.invoke('eq:grok-status'),
+  grokInstall: (confirmed) => ipcRenderer.invoke('eq:grok-install', { confirmed: confirmed === true }),
+  grokLogin: () => ipcRenderer.invoke('eq:grok-login'),
+  grokAsk: (args) => ipcRenderer.invoke('eq:grok-ask', args),
+  cancelGrok: (id) => ipcRenderer.invoke('eq:grok-cancel', id),
+  onGrokResult: (cb) => {
+    const listener = (_event, result) => {
+      try { cb(result); } catch (_) { /* ignore */ }
+    };
+    ipcRenderer.on('eq:grok-result', listener);
+    return () => ipcRenderer.removeListener('eq:grok-result', listener);
+  },
   splashFinished: () => ipcRenderer.send('eq:splash-finished'),
   onSplashStop: (cb) => {
     ipcRenderer.on('eq:splash-stop', () => {

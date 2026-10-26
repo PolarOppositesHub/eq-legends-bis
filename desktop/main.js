@@ -1012,6 +1012,7 @@ function quitCleanup() {
     clearInterval(overlayRaiseTimer);
     overlayRaiseTimer = null;
   }
+  try { grokCli.stopAll(spawn); } catch (_) { /* cli helpers stay optional */ }
   stopInventoryWatcher();
   stopSyncSchedule();
   closeAuxiliaryWindows();
@@ -1166,6 +1167,90 @@ ipcMain.handle('eq:ask-grok', async (_evt, args) => {
   } catch (_) {
     return { mode: 'browser', reason: 'failed' };
   }
+});
+
+ipcMain.handle('eq:grok-status', async () => {
+  try {
+    return await grokCli.detectGrok({ spawn, env: process.env });
+  } catch (_) {
+    return { state: 'unknown', detail: 'Sign-in check failed. The copy button still works.' };
+  }
+});
+
+ipcMain.handle('eq:grok-install', async (_evt, args) => {
+  const started = grokCli.startInstall({
+    spawn,
+    confirmed: !!(args && args.confirmed === true),
+    platform: process.platform,
+    env: process.env,
+  });
+  if (!started || !started.started || !started.child) {
+    return {
+      ok: false,
+      started: false,
+      command: started && started.command,
+      detail: (started && started.detail) || 'Installer was not run. Confirm it first.',
+    };
+  }
+  const child = started.child;
+  const outcome = await new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(result);
+    };
+    const timer = setTimeout(() => {
+      grokCli.killChild(child, spawn);
+      finish({ ok: false, detail: 'Installer was stopped after 120 seconds.' });
+    }, grokCli.INSTALL_TIMEOUT_MS || 120000);
+    child.on('close', (code) => {
+      finish({
+        ok: code === 0,
+        detail: code === 0 ? 'Installer finished. Check again.' : `Installer exited ${code}.`,
+      });
+    });
+    child.on('error', () => {
+      finish({ ok: false, detail: 'The installer could not be started.' });
+    });
+  });
+  return { ok: outcome.ok, started: true, command: started.command, detail: outcome.detail };
+});
+
+ipcMain.handle('eq:grok-login', async () => {
+  try {
+    const started = grokCli.startLogin({ spawn, env: process.env });
+    return { ok: true, detail: started.detail };
+  } catch (_) {
+    return { ok: false, detail: 'Grok sign-in could not be started.' };
+  }
+});
+
+const grokRuns = new Map();
+
+ipcMain.handle('eq:grok-ask', async (evt, args) => {
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const handle = grokCli.startHeadless({
+    spawn,
+    env: process.env,
+    prompt: String((args && args.prompt) || '').slice(0, 24000),
+    timeoutMs: args && args.timeoutMs,
+  });
+  grokRuns.set(id, handle);
+  handle.done.then((result) => {
+    grokRuns.delete(id);
+    try {
+      if (evt.sender && !evt.sender.isDestroyed()) evt.sender.send('eq:grok-result', { id, ...(result || {}) });
+    } catch (_) { /* window gone */ }
+  });
+  return { id, started: true };
+});
+
+ipcMain.handle('eq:grok-cancel', async (_evt, id) => {
+  const handle = grokRuns.get(String(id || ''));
+  if (handle && typeof handle.cancel === 'function') handle.cancel();
+  return { ok: true };
 });
 
 ipcMain.handle('eq:quit', async () => {

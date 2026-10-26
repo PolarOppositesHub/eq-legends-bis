@@ -1,0 +1,3223 @@
+[
+ {
+  "name": "Ancient Signet Ring of House Everling",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 13,
+   "HP": 20,
+   "MANA": 5,
+   "INT": 5,
+   "WIS": 5,
+   "DEX": 5
+  },
+  "special": [],
+  "source": "Drops From: Lake Nerius: Corrupted Kedgespawn",
+  "flags": "Attunable",
+  "sourceUrl": "https://eqlegendstools.com/items/ancient-signet-ring-of-house-everling/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Lake Nerius",
+    "npc": "Corrupted Kedgespawn"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Attunable",
+   "Slot: FINGER",
+   "AC: 13 HP: +20 MANA: +5",
+   "INT: +5 WIS: +5 DEX: +5",
+   "WT: 0.1 Size: TINY",
+   "Class: ALL",
+   "Drops From: Lake Nerius: Corrupted Kedgespawn",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Lake Nerius",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/lake-nerius/",
+  "sourceZones": [
+   "Lake Nerius"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/lake-nerius/"
+  ],
+  "sourceDisplay": "Drops From: Lake Nerius: Corrupted Kedgespawn",
+  "sourceHref": "https://eqlegendstools.com/items/ancient-signet-ring-of-house-everling/"
+ },
+ {
+  "name": "Ancient Warsword",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Paladin",
+   "Ranger",
+   "Shadow Knight"
+  ],
+  "stats": {
+   "DLY": 19,
+   "DMG": 12,
+   "Dmg Bonus": 9,
+   "HP": 15,
+   "STR": 11,
+   "STA": 9,
+   "DEX": 13
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Crypt Guardian",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/ancient-warsword/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Crypt Guardian"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Slashing Atk Delay: 19",
+   "DMG: 12 Dmg Bonus: 9",
+   "HP: +15",
+   "STR: +11 STA: +9 DEX: +13",
+   "WT: 8.0 Size: LARGE",
+   "Class: PAL RNG SHD",
+   "Drops From: Nektropos Castle: Crypt Guardian",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 12,
+   "dly": 19,
+   "ratio0": 0.6316,
+   "dmg10": 24,
+   "ratio10": 1.2632
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Crypt Guardian",
+  "sourceHref": "https://eqlegendstools.com/items/ancient-warsword/"
+ },
+ {
+  "name": "Angler's Finery",
+  "itemID": null,
+  "slots": [
+   "HEAD"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "STA": 17,
+   "AGI": -8,
+   "CHA": -8,
+   "SV COLD": 10,
+   "SV VOID": 0
+  },
+  "special": [
+   "Skill Mod: Fishing 5%",
+   "Effect: Enduring Breath (Worn)"
+  ],
+  "source": "Drops From: Lake Nerius: Corrupted Kedgespawn",
+  "flags": "Attunable",
+  "sourceUrl": "https://eqlegendstools.com/items/anglers-finery/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Lake Nerius",
+    "npc": "Corrupted Kedgespawn"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Attunable",
+   "Slot: HEAD",
+   "STA: +17 AGI: -8 CHA: -8",
+   "SV COLD: +10 SV VOID: +0",
+   "Skill Mod: Fishing 5%",
+   "Effect: Enduring Breath (Worn)",
+   "WT: 0.2 Size: SMALL",
+   "Class: ALL",
+   "Drops From: Lake Nerius: Corrupted Kedgespawn",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Lake Nerius",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/lake-nerius/",
+  "sourceZones": [
+   "Lake Nerius"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/lake-nerius/"
+  ],
+  "sourceDisplay": "Drops From: Lake Nerius: Corrupted Kedgespawn",
+  "sourceHref": "https://eqlegendstools.com/items/anglers-finery/"
+ },
+ {
+  "name": "Blood's Unity",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Rogue"
+  ],
+  "stats": {
+   "DLY": 20,
+   "DMG": 11,
+   "Dmg Bonus": 10,
+   "STR": 15,
+   "STA": 15,
+   "INT": 15,
+   "WIS": 15,
+   "AGI": 15,
+   "DEX": 15,
+   "CHA": 15,
+   "SV MAGIC": 15,
+   "SV FIRE": 15,
+   "SV COLD": 15,
+   "SV DISEASE": 15,
+   "SV POISON": 15,
+   "SV VOID": 30
+  },
+  "special": [
+   "Note: Awarded after obtaining the Remnant of the Betrayer from Plimptos, then killing Alexa Everling followed by Lord Rikantus Everling. You must have Fractured Malice in your inventory when you kill Lord Rikantus Everling. This can be completed multiple times."
+  ],
+  "source": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/bloods-unity/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Lord Rikantus Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Slashing Atk Delay: 20",
+   "DMG: 11 Dmg Bonus: 10",
+   "STR: +15 STA: +15 INT: +15 WIS: +15 AGI: +15 DEX: +15 CHA: +15",
+   "SV MAGIC: +15 SV FIRE: +15 SV COLD: +15 SV DISEASE: +15 SV POISON: +15 SV VOID: +30",
+   "WT: 5.0 Size: MEDIUM",
+   "Class: WAR PAL RNG SHD ROG",
+   "Drops From: Nektropos Castle: Lord Rikantus Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment.",
+   "Note: Awarded after obtaining the Remnant of the Betrayer from Plimptos, then killing Alexa Everling followed by Lord Rikantus Everling. You must have Fractured Malice in your inventory when you kill Lord Rikantus Everling. This can be completed multiple times."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 11,
+   "dly": 20,
+   "ratio0": 0.55,
+   "dmg10": 22,
+   "ratio10": 1.1
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "sourceHref": "https://eqlegendstools.com/items/bloods-unity/"
+ },
+ {
+  "name": "Bloodsoaked Gauntlets",
+  "itemID": null,
+  "slots": [
+   "HANDS"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Shadow Knight",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 17,
+   "HP": 130,
+   "MANA": 95,
+   "END": 95
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/bloodsoaked-gauntlets/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Inquisitor of Ulkorruuk"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: HANDS",
+   "AC: 17 HP: +130 MANA: +95 END: +95",
+   "WT: 3.5 Size: SMALL",
+   "Class: WAR PAL SHD BER",
+   "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+  "sourceHref": "https://eqlegendstools.com/items/bloodsoaked-gauntlets/"
+ },
+ {
+  "name": "Burning Fighters Blade",
+  "itemID": null,
+  "slots": [
+   "SECONDARY"
+  ],
+  "classes": [
+   "Ranger"
+  ],
+  "stats": {
+   "DLY": 20,
+   "DMG": 8,
+   "Dmg Bonus": 10,
+   "Fire DMG": 4,
+   "WIS": 4,
+   "DEX": 4,
+   "SV Fire": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/burning-fighters-blade/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Guard Captain Ga'Vin"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: SECONDARY",
+   "Skill: 1H Slashing Atk Delay: 20",
+   "DMG: 8 Dmg Bonus: 10",
+   "Fire DMG: +4",
+   "WIS: +4 DEX: +4",
+   "SV Fire: +5",
+   "WT: 5.0 Size: MEDIUM",
+   "Class: RNG",
+   "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 8,
+   "dly": 20,
+   "ratio0": 0.4,
+   "dmg10": 16,
+   "ratio10": 0.8
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+  "sourceHref": "https://eqlegendstools.com/items/burning-fighters-blade/"
+ },
+ {
+  "name": "Checkmate",
+  "itemID": null,
+  "slots": [
+   "EAR"
+  ],
+  "classes": [
+   "Warrior",
+   "Monk",
+   "Rogue",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 5,
+   "INT": 5,
+   "WIS": 5,
+   "CHA": 5,
+   "SV MAGIC": 5,
+   "SV FIRE": 5,
+   "Mana Regen": 2
+  },
+  "special": [
+   "Focus Effect: Improved Damage III"
+  ],
+  "source": "Drops From: Nektropos Castle: The Game Master",
+  "flags": "Attunable",
+  "sourceUrl": "https://eqlegendstools.com/items/checkmate/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Game Master"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Attunable",
+   "Slot: EAR",
+   "AC: 6 MANA: +5",
+   "INT: +5 WIS: +5 CHA: +5",
+   "SV MAGIC: +5 SV FIRE: +5",
+   "Mana Regen: +2",
+   "Focus Effect: Improved Damage III",
+   "WT: 0.1 Size: TINY",
+   "Class: WAR MNK ROG BER",
+   "Drops From: Nektropos Castle: The Game Master",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25). CONFLICT: eqlwiki lists WIS +8, MANA +10; eqlegendstools lists WIS 5, MANA 5. Source: https://eqlwiki.com/Nektropos_Castle",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Game Master",
+  "sourceHref": "https://eqlegendstools.com/items/checkmate/"
+ },
+ {
+  "name": "Cloak of Treason",
+  "itemID": null,
+  "slots": [
+   "BACK"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 13,
+   "STR": 13,
+   "DEX": 13,
+   "ATK": 13,
+   "SV POISON": 13
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/cloak-of-treason/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Inquisitor of Ulkorruuk"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: BACK",
+   "AC: 13",
+   "STR: +13 DEX: +13 ATK: +13",
+   "SV POISON: +13",
+   "WT: 2.0 Size: SMALL",
+   "Class: ALL",
+   "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Inquisitor of Ulkorruuk",
+  "sourceHref": "https://eqlegendstools.com/items/cloak-of-treason/"
+ },
+ {
+  "name": "Corroded Spiked Club",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "DLY": 18,
+   "DMG": 10,
+   "Dmg Bonus": 8,
+   "HP": 10,
+   "END": 10,
+   "STR": 8,
+   "STA": 8,
+   "AGI": 8,
+   "DEX": 8
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: C'Rate",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/corroded-spiked-club/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "C'Rate"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: 1H Blunt Atk Delay: 18",
+   "DMG: 10 Dmg Bonus: 8",
+   "HP: +10 END: +10",
+   "STR: +8 STA: +8 AGI: +8 DEX: +8",
+   "WT: 3.0 Size: MEDIUM",
+   "Class: WAR CLR PAL RNG SHD DRU MNK BRD ROG SHM BST BER",
+   "Drops From: Nektropos Castle: C'Rate",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Blunt",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 10,
+   "dly": 18,
+   "ratio0": 0.5556,
+   "dmg10": 20,
+   "ratio10": 1.1111
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: C'Rate",
+  "sourceHref": "https://eqlegendstools.com/items/corroded-spiked-club/"
+ },
+ {
+  "name": "Cryptguard",
+  "itemID": null,
+  "slots": [
+   "SECONDARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Shadow Knight"
+  ],
+  "stats": {
+   "AC": 30,
+   "STR": 10,
+   "STA": 10,
+   "SV MAGIC": 10
+  },
+  "special": [
+   "Type: Shield"
+  ],
+  "source": "Drops From: Nektropos Castle: Crypt Guardian",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/cryptguard/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Crypt Guardian"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: SECONDARY",
+   "Type: Shield",
+   "AC: 30",
+   "STR: +10 STA: +10",
+   "SV MAGIC: +10",
+   "WT: 5.5 Size: MEDIUM",
+   "Class: WAR PAL SHD",
+   "Drops From: Nektropos Castle: Crypt Guardian",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Crypt Guardian",
+  "sourceHref": "https://eqlegendstools.com/items/cryptguard/"
+ },
+ {
+  "name": "Dark Ironbound Tome",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Shadow Knight",
+   "Necromancer"
+  ],
+  "stats": {
+   "DLY": 22,
+   "DMG": 15,
+   "Dmg Bonus": 10,
+   "HP": 20,
+   "STA": 8
+  },
+  "special": [
+   "Focus Effect: Improved Vampirism III"
+  ],
+  "source": "Drops From: Nektropos Castle: The Head Librarian",
+  "flags": "No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/dark-ironbound-tome/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Head Librarian"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Blunt Atk Delay: 22",
+   "DMG: 15 Dmg Bonus: 10",
+   "HP: +20",
+   "STA: +8",
+   "Focus Effect: Improved Vampirism III",
+   "WT: 2.0 Size: MEDIUM",
+   "Class: SHD NEC",
+   "Drops From: Nektropos Castle: The Head Librarian",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Blunt",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 15,
+   "dly": 22,
+   "ratio0": 0.6818,
+   "dmg10": 30,
+   "ratio10": 1.3636
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Head Librarian",
+  "sourceHref": "https://eqlegendstools.com/items/dark-ironbound-tome/"
+ },
+ {
+  "name": "Distressed Mithril Shortbow",
+  "itemID": null,
+  "slots": [
+   "RANGE"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight"
+  ],
+  "stats": {
+   "DLY": 40,
+   "DMG": 25,
+   "Range": 175,
+   "HP": 25,
+   "MANA": 25,
+   "AGI": 7,
+   "DEX": 7,
+   "SV DISEASE": 5,
+   "SV POISON": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: C'Rate",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/distressed-mithril-shortbow/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "C'Rate"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: RANGE",
+   "Skill: Archery Atk Delay: 40",
+   "DMG: 25",
+   "Range: 175",
+   "HP: +25 MANA: +25",
+   "AGI: +7 DEX: +7",
+   "SV DISEASE: +5 SV POISON: +5",
+   "WT: 4.0 Size: MEDIUM",
+   "Class: WAR PAL RNG SHD",
+   "Drops From: Nektropos Castle: C'Rate",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "Archery",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25). CONFLICT: eqlwiki lists SV DISEASE +15; eqlegendstools lists 5. Source: https://eqlwiki.com/Nektropos_Castle",
+  "weapon": {
+   "dmg0": 25,
+   "dly": 40,
+   "ratio0": 0.625,
+   "dmg10": 50,
+   "ratio10": 1.25
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: C'Rate",
+  "sourceHref": "https://eqlegendstools.com/items/distressed-mithril-shortbow/"
+ },
+ {
+  "name": "Doll's Fang",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Monk",
+   "Beastlord"
+  ],
+  "stats": {
+   "DLY": 20,
+   "DMG": 13,
+   "Dmg Bonus": 10
+  },
+  "special": [
+   "Effect: Lifedraw (Combat) at Level 1"
+  ],
+  "source": "Drops From: Nektropos Castle: Alexa Everling",
+  "flags": "No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/dolls-fang/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Alexa Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: Hand to Hand Atk Delay: 20",
+   "DMG: 13 Dmg Bonus: 10",
+   "Effect: Lifedraw (Combat) at Level 1",
+   "WT: 0.5 Size: SMALL",
+   "Class: MNK BST",
+   "Drops From: Nektropos Castle: Alexa Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "Hand to Hand",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 13,
+   "dly": 20,
+   "ratio0": 0.65,
+   "dmg10": 26,
+   "ratio10": 1.3
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Alexa Everling",
+  "sourceHref": "https://eqlegendstools.com/items/dolls-fang/"
+ },
+ {
+  "name": "Earring of Experimentation",
+  "itemID": null,
+  "slots": [
+   "EAR"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 3,
+   "STA": 3,
+   "CHA": -3
+  },
+  "special": [],
+  "source": "Drops From: Lake Nerius: Discarded Experiment",
+  "flags": "Attunable",
+  "sourceUrl": "https://eqlegendstools.com/items/earring-of-experimentation/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Lake Nerius",
+    "npc": "Discarded Experiment"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Attunable",
+   "Slot: EAR",
+   "AC: 3",
+   "STA: +3 CHA: -3",
+   "WT: 0.1 Size: TINY",
+   "Class: ALL",
+   "Drops From: Lake Nerius: Discarded Experiment",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Lake Nerius",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/lake-nerius/",
+  "sourceZones": [
+   "Lake Nerius"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/lake-nerius/"
+  ],
+  "sourceDisplay": "Drops From: Lake Nerius: Discarded Experiment",
+  "sourceHref": "https://eqlegendstools.com/items/earring-of-experimentation/"
+ },
+ {
+  "name": "Gamblers Gambit",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Rogue"
+  ],
+  "stats": {
+   "DLY": 20,
+   "DMG": 11,
+   "Dmg Bonus": 10,
+   "Backstab Dmg": 13,
+   "Proc Rate": "-75%"
+  },
+  "special": [
+   "Effect: Supernova (Combat) at Level 45"
+  ],
+  "source": "Drops From: Nektropos Castle: The Game Master",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/gamblers-gambit/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Game Master"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Piercing Atk Delay: 20",
+   "DMG: 11 Dmg Bonus: 10 Backstab Dmg: 13",
+   "Effect: Supernova (Combat) at Level 45",
+   "Proc Rate: -75%",
+   "WT: 3.5 Size: SMALL",
+   "Class: ROG",
+   "Drops From: Nektropos Castle: The Game Master",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Piercing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 11,
+   "dly": 20,
+   "ratio0": 0.55,
+   "dmg10": 22,
+   "ratio10": 1.1
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Game Master",
+  "sourceHref": "https://eqlegendstools.com/items/gamblers-gambit/"
+ },
+ {
+  "name": "Handmaiden's Earring",
+  "itemID": null,
+  "slots": [
+   "EAR"
+  ],
+  "classes": [
+   "Cleric",
+   "Druid",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "MANA": 10,
+   "INT": 7,
+   "WIS": 7,
+   "CHA": 7
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/handmaidens-earring/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "A Spectral Handmaiden"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: EAR",
+   "MANA: +10",
+   "INT: +7 WIS: +7 CHA: +7",
+   "WT: 0.1 Size: TINY",
+   "Class: CLR DRU SHM NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: A Spectral Handmaiden",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "sourceHref": "https://eqlegendstools.com/items/handmaidens-earring/"
+ },
+ {
+  "name": "Handmaiden's Handwrap",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Monk",
+   "Beastlord"
+  ],
+  "stats": {
+   "DLY": 30,
+   "DMG": 5,
+   "Dmg Bonus": 15
+  },
+  "special": [
+   "Bane Dmg: Undead +25"
+  ],
+  "source": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "flags": "No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/handmaidens-handwrap/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "A Spectral Handmaiden"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: Hand to Hand Atk Delay: 30",
+   "DMG: 5 Dmg Bonus: 15",
+   "Bane Dmg: Undead +25",
+   "WT: 0.5 Size: TINY",
+   "Class: MNK BST",
+   "Drops From: Nektropos Castle: A Spectral Handmaiden",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": "Hand to Hand",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 5,
+   "dly": 30,
+   "ratio0": 0.1667,
+   "dmg10": 10,
+   "ratio10": 0.3333
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "sourceHref": "https://eqlegendstools.com/items/handmaidens-handwrap/"
+ },
+ {
+  "name": "Handmaiden's Ring",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 10,
+   "HP": 5,
+   "END": 5,
+   "STR": 4,
+   "STA": 4,
+   "AGI": 8,
+   "DEX": 4
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/handmaidens-ring/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "A Spectral Handmaiden"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FINGER",
+   "AC: 10 HP: +5 END: +5",
+   "STR: +4 STA: +4 AGI: +8 DEX: +4",
+   "WT: 0.1 Size: TINY",
+   "Class: WAR PAL RNG SHD MNK BRD ROG BST BER",
+   "Drops From: Nektropos Castle: A Spectral Handmaiden",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "sourceHref": "https://eqlegendstools.com/items/handmaidens-ring/"
+ },
+ {
+  "name": "Handmaiden's Wristwrap",
+  "itemID": null,
+  "slots": [
+   "WRIST"
+  ],
+  "classes": [
+   "Druid",
+   "Monk",
+   "Shaman",
+   "Beastlord"
+  ],
+  "stats": {
+   "HP": 10,
+   "STA": 7,
+   "WIS": 7,
+   "AGI": 7,
+   "SV FIRE": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/handmaidens-wristwrap/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "A Spectral Handmaiden"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: WRIST",
+   "HP: +10",
+   "STA: +7 WIS: +7 AGI: +7",
+   "SV FIRE: +5",
+   "WT: 1.0 Size: SMALL",
+   "Class: DRU MNK SHM BST",
+   "Drops From: Nektropos Castle: A Spectral Handmaiden",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: A Spectral Handmaiden",
+  "sourceHref": "https://eqlegendstools.com/items/handmaidens-wristwrap/"
+ },
+ {
+  "name": "Helical Band of the Unyielding",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 11,
+   "HP": 35,
+   "STA": 9
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/helical-band-of-the-unyielding/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Guard Captain Ga'Vin"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FINGER",
+   "AC: 11 HP: +35",
+   "STA: +9",
+   "WT: 0.1 Size: TINY",
+   "Class: ALL",
+   "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Guard Captain Ga'Vin",
+  "sourceHref": "https://eqlegendstools.com/items/helical-band-of-the-unyielding/"
+ },
+ {
+  "name": "Idol of Forsaken Ideals",
+  "itemID": null,
+  "slots": [
+   "RANGE"
+  ],
+  "classes": [
+   "Cleric",
+   "Paladin",
+   "Druid",
+   "Shaman",
+   "Beastlord"
+  ],
+  "stats": {
+   "MANA": 25,
+   "STA": 6,
+   "WIS": 6,
+   "CHA": 6,
+   "SV MAGIC": 7,
+   "SV DISEASE": 7
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/idol-of-forsaken-ideals/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Lord Rikantus Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: RANGE",
+   "MANA: +25",
+   "STA: +6 WIS: +6 CHA: +6",
+   "SV MAGIC: +7 SV DISEASE: +7",
+   "WT: 0.1 Size: TINY",
+   "Class: CLR PAL DRU SHM BST",
+   "Drops From: Nektropos Castle: Lord Rikantus Everling",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "sourceHref": "https://eqlegendstools.com/items/idol-of-forsaken-ideals/"
+ },
+ {
+  "name": "Layered Guards",
+  "itemID": null,
+  "slots": [
+   "ARMS"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Rogue",
+   "Shaman"
+  ],
+  "stats": {
+   "AC": 19,
+   "END": 30,
+   "STR": 7,
+   "STA": 12
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Sergeant Tvyn",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/layered-guards/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Sergeant Tvyn"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: ARMS",
+   "AC: 19 END: +30",
+   "STR: +7 STA: +12",
+   "WT: 2.5 Size: SMALL",
+   "Class: WAR PAL RNG SHD ROG SHM",
+   "Drops From: Nektropos Castle: Sergeant Tvyn",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Sergeant Tvyn",
+  "sourceHref": "https://eqlegendstools.com/items/layered-guards/"
+ },
+ {
+  "name": "Pyrosilk Amice",
+  "itemID": null,
+  "slots": [
+   "SHOULDER"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 15,
+   "STA": 3,
+   "INT": 5,
+   "AGI": 3,
+   "SV MAGIC": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Crysta Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-amice/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Crysta Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: SHOULDER",
+   "AC: 6 MANA: +15",
+   "STA: +3 INT: +5 AGI: +3",
+   "SV MAGIC: +5",
+   "WT: 1.0 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Crysta Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Crysta Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-amice/"
+ },
+ {
+  "name": "Pyrosilk Bracelet",
+  "itemID": null,
+  "slots": [
+   "WRIST"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 5,
+   "MANA": 20,
+   "STA": 4,
+   "DEX": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Elise Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-bracelet/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Elise Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: WRIST",
+   "AC: 5 MANA: +20",
+   "STA: +4 DEX: +5",
+   "WT: 0.5 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Elise Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Elise Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-bracelet/"
+ },
+ {
+  "name": "Pyrosilk Choker",
+  "itemID": null,
+  "slots": [
+   "NECK"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 15,
+   "STA": 3,
+   "INT": 5,
+   "DEX": 3,
+   "SV DISEASE": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Deirdre Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-choker/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Deirdre Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: NECK",
+   "AC: 6 MANA: +15",
+   "STA: +3 INT: +5 DEX: +3",
+   "SV DISEASE: +10",
+   "WT: 0.1 Size: TINY",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Deirdre Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Deirdre Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-choker/"
+ },
+ {
+  "name": "Pyrosilk Cloak",
+  "itemID": null,
+  "slots": [
+   "BACK"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 15,
+   "INT": 4,
+   "AGI": 2,
+   "DEX": 2,
+   "SV COLD": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Melanie Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-cloak/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Melanie Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: BACK",
+   "AC: 6 MANA: +15",
+   "INT: +4 AGI: +2 DEX: +2",
+   "SV COLD: +10",
+   "WT: 1.0 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Melanie Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Melanie Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-cloak/"
+ },
+ {
+  "name": "Pyrosilk Gloves",
+  "itemID": null,
+  "slots": [
+   "HANDS"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 15,
+   "INT": 8,
+   "AGI": 9,
+   "DEX": 11,
+   "SV DISEASE": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Sheila Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-gloves/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Sheila Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: HANDS",
+   "AC: 6 MANA: +15",
+   "INT: +8 AGI: +9 DEX: +11",
+   "SV DISEASE: +10",
+   "WT: 0.5 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Sheila Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Sheila Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-gloves/"
+ },
+ {
+  "name": "Pyrosilk Headband",
+  "itemID": null,
+  "slots": [
+   "HEAD"
+  ],
+  "classes": [
+   "Monk",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 7,
+   "MANA": 20,
+   "INT": 9,
+   "WIS": 7,
+   "CHA": 8,
+   "SV MAGIC": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Sheila Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-headband/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Sheila Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: HEAD",
+   "AC: 7 MANA: +20",
+   "INT: +9 WIS: +7 CHA: +8",
+   "SV MAGIC: +10",
+   "WT: 0.5 Size: SMALL",
+   "Class: MNK NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Sheila Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Sheila Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-headband/"
+ },
+ {
+  "name": "Pyrosilk Leggings",
+  "itemID": null,
+  "slots": [
+   "LEGS"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 8,
+   "MANA": 15,
+   "INT": 8,
+   "SV FIRE": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Crysta Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-leggings/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Crysta Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: LEGS",
+   "AC: 8 MANA: +15",
+   "INT: +8",
+   "SV FIRE: +10",
+   "WT: 1.5 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Crysta Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Crysta Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-leggings/"
+ },
+ {
+  "name": "Pyrosilk Lined Shoes",
+  "itemID": null,
+  "slots": [
+   "FEET"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 25,
+   "STA": 5,
+   "INT": 6,
+   "AGI": 9,
+   "SV FIRE": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Elise Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-lined-shoes/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Elise Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FEET",
+   "AC: 6 MANA: +25",
+   "STA: +5 INT: +6 AGI: +9",
+   "SV FIRE: +5",
+   "WT: 1.0 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Elise Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Elise Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-lined-shoes/"
+ },
+ {
+  "name": "Pyrosilk Robe",
+  "itemID": null,
+  "slots": [
+   "CHEST"
+  ],
+  "classes": [
+   "Monk",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 13,
+   "MANA": 40,
+   "STA": 14,
+   "INT": 13,
+   "DEX": 9,
+   "CHA": 12,
+   "SV MAGIC": 10,
+   "SV FIRE": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Alexa Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-robe/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Alexa Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: CHEST",
+   "AC: 13 MANA: +40",
+   "STA: +14 INT: +13 DEX: +9 CHA: +12",
+   "SV MAGIC: +10 SV FIRE: +10",
+   "WT: 2.0 Size: SMALL",
+   "Class: MNK NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Alexa Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Alexa Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-robe/"
+ },
+ {
+  "name": "Pyrosilk Sash",
+  "itemID": null,
+  "slots": [
+   "WAIST"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 6,
+   "MANA": 15,
+   "STR": 4,
+   "INT": 5,
+   "SV MAGIC": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Melanie Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-sash/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Melanie Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: WAIST",
+   "AC: 6 MANA: +15",
+   "STR: +4 INT: +5",
+   "SV MAGIC: +10",
+   "WT: 0.5 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Melanie Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Melanie Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-sash/"
+ },
+ {
+  "name": "Pyrosilk Sleeves",
+  "itemID": null,
+  "slots": [
+   "ARMS"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 7,
+   "HP": 20,
+   "INT": 8,
+   "SV COLD": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Deirdre Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-sleeves/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Deirdre Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: ARMS",
+   "AC: 7 HP: +20",
+   "INT: +8",
+   "SV COLD: +10",
+   "WT: 0.5 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Deirdre Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Deirdre Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-sleeves/"
+ },
+ {
+  "name": "Pyrosilk Veil",
+  "itemID": null,
+  "slots": [
+   "FACE"
+  ],
+  "classes": [
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 5,
+   "MANA": 15,
+   "INT": 4,
+   "SV DISEASE": 10,
+   "SV POISON": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Jenni Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyrosilk-veil/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Jenni Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FACE",
+   "AC: 5 MANA: +15",
+   "INT: +4",
+   "SV DISEASE: +10 SV POISON: +10",
+   "WT: 0.1 Size: SMALL",
+   "Class: NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Jenni Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Jenni Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyrosilk-veil/"
+ },
+ {
+  "name": "Pyroweave Band",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 9,
+   "INT": 9,
+   "SV FIRE": 25
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Jenni Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/pyroweave-band/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Jenni Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FINGER",
+   "AC: 9",
+   "INT: +9",
+   "SV FIRE: +25",
+   "WT: 0.1 Size: TINY",
+   "Class: ALL",
+   "Drops From: Nektropos Castle: Jenni Everling",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Jenni Everling",
+  "sourceHref": "https://eqlegendstools.com/items/pyroweave-band/"
+ },
+ {
+  "name": "Ring of the Eldest",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 13,
+   "STA": 7,
+   "INT": 4,
+   "WIS": 11,
+   "SV COLD": 10,
+   "SV DISEASE": 10,
+   "SV POISON": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Alexa Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/ring-of-the-eldest/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Alexa Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FINGER",
+   "AC: 13",
+   "STA: +7 INT: +4 WIS: +11",
+   "SV COLD: +10 SV DISEASE: +10 SV POISON: +10",
+   "WT: 0.1 Size: TINY",
+   "Class: ALL",
+   "Drops From: Nektropos Castle: Alexa Everling",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Alexa Everling",
+  "sourceHref": "https://eqlegendstools.com/items/ring-of-the-eldest/"
+ },
+ {
+  "name": "Robe of the Betrayed",
+  "itemID": null,
+  "slots": [
+   "CHEST"
+  ],
+  "classes": [
+   "Druid",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 22,
+   "HP": 25,
+   "MANA": 25,
+   "STA": 14,
+   "INT": 12,
+   "WIS": 12,
+   "CHA": 8,
+   "SV MAGIC": 2,
+   "SV FIRE": 2,
+   "SV COLD": 2,
+   "SV DISEASE": 2,
+   "SV POISON": 2,
+   "SV VOID": 4
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/robe-of-the-betrayed/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Lord Rikantus Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: CHEST",
+   "AC: 22 HP: +25 MANA: +25",
+   "STA: +14 INT: +12 WIS: +12 CHA: +8",
+   "SV MAGIC: +2 SV FIRE: +2 SV COLD: +2 SV DISEASE: +2 SV POISON: +2 SV VOID: +4",
+   "WT: 3.0 Size: MEDIUM",
+   "Class: DRU SHM NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Lord Rikantus Everling",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "sourceHref": "https://eqlegendstools.com/items/robe-of-the-betrayed/"
+ },
+ {
+  "name": "Scars of the Indomable",
+  "itemID": null,
+  "slots": [
+   "ARMS"
+  ],
+  "classes": [
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 22,
+   "HP": 35,
+   "END": 45,
+   "STA": 25
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: The Juggernaught",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/scars-of-the-indomable/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Juggernaught"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: ARMS",
+   "AC: 22 HP: +35 END: +45",
+   "STA: +25",
+   "WT: 4.0 Size: MEDIUM",
+   "Class: BER",
+   "Drops From: Nektropos Castle: The Juggernaught",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25). CONFLICT: eqlwiki spells it 'Scars of the Indominable'. Source: https://eqlwiki.com/Nektropos_Castle",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Juggernaught",
+  "sourceHref": "https://eqlegendstools.com/items/scars-of-the-indomable/"
+ },
+ {
+  "name": "Schemer's Guise",
+  "itemID": null,
+  "slots": [
+   "FACE"
+  ],
+  "classes": [
+   "Bard",
+   "Rogue",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 5,
+   "MANA": 30,
+   "INT": 13,
+   "CHA": 13,
+   "SV MAGIC": 10
+  },
+  "special": [
+   "Effect: Illusion: Half Dark Elf (Must Equip, Casting Time: Instant)"
+  ],
+  "source": "Drops From: Nektropos Castle: The Game Master",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/schemers-guise/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Game Master"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FACE",
+   "AC: 5 MANA: +30",
+   "INT: +13 CHA: +13",
+   "SV MAGIC: +10",
+   "Effect: Illusion: Half Dark Elf (Must Equip, Casting Time: Instant)",
+   "WT: 1.0 Size: SMALL",
+   "Class: BRD ROG ENC",
+   "Drops From: Nektropos Castle: The Game Master",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Game Master",
+  "sourceHref": "https://eqlegendstools.com/items/schemers-guise/"
+ },
+ {
+  "name": "Sergeant's Leather Belt",
+  "itemID": null,
+  "slots": [
+   "WAIST"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "HP": 35,
+   "END": 20,
+   "STA": 9,
+   "Haste": "32%"
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Sergeant Tvyn",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/sergeants-leather-belt/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Sergeant Tvyn"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: WAIST",
+   "HP: +35 END: +20",
+   "STA: +9",
+   "Haste: +32%",
+   "WT: 0.5 Size: SMALL",
+   "Class: WAR CLR PAL RNG SHD DRU MNK BRD ROG SHM BST BER",
+   "Drops From: Nektropos Castle: Sergeant Tvyn",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Sergeant Tvyn",
+  "sourceHref": "https://eqlegendstools.com/items/sergeants-leather-belt/"
+ },
+ {
+  "name": "Signet Ring of Lord Everling",
+  "itemID": null,
+  "slots": [
+   "FINGER"
+  ],
+  "classes": [
+   "Shadow Knight",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "HP": 15,
+   "MANA": 15,
+   "STR": 7,
+   "INT": 7,
+   "DEX": 5,
+   "SV MAGIC": 5
+  },
+  "special": [
+   "Focus Effect: Mana Preservation III"
+  ],
+  "source": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/signet-ring-of-lord-everling/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Lord Rikantus Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: FINGER",
+   "HP: +15 MANA: +15",
+   "STR: +7 INT: +7 DEX: +5",
+   "SV MAGIC: +5",
+   "Focus Effect: Mana Preservation III",
+   "WT: 0.1 Size: TINY",
+   "Class: SHD NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Lord Rikantus Everling",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "sourceHref": "https://eqlegendstools.com/items/signet-ring-of-lord-everling/"
+ },
+ {
+  "name": "The Unbreakable Word",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Cleric",
+   "Paladin"
+  ],
+  "stats": {
+   "DLY": 22,
+   "DMG": 15,
+   "Dmg Bonus": 10,
+   "MANA": 20,
+   "WIS": 8
+  },
+  "special": [
+   "Focus Effect: Mana Preservation III"
+  ],
+  "source": "Drops From: Nektropos Castle: The Head Librarian",
+  "flags": "No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/the-unbreakable-word/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Head Librarian"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Blunt Atk Delay: 22",
+   "DMG: 15 Dmg Bonus: 10",
+   "MANA: +20",
+   "WIS: +8",
+   "Focus Effect: Mana Preservation III",
+   "WT: 2.0 Size: MEDIUM",
+   "Class: CLR PAL",
+   "Drops From: Nektropos Castle: The Head Librarian",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Blunt",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 15,
+   "dly": 22,
+   "ratio0": 0.6818,
+   "dmg10": 30,
+   "ratio10": 1.3636
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Head Librarian",
+  "sourceHref": "https://eqlegendstools.com/items/the-unbreakable-word/"
+ },
+ {
+  "name": "Torturer's Signature",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Ranger",
+   "Bard",
+   "Rogue"
+  ],
+  "stats": {
+   "DLY": 22,
+   "DMG": 10,
+   "Backstab DMG": 15,
+   "Dmg Bonus": 10,
+   "STR": 10,
+   "STA": 5,
+   "DEX": 10,
+   "SV Fire": 5,
+   "SV Cold": 5
+  },
+  "special": [
+   "Effect: Laceration (Combat) at Level 1"
+  ],
+  "source": "Drops From: Nektropos Castle: Tormentor Utzain",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/torturers-signature/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Tormentor Utzain"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: 1H Piercing Atk Delay: 22",
+   "DMG: 10 Backstab DMG: 15 Dmg Bonus: 10",
+   "STR: +10 STA: +5 DEX: +10",
+   "SV Fire: +5 SV Cold: +5",
+   "Effect: Laceration (Combat) at Level 1",
+   "WT: 2.5 Size: MEDIUM",
+   "Class: WAR RNG BRD ROG",
+   "Drops From: Nektropos Castle: Tormentor Utzain",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": "1H Piercing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 10,
+   "dly": 22,
+   "ratio0": 0.4545,
+   "dmg10": 20,
+   "ratio10": 0.9091
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Tormentor Utzain",
+  "sourceHref": "https://eqlegendstools.com/items/torturers-signature/"
+ },
+ {
+  "name": "Unbroken Golem Core",
+  "itemID": null,
+  "slots": [
+   "SECONDARY"
+  ],
+  "classes": [
+   "Cleric",
+   "Druid",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "AC": 19,
+   "SV MAGIC": 19,
+   "SV FIRE": 19,
+   "SV COLD": 19,
+   "SV DISEASE": 19,
+   "SV POISON": 19,
+   "SV VOID": 38,
+   "Cooldown": 180
+  },
+  "special": [
+   "Type: Shield",
+   "Effect: Rune III (Must Equip, Casting Time: Instant) at Level 40",
+   "Charges: Infinite"
+  ],
+  "source": "Drops From: Nektropos Castle: The Head Librarian",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/unbroken-golem-core/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Head Librarian"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: SECONDARY",
+   "Type: Shield",
+   "AC: 19",
+   "SV MAGIC: +19 SV FIRE: +19 SV COLD: +19 SV DISEASE: +19 SV POISON: +19 SV VOID: +38",
+   "Effect: Rune III (Must Equip, Casting Time: Instant) at Level 40",
+   "Charges: Infinite",
+   "Cooldown: 180 seconds",
+   "WT: 4.0 Size: MEDIUM",
+   "Class: CLR DRU SHM NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: The Head Librarian",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25). CONFLICT: Classes: eqlegendstools CLR DRU SHM NEC WIZ MAG ENC; eqlwiki DRU SHM NEC WIZ MAG. Source: https://eqlwiki.com/Nektropos_Castle",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Head Librarian",
+  "sourceHref": "https://eqlegendstools.com/items/unbroken-golem-core/"
+ },
+ {
+  "name": "Unstoppable Girdle",
+  "itemID": null,
+  "slots": [
+   "WAIST"
+  ],
+  "classes": [
+   "Warrior",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 15,
+   "HP": 35,
+   "END": 45,
+   "STR": 25
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: The Juggernaught",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/unstoppable-girdle/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "The Juggernaught"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: WAIST",
+   "AC: 15 HP: +35 END: +45",
+   "STR: +25",
+   "WT: 3.0 Size: MEDIUM",
+   "Class: WAR BER",
+   "Drops From: Nektropos Castle: The Juggernaught",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: The Juggernaught",
+  "sourceHref": "https://eqlegendstools.com/items/unstoppable-girdle/"
+ },
+ {
+  "name": "Warstaff of Hope's Demise",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter"
+  ],
+  "stats": {
+   "DLY": 30,
+   "DMG": 10,
+   "Dmg Bonus": 15,
+   "Backstab DMG": 15,
+   "Magic Dmg": 30,
+   "HP": 25,
+   "MANA": 25,
+   "STR": 6,
+   "INT": 10,
+   "AGI": 6,
+   "DEX": 6,
+   "SV MAGIC": 5,
+   "SV DISEASE": 5,
+   "SV POISON": 5
+  },
+  "special": [
+   "Focus Effect: Improved Damage III"
+  ],
+  "source": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/warstaff-of-hopes-demise/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Lord Rikantus Everling"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY",
+   "Skill: 1H Piercing Atk Delay: 30",
+   "DMG: 10 Dmg Bonus: 15 Backstab DMG: 15",
+   "Magic Dmg: +30",
+   "HP: +25 MANA: +25",
+   "STR: +6 INT: +10 AGI: +6 DEX: +6",
+   "SV MAGIC: +5 SV DISEASE: +5 SV POISON: +5",
+   "Focus Effect: Improved Damage III",
+   "WT: 2.5 Size: LARGE",
+   "Class: ROG SHM NEC WIZ MAG ENC",
+   "Drops From: Nektropos Castle: Lord Rikantus Everling",
+   "Farming Speed: Slow \u2014 Very time-consuming to acquire multiple copies."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Slow \u2014 Very time-consuming to acquire multiple copies.",
+  "skill": "1H Piercing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25). CONFLICT: eqlwiki lists Skill 1H Piercing and no delay; eqlegendstools lists DLY 30. Source: https://eqlwiki.com/Nektropos_Castle",
+  "weapon": {
+   "dmg0": 10,
+   "dly": 30,
+   "ratio0": 0.3333,
+   "dmg10": 20,
+   "ratio10": 0.6667
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Lord Rikantus Everling",
+  "sourceHref": "https://eqlegendstools.com/items/warstaff-of-hopes-demise/"
+ },
+ {
+  "name": "Well Worn Boots (Lake Nerius)",
+  "itemID": null,
+  "slots": [
+   "FEET"
+  ],
+  "classes": [
+   "Warrior",
+   "Cleric",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Druid",
+   "Monk",
+   "Bard",
+   "Rogue",
+   "Shaman",
+   "Necromancer",
+   "Wizard",
+   "Magician",
+   "Enchanter",
+   "Beastlord",
+   "Berserker"
+  ],
+  "stats": {
+   "AC": 5,
+   "STA": 1,
+   "WIS": 3
+  },
+  "special": [],
+  "source": "Drops From: Lake Nerius: Direbear",
+  "flags": "Attunable",
+  "sourceUrl": "https://eqlegendstools.com/items/well-worn-boots-lake-nerius/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Lake Nerius",
+    "npc": "Direbear"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Attunable",
+   "Slot: FEET",
+   "AC: 5",
+   "STA: +1 WIS: +3",
+   "WT: 2.2 Size: SMALL",
+   "Class: ALL",
+   "Drops From: Lake Nerius: Direbear",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Lake Nerius",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": null,
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/lake-nerius/",
+  "sourceZones": [
+   "Lake Nerius"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/lake-nerius/"
+  ],
+  "sourceDisplay": "Drops From: Lake Nerius: Direbear",
+  "sourceHref": "https://eqlegendstools.com/items/well-worn-boots-lake-nerius/"
+ },
+ {
+  "name": "Wellworn Blade",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Bard",
+   "Rogue"
+  ],
+  "stats": {
+   "DLY": 40,
+   "DMG": 19,
+   "Dmg Bonus": 20,
+   "END": 30,
+   "STR": 5,
+   "AGI": 5,
+   "DEX": 5
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Tormentor Utzain",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/wellworn-blade/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Tormentor Utzain"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: 1H Slashing Atk Delay: 40",
+   "DMG: 19 Dmg Bonus: 20",
+   "END: +30",
+   "STR: +5 AGI: +5 DEX: +5",
+   "WT: 4.0 Size: MEDIUM",
+   "Class: WAR PAL RNG SHD BRD ROG",
+   "Drops From: Nektropos Castle: Tormentor Utzain",
+   "Farming Speed: Fast \u2014 Can be farmed very rapidly."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fast \u2014 Can be farmed very rapidly.",
+  "skill": "1H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 19,
+   "dly": 40,
+   "ratio0": 0.475,
+   "dmg10": 38,
+   "ratio10": 0.95
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Tormentor Utzain",
+  "sourceHref": "https://eqlegendstools.com/items/wellworn-blade/"
+ },
+ {
+  "name": "Worn Corpse Chopper",
+  "itemID": null,
+  "slots": [
+   "PRIMARY",
+   "SECONDARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Ranger",
+   "Shadow Knight",
+   "Bard",
+   "Rogue"
+  ],
+  "stats": {
+   "DLY": 23,
+   "DMG": 7,
+   "Dmg Bonus": 11
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: Head Chef Vy'zen",
+  "flags": "No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/worn-corpse-chopper/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "Head Chef Vy'zen"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "No Trade",
+   "Slot: PRIMARY SECONDARY",
+   "Skill: 1H Slashing Atk Delay: 23",
+   "DMG: 7 Dmg Bonus: 11",
+   "WT: 8.5 Size: MEDIUM",
+   "Class: WAR PAL RNG SHD BRD ROG",
+   "Drops From: Nektropos Castle: Head Chef Vy'zen",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "1H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 7,
+   "dly": 23,
+   "ratio0": 0.3043,
+   "dmg10": 14,
+   "ratio10": 0.6087
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: Head Chef Vy'zen",
+  "sourceHref": "https://eqlegendstools.com/items/worn-corpse-chopper/"
+ },
+ {
+  "name": "Worn Great Blade",
+  "itemID": null,
+  "slots": [
+   "PRIMARY"
+  ],
+  "classes": [
+   "Warrior",
+   "Paladin",
+   "Shadow Knight",
+   "Berserker"
+  ],
+  "stats": {
+   "DLY": 45,
+   "DMG": 30,
+   "Dmg Bonus": 30,
+   "END": 50,
+   "STR": 10,
+   "STA": 10
+  },
+  "special": [],
+  "source": "Drops From: Nektropos Castle: C'Rate",
+  "flags": "Lore Equipped \u00b7 No Trade",
+  "sourceUrl": "https://eqlegendstools.com/items/worn-great-blade/",
+  "zamUrl": null,
+  "dropsFrom": [
+   {
+    "location": "Nektropos Castle",
+    "npc": "C'Rate"
+   }
+  ],
+  "rewardFromQuests": [],
+  "tooltipLines": [
+   "Lore Equipped \u00b7 No Trade",
+   "Slot: PRIMARY",
+   "Skill: 2H Slashing Atk Delay: 45",
+   "DMG: 30 Dmg Bonus: 30",
+   "END: +50",
+   "STR: +10 STA: +10",
+   "WT: 4.0 Size: LARGE",
+   "Class: WAR PAL SHD BER",
+   "Drops From: Nektropos Castle: C'Rate",
+   "Farming Speed: Fair \u2014 Can be farmed with a reasonable time investment."
+  ],
+  "minLevel": null,
+  "sourceZone": "Nektropos Castle",
+  "sourceKind": "eqlegendstools",
+  "farmingSpeed": "Fair \u2014 Can be farmed with a reasonable time investment.",
+  "skill": "2H Slashing",
+  "reviewNotes": "Stats at upgrade level 0 from eqlegendstools item page (fetched 2026-10-25).",
+  "weapon": {
+   "dmg0": 30,
+   "dly": 45,
+   "ratio0": 0.6667,
+   "dmg10": 60,
+   "ratio10": 1.3333
+  },
+  "sourceZoneUrl": "https://eqlegendstools.com/zones/nektropos-castle/",
+  "sourceZones": [
+   "Nektropos Castle"
+  ],
+  "sourceZoneUrls": [
+   "https://eqlegendstools.com/zones/nektropos-castle/"
+  ],
+  "sourceDisplay": "Drops From: Nektropos Castle: C'Rate",
+  "sourceHref": "https://eqlegendstools.com/items/worn-great-blade/"
+ }
+]

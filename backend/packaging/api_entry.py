@@ -123,9 +123,9 @@ def main(argv: list[str] | None = None) -> int:
         except OSError:
             pass
 
-    # Import after path bootstrap
+    # Health answers from the boot app while backend.app.main imports.
     uvicorn.run(
-        "backend.app.main:app",
+        "backend.app.boot:app",
         host=args.host,
         port=args.port,
         log_level="info",

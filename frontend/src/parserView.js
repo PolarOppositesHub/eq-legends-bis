@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.17'
+export const WHATS_NEW_ID = '1.1.18'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,13 +23,14 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.17"
+export const WHATS_NEW_TITLE = "What's new in 1.1.18"
 
 export const WHATS_NEW_POINTS = [
-  'Ask AI is one button in the header. Type a question. The button adds the gear or fight already on screen: worn gear, Best in Slot picks, Simulator picks, or the selected Parser fight.',
-  'A stat or number that is not already on screen stays unknown. The note does not fill one in.',
-  'Grok opens in your browser. The question is filled in when the link can hold it. Otherwise it is copied, and a note tells you to paste it into Grok.',
-  'If the Grok command on this PC is already signed in to your own account, the answer can show here. The app does not add an API key, a shared sign-in, or a saved token.',
+  'Ask AI leaves chat lines out of the question. The full pack is copied. The web address only gets a short prompt. If the clipboard fails, the pack is shown so you can copy it.',
+  'Installing Grok Build runs only after you confirm. Sign-in uses your own account. No API key. In-app answers are Beta, read-only, and can be cancelled. If Grok stops, copy the pack instead.',
+  'The API health check answers in about 0.01s. Before this build the import took 0.71s before health could answer. Empty Item Search went from 4.11s to 0.15s, and the next search of that catalog was 0.01s.',
+  'While a parser rebuild is running, the wait screen skips the blur and the sliding bar. Meter overlays back off when the parser is busy and listen only for alerts.',
+  'This install includes zone files for Nektropos Castle and Lake Nerius (28 mobs). Other zones stay unknown. A source conflict stays flagged and is not resolved.',
 ]
 
 export function currentClassText(current) {

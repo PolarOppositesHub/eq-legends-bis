@@ -616,7 +616,9 @@ def get_companion_feedback():
 async def stream(request: Request) -> StreamingResponse:
     """Server-Sent Events for replay progress and live fight updates."""
     hub = get_service().hub
-    queue = hub.subscribe()
+    raw = (request.query_params.get("events") or "").strip()
+    types = [part.strip() for part in raw.split(",") if part.strip()] or None
+    queue = hub.subscribe(types)
 
     async def generate():
         yield _frame("hello", {"ok": True})

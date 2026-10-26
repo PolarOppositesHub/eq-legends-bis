@@ -355,6 +355,25 @@ function MaybeWikiLink({ href, children, onConfirmWiki, title, className }) {
   )
 }
 
+function sourceConflictText(row) {
+  if (!row) return ''
+  const listed = Array.isArray(row.source_conflicts)
+    ? row.source_conflicts.map((line) => String(line || '').trim()).filter(Boolean)
+    : []
+  if (listed.length) return listed.join(' ')
+  const notes = String(row.reviewNotes || '')
+  const at = notes.indexOf('CONFLICT:')
+  return at >= 0 ? notes.slice(at).trim() : ''
+}
+
+function formatDamageDelayRatio(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return ''
+  const text = String(value)
+  if (/^-?\d+\.\d{3,}$/.test(text)) return text
+  return n.toFixed(2)
+}
+
 /** Hover preview text from item-detail payload — never invents stats.
  * Raw tooltip lines are the +0 item, so the preview says so. */
 function itemDetailTipText(detail) {
@@ -952,6 +971,9 @@ function ZoneModal({ detail, onClose, onConfirmWiki }) {
                 {m.spawn_known ? (m.spawn_notes || 'spawn known') : (
                   <span className="spawn-unknown">{m.spawn_notes || 'mob location unknown'}</span>
                 )}
+                {String(m.spawn_notes || '').includes('CONFLICT') ? (
+                  <div className="source-conflict" data-testid="source-conflict">Source conflict</div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -1047,6 +1069,7 @@ export default function App() {
   const [parserMergePets, setParserMergePets] = useState(true)
   const [parserFightId, setParserFightId] = useState(null)
   const [parserSummary, setParserSummary] = useState(null)
+  const [parserBusy, setParserBusy] = useState(false)
   const [parserGroupCollapsed, setParserGroupCollapsed] = useState(false)
   const [currencyCharacter, setCurrencyCharacter] = useState('')
   const [wishByCharacter, setWishByCharacter] = useState({})
@@ -3110,6 +3133,15 @@ export default function App() {
     }
   }, [tab, currencyCharacter])
 
+  useEffect(() => {
+    const stream = openParserStream({
+      events: ['progress', 'upgrade'],
+      progress: (data) => setParserBusy(!(data && data.done)),
+      upgrade: (data) => setParserBusy(!!(data && data.active && !data.done)),
+    })
+    return () => stream.close()
+  }, [])
+
   const wishCharacter = (currencyCharacter || '').trim() || characterFromInventoryFile(importMeta?.source || '')
   const syncSnapshot = useMemo(() => snapshotFromWorkspace({
     wishByCharacter,
@@ -3326,6 +3358,7 @@ export default function App() {
         open={loadJobs.length > 0}
         jobs={loadJobs}
         funnyTips={uiSettings.funnyLoadingTips !== false}
+        light={parserBusy}
       />
       {inventoryDropActive && (
         <div className="inventory-drop-overlay" role="status">
@@ -3360,6 +3393,8 @@ export default function App() {
               slots: meta?.slots || [],
               parser: parserSummary,
               buildName,
+              view: tab,
+              currencies: currencyView,
             }}
           />
           <button
@@ -4723,13 +4758,19 @@ export default function App() {
                             {it.catalog_source === 'eqlwiki' && !it.has_stats ? (
                               <span className="badge" style={{ marginLeft: 6 }}>eqlwiki</span>
                             ) : null}
+                            {sourceConflictText(it) ? (
+                              <span className="source-conflict" data-testid="source-conflict"> Source conflict</span>
+                            ) : null}
                           </div>
                           <div className="muted" style={{ fontSize: '0.78rem' }}>
                             {it.classes_str || (it.classes || []).join(', ') || (it.catalog_source === 'eqlwiki' ? 'Non-tools / open for wiki details' : '—')}
                             {it.zone ? ` · ${it.zone}` : ''}
                           </div>
                           {it.damage_delay_ratio != null ? (
-                            <div className="stats-line">Damage/Delay {Number(it.damage_delay_ratio).toFixed(2)}</div>
+                            <div className="stats-line">Damage/Delay {formatDamageDelayRatio(it.damage_delay_ratio)}</div>
+                          ) : null}
+                          {sourceConflictText(it) ? (
+                            <div className="source-conflict" data-testid="source-conflict">{sourceConflictText(it)}</div>
                           ) : null}
                           {it.damage_delay_note ? (
                             <div className="muted" style={{ fontSize: '0.75rem' }}>{it.damage_delay_note}</div>
@@ -4809,6 +4850,9 @@ export default function App() {
                     <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.35rem' }}>
                       {panelMeta.classes_str || (panelMeta.classes || []).join(', ')}
                     </div>
+                    {sourceConflictText(panelMeta) ? (
+                      <div className="source-conflict" data-testid="source-conflict">{sourceConflictText(panelMeta)}</div>
+                    ) : null}
                     {panelItem ? (
                       <ItemStatsDetail
                         item={panelItem}
@@ -5383,6 +5427,9 @@ export default function App() {
                                         <strong>{m.name}</strong>
                                         {m.level != null && m.level !== '' ? ` · L${m.level}` : ''}
                                         {m.spawn_notes ? ` · ${m.spawn_notes}` : ''}
+                                        {String(m.spawn_notes || '').includes('CONFLICT') ? (
+                                          <span className="source-conflict" data-testid="source-conflict"> Source conflict</span>
+                                        ) : null}
                                       </li>
                                     ))}
                                   </ul>

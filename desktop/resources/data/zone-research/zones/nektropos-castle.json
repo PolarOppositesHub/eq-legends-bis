@@ -1,0 +1,380 @@
+{
+  "zone": "Nektropos Castle",
+  "slug": "nektropos-castle",
+  "overview": {
+    "brief": "Everling family castle in Nektulos Forest; endgame dungeon with 20+ named (official). Vermin, mimics, ghosts, undead, golems. eqlwiki monster levels 45-60; named up to 65.",
+    "level_requirement": "46+",
+    "access_keys": [
+      {
+        "name": "Access quest 'Hate, Betrayal, and Trust' (Retainer Ozval, Lake Nerius)",
+        "required": true,
+        "notes": "Ancient Signet Ring from Corrupted Kedgespawn; Peerless Sapphire (Merchant Tyslin, N. Felwithe); Exquisite Gem Setter (Rylin Coil, Ak'Anon); Blessing of the Betrayer from High Priestess of Ulkorruuk, Plane of Hate 2nd floor, non-instanced, no hide/sneak.",
+        "source_url": "https://eqlwiki.com/Nektropos_Castle"
+      },
+      {
+        "name": "Nektropos Library Key",
+        "required": true,
+        "notes": "via The Tragic Tale of House Everling",
+        "source_url": "https://eqlwiki.com/Nektropos_Castle"
+      },
+      {
+        "name": "Nektropos Great Room / Private Chamber / Basement Keys",
+        "required": true,
+        "notes": "via The Betrayer; Basement Key from The Juggernaught, Private Chamber Key from Alexa Everling",
+        "source_url": "https://eqlwiki.com/Nektropos_Castle"
+      }
+    ],
+    "walkthrough_urls": [
+      {
+        "title": "Nektropos Castle - EQ Legends Tools",
+        "url": "https://eqlegendstools.com/zones/nektropos-castle/",
+        "preferred": true
+      },
+      {
+        "title": "eqlwiki",
+        "url": "https://eqlwiki.com/Nektropos_Castle",
+        "preferred": false
+      }
+    ],
+    "map_urls": [],
+    "sources": [
+      "https://eqlegendstools.com/zones/nektropos-castle/",
+      "https://eqlwiki.com/Nektropos_Castle",
+      "https://www.everquestlegends.com/news/eql-nektropos-castle",
+      "https://www.everquestlegends.com/patch-notes/eql-update-notes-10-23-2026"
+    ]
+  },
+  "mobs": [
+    {
+      "name": "Lord Rikantus Everling",
+      "level": 65,
+      "spawn": {
+        "known": false,
+        "notes": "final boss; requires quest chain (The Betrayer)",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Guard Captain Ga'Vin",
+      "level": 63,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "The Juggernaught",
+      "level": 62,
+      "spawn": {
+        "known": true,
+        "notes": "drops Nektropos Basement Key per eqlwiki",
+        "coords": "(-331, 310, -112)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Alexa Everling",
+      "level": 61,
+      "spawn": {
+        "known": false,
+        "notes": "drops Nektropos Private Chamber Key and Fractured Malice per eqlwiki",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Crypt Guardian",
+      "level": 61,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Crysta Everling",
+      "level": 60,
+      "spawn": {
+        "known": true,
+        "notes": "CONFLICT: eqlegendstools 60, eqlwiki 58. NW tower, 2nd floor",
+        "coords": "(859, 311, 18)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Jenni Everling",
+      "level": 60,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Melanie Everling",
+      "level": 60,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Sheila Everling",
+      "level": 60,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "C'Rate",
+      "level": 59,
+      "spawn": {
+        "known": true,
+        "notes": "FEED attack ~40,000 dmg in melee range (eqlwiki)",
+        "coords": "(740, -345)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Deirdre Everling",
+      "level": 58,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Elise Everling",
+      "level": 58,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "A Spectral Handmaiden",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "guards each Everling sister behind tower doors",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "The Head Librarian",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "rare; hail + 'tome' starts event spawning a passage of flame (50), a chapter of misery (52), a tale of woe (53)",
+        "coords": "(-83, -201, 17)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Sergeant Tvyn",
+      "level": 55,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "The Game Master",
+      "level": 54,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Head Chef Vy'zen",
+      "level": 52,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Inquisitor of Ulkorruuk",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Tormentor Utzain",
+      "level": 51,
+      "spawn": {
+        "known": false,
+        "notes": "mob location unknown",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlegendstools.com/zones/nektropos-castle/",
+        "https://eqlegendstools.com/zones/"
+      ]
+    },
+    {
+      "name": "Plimptos",
+      "level": 60,
+      "spawn": {
+        "known": true,
+        "notes": "not fought; quest NPC",
+        "coords": "(102, -151, 7)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Alexa`s Handmaiden",
+      "level": 55,
+      "spawn": {
+        "known": true,
+        "notes": "rare; quest NPC",
+        "coords": "(172, -178)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Elite Guard",
+      "level": 60,
+      "spawn": {
+        "known": true,
+        "notes": "eqlwiki loc",
+        "coords": "(286, -67)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Lady Sileniu Everling",
+      "level": null,
+      "spawn": {
+        "known": false,
+        "notes": "quest giver (The Betrayer)",
+        "coords": null,
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    },
+    {
+      "name": "Priestess of Ulkorruuk",
+      "level": 52,
+      "spawn": {
+        "known": true,
+        "notes": "eqlwiki loc",
+        "coords": "(-24, -159)",
+        "map_url": null
+      },
+      "sources": [
+        "https://eqlwiki.com/Nektropos_Castle"
+      ]
+    }
+  ]
+}
