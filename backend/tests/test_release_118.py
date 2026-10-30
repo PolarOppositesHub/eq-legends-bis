@@ -25,7 +25,7 @@ INDEX = ZONE / "zones_index.json"
 
 class Release118Tests(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(__version__, "1.1.18")
+        self.assertEqual(__version__, "1.1.19")
 
     def test_packaged_zone_index_is_a_tracked_file(self):
         self.assertTrue(INDEX.is_file())
@@ -171,7 +171,7 @@ class Release118Tests(unittest.TestCase):
         body = json.loads(raw)
         self.assertEqual(sent[0]["status"], 200)
         self.assertTrue(body["ok"])
-        self.assertEqual(body["version"], "1.1.18")
+        self.assertEqual(body["version"], "1.1.19")
 
     def test_overlay_subscriber_skips_progress(self):
         hub = EventHub()

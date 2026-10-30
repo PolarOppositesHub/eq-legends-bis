@@ -8,7 +8,7 @@
  * after a class swap. A lower later number is never an error.
  */
 
-export const WHATS_NEW_ID = '1.1.18'
+export const WHATS_NEW_ID = '1.1.19'
 
 export const PARSER_EMPTY = {
   title: 'No combat logs found',
@@ -23,14 +23,13 @@ export const PARSER_EMPTY = {
 export const LEVEL_LOADOUT_NOTE =
   'Level follows each 3-class loadout. The same character can be 50 and later 29 after a class swap. Both readings are kept.'
 
-export const WHATS_NEW_TITLE = "What's new in 1.1.18"
+export const WHATS_NEW_TITLE = "What's new in 1.1.19"
 
 export const WHATS_NEW_POINTS = [
-  'Ask AI leaves chat lines out of the question. The full pack is copied. The web address only gets a short prompt. If the clipboard fails, the pack is shown so you can copy it.',
-  'Installing Grok Build runs only after you confirm. Sign-in uses your own account. No API key. In-app answers are Beta, read-only, and can be cancelled. If Grok stops, copy the pack instead.',
-  'The API health check answers in about 0.01s. Before this build the import took 0.71s before health could answer. Empty Item Search went from 4.11s to 0.15s, and the next search of that catalog was 0.01s.',
-  'While a parser rebuild is running, the wait screen skips the blur and the sliding bar. Meter overlays back off when the parser is busy and listen only for alerts.',
-  'This install includes the sourced zone files: 56 zones and 448 mobs, including Nektropos Castle and Lake Nerius. A source conflict stays flagged and is not resolved.',
+  'Overview is the home screen. Your character, class loadout, and whether a fight is open sit at the top. The same cards are grouped into Right now and Recent.',
+  'Buttons on the home screen open Loot, Leveling, Raid targets, Parser, Best in Slot, and Item Search. A missing number stays unknown.',
+  'Press ? for keyboard shortcuts. g, then a letter, opens a page. Shortcuts stay quiet while you are typing or a dialog is open.',
+  'The header shows sync: off, syncing, synced, waiting for iCloud, offline, changes still waiting, or a problem. It uses the sync status already on this PC. Click it to open Settings.',
 ]
 
 export function currentClassText(current) {

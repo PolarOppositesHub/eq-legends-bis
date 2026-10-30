@@ -77,7 +77,9 @@ import { loadoutKey } from './companionView.js'
 import { CurrenciesPanel } from './currenciesView.jsx'
 import { bagCountsFromImport, characterFromInventoryFile } from './currenciesView.js'
 import { SyncBridge } from './SyncBridge.jsx'
-import { SyncSettingsHost } from './SyncSettings.jsx'
+import { SyncSettingsHost, SyncStatusIndicatorHost } from './SyncSettings.jsx'
+import { ShortcutsDialog } from './shortcuts.jsx'
+import { CHORD_MS, isTypingTarget, nextShortcut } from './shortcuts.js'
 import { TitleBar } from './TitleBar.jsx'
 import { CloseActionSettingHost } from './CloseActionSetting.jsx'
 import { snapshotFromWorkspace } from './syncSettings.js'
@@ -1065,6 +1067,7 @@ export default function App() {
   const [appHelpOpen, setAppHelpOpen] = useState(false)
   const [creditsOpen, setCreditsOpen] = useState(false)
   const [whatsNewOpen, setWhatsNewOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [parserLogPath, setParserLogPath] = useState('')
   const [parserMergePets, setParserMergePets] = useState(true)
   const [parserFightId, setParserFightId] = useState(null)
@@ -2493,6 +2496,7 @@ export default function App() {
           || appHelpOpen
           || creditsOpen
           || whatsNewOpen
+          || shortcutsOpen
         ),
       })
       if (!action) return
@@ -2513,7 +2517,8 @@ export default function App() {
         return
       }
       if (action === 'modal') {
-        if (zoneDetail) setZoneDetail(null)
+        if (shortcutsOpen) setShortcutsOpen(false)
+        else if (zoneDetail) setZoneDetail(null)
         else if (helpMd != null) setHelpMd(null)
         else if (settingsOpen) setSettingsOpen(false)
         else if (appHelpOpen) setAppHelpOpen(false)
@@ -2570,6 +2575,67 @@ export default function App() {
     appHelpOpen,
     creditsOpen,
     whatsNewOpen,
+    shortcutsOpen,
+  ])
+
+  useEffect(() => {
+    let armed = false
+    let timer = 0
+    const modalOpen = () => !!(
+      zoneDetail
+      || helpMd != null
+      || settingsOpen
+      || appHelpOpen
+      || creditsOpen
+      || whatsNewOpen
+      || shortcutsOpen
+    )
+    const onKey = (event) => {
+      if (modalOpen()) {
+        armed = false
+        window.clearTimeout(timer)
+        if (
+          shortcutsOpen
+          && !isTypingTarget(event.target)
+          && event.key === '?'
+          && !event.metaKey
+          && !event.ctrlKey
+          && !event.altKey
+          && !event.repeat
+        ) {
+          event.preventDefault()
+          setShortcutsOpen(false)
+        }
+        return
+      }
+      const action = nextShortcut(event, armed)
+      if (!action) return
+      if (action.type === 'arm') {
+        armed = true
+        window.clearTimeout(timer)
+        timer = window.setTimeout(() => { armed = false }, CHORD_MS)
+        return
+      }
+      armed = false
+      window.clearTimeout(timer)
+      if (action.type === 'clear') return
+      event.preventDefault()
+      if (action.type === 'help') setShortcutsOpen(true)
+      else if (action.type === 'go') setTab(action.tab)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.clearTimeout(timer)
+    }
+  }, [
+    zoneDetail,
+    helpMd,
+    settingsOpen,
+    appHelpOpen,
+    creditsOpen,
+    whatsNewOpen,
+    shortcutsOpen,
   ])
 
   useEffect(() => {
@@ -3397,6 +3463,14 @@ export default function App() {
               currencies: currencyView,
             }}
           />
+          <SyncStatusIndicatorHost onOpen={() => setSettingsOpen(true)} />
+          <button
+            type="button"
+            className="header-text-btn"
+            onClick={() => setShortcutsOpen(true)}
+          >
+            Shortcuts
+          </button>
           <button
             type="button"
             className="header-text-btn"
@@ -3691,7 +3765,13 @@ export default function App() {
 
           {dashboardTab && (
             <>
-              {tab === 'overview' && <OverviewPanel character={wishCharacter} wishes={wishNames} />}
+              {tab === 'overview' && (
+                <OverviewPanel
+                  character={wishCharacter}
+                  wishes={wishNames}
+                  onOpenTab={setTab}
+                />
+              )}
               {tab === 'loot' && <LootPanel character={wishCharacter} wishes={wishNames} />}
               {tab === 'leveling' && <LevelingPanel character={wishCharacter} />}
               {tab === 'raids' && (
@@ -5511,7 +5591,7 @@ export default function App() {
 
           <footer className="muted" style={{ marginTop: '1.5rem', fontSize: '0.78rem', lineHeight: 1.45 }}>
             Stats from decoded catalog / eqlwiki only — never invented.
-            Use the <strong>?</strong> help, <strong>Credits</strong>, and <strong>cog</strong> settings in the header anytime.
+            Use <strong>Shortcuts</strong> or press <strong>?</strong>, the help icon, <strong>Credits</strong>, and the cog in the header anytime.
             {isDesktopApp && (
               <>
                 {' '}Desktop: window <strong>X</strong>, <strong>Alt+F4</strong>, or{' '}
@@ -5677,6 +5757,7 @@ export default function App() {
       )}
 
       <DashboardToasts />
+      {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
       {creditsOpen && <CreditsDialog onClose={() => setCreditsOpen(false)} />}
       {whatsNewOpen && (
         <WhatsNewDialog
