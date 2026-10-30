@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { SyncSettings } from './SyncSettings.jsx'
+import { SyncSettings, SyncStatusIndicator } from './SyncSettings.jsx'
 import {
   CONNECTED_APP_FOLDER,
   ICLOUD_TIP,
@@ -15,6 +15,7 @@ import {
   skippedFilesText,
   snapshotFromWorkspace,
   syncFailureText,
+  syncIndicatorState,
   syncStatusText,
 } from './syncSettings.js'
 
@@ -208,4 +209,38 @@ test('workspace snapshot is per character and a projection can add a pin', () =>
     },
   })
   assert.deepEqual(merged.wishByCharacter.Zasariz, ['Mask of Song', 'Cloak of Flames'])
+})
+
+test('the header sync indicator uses the status already reported', () => {
+  assert.equal(syncIndicatorState(null).label, 'Sync')
+  assert.equal(syncIndicatorState({ provider: '' }).tone, 'off')
+  assert.equal(syncIndicatorState({ provider: 'onedrive' }, { syncing: true }).label, 'Syncing…')
+  const waiting = syncIndicatorState({ provider: 'folder', message: ICLOUD_WAITING, error: 'nope' })
+  assert.equal(waiting.label, 'Waiting for iCloud')
+  assert.equal(waiting.detail, ICLOUD_WAITING)
+  const offline = syncIndicatorState({ provider: 'onedrive', status: 'offline', error: '' })
+  assert.equal(offline.label, 'Offline')
+  assert.match(offline.detail, /Offline/)
+  assert.equal(syncIndicatorState({ provider: 'google', status: 'error', error: 'Drive 401' }).label, 'Sync problem')
+  const signIn = syncIndicatorState({ provider: 'onedrive', reauth: true, error: UPDATE_SIGN_IN_TEXT })
+  assert.equal(signIn.label, 'Sign in')
+  assert.equal(signIn.detail, UPDATE_SIGN_IN_TEXT)
+  assert.equal(syncIndicatorState({ provider: 'folder', status: 'idle', pending: 2 }).label, '2 changes waiting')
+  const synced = syncIndicatorState({
+    provider: 'google',
+    status: 'ok',
+    last_synced: '2026-10-30T12:00:00',
+    skipped: 1,
+  })
+  assert.equal(synced.label, 'Synced')
+  assert.equal(synced.tone, 'ok')
+  assert.match(synced.detail, /Google Drive · 2026-10-30 12:00:00 · Synced with 1 file skipped/)
+  assert.equal(syncIndicatorState({ provider: 'onedrive', status: 'idle' }).detail, 'Not synced yet')
+  const html = renderToStaticMarkup(React.createElement(SyncStatusIndicator, {
+    status: { provider: 'onedrive', status: 'ok', last_synced: '2026-10-30T12:00:00' },
+  }))
+  assert.match(html, /data-testid="sync-indicator"/)
+  assert.match(html, /data-tone="ok"/)
+  assert.match(html, /OneDrive/)
+  assert.match(html, />Synced</)
 })

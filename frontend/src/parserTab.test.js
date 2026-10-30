@@ -335,18 +335,18 @@ test('pets scope with merge pets totals the pet rows on screen', () => {
   assert.equal(visibleRate(sourcesForScope(detail, 'pets'), 30), 20 / 30)
 })
 
-test("what's new dialog shows the 1.1.18 notes", () => {
+test("what's new dialog shows the 1.1.19 notes", () => {
   const html = markup(React.createElement(WhatsNewDialog, { onClose: noop }))
   assert.match(html, /data-testid="whats-new-dialog"/)
-  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.18")
-  assert.match(html, /<h2>What&#x27;s new in 1\.1\.18<\/h2>/)
-  assert.match(html, /chat lines/)
-  assert.match(html, /short prompt/)
-  assert.match(html, /No API key/)
-  assert.match(html, /0\.15s/)
-  assert.match(html, /Nektropos Castle/)
-  assert.match(html, /source conflict stays flagged/)
-  assert.equal(/<h2>What&#x27;s new in 1\.1\.17<\/h2>/.test(html), false)
+  assert.equal(WHATS_NEW_TITLE, "What's new in 1.1.19")
+  assert.match(html, /<h2>What&#x27;s new in 1\.1\.19<\/h2>/)
+  assert.match(html, /Right now/)
+  assert.match(html, /keyboard shortcuts/)
+  assert.match(html, /g, then a letter/)
+  assert.match(html, /waiting for iCloud/)
+  assert.match(html, /Click it to open Settings/)
+  assert.equal(/<h2>What&#x27;s new in 1\.1\.18<\/h2>/.test(html), false)
+  assert.equal(html.includes('Nektropos Castle'), false)
 })
 
 test('overlays panel shows the borderless note and an exclusive-fullscreen warning', () => {

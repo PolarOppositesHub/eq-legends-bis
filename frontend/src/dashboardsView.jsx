@@ -14,12 +14,17 @@ import {
   postDashboardWishes,
 } from './parserApi.js'
 import {
+  HOME_JUMPS,
   MULTI_CLASS_CAVEAT,
   XP_HONESTY,
   conLine,
   dropRateLabel,
   formatHours,
   formatLevelsPerHour,
+  homeDpsText,
+  homeFightStatus,
+  homeLoadout,
+  homeMobLine,
   toastText,
   toastsFromStream,
 } from './dashboardsView.js'
@@ -99,75 +104,138 @@ function Sparkline({ curve }) {
   )
 }
 
-export function OverviewPanel({ character, wishes }) {
+function HomeJumps({ onOpenTab }) {
+  return (
+    <nav className="home-jumps" aria-label="Open from home" data-testid="home-jumps">
+      {HOME_JUMPS.map((jump) => (
+        <button key={jump.id} type="button" className="home-jump" onClick={() => onOpenTab?.(jump.id)}>
+          {jump.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+function RecentList({ rows, empty, renderRow }) {
+  if (!rows.length) return <p className="muted">{empty}</p>
+  return <ul className="dashboard-list">{rows.map(renderRow)}</ul>
+}
+
+export function HomeOverview({ character, body, loading, error, onOpenTab }) {
+  const mob = body?.current_mob || {}
+  const dps = body?.dps || {}
+  const loots = body?.recent_loots || []
+  const kills = body?.recent_kills || []
+  const zones = body?.zones || []
+  return (
+    <div className="panel dashboard-panel home-screen" data-testid="overview-panel">
+      <header className="home-head">
+        <div>
+          <p className="home-kicker">Home</p>
+          <h2 data-testid="home-character">{character}</h2>
+          {body ? <p className="muted" data-testid="home-loadout">{homeLoadout(body.leveling)}</p> : null}
+        </div>
+        {body ? <p className="home-status" data-testid="home-status">{homeFightStatus(mob)}</p> : null}
+      </header>
+      <p className="note" data-testid="overview-caveat">{body?.caveat || MULTI_CLASS_CAVEAT}</p>
+      <HomeJumps onOpenTab={onOpenTab} />
+      <p className="muted" data-testid="home-shortcut-hint">Press ? for keyboard shortcuts.</p>
+      {loading && !body ? <p className="muted">Loading the log…</p> : null}
+      {error ? <p className="error">{error}</p> : null}
+      {body ? (
+        <>
+          <h3 className="home-group">Right now</h3>
+          <div className="dashboard-grid">
+            <section className="dashboard-card" data-testid="card-current-mob">
+              <h3>Current mob</h3>
+              <p className="home-card-value">{homeMobLine(mob)}</p>
+              <p className="muted">{mob.zone || 'zone unknown'}</p>
+              {(mob.last_targets || []).length ? (
+                <p className="muted">Recent: {(mob.last_targets || []).join(', ')}</p>
+              ) : null}
+            </section>
+            <section className="dashboard-card" data-testid="card-dps">
+              <h3>DPS</h3>
+              <p className="home-card-value">{homeDpsText(dps.your_dps)}</p>
+              <p className="muted">{(dps.targets || []).join(', ') || 'no targets'}</p>
+              <Sparkline curve={dps.curve} />
+            </section>
+            <section className="dashboard-card" data-testid="card-leveling">
+              <h3>Leveling</h3>
+              <p className="home-card-value">{formatLevelsPerHour(body?.leveling?.levels_per_hour)}</p>
+              <p className="muted">Time to level {formatHours(body?.leveling?.hours_to_level)}</p>
+            </section>
+          </div>
+          <h3 className="home-group">Recent</h3>
+          <div className="dashboard-grid">
+            <section className="dashboard-card" data-testid="card-drops">
+              <h3>Recent drops</h3>
+              <RecentList
+                rows={loots}
+                empty="No loot yet."
+                renderRow={(row, index) => (
+                  <li key={`${row.item}-${index}`}>{row.item || row.coin_text || 'unknown'}{row.from ? ` from ${row.from}` : ''}</li>
+                )}
+              />
+            </section>
+            <section className="dashboard-card" data-testid="card-kills">
+              <h3>Recent kills</h3>
+              <RecentList
+                rows={kills}
+                empty="No kills yet."
+                renderRow={(row, index) => (
+                  <li key={`${row.mob}-${index}`}>{row.mob || 'unknown'}</li>
+                )}
+              />
+            </section>
+            <section className="dashboard-card" data-testid="card-zones">
+              <h3>Zones</h3>
+              {zones.length ? (
+                <ul className="zone-strip">
+                  {zones.map((row) => (
+                    <li key={`${row.zone}-${row.ts}`}>{row.zone}{row.instance?.tier ? ` · ${row.instance.tier}` : ''}</li>
+                  ))}
+                </ul>
+              ) : <p className="muted">No zone yet.</p>}
+            </section>
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+export function OverviewPanel({ character, wishes, onOpenTab }) {
   const { body, error, loading } = useDashboard(
     (name) => getDashboardOverview(name),
     character,
     wishes,
     [character, (wishes || []).join('|')],
   )
-  if (!(character || '').trim()) return <div className="panel"><h2>Overview</h2><EmptyCharacter /></div>
-  const mob = body?.current_mob || {}
-  const dps = body?.dps || {}
-  return (
-    <div className="panel dashboard-panel" data-testid="overview-panel">
-      <h2>Overview</h2>
-      <p className="note" data-testid="overview-caveat">{body?.caveat || MULTI_CLASS_CAVEAT}</p>
-      {loading ? <p className="muted">Loading the log…</p> : null}
-      {error ? <p className="error">{error}</p> : null}
-      <div className="dashboard-grid">
-        <section className="dashboard-card" data-testid="card-current-mob">
-          <h3>Current mob</h3>
-          <p>{mob.status === 'fighting' ? (mob.names || []).join(', ') || 'unknown' : 'No fight open'}</p>
-          <p className="muted">{mob.zone || 'zone unknown'}</p>
-          {(mob.last_targets || []).length ? (
-            <p className="muted">Recent: {(mob.last_targets || []).join(', ')}</p>
-          ) : null}
-        </section>
-        <section className="dashboard-card" data-testid="card-dps">
-          <h3>DPS</h3>
-          <p>{dps.your_dps == null ? 'unknown' : `${Number(dps.your_dps).toFixed(1)} DPS`}</p>
-          <p className="muted">{(dps.targets || []).join(', ') || 'no targets'}</p>
-          <Sparkline curve={dps.curve} />
-        </section>
-        <section className="dashboard-card" data-testid="card-leveling">
-          <h3>Leveling</h3>
-          <p>{formatLevelsPerHour(body?.leveling?.levels_per_hour)}</p>
-          <p className="muted">Time to level {formatHours(body?.leveling?.hours_to_level)}</p>
-          <p className="muted">
-            {(body?.leveling?.classes || []).join(' / ') || 'classes unknown'}
-            {body?.leveling?.level != null ? ` · ${body.leveling.level}` : ''}
-          </p>
-        </section>
-        <section className="dashboard-card" data-testid="card-drops">
-          <h3>Recent drops</h3>
-          <ul className="dashboard-list">
-            {(body?.recent_loots || []).map((row, index) => (
-              <li key={`${row.item}-${index}`}>{row.item || row.coin_text || 'unknown'}{row.from ? ` from ${row.from}` : ''}</li>
-            ))}
-          </ul>
-          {(body?.recent_loots || []).length ? null : <p className="muted">No loot yet.</p>}
-        </section>
-        <section className="dashboard-card" data-testid="card-kills">
-          <h3>Recent kills</h3>
-          <ul className="dashboard-list">
-            {(body?.recent_kills || []).map((row, index) => (
-              <li key={`${row.mob}-${index}`}>{row.mob || 'unknown'}</li>
-            ))}
-          </ul>
-          {(body?.recent_kills || []).length ? null : <p className="muted">No kills yet.</p>}
-        </section>
-        <section className="dashboard-card" data-testid="card-zones">
-          <h3>Zones</h3>
-          <ul className="zone-strip">
-            {(body?.zones || []).map((row) => (
-              <li key={`${row.zone}-${row.ts}`}>{row.zone}{row.instance?.tier ? ` · ${row.instance.tier}` : ''}</li>
-            ))}
-          </ul>
-          {(body?.zones || []).length ? null : <p className="muted">No zone yet.</p>}
-        </section>
+  const name = (character || '').trim()
+  if (!name) {
+    return (
+      <div className="panel dashboard-panel home-screen" data-testid="overview-panel">
+        <header className="home-head">
+          <div>
+            <p className="home-kicker">Home</p>
+            <h2>Overview</h2>
+          </div>
+        </header>
+        <EmptyCharacter />
+        <HomeJumps onOpenTab={onOpenTab} />
+        <p className="muted" data-testid="home-shortcut-hint">Press ? for keyboard shortcuts.</p>
       </div>
-    </div>
+    )
+  }
+  return (
+    <HomeOverview
+      character={name}
+      body={body}
+      loading={loading}
+      error={error}
+      onOpenTab={onOpenTab}
+    />
   )
 }
 

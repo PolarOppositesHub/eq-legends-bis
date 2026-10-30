@@ -3,11 +3,16 @@ import {
   GOOGLE_UNVERIFIED_NOTE,
   ICLOUD_TIP,
   ICLOUD_WAITING,
+  SYNC_BUSY_EVENT,
   SYNC_PROVIDERS,
+  SYNC_UPDATED_EVENT,
   connectionResultText,
   formatSyncedAt,
+  publishSyncBusy,
+  publishSyncStatus,
   skippedFilesText,
   syncFailureText,
+  syncIndicatorState,
   syncStatusText,
 } from './syncSettings.js'
 
@@ -132,6 +137,76 @@ export function SyncSettings({
   )
 }
 
+export function SyncStatusIndicator({ status, syncing = false, onOpen }) {
+  const view = syncIndicatorState(status, { syncing })
+  const label = view.detail ? `${view.label}. ${view.detail}` : view.label
+  return (
+    <button
+      type="button"
+      className="sync-indicator"
+      data-testid="sync-indicator"
+      data-tone={view.tone}
+      title={view.detail || view.label}
+      aria-label={label}
+      onClick={() => onOpen?.()}
+    >
+      <span className="sync-indicator-dot" aria-hidden="true" />
+      <span>{view.label}</span>
+    </button>
+  )
+}
+
+/** Header control. Polls the sidecar status and follows sync events from this window. */
+export function SyncStatusIndicatorHost({ onOpen }) {
+  const [status, setStatus] = useState(null)
+  const [syncing, setSyncing] = useState(false)
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    let cancel = false
+    const load = async () => {
+      try {
+        const response = await fetch('/api/sync/status')
+        if (!response.ok || cancel) return
+        const body = await response.json()
+        if (cancel) return
+        setStatus(body)
+        if (!body?.error && body?.status !== 'error' && body?.status !== 'offline') setNotice('')
+      } catch (_) {
+        /* Browser preview has no sidecar. */
+      }
+    }
+    load()
+    const timer = setInterval(load, 30000)
+    const onError = (event) => {
+      const message = event && event.detail
+      if (message) setNotice(String(message))
+    }
+    const onUpdated = (event) => {
+      const detail = event && event.detail
+      if (!detail || typeof detail !== 'object') return
+      setStatus(detail)
+      if (!detail.error && detail.status !== 'error' && detail.status !== 'offline') setNotice('')
+    }
+    const onBusy = (event) => setSyncing(!!(event && event.detail))
+    window.addEventListener('eq-sync-error', onError)
+    window.addEventListener(SYNC_UPDATED_EVENT, onUpdated)
+    window.addEventListener(SYNC_BUSY_EVENT, onBusy)
+    return () => {
+      cancel = true
+      clearInterval(timer)
+      window.removeEventListener('eq-sync-error', onError)
+      window.removeEventListener(SYNC_UPDATED_EVENT, onUpdated)
+      window.removeEventListener(SYNC_BUSY_EVENT, onBusy)
+    }
+  }, [])
+
+  const shown = notice
+    ? { ...(status || {}), status: 'error', error: notice }
+    : status
+  return <SyncStatusIndicator status={shown} syncing={syncing} onOpen={onOpen} />
+}
+
 function desktop() {
   if (typeof window === 'undefined') return null
   return window.eqDesktop || null
@@ -146,13 +221,18 @@ export function SyncSettingsHost() {
   const [connectionText, setConnectionText] = useState('')
   const [testingConnection, setTestingConnection] = useState(false)
 
+  const applyStatus = (body) => {
+    setStatus(body)
+    if (body?.device_name) setDeviceName(body.device_name)
+    publishSyncStatus(body)
+  }
+
   const load = async () => {
     try {
       const response = await fetch('/api/sync/status')
       if (!response.ok) return
       const body = await response.json()
-      setStatus(body)
-      setDeviceName(body.device_name || '')
+      applyStatus(body)
     } catch (_) {
       /* Browser preview has no sidecar. */
     }
@@ -185,9 +265,8 @@ export function SyncSettingsHost() {
         return
       }
       const body = await response.json()
-      setStatus(body)
+      applyStatus(body)
       setSyncError('')
-      if (body.device_name) setDeviceName(body.device_name)
     } catch (err) {
       setSyncError(String(err?.message || err || 'Sync settings could not be saved.'))
     }
@@ -271,6 +350,7 @@ export function SyncSettingsHost() {
       }}
       onSyncNow={async () => {
         setSyncing(true)
+        publishSyncBusy(true)
         setSyncError('')
         try {
           const result = await requestSyncNow()
@@ -298,6 +378,7 @@ export function SyncSettingsHost() {
           setStatus((prev) => ({ ...(prev || {}), status: 'error', error: message }))
         } finally {
           setSyncing(false)
+          publishSyncBusy(false)
           await load()
         }
       }}

@@ -1,5 +1,19 @@
 # Next build notes
 
+**Planned as 1.1.19.** Updater untouched. Never invent item stats, mob levels, spawns, rules, or formats. Unknown stays unknown. Always 1.1.x, never 1.2.0. Versions stay valid semver. No feature removals.
+
+## 1.1.19 — UI polish
+Ships the Fri Oct 30 target. Home screen, keyboard shortcuts, and a sync status indicator. No new game data.
+- [x] (1) Cleaner home screen. Overview stays the home page. The character, class loadout, and fight status sit at the top. Right now and Recent group the existing cards. Jump buttons open Loot, Leveling, Raid targets, Parser, Best in Slot, and Item Search. A missing number stays unknown.
+- [x] (2) Keyboard shortcuts. ? opens the list. g, then a letter, opens a page already in the side menu. Shortcuts do nothing while typing in a field or while a dialog is open.
+- [x] (3) Sync status in the header. Off, Syncing, Synced, waiting for iCloud, offline, changes still waiting, or a problem. The label uses the sync status the app already has. Click opens Settings.
+- [x] (4) Version **1.1.19** with 1.1.19-only What's new lines. No release publishing.
+
+## Upcoming (1.1.x only)
+None scheduled past 1.1.19.
+
+---
+
 **Planned as 1.1.18.** Updater untouched. Never invent item stats, mob levels, spawns, rules, or formats. Unknown stays unknown. Always 1.1.x, never 1.2.0. Versions stay valid semver. No feature removals.
 
 ## 1.1.18 — Speed, Ask AI extras, packaged zones

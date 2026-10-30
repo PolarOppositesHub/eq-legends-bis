@@ -115,6 +115,77 @@ export function mergeProjection(local, projection) {
   return changed ? next : null
 }
 
+export const SYNC_UPDATED_EVENT = 'eq-sync-updated'
+export const SYNC_BUSY_EVENT = 'eq-sync-busy'
+
+export function publishSyncStatus(status) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(SYNC_UPDATED_EVENT, { detail: status || null }))
+}
+
+export function publishSyncBusy(syncing) {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(SYNC_BUSY_EVENT, { detail: !!syncing }))
+}
+
+const SYNC_PROVIDER_LABEL = {
+  folder: 'Sync folder',
+  onedrive: 'OneDrive',
+  google: 'Google Drive',
+}
+
+/** Header pill for the sync status the sidecar already reports. */
+export function syncIndicatorState(status, options = {}) {
+  if (options.syncing) return { tone: 'syncing', label: 'Syncing…', detail: '' }
+  if (!status || typeof status !== 'object') return { tone: 'unknown', label: 'Sync', detail: '' }
+  const provider = status.provider === 'folder' || status.provider === 'onedrive' || status.provider === 'google'
+    ? status.provider
+    : ''
+  if (!provider) {
+    return { tone: 'off', label: 'Sync off', detail: 'Choose a folder, OneDrive, or Google Drive in Settings.' }
+  }
+  const providerLabel = SYNC_PROVIDER_LABEL[provider]
+  if (status.message === ICLOUD_WAITING || status.status === 'waiting') {
+    const detail = status.message || ICLOUD_WAITING
+    return {
+      tone: 'waiting',
+      label: detail === ICLOUD_WAITING ? 'Waiting for iCloud' : 'Waiting',
+      detail,
+    }
+  }
+  if (status.status === 'offline') {
+    return { tone: 'offline', label: 'Offline', detail: syncStatusText(status) }
+  }
+  const error = String(status.error || '').trim()
+  if (error || status.status === 'error' || status.auth_expired || status.reauth) {
+    const signIn = !!(status.auth_expired || status.reauth)
+    return {
+      tone: 'error',
+      label: signIn ? 'Sign in' : 'Sync problem',
+      detail: error || (signIn ? 'Sign in again.' : 'Sync failed.'),
+    }
+  }
+  const pending = Number(status.pending)
+  if (Number.isFinite(pending) && pending > 0) {
+    const n = Math.trunc(pending)
+    return {
+      tone: 'pending',
+      label: n === 1 ? '1 change waiting' : `${n} changes waiting`,
+      detail: providerLabel,
+    }
+  }
+  const last = status.last_synced ? String(status.last_synced).replace('T', ' ') : ''
+  if (last) {
+    const skip = skippedFilesText(status.skipped)
+    return {
+      tone: 'ok',
+      label: 'Synced',
+      detail: [providerLabel, last, skip].filter(Boolean).join(' · '),
+    }
+  }
+  return { tone: 'idle', label: providerLabel, detail: 'Not synced yet' }
+}
+
 export function syncStatusText(status) {
   if (!status) return ''
   if (status.message === ICLOUD_WAITING) return ICLOUD_WAITING

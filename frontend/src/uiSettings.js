@@ -1,5 +1,7 @@
 /** Persisted UI settings + help copy + loading flavor text. */
 
+import { shortcutHelpLines } from './shortcuts.js'
+
 export const UI_SETTINGS_KEY = 'eq-legends-bis-ui-settings-v1'
 
 export const THEME_OPTIONS = [
@@ -75,6 +77,23 @@ export const APP_HELP = {
   intro:
     'Pick up to three classes, then use the side menu to plan BiS, simulate your worn gear, search your character, and look up quests. Data comes from decoded eqlegendstools / eqlwiki sources — stats are never invented.',
   sections: [
+    {
+      id: 'home',
+      title: 'Home',
+      body: [
+        'Overview is the home screen. It shows the character, the class loadout and level already in the log, and whether a fight is open.',
+        'Right now holds the current mob, DPS, and leveling pace. Recent holds drops, kills, and zones from that same log. A missing number stays unknown.',
+        'The buttons under the name open Loot, Leveling, Raid targets, Parser, Best in Slot, and Item Search.',
+      ],
+    },
+    {
+      id: 'shortcuts',
+      title: 'Keyboard shortcuts',
+      body: shortcutHelpLines().slice(0, 2).concat([
+        'The full list is on the Shortcuts button, or press ?.',
+        'The header shows sync for the folder, OneDrive, or Google Drive already chosen in Settings. Click it to open Settings. Sync off means no provider is selected.',
+      ]),
+    },
     {
       id: 'bis',
       title: 'Best in Slot',

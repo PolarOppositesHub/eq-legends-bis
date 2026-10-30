@@ -55,6 +55,52 @@ export function toastText(toast) {
   return reasons ? `${toast.item} (${reasons})` : String(toast.item || '')
 }
 
+/** Pages the home screen can open. Each id is already in the side menu. */
+export const HOME_JUMPS = [
+  { id: 'loot', label: 'Loot' },
+  { id: 'leveling', label: 'Leveling' },
+  { id: 'raids', label: 'Raid targets' },
+  { id: 'parser', label: 'Parser' },
+  { id: 'bis', label: 'Best in Slot' },
+  { id: 'search', label: 'Item Search' },
+]
+
+/** Class loadout line from the overview payload. A missing class or level stays unknown. */
+export function homeLoadout(leveling) {
+  const classes = Array.isArray(leveling?.classes)
+    ? leveling.classes.map((name) => String(name || '').trim()).filter(Boolean)
+    : []
+  const classText = classes.length ? classes.join(' / ') : 'classes unknown'
+  const level = leveling?.level == null || leveling.level === '' ? 'level unknown' : String(leveling.level)
+  return `${classText} · ${level}`
+}
+
+/** Short fight state for the home header. Uses the status the log already stored. */
+export function homeFightStatus(mob) {
+  const status = mob?.status
+  if (status === 'fighting') return 'Fighting'
+  if (status === 'between fights') return 'Between fights'
+  if (status === 'no fight yet') return 'No fight yet'
+  return 'No fight open'
+}
+
+/** Mob card line. Names come from the open fight. Anything else uses the status. */
+export function homeMobLine(mob) {
+  if (mob?.status === 'fighting') {
+    const names = (Array.isArray(mob.names) ? mob.names : []).map((name) => String(name || '').trim()).filter(Boolean)
+    return names.length ? names.join(', ') : 'unknown'
+  }
+  return homeFightStatus(mob)
+}
+
+/** One decimal, matching the rest of the app. A missing rate stays unknown. */
+export function homeDpsText(value) {
+  if (value == null || value === '') return 'unknown'
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 'unknown'
+  return `${n.toFixed(1)} DPS`
+}
+
 export function conLine(consider) {
   if (!consider) return 'No consider yet.'
   const mob = consider.mob || 'unknown mob'
